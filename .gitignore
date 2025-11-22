@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# Output files (may contain large generated content)
+output/social_posts/*.txt
+
+# State files (regenerated each run)
+orchestration/state.json
+
+# Environment
+.env
+*.log
