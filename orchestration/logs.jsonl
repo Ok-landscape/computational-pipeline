@@ -1059,3 +1059,73 @@
 {"timestamp": "2025-11-22T22:15:10.034200", "message": "Invoking Claude agent...", "level": "INFO"}
 {"timestamp": "2025-11-22T22:16:12.759961", "message": "Social posts saved to: output/social_posts/newton_raphson_root_finding_posts.txt", "level": "INFO"}
 {"timestamp": "2025-11-22T22:16:12.760160", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:16:29.848626", "message": "Stage 1: Drafting notebook for 'Bisection Method Root Finding'", "level": "INFO"}
+{"timestamp": "2025-11-22T22:16:29.848942", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:44.102739", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:44.103223", "message": "Testing notebook: bisection_method_root_finding.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:44.103292", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:54.594184", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:54.594763", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/bisection_method_root_finding.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:54.594837", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:17:54.602529", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:18:09.622538", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/bisection_method_root_finding.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:18:09.622799", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:18:09.623042", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:18:56.465392", "message": "Social posts saved to: output/social_posts/bisection_method_root_finding_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T22:18:56.465622", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:19:00.850111", "message": "Stage 1: Drafting notebook for 'Perceptron Neural Network'", "level": "INFO"}
+{"timestamp": "2025-11-22T22:19:00.850396", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:17.405957", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:17.406486", "message": "Testing notebook: perceptron_neural_network.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:17.406561", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:26.598126", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:26.598788", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/perceptron_neural_network.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:26.598877", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:26.606163", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:40.869385", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/perceptron_neural_network.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:40.869571", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:20:40.869761", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:22:07.988055", "message": "Social posts saved to: output/social_posts/perceptron_neural_network_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T22:22:07.988242", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:22:12.222057", "message": "Stage 1: Drafting notebook for 'Linear Regression from Scratch'", "level": "INFO"}
+{"timestamp": "2025-11-22T22:22:12.222351", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:36.851751", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:36.852276", "message": "Testing notebook: linear_regression_from_scratch.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:36.852355", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:47.511034", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:47.511653", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/linear_regression_from_scratch.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:47.511748", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:23:47.519051", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:24:02.260629", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/linear_regression_from_scratch.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:24:02.260821", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:24:02.261026", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:25:35.579396", "message": "Social posts saved to: output/social_posts/linear_regression_from_scratch_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T22:25:35.579629", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:25:40.205978", "message": "Stage 1: Drafting notebook for 'Logistic Regression Classification'", "level": "INFO"}
+{"timestamp": "2025-11-22T22:25:40.206282", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:26:52.291534", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:26:52.292079", "message": "Testing notebook: logistic_regression_classification.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:26:52.292148", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:01.201098", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:01.201918", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/logistic_regression_classification.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:01.201992", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:01.209828", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:16.592542", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/logistic_regression_classification.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:16.592758", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:27:16.592991", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:28:32.967668", "message": "Social posts saved to: output/social_posts/logistic_regression_classification_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T22:28:32.967842", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:28:37.893341", "message": "Stage 1: Drafting notebook for 'K Nearest Neighbors'", "level": "INFO"}
+{"timestamp": "2025-11-22T22:28:37.893660", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:30:56.243161", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:30:56.243690", "message": "Testing notebook: k_nearest_neighbors.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:30:56.243790", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:44.553898", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:44.554449", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/k_nearest_neighbors.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:44.554516", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:44.582254", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:58.904461", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/k_nearest_neighbors.ipynb`", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:58.904685", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:31:58.904885", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T22:32:48.008023", "message": "Social posts saved to: output/social_posts/k_nearest_neighbors_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T22:32:48.008212", "message": "Pipeline complete!", "level": "INFO"}
