@@ -1273,3 +1273,73 @@
 {"timestamp": "2025-11-22T23:00:51.335336", "message": "Invoking Claude agent...", "level": "INFO"}
 {"timestamp": "2025-11-22T23:01:42.377082", "message": "Social posts saved to: output/social_posts/genetic_algorithm_optimization_posts.txt", "level": "INFO"}
 {"timestamp": "2025-11-22T23:01:42.377289", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:01:58.850029", "message": "Stage 1: Drafting notebook for 'Cellular Automata Game of Life'", "level": "INFO"}
+{"timestamp": "2025-11-22T23:01:58.850308", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:26.449321", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:26.449781", "message": "Testing notebook: cellular_automata_game_of_life.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:26.449851", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:36.089562", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:36.090084", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/cellular_automata_game_of_life.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:36.090164", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:36.097313", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:49.711683", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/cellular_automata_game_of_life.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:49.711927", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:03:49.712138", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:04:39.267156", "message": "Social posts saved to: output/social_posts/cellular_automata_game_of_life_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T23:04:39.267397", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:04:43.732666", "message": "Stage 1: Drafting notebook for 'RSA Encryption Basics'", "level": "INFO"}
+{"timestamp": "2025-11-22T23:04:43.732944", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:23.296330", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:23.296784", "message": "Testing notebook: rsa_encryption_basics.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:23.296851", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:32.297814", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:32.298321", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/rsa_encryption_basics.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:32.298393", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:32.305133", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:47.088407", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/rsa_encryption_basics.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:47.088638", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:06:47.088835", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:07:32.101494", "message": "Social posts saved to: output/social_posts/rsa_encryption_basics_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T23:07:32.101690", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:07:36.210901", "message": "Stage 1: Drafting notebook for 'Prisoners Dilemma Simulation'", "level": "INFO"}
+{"timestamp": "2025-11-22T23:07:36.211164", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:13.974112", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:13.974557", "message": "Testing notebook: prisoners_dilemma_simulation.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:13.974626", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:21.666018", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:21.666518", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/prisoners_dilemma_simulation.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:21.666586", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:21.673813", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:35.384234", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/prisoners_dilemma_simulation.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:35.384405", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:09:35.384624", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:10:24.473832", "message": "Social posts saved to: output/social_posts/prisoners_dilemma_simulation_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T23:10:24.474028", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:10:28.715580", "message": "Stage 1: Drafting notebook for 'Digital Filter Design'", "level": "INFO"}
+{"timestamp": "2025-11-22T23:10:28.715839", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:10.254598", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:10.255080", "message": "Testing notebook: digital_filter_design.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:10.255144", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:21.866311", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:21.866892", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/digital_filter_design.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:21.866980", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:21.874613", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:35.735646", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/digital_filter_design.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:35.735832", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:12:35.736012", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:13:29.111773", "message": "Social posts saved to: output/social_posts/digital_filter_design_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T23:13:29.111946", "message": "Pipeline complete!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:13:33.393252", "message": "Stage 1: Drafting notebook for 'Numerical Differentiation'", "level": "INFO"}
+{"timestamp": "2025-11-22T23:13:33.393546", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:36.854627", "message": "Stage 2: Testing code integrity...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:36.855043", "message": "Testing notebook: numerical_differentiation.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:36.855110", "message": "Execution attempt 1/3...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:44.584847", "message": "Notebook executed successfully!", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:44.585340", "message": "Notebook verified and moved to: /home/user/computational_pipeline/notebooks/published/numerical_differentiation.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:44.585406", "message": "Stage 3: Publishing to repository...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:14:44.592246", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:15:05.787180", "message": "Published at: https://raw.githubusercontent.com/Ok-landscape/computational-pipeline/main/notebooks/published/numerical_differentiation.ipynb", "level": "INFO"}
+{"timestamp": "2025-11-22T23:15:05.787401", "message": "Stage 4: Generating social media content...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:15:05.787671", "message": "Invoking Claude agent...", "level": "INFO"}
+{"timestamp": "2025-11-22T23:15:50.451875", "message": "Social posts saved to: output/social_posts/numerical_differentiation_posts.txt", "level": "INFO"}
+{"timestamp": "2025-11-22T23:15:50.452059", "message": "Pipeline complete!", "level": "INFO"}
