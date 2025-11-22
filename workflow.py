@@ -163,8 +163,11 @@ def main():
     # Load prompts
     prompts = load_prompts()
 
-    # Get topic from user
-    topic = input("Enter scientific topic (e.g., 'Lotka-Volterra Simulation'): ").strip()
+    # Get topic from command line or user input
+    if len(sys.argv) > 1:
+        topic = " ".join(sys.argv[1:]).strip()
+    else:
+        topic = input("Enter scientific topic (e.g., 'Lotka-Volterra Simulation'): ").strip()
     if not topic:
         log("Topic cannot be empty", "ERROR")
         return
