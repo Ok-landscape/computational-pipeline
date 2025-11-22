@@ -103,6 +103,15 @@ Social media platforms do NOT support LaTeX rendering.
 
 **Deliverables:** Create `output/social_posts/[topic]_posts.txt` containing:
 
+### CoCalc Viewer URL
+
+**IMPORTANT:** For platforms that support links (Reddit, LinkedIn, Facebook), include the CoCalc viewer URL so readers can view and interact with the notebook directly in their browser.
+
+**URL Format:** `https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/[filename].ipynb`
+
+Example: If the notebook is `sir_epidemic_model.ipynb`, the URL is:
+`https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sir_epidemic_model.ipynb`
+
 #### Short-form Posts
 1. **Twitter/X:** < 280 chars, punchy hook, Unicode math, hashtags (#Python #Science #Math)
 2. **Bluesky:** < 300 chars, slightly more formal tone
@@ -110,7 +119,7 @@ Social media platforms do NOT support LaTeX rendering.
 4. **Mastodon:** < 500 chars, technical details welcome, science community tone
 
 #### Long-form Posts
-5. **Reddit:** Title + body for r/learnpython or r/science, ELI5 explanation of the concept, include what was learned
-6. **Facebook:** < 500 chars, accessible to general audience, emphasize the "cool factor"
-7. **LinkedIn:** < 1000 chars, professional tone, emphasize methodology and skills demonstrated
+5. **Reddit:** Title + body for r/learnpython or r/science, ELI5 explanation of the concept, include what was learned. **MUST include CoCalc viewer URL.**
+6. **Facebook:** < 500 chars, accessible to general audience, emphasize the "cool factor". **MUST include CoCalc viewer URL.**
+7. **LinkedIn:** < 1000 chars, professional tone, emphasize methodology and skills demonstrated. **MUST include CoCalc viewer URL.**
 8. **Instagram:** < 500 chars, visual-focused caption (assumes plot.png is the image), use line breaks for readability

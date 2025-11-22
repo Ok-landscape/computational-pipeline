@@ -13,3 +13,7 @@ orchestration/state.json
 # Environment
 .env
 *.log
+
+# Explicitly track plot files in published notebooks
+# (negation pattern ensures plot.png files are committed)
+!notebooks/published/*.png
