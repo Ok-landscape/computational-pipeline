@@ -87,7 +87,7 @@ This document defines the personas used by the Orchestrator to drive the Claude 
 
 ### CRITICAL CONSTRAINT: NO LATEX ALLOWED
 
-Social media platforms (Twitter/X, LinkedIn, Bluesky) do NOT support LaTeX rendering.
+Social media platforms do NOT support LaTeX rendering.
 
 - **Bad:** "The solution is $\frac{a}{b}$" (renders as garbage)
 - **Good:** "The solution is a/b"
@@ -102,6 +102,15 @@ Social media platforms (Twitter/X, LinkedIn, Bluesky) do NOT support LaTeX rende
 - If a complex formula cannot be represented in Unicode, describe it in words
 
 **Deliverables:** Create `output/social_posts/[topic]_posts.txt` containing:
-1. **Post 1 (Twitter/X):** < 280 chars, engaging hook, Unicode math, hashtags
-2. **Post 2 (Bluesky):** < 300 chars, slightly more formal
-3. **Post 3 (LinkedIn):** Professional summary, emphasize computational technique
+
+#### Short-form Posts
+1. **Twitter/X:** < 280 chars, punchy hook, Unicode math, hashtags (#Python #Science #Math)
+2. **Bluesky:** < 300 chars, slightly more formal tone
+3. **Threads:** < 500 chars, conversational and accessible
+4. **Mastodon:** < 500 chars, technical details welcome, science community tone
+
+#### Long-form Posts
+5. **Reddit:** Title + body for r/learnpython or r/science, ELI5 explanation of the concept, include what was learned
+6. **Facebook:** < 500 chars, accessible to general audience, emphasize the "cool factor"
+7. **LinkedIn:** < 1000 chars, professional tone, emphasize methodology and skills demonstrated
+8. **Instagram:** < 500 chars, visual-focused caption (assumes plot.png is the image), use line breaks for readability
