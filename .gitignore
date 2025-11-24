@@ -1,35 +1,16 @@
-# ===== Split Repository: Public Content Only =====
-# This repo tracks ONLY published notebooks
-# Private outputs and orchestration live in: computational-pipeline-outputs
-
-# === PRIVATE CONTENT (tracked in outputs repo) ===
-output/
-orchestration/
-templates/
-*.py
-*.sh
-*.md
-batch*.py
-batch*.json
-batch.pid
-*.txt
+# Public Educational Repository
+# Contains only notebooks and LaTeX templates
 
 # === Notebook Management ===
-# Only track published notebooks
+# Ignore notebook checkpoints
+**/.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Ignore draft notebooks (only published notebooks are tracked)
 notebooks/drafts/
 notebooks/temp/
-notebooks/**/.ipynb_checkpoints/
 
-# Allow published notebooks
-!notebooks/published/
-!notebooks/published/*.ipynb
-
-# Exclude plot images in notebooks/published/ (they're in output/)
-notebooks/published/*.png
-notebooks/published/*.jpg
-notebooks/published/*.svg
-
-# === LaTeX Templates (if applicable) ===
+# === LaTeX Build Artifacts ===
 latex-templates/**/*.aux
 latex-templates/**/*.log
 latex-templates/**/*.out
@@ -41,6 +22,7 @@ latex-templates/**/*.run.xml
 latex-templates/**/*.fls
 latex-templates/**/*.fdb_latexmk
 latex-templates/**/*.synctex.gz
+latex-templates/**/*.syncdb
 
 # === Development Files ===
 *~
@@ -49,48 +31,16 @@ latex-templates/**/*.synctex.gz
 *.tmp
 *.bak
 .DS_Store
+Thumbs.db
 
 # === Python Cache ===
 __pycache__/
 *.pyc
 *.pyo
-.pytest_cache/
-.mypy_cache/
-*.egg-info/
-
-# === Virtual Environments ===
-venv/
-env/
-ENV/
-.venv/
 
 # === IDE Files ===
 .vscode/
 .idea/
-*.sublime-*
 
 # === OS Files ===
-Thumbs.db
 .Trash-*/
-
-# === Secrets ===
-.env
-.env.local
-credentials.json
-secrets/
-*.key
-*.pem
-
-# === Build Directories ===
-build/
-dist/
-.build/
-
-# === Logs ===
-*.log
-logs/
-*.log.*
-
-# === Allow Essential Documentation ===
-!README.md
-!LICENSE
