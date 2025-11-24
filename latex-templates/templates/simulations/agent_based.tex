@@ -1,0 +1,733 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Agent-Based Modeling: Emergent Behavior from Simple Rules}
+\author{Computational Social Science}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Agent-based models (ABMs) simulate complex systems through the interactions of autonomous agents
+following simple rules. This document explores three classic agent-based models: the Schelling
+segregation model demonstrating how mild individual preferences lead to stark spatial segregation,
+the Boids flocking algorithm showing how coordinated group behavior emerges from local interactions,
+and cellular automata including Conway's Game of Life and forest fire models. These models reveal
+how macroscopic patterns emerge from microscopic interactions.
+
+\section{Mathematical Framework}
+
+\subsection{Schelling Segregation Model}
+Agent satisfaction based on neighborhood composition:
+\begin{equation}
+\text{Satisfied}_i = \begin{cases}
+1 & \text{if } \frac{N_{same}}{N_{neighbors}} \geq \tau \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation}
+where $\tau$ is the similarity threshold.
+
+Segregation index (dissimilarity index):
+\begin{equation}
+D = \frac{1}{2} \sum_{i=1}^{N} \left| \frac{a_i}{A} - \frac{b_i}{B} \right|
+\end{equation}
+
+\subsection{Boids Flocking Rules}
+Each agent follows three rules with weighted contributions:
+\begin{align}
+\mathbf{v}_{\text{separation}} &= -\sum_{j \in \text{neighbors}} \frac{\mathbf{r}_j - \mathbf{r}_i}{|\mathbf{r}_j - \mathbf{r}_i|^2} \\
+\mathbf{v}_{\text{alignment}} &= \frac{1}{N} \sum_{j \in \text{neighbors}} \mathbf{v}_j - \mathbf{v}_i \\
+\mathbf{v}_{\text{cohesion}} &= \frac{1}{N} \sum_{j \in \text{neighbors}} \mathbf{r}_j - \mathbf{r}_i
+\end{align}
+
+\subsection{Cellular Automata}
+State transition function:
+\begin{equation}
+s_i^{t+1} = f(s_{i-r}^t, \ldots, s_i^t, \ldots, s_{i+r}^t)
+\end{equation}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from scipy import ndimage
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Schelling Segregation Model}
+\begin{pycode}
+class SchellingModel:
+    def __init__(self, size=50, empty_ratio=0.1, similarity_threshold=0.3):
+        self.size = size
+        self.threshold = similarity_threshold
+
+        # Initialize grid: 0=empty, 1=type A, 2=type B
+        n_cells = size * size
+        n_empty = int(n_cells * empty_ratio)
+        n_agents = n_cells - n_empty
+
+        population = np.zeros(n_cells, dtype=int)
+        agent_indices = np.random.choice(n_cells, n_agents, replace=False)
+        population[agent_indices[:n_agents//2]] = 1
+        population[agent_indices[n_agents//2:]] = 2
+
+        self.grid = population.reshape(size, size)
+        self.history = [self.grid.copy()]
+
+    def get_neighbors(self, i, j):
+        neighbors = []
+        for di in [-1, 0, 1]:
+            for dj in [-1, 0, 1]:
+                if di == 0 and dj == 0:
+                    continue
+                ni, nj = (i + di) % self.size, (j + dj) % self.size
+                neighbors.append(self.grid[ni, nj])
+        return neighbors
+
+    def is_satisfied(self, i, j):
+        if self.grid[i, j] == 0:
+            return True
+
+        neighbors = self.get_neighbors(i, j)
+        occupied = [n for n in neighbors if n != 0]
+
+        if len(occupied) == 0:
+            return True
+
+        same = sum(1 for n in occupied if n == self.grid[i, j])
+        return same / len(occupied) >= self.threshold
+
+    def step(self):
+        # Find unsatisfied agents
+        unsatisfied = []
+        empty = []
+
+        for i in range(self.size):
+            for j in range(self.size):
+                if self.grid[i, j] == 0:
+                    empty.append((i, j))
+                elif not self.is_satisfied(i, j):
+                    unsatisfied.append((i, j))
+
+        # Move unsatisfied agents to random empty cells
+        np.random.shuffle(unsatisfied)
+        np.random.shuffle(empty)
+
+        moves = min(len(unsatisfied), len(empty))
+        for k in range(moves):
+            old_i, old_j = unsatisfied[k]
+            new_i, new_j = empty[k]
+            self.grid[new_i, new_j] = self.grid[old_i, old_j]
+            self.grid[old_i, old_j] = 0
+
+        self.history.append(self.grid.copy())
+        return moves
+
+    def get_segregation_index(self):
+        # Calculate average similarity ratio
+        total_ratio = 0
+        count = 0
+
+        for i in range(self.size):
+            for j in range(self.size):
+                if self.grid[i, j] != 0:
+                    neighbors = self.get_neighbors(i, j)
+                    occupied = [n for n in neighbors if n != 0]
+                    if len(occupied) > 0:
+                        same = sum(1 for n in occupied if n == self.grid[i, j])
+                        total_ratio += same / len(occupied)
+                        count += 1
+
+        return total_ratio / count if count > 0 else 0
+
+# Run simulation
+model = SchellingModel(size=50, empty_ratio=0.1, similarity_threshold=0.35)
+
+# Collect metrics over time
+segregation_history = [model.get_segregation_index()]
+moves_history = []
+
+for _ in range(100):
+    moves = model.step()
+    moves_history.append(moves)
+    segregation_history.append(model.get_segregation_index())
+    if moves == 0:
+        break
+
+# Plot results
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Initial state
+cmap = ListedColormap(['white', 'blue', 'red'])
+axes[0, 0].imshow(model.history[0], cmap=cmap, interpolation='nearest')
+axes[0, 0].set_title('Initial Configuration')
+axes[0, 0].axis('off')
+
+# After 10 steps
+idx_10 = min(10, len(model.history)-1)
+axes[0, 1].imshow(model.history[idx_10], cmap=cmap, interpolation='nearest')
+axes[0, 1].set_title(f'After {idx_10} Steps')
+axes[0, 1].axis('off')
+
+# Final state
+axes[0, 2].imshow(model.history[-1], cmap=cmap, interpolation='nearest')
+axes[0, 2].set_title(f'Final State ({len(model.history)-1} steps)')
+axes[0, 2].axis('off')
+
+# Segregation over time
+axes[1, 0].plot(segregation_history, 'b-', linewidth=1.5)
+axes[1, 0].set_xlabel('Time Step')
+axes[1, 0].set_ylabel('Average Similarity Ratio')
+axes[1, 0].set_title('Segregation Index Over Time')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Moves over time
+axes[1, 1].plot(moves_history, 'r-', linewidth=1)
+axes[1, 1].set_xlabel('Time Step')
+axes[1, 1].set_ylabel('Number of Moves')
+axes[1, 1].set_title('Agent Movement Activity')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Threshold sensitivity
+thresholds = [0.2, 0.3, 0.4, 0.5, 0.6]
+final_segregation = []
+
+for thresh in thresholds:
+    test_model = SchellingModel(size=40, similarity_threshold=thresh)
+    for _ in range(100):
+        if test_model.step() == 0:
+            break
+    final_segregation.append(test_model.get_segregation_index())
+
+axes[1, 2].bar(range(len(thresholds)), final_segregation, color='green', alpha=0.7)
+axes[1, 2].set_xticks(range(len(thresholds)))
+axes[1, 2].set_xticklabels([f'{t:.1f}' for t in thresholds])
+axes[1, 2].set_xlabel('Similarity Threshold')
+axes[1, 2].set_ylabel('Final Segregation Index')
+axes[1, 2].set_title('Effect of Threshold on Segregation')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('schelling_model.pdf',
+          'Schelling segregation model showing emergence of spatial clustering from mild preferences.')
+
+schelling_initial = segregation_history[0]
+schelling_final = segregation_history[-1]
+schelling_steps = len(model.history) - 1
+\end{pycode}
+
+\section{Boids Flocking Algorithm}
+\begin{pycode}
+class Boid:
+    def __init__(self, x, y, vx, vy):
+        self.position = np.array([x, y], dtype=float)
+        self.velocity = np.array([vx, vy], dtype=float)
+
+    def limit_speed(self, max_speed):
+        speed = np.linalg.norm(self.velocity)
+        if speed > max_speed:
+            self.velocity = self.velocity / speed * max_speed
+
+class BoidsSimulation:
+    def __init__(self, n_boids=100, width=100, height=100):
+        self.width = width
+        self.height = height
+        self.boids = []
+
+        for _ in range(n_boids):
+            x = np.random.uniform(0, width)
+            y = np.random.uniform(0, height)
+            vx = np.random.uniform(-2, 2)
+            vy = np.random.uniform(-2, 2)
+            self.boids.append(Boid(x, y, vx, vy))
+
+        # Parameters
+        self.visual_range = 15
+        self.protected_range = 3
+        self.max_speed = 4
+        self.separation_factor = 0.05
+        self.alignment_factor = 0.05
+        self.cohesion_factor = 0.005
+
+    def step(self):
+        for boid in self.boids:
+            close_dx, close_dy = 0, 0
+            avg_vx, avg_vy = 0, 0
+            avg_x, avg_y = 0, 0
+            neighbors = 0
+
+            for other in self.boids:
+                if other is boid:
+                    continue
+
+                dx = other.position[0] - boid.position[0]
+                dy = other.position[1] - boid.position[1]
+                dist = np.sqrt(dx*dx + dy*dy)
+
+                if dist < self.protected_range:
+                    close_dx -= dx
+                    close_dy -= dy
+                elif dist < self.visual_range:
+                    avg_vx += other.velocity[0]
+                    avg_vy += other.velocity[1]
+                    avg_x += other.position[0]
+                    avg_y += other.position[1]
+                    neighbors += 1
+
+            # Apply rules
+            boid.velocity[0] += close_dx * self.separation_factor
+            boid.velocity[1] += close_dy * self.separation_factor
+
+            if neighbors > 0:
+                avg_vx /= neighbors
+                avg_vy /= neighbors
+                avg_x /= neighbors
+                avg_y /= neighbors
+
+                boid.velocity[0] += (avg_vx - boid.velocity[0]) * self.alignment_factor
+                boid.velocity[1] += (avg_vy - boid.velocity[1]) * self.alignment_factor
+                boid.velocity[0] += (avg_x - boid.position[0]) * self.cohesion_factor
+                boid.velocity[1] += (avg_y - boid.position[1]) * self.cohesion_factor
+
+            # Edge avoidance
+            margin = 10
+            turn_factor = 0.5
+
+            if boid.position[0] < margin:
+                boid.velocity[0] += turn_factor
+            if boid.position[0] > self.width - margin:
+                boid.velocity[0] -= turn_factor
+            if boid.position[1] < margin:
+                boid.velocity[1] += turn_factor
+            if boid.position[1] > self.height - margin:
+                boid.velocity[1] -= turn_factor
+
+            boid.limit_speed(self.max_speed)
+
+        # Update positions
+        for boid in self.boids:
+            boid.position += boid.velocity
+
+    def get_order_parameter(self):
+        # Average normalized velocity (measure of alignment)
+        vx_sum = sum(b.velocity[0] for b in self.boids)
+        vy_sum = sum(b.velocity[1] for b in self.boids)
+        speed_sum = sum(np.linalg.norm(b.velocity) for b in self.boids)
+
+        if speed_sum == 0:
+            return 0
+        return np.sqrt(vx_sum**2 + vy_sum**2) / speed_sum
+
+    def get_positions(self):
+        return np.array([b.position for b in self.boids])
+
+    def get_velocities(self):
+        return np.array([b.velocity for b in self.boids])
+
+# Run simulation
+sim = BoidsSimulation(n_boids=150, width=100, height=100)
+order_history = [sim.get_order_parameter()]
+
+# Store snapshots
+snapshots = [sim.get_positions().copy()]
+velocity_snapshots = [sim.get_velocities().copy()]
+
+for i in range(200):
+    sim.step()
+    order_history.append(sim.get_order_parameter())
+    if i in [49, 199]:
+        snapshots.append(sim.get_positions().copy())
+        velocity_snapshots.append(sim.get_velocities().copy())
+
+# Plot results
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Initial state
+pos = snapshots[0]
+vel = velocity_snapshots[0]
+axes[0, 0].quiver(pos[:, 0], pos[:, 1], vel[:, 0], vel[:, 1],
+                  scale=50, alpha=0.6, width=0.003)
+axes[0, 0].set_xlim([0, 100])
+axes[0, 0].set_ylim([0, 100])
+axes[0, 0].set_title('Initial State (t=0)')
+axes[0, 0].set_aspect('equal')
+
+# After 50 steps
+pos = snapshots[1]
+vel = velocity_snapshots[1]
+axes[0, 1].quiver(pos[:, 0], pos[:, 1], vel[:, 0], vel[:, 1],
+                  scale=50, alpha=0.6, width=0.003)
+axes[0, 1].set_xlim([0, 100])
+axes[0, 1].set_ylim([0, 100])
+axes[0, 1].set_title('After 50 Steps')
+axes[0, 1].set_aspect('equal')
+
+# Final state
+pos = snapshots[2]
+vel = velocity_snapshots[2]
+axes[0, 2].quiver(pos[:, 0], pos[:, 1], vel[:, 0], vel[:, 1],
+                  scale=50, alpha=0.6, width=0.003)
+axes[0, 2].set_xlim([0, 100])
+axes[0, 2].set_ylim([0, 100])
+axes[0, 2].set_title('Final State (t=200)')
+axes[0, 2].set_aspect('equal')
+
+# Order parameter over time
+axes[1, 0].plot(order_history, 'b-', linewidth=1)
+axes[1, 0].set_xlabel('Time Step')
+axes[1, 0].set_ylabel('Order Parameter')
+axes[1, 0].set_title('Flock Alignment Over Time')
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_ylim([0, 1])
+
+# Speed distribution
+speeds = [np.linalg.norm(b.velocity) for b in sim.boids]
+axes[1, 1].hist(speeds, bins=20, alpha=0.7, color='green', edgecolor='black')
+axes[1, 1].set_xlabel('Speed')
+axes[1, 1].set_ylabel('Frequency')
+axes[1, 1].set_title('Speed Distribution')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Parameter sensitivity: cohesion
+cohesion_values = [0.001, 0.005, 0.01, 0.02]
+final_orders = []
+
+for coh in cohesion_values:
+    test_sim = BoidsSimulation(n_boids=100)
+    test_sim.cohesion_factor = coh
+    for _ in range(100):
+        test_sim.step()
+    final_orders.append(test_sim.get_order_parameter())
+
+axes[1, 2].bar(range(len(cohesion_values)), final_orders, color='purple', alpha=0.7)
+axes[1, 2].set_xticks(range(len(cohesion_values)))
+axes[1, 2].set_xticklabels([f'{c:.3f}' for c in cohesion_values])
+axes[1, 2].set_xlabel('Cohesion Factor')
+axes[1, 2].set_ylabel('Final Order Parameter')
+axes[1, 2].set_title('Effect of Cohesion on Alignment')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('boids_flocking.pdf',
+          'Boids flocking simulation showing emergent collective behavior.')
+
+boids_initial_order = order_history[0]
+boids_final_order = order_history[-1]
+\end{pycode}
+
+\section{Conway's Game of Life}
+\begin{pycode}
+def game_of_life_step(grid):
+    # Count neighbors using convolution
+    kernel = np.array([[1, 1, 1],
+                       [1, 0, 1],
+                       [1, 1, 1]])
+
+    neighbors = ndimage.convolve(grid, kernel, mode='wrap')
+
+    # Apply rules
+    new_grid = np.zeros_like(grid)
+    new_grid[(grid == 1) & ((neighbors == 2) | (neighbors == 3))] = 1  # Survive
+    new_grid[(grid == 0) & (neighbors == 3)] = 1  # Birth
+
+    return new_grid
+
+# Initialize with random pattern
+size = 100
+grid = np.random.randint(0, 2, (size, size))
+
+# Run simulation
+history = [grid.copy()]
+population_history = [np.sum(grid)]
+
+for _ in range(200):
+    grid = game_of_life_step(grid)
+    history.append(grid.copy())
+    population_history.append(np.sum(grid))
+
+# Create classic patterns
+def create_glider(grid, x, y):
+    pattern = [[0, 1, 0],
+               [0, 0, 1],
+               [1, 1, 1]]
+    for i, row in enumerate(pattern):
+        for j, val in enumerate(row):
+            grid[(x+i) % grid.shape[0], (y+j) % grid.shape[1]] = val
+
+def create_blinker(grid, x, y):
+    grid[x:x+3, y] = 1
+
+# Plot results
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Initial state
+axes[0, 0].imshow(history[0], cmap='binary', interpolation='nearest')
+axes[0, 0].set_title('Initial Configuration')
+axes[0, 0].axis('off')
+
+# After 50 steps
+axes[0, 1].imshow(history[50], cmap='binary', interpolation='nearest')
+axes[0, 1].set_title('After 50 Generations')
+axes[0, 1].axis('off')
+
+# After 200 steps
+axes[0, 2].imshow(history[200], cmap='binary', interpolation='nearest')
+axes[0, 2].set_title('After 200 Generations')
+axes[0, 2].axis('off')
+
+# Population over time
+axes[1, 0].plot(population_history, 'b-', linewidth=0.5)
+axes[1, 0].set_xlabel('Generation')
+axes[1, 0].set_ylabel('Living Cells')
+axes[1, 0].set_title('Population Dynamics')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Show glider pattern evolution
+glider_grid = np.zeros((20, 20), dtype=int)
+create_glider(glider_grid, 5, 5)
+
+glider_states = [glider_grid.copy()]
+for _ in range(4):
+    glider_grid = game_of_life_step(glider_grid)
+    glider_states.append(glider_grid.copy())
+
+# Display glider evolution
+glider_combined = np.hstack(glider_states)
+axes[1, 1].imshow(glider_combined, cmap='binary', interpolation='nearest')
+axes[1, 1].set_title('Glider Pattern (5 generations)')
+axes[1, 1].axis('off')
+
+# Density vs final population
+densities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+final_populations = []
+
+for density in densities:
+    test_grid = (np.random.random((50, 50)) < density).astype(int)
+    for _ in range(100):
+        test_grid = game_of_life_step(test_grid)
+    final_populations.append(np.sum(test_grid) / (50*50))
+
+axes[1, 2].plot(densities, final_populations, 'go-', linewidth=1.5, markersize=8)
+axes[1, 2].set_xlabel('Initial Density')
+axes[1, 2].set_ylabel('Final Density')
+axes[1, 2].set_title('Effect of Initial Density')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('game_of_life.pdf',
+          "Conway's Game of Life demonstrating cellular automata dynamics.")
+
+gol_initial_pop = population_history[0]
+gol_final_pop = population_history[-1]
+\end{pycode}
+
+\section{Forest Fire Model}
+\begin{pycode}
+def forest_fire_step(grid, p_grow=0.01, p_lightning=0.0001):
+    """
+    States: 0=empty, 1=tree, 2=burning
+    """
+    new_grid = grid.copy()
+
+    # Find burning neighbors
+    burning_kernel = np.array([[1, 1, 1],
+                               [1, 0, 1],
+                               [1, 1, 1]])
+
+    has_burning_neighbor = ndimage.convolve((grid == 2).astype(int),
+                                            burning_kernel, mode='wrap') > 0
+
+    # Trees next to fire catch fire
+    new_grid[(grid == 1) & has_burning_neighbor] = 2
+
+    # Burning trees become empty
+    new_grid[grid == 2] = 0
+
+    # Lightning strikes (random fire)
+    lightning = (np.random.random(grid.shape) < p_lightning) & (grid == 1)
+    new_grid[lightning] = 2
+
+    # Empty cells grow trees
+    growth = (np.random.random(grid.shape) < p_grow) & (grid == 0)
+    new_grid[growth] = 1
+
+    return new_grid
+
+# Initialize forest
+size = 100
+forest = np.zeros((size, size), dtype=int)
+forest[np.random.random((size, size)) < 0.6] = 1  # 60% trees
+
+# Run simulation
+forest_history = [forest.copy()]
+tree_count = [np.sum(forest == 1)]
+fire_count = [np.sum(forest == 2)]
+
+for _ in range(500):
+    forest = forest_fire_step(forest, p_grow=0.02, p_lightning=0.0001)
+    forest_history.append(forest.copy())
+    tree_count.append(np.sum(forest == 1))
+    fire_count.append(np.sum(forest == 2))
+
+# Plot results
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Custom colormap: empty=tan, tree=green, fire=red
+forest_cmap = ListedColormap(['tan', 'forestgreen', 'red'])
+
+# Initial state
+axes[0, 0].imshow(forest_history[0], cmap=forest_cmap, interpolation='nearest')
+axes[0, 0].set_title('Initial Forest')
+axes[0, 0].axis('off')
+
+# Mid simulation
+mid_idx = 250
+axes[0, 1].imshow(forest_history[mid_idx], cmap=forest_cmap, interpolation='nearest')
+axes[0, 1].set_title(f't = {mid_idx}')
+axes[0, 1].axis('off')
+
+# Final state
+axes[0, 2].imshow(forest_history[-1], cmap=forest_cmap, interpolation='nearest')
+axes[0, 2].set_title('Final State')
+axes[0, 2].axis('off')
+
+# Tree population over time
+axes[1, 0].plot(tree_count, 'g-', linewidth=0.5, label='Trees')
+axes[1, 0].set_xlabel('Time Step')
+axes[1, 0].set_ylabel('Cell Count')
+axes[1, 0].set_title('Tree Population Dynamics')
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].legend()
+
+# Fire events
+axes[1, 1].plot(fire_count, 'r-', linewidth=0.5)
+axes[1, 1].set_xlabel('Time Step')
+axes[1, 1].set_ylabel('Burning Cells')
+axes[1, 1].set_title('Fire Activity')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Growth rate sensitivity
+growth_rates = [0.005, 0.01, 0.02, 0.05]
+avg_densities = []
+
+for p_grow in growth_rates:
+    test_forest = np.zeros((50, 50), dtype=int)
+    test_forest[np.random.random((50, 50)) < 0.5] = 1
+
+    densities = []
+    for _ in range(300):
+        test_forest = forest_fire_step(test_forest, p_grow=p_grow)
+        densities.append(np.sum(test_forest == 1) / (50*50))
+
+    avg_densities.append(np.mean(densities[-100:]))
+
+axes[1, 2].bar(range(len(growth_rates)), avg_densities, color='forestgreen', alpha=0.7)
+axes[1, 2].set_xticks(range(len(growth_rates)))
+axes[1, 2].set_xticklabels([f'{g:.3f}' for g in growth_rates])
+axes[1, 2].set_xlabel('Growth Probability')
+axes[1, 2].set_ylabel('Equilibrium Density')
+axes[1, 2].set_title('Effect of Growth Rate')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('forest_fire.pdf',
+          'Forest fire model showing self-organized criticality.')
+
+forest_initial = tree_count[0]
+forest_final = tree_count[-1]
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Schelling Model Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Schelling Segregation Model Results}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Metric & Value \\')
+print(r'\midrule')
+print(f'Initial Segregation Index & {schelling_initial:.3f} \\\\')
+print(f'Final Segregation Index & {schelling_final:.3f} \\\\')
+print(f'Steps to Equilibrium & {schelling_steps} \\\\')
+print(f'Similarity Threshold & {0.35} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Boids Flocking Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Boids Flocking Simulation Results}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Metric & Value \\')
+print(r'\midrule')
+print(f'Initial Order Parameter & {boids_initial_order:.3f} \\\\')
+print(f'Final Order Parameter & {boids_final_order:.3f} \\\\')
+print(f'Number of Boids & 150 \\\\')
+print(f'Visual Range & 15 units \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Cellular Automata Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Cellular Automata Simulation Results}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Model & Initial Population & Final Population \\')
+print(r'\midrule')
+print(f"Game of Life & {gol_initial_pop} & {gol_final_pop} \\\\")
+print(f"Forest Fire & {forest_initial} & {forest_final} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+Key simulation metrics:
+\begin{itemize}
+    \item Schelling segregation increase: \py{f"{(schelling_final - schelling_initial)*100:.1f}"}\% points
+    \item Boids alignment improvement: \py{f"{(boids_final_order - boids_initial_order)*100:.1f}"}\%
+    \item Game of Life population change: \py{f"{(gol_final_pop - gol_initial_pop) / gol_initial_pop * 100:.1f}"}\%
+    \item Forest equilibrium density: \py{f"{forest_final / (100*100) * 100:.1f}"}\%
+\end{itemize}
+
+\section{Conclusion}
+This computational analysis demonstrates how simple local rules lead to complex emergent behavior
+in agent-based models. The Schelling model shows that even mild individual preferences (35\%
+similarity threshold) produce stark spatial segregation. The Boids algorithm demonstrates that
+flocking behavior emerges from three simple rules without central coordination. Cellular automata
+like the Game of Life and forest fire model exhibit self-organization and critical dynamics.
+These models provide insights into social dynamics, collective behavior, and complex systems
+in nature and society.
+
+\end{document}

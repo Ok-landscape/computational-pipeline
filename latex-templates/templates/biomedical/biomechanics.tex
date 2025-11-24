@@ -1,0 +1,235 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Biomechanics\\Tissue Mechanics and Viscoelasticity}
+\author{Biomedical Engineering Department}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of biological tissue mechanics including stress-strain relationships, viscoelasticity, and bone mechanics.
+\end{abstract}
+
+
+\section{Introduction}
+
+Biomechanics applies mechanical principles to biological systems.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+\end{pycode}
+
+\section{Stress-Strain Curves}
+
+\begin{pycode}
+strain = np.linspace(0, 0.3, 100)
+
+# Different tissue types
+bone_stress = 20e9 * strain * (strain < 0.02) + (20e9 * 0.02) * (strain >= 0.02)
+tendon_stress = 1.5e9 * strain**1.5
+skin_stress = 1e6 * (np.exp(10*strain) - 1)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(strain * 100, bone_stress / 1e6, label='Bone', linewidth=1.5)
+ax.plot(strain * 100, tendon_stress / 1e6, label='Tendon', linewidth=1.5)
+ax.plot(strain * 100, skin_stress / 1e6, label='Skin', linewidth=1.5)
+ax.set_xlabel('Strain (\\%)')
+ax.set_ylabel('Stress (MPa)')
+ax.set_title('Stress-Strain Curves for Biological Tissues')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim([0, 30])
+ax.set_ylim([0, 500])
+plt.tight_layout()
+plt.savefig('tissue_stress_strain.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{tissue_stress_strain.pdf}
+\caption{Stress-strain behavior of different tissues.}
+\end{figure}
+
+\section{Viscoelastic Models}
+
+Standard Linear Solid: $\sigma + \tau_\sigma \dot{\sigma} = E_R \epsilon + \tau_\epsilon E_R \dot{\epsilon}$
+
+\begin{pycode}
+# Stress relaxation
+t = np.linspace(0, 10, 100)
+E_0 = 10  # Initial modulus
+E_inf = 2  # Equilibrium modulus
+tau = 2   # Relaxation time
+
+G_t = E_inf + (E_0 - E_inf) * np.exp(-t/tau)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(t, G_t, 'b-', linewidth=2)
+ax.axhline(y=E_inf, color='r', linestyle='--', label='$E_\\infty$')
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Relaxation Modulus (MPa)')
+ax.set_title('Stress Relaxation')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('stress_relaxation.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{stress_relaxation.pdf}
+\caption{Viscoelastic stress relaxation.}
+\end{figure}
+
+\section{Creep Response}
+
+\begin{pycode}
+J_0 = 0.1  # Initial compliance
+J_inf = 0.5  # Equilibrium compliance
+
+J_t = J_inf - (J_inf - J_0) * np.exp(-t/tau)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(t, J_t, 'b-', linewidth=2)
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Creep Compliance (1/MPa)')
+ax.set_title('Creep Response')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('creep_response.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{creep_response.pdf}
+\caption{Viscoelastic creep compliance.}
+\end{figure}
+
+\section{Dynamic Modulus}
+
+\begin{pycode}
+omega = np.logspace(-2, 2, 100)
+
+# Storage and loss moduli
+E_storage = E_inf + (E_0 - E_inf) * (omega * tau)**2 / (1 + (omega * tau)**2)
+E_loss = (E_0 - E_inf) * omega * tau / (1 + (omega * tau)**2)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(omega, E_storage, 'b-', linewidth=2, label="$E'$ (Storage)")
+ax.loglog(omega, E_loss, 'r-', linewidth=2, label="$E''$ (Loss)")
+ax.set_xlabel('Frequency (rad/s)')
+ax.set_ylabel('Modulus (MPa)')
+ax.set_title('Dynamic Mechanical Properties')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('dynamic_modulus.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{dynamic_modulus.pdf}
+\caption{Storage and loss moduli vs frequency.}
+\end{figure}
+
+\section{Bone Remodeling}
+
+\begin{pycode}
+# Wolff's law simulation
+rho_0 = 1500  # Initial density
+stimulus = np.linspace(0, 2, 100)  # Mechanical stimulus
+
+# Remodeling response
+drho_dt = 0.1 * (stimulus - 1) * rho_0
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(stimulus, drho_dt, 'b-', linewidth=2)
+ax.axhline(y=0, color='k', linewidth=0.5)
+ax.axvline(x=1, color='r', linestyle='--', label='Equilibrium')
+ax.set_xlabel('Mechanical Stimulus (normalized)')
+ax.set_ylabel('Remodeling Rate')
+ax.set_title("Bone Remodeling (Wolff's Law)")
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('bone_remodeling.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{bone_remodeling.pdf}
+\caption{Bone remodeling rate vs mechanical stimulus.}
+\end{figure}
+
+\section{Hyperelastic Model}
+
+\begin{pycode}
+# Neo-Hookean model
+lambda_stretch = np.linspace(1, 2, 100)
+mu = 0.5  # Shear modulus (MPa)
+
+# Cauchy stress
+sigma_nh = mu * (lambda_stretch - 1/lambda_stretch**2)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(lambda_stretch, sigma_nh, 'b-', linewidth=2)
+ax.set_xlabel('Stretch Ratio $\\lambda$')
+ax.set_ylabel('Cauchy Stress (MPa)')
+ax.set_title('Neo-Hookean Hyperelastic Model')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('hyperelastic.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{hyperelastic.pdf}
+\caption{Neo-Hookean stress-stretch relationship.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Tissue Mechanical Properties}')
+print(r'\begin{tabular}{@{}lcc@{}}')
+print(r'\toprule')
+print(r'Tissue & Elastic Modulus & Ultimate Stress \\')
+print(r'\midrule')
+print(r'Cortical Bone & 15-20 GPa & 100-150 MPa \\')
+print(r'Tendon & 1-2 GPa & 50-100 MPa \\')
+print(r'Articular Cartilage & 1-10 MPa & 10-40 MPa \\')
+print(r'Skin & 0.1-1 MPa & 2-20 MPa \\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Biological tissues exhibit complex nonlinear and time-dependent mechanical behavior.
+
+
+\end{document}

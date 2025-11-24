@@ -1,0 +1,632 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+
+\title{Navier-Stokes Equations: Viscous Flow Analysis\\and Boundary Layer Theory}
+\author{Fluid Mechanics Research Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents analytical and computational solutions to the Navier-Stokes equations for canonical viscous flow problems. We analyze Couette flow, Poiseuille flow, and boundary layer development using Python-based numerical methods. Results include velocity profiles, shear stress distributions, and Reynolds number effects on flow characteristics.
+\end{abstract}
+
+\section{Introduction}
+
+The Navier-Stokes equations govern the motion of viscous fluids and form the foundation of fluid mechanics:
+\begin{equation}
+\rho\left(\frac{\partial \mathbf{u}}{\partial t} + \mathbf{u} \cdot \nabla \mathbf{u}\right) = -\nabla p + \mu \nabla^2 \mathbf{u} + \rho \mathbf{g}
+\end{equation}
+
+\begin{definition}[Reynolds Number]
+The Reynolds number characterizes the ratio of inertial to viscous forces:
+\begin{equation}
+Re = \frac{\rho U L}{\mu} = \frac{U L}{\nu}
+\end{equation}
+\end{definition}
+
+\section{Computational Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint, solve_bvp
+from scipy.special import erfc
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=9)
+np.random.seed(42)
+
+# Fluid properties (water at 20C)
+rho = 998.0  # kg/m^3
+mu = 1.002e-3  # Pa.s
+nu = mu / rho  # m^2/s
+
+# Geometric parameters
+H = 0.01  # Channel height (m)
+L = 0.1   # Channel length (m)
+\end{pycode}
+
+\noindent\textbf{Fluid Properties (Water at 20$^\circ$C):}
+\begin{itemize}
+    \item Density: $\rho = \py{rho}$ kg/m$^3$
+    \item Dynamic Viscosity: $\mu = \py{f"{mu*1000:.3f}"}$ mPa$\cdot$s
+    \item Kinematic Viscosity: $\nu = \py{f"{nu*1e6:.3f}"}$ mm$^2$/s
+\end{itemize}
+
+\section{Couette Flow Analysis}
+
+Couette flow occurs between two parallel plates where one plate moves relative to the other.
+
+\begin{pycode}
+# Couette flow: upper plate moving at U_wall
+U_wall = 0.1  # m/s
+y = np.linspace(0, H, 100)
+
+# Velocity profile (linear)
+u_couette = U_wall * y / H
+
+# With pressure gradient (generalized Couette)
+dpdx_values = [-1000, 0, 1000]  # Pa/m
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+for dpdx in dpdx_values:
+    u_gen = U_wall * y/H - (1/(2*mu)) * dpdx * y * (H - y)
+    label = f'dp/dx = {dpdx} Pa/m'
+    axes[0, 0].plot(u_gen*1000, y*1000, linewidth=1.5, label=label)
+
+axes[0, 0].set_xlabel('Velocity (mm/s)')
+axes[0, 0].set_ylabel('y (mm)')
+axes[0, 0].set_title('Generalized Couette Flow')
+axes[0, 0].legend(loc='upper left', fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Shear stress distribution
+tau_couette = mu * U_wall / H
+y_stress = np.linspace(0, H, 100)
+tau_wall = mu * U_wall / H * np.ones_like(y_stress)
+
+# With pressure gradient
+for dpdx in dpdx_values:
+    du_dy = U_wall/H - (1/(2*mu)) * dpdx * (H - 2*y_stress)
+    tau = mu * du_dy
+    axes[0, 1].plot(tau, y_stress*1000, linewidth=1.5)
+
+axes[0, 1].set_xlabel('Shear Stress (Pa)')
+axes[0, 1].set_ylabel('y (mm)')
+axes[0, 1].set_title('Shear Stress Distribution')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Time-dependent startup (Stokes first problem)
+t_values = [0.01, 0.05, 0.1, 0.5, 1.0]
+y_stokes = np.linspace(0, 5*H, 200)
+
+for t in t_values:
+    eta = y_stokes / (2 * np.sqrt(nu * t))
+    u_stokes = U_wall * erfc(eta)
+    axes[1, 0].plot(u_stokes*1000, y_stokes*1000, linewidth=1.5,
+                    label=f't = {t} s')
+
+axes[1, 0].set_xlabel('Velocity (mm/s)')
+axes[1, 0].set_ylabel('y (mm)')
+axes[1, 0].set_title("Stokes' First Problem (Impulsive Start)")
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Boundary layer thickness vs time
+t_range = np.linspace(0.001, 2, 100)
+delta_99 = 3.6 * np.sqrt(nu * t_range)
+
+axes[1, 1].plot(t_range, delta_99*1000, 'b-', linewidth=1.5)
+axes[1, 1].set_xlabel('Time (s)')
+axes[1, 1].set_ylabel('$\\delta_{99}$ (mm)')
+axes[1, 1].set_title('Boundary Layer Growth')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('navier_stokes_plot1.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+
+# Calculate key parameters
+Re_couette = rho * U_wall * H / mu
+tau_wall_couette = mu * U_wall / H
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{navier_stokes_plot1.pdf}
+\caption{Couette flow analysis: velocity profiles, shear stress, and transient development.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Couette Flow Parameters}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Wall Velocity & \py{f"{U_wall*1000:.1f}"} & mm/s \\
+Channel Height & \py{f"{H*1000:.1f}"} & mm \\
+Reynolds Number & \py{f"{Re_couette:.2f}"} & -- \\
+Wall Shear Stress & \py{f"{tau_wall_couette:.4f}"} & Pa \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Poiseuille Flow (Pressure-Driven)}
+
+\begin{theorem}[Hagen-Poiseuille Equation]
+For laminar flow in a circular pipe, the volumetric flow rate is:
+\begin{equation}
+Q = \frac{\pi R^4}{8\mu}\left(-\frac{dp}{dx}\right)
+\end{equation}
+\end{theorem}
+
+\begin{pycode}
+# Channel Poiseuille flow
+dpdx = -1000  # Pa/m (negative for flow in +x direction)
+
+# Velocity profile
+u_max = -(dpdx * H**2) / (8 * mu)
+u_poiseuille = -(1/(2*mu)) * dpdx * y * (H - y)
+u_avg = (2/3) * u_max
+
+# Pipe flow
+R_pipe = H/2
+r = np.linspace(-R_pipe, R_pipe, 100)
+u_pipe = -(1/(4*mu)) * dpdx * (R_pipe**2 - r**2)
+u_max_pipe = -(dpdx * R_pipe**2) / (4 * mu)
+
+# Flow rate calculations
+Q_channel = (H**3 * (-dpdx)) / (12 * mu)  # per unit width
+Q_pipe = (np.pi * R_pipe**4 * (-dpdx)) / (8 * mu)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Channel velocity profile
+axes[0, 0].plot(u_poiseuille*1000, y*1000, 'b-', linewidth=1.5, label='Velocity')
+axes[0, 0].axhline(y=H*1000/2, color='r', linestyle='--', alpha=0.7)
+axes[0, 0].axvline(x=u_max*1000, color='g', linestyle=':', alpha=0.7, label='$u_{max}$')
+axes[0, 0].set_xlabel('Velocity (mm/s)')
+axes[0, 0].set_ylabel('y (mm)')
+axes[0, 0].set_title('Channel Poiseuille Flow')
+axes[0, 0].legend(loc='upper right', fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Pipe velocity profile
+axes[0, 1].plot(u_pipe*1000, r*1000, 'b-', linewidth=1.5)
+axes[0, 1].axhline(y=0, color='r', linestyle='--', alpha=0.7)
+axes[0, 1].set_xlabel('Velocity (mm/s)')
+axes[0, 1].set_ylabel('r (mm)')
+axes[0, 1].set_title('Pipe Poiseuille Flow')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Entrance length development
+Re_pipe = rho * (u_avg * 2) * (2*R_pipe) / mu
+Le_laminar = 0.06 * Re_pipe * (2*R_pipe)
+
+x_entrance = np.linspace(0, Le_laminar*1.5, 100)
+# Developing velocity profiles at different x locations
+x_positions = [0.1*Le_laminar, 0.3*Le_laminar, 0.6*Le_laminar, Le_laminar]
+r_dev = np.linspace(0, R_pipe, 50)
+
+for i, x_pos in enumerate(x_positions):
+    # Approximate developing profile
+    alpha = min(1, x_pos/Le_laminar)
+    u_dev = u_avg * (1 + alpha * (2*(1-(r_dev/R_pipe)**2) - 1))
+    axes[1, 0].plot(u_dev*1000, r_dev*1000, linewidth=1.5,
+                    label=f'x/Le = {x_pos/Le_laminar:.1f}')
+
+axes[1, 0].set_xlabel('Velocity (mm/s)')
+axes[1, 0].set_ylabel('r (mm)')
+axes[1, 0].set_title('Developing Flow in Entrance Region')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Reynolds number effect on velocity profile shape
+Re_values = [100, 500, 1000, 2000]
+for Re in Re_values:
+    U_Re = Re * nu / (2*R_pipe)
+    dpdx_Re = -8 * mu * U_Re / R_pipe**2
+    u_Re = -(1/(4*mu)) * dpdx_Re * (R_pipe**2 - r**2)
+    axes[1, 1].plot(u_Re/U_Re, r/R_pipe, linewidth=1.5, label=f'Re = {Re}')
+
+axes[1, 1].set_xlabel('$u/U_{avg}$')
+axes[1, 1].set_ylabel('$r/R$')
+axes[1, 1].set_title('Normalized Velocity Profiles')
+axes[1, 1].legend(loc='upper right', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('navier_stokes_plot2.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{navier_stokes_plot2.pdf}
+\caption{Poiseuille flow analysis: velocity profiles and entrance region development.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Poiseuille Flow Results}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Maximum Velocity & \py{f"{u_max*1000:.2f}"} & mm/s \\
+Average Velocity & \py{f"{u_avg*1000:.2f}"} & mm/s \\
+Flow Rate (channel) & \py{f"{Q_channel*1e6:.3f}"} & mm$^2$/s \\
+Reynolds Number & \py{f"{Re_pipe:.1f}"} & -- \\
+Entrance Length & \py{f"{Le_laminar*1000:.1f}"} & mm \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Boundary Layer Analysis}
+
+\begin{pycode}
+# Blasius boundary layer solution
+# f''' + 0.5*f*f'' = 0 with f(0)=f'(0)=0, f'(inf)=1
+
+def blasius_ode(eta, f):
+    return [f[1], f[2], -0.5*f[0]*f[2]]
+
+# Shooting method to find correct f''(0)
+from scipy.optimize import brentq
+
+def shoot_blasius(f2_0):
+    eta_span = [0, 10]
+    eta_eval = np.linspace(0, 10, 500)
+    f0 = [0, 0, f2_0]
+    sol = odeint(blasius_ode, f0, eta_eval)
+    return sol[-1, 1] - 1  # f'(inf) should be 1
+
+# Use bisection to find correct f''(0)
+f2_0_correct = brentq(shoot_blasius, 0.1, 0.5)
+
+# Solve with correct initial condition
+eta = np.linspace(0, 8, 500)
+f0 = [0, 0, f2_0_correct]
+sol = odeint(blasius_ode, f0, eta)
+
+f = sol[:, 0]
+f_prime = sol[:, 1]  # u/U_inf
+f_double_prime = sol[:, 2]
+
+# Boundary layer parameters
+U_inf = 1.0  # Free stream velocity (m/s)
+x_values = np.array([0.01, 0.05, 0.1, 0.2, 0.5])
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Blasius velocity profile
+axes[0, 0].plot(f_prime, eta, 'b-', linewidth=1.5)
+axes[0, 0].axhline(y=5.0, color='r', linestyle='--', alpha=0.7, label='$\\eta = 5$')
+axes[0, 0].axvline(x=0.99, color='g', linestyle=':', alpha=0.7, label='$u/U_\\infty = 0.99$')
+axes[0, 0].set_xlabel('$u/U_\\infty$')
+axes[0, 0].set_ylabel('$\\eta = y\\sqrt{U_\\infty/\\nu x}$')
+axes[0, 0].set_title('Blasius Velocity Profile')
+axes[0, 0].legend(loc='lower right', fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Boundary layer thickness along plate
+Re_x = U_inf * x_values / nu
+delta = 5.0 * x_values / np.sqrt(Re_x)
+delta_star = 1.72 * x_values / np.sqrt(Re_x)
+theta = 0.664 * x_values / np.sqrt(Re_x)
+
+axes[0, 1].plot(x_values*1000, delta*1000, 'b-', linewidth=1.5, label='$\\delta$')
+axes[0, 1].plot(x_values*1000, delta_star*1000, 'r--', linewidth=1.5, label='$\\delta^*$')
+axes[0, 1].plot(x_values*1000, theta*1000, 'g:', linewidth=1.5, label='$\\theta$')
+axes[0, 1].set_xlabel('x (mm)')
+axes[0, 1].set_ylabel('Thickness (mm)')
+axes[0, 1].set_title('Boundary Layer Thickness Growth')
+axes[0, 1].legend(loc='upper left', fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Skin friction coefficient
+Cf = 0.664 / np.sqrt(Re_x)
+axes[1, 0].loglog(Re_x, Cf, 'b-', linewidth=1.5, label='Laminar (Blasius)')
+# Turbulent comparison
+Re_x_turb = np.logspace(5, 7, 100)
+Cf_turb = 0.027 / Re_x_turb**(1/7)
+axes[1, 0].loglog(Re_x_turb, Cf_turb, 'r--', linewidth=1.5, label='Turbulent')
+axes[1, 0].set_xlabel('$Re_x$')
+axes[1, 0].set_ylabel('$C_f$')
+axes[1, 0].set_title('Skin Friction Coefficient')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, which='both', alpha=0.3)
+
+# Wall shear stress
+tau_w = 0.332 * rho * U_inf**2 / np.sqrt(Re_x)
+axes[1, 1].plot(x_values*1000, tau_w, 'b-', linewidth=1.5, marker='o')
+axes[1, 1].set_xlabel('x (mm)')
+axes[1, 1].set_ylabel('$\\tau_w$ (Pa)')
+axes[1, 1].set_title('Wall Shear Stress Distribution')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('navier_stokes_plot3.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+
+# Calculate shape factor
+H_factor = delta_star / theta
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{navier_stokes_plot3.pdf}
+\caption{Blasius boundary layer solution: velocity profile, thickness growth, and skin friction.}
+\end{figure}
+
+\section{Reynolds Number Effects}
+
+\begin{pycode}
+# Reynolds number effects on flow characteristics
+Re_range = np.logspace(0, 4, 100)
+
+# Critical Reynolds numbers
+Re_crit_pipe = 2300
+Re_crit_plate = 5e5
+
+# Friction factor for pipe flow
+def friction_factor(Re):
+    if Re < 2300:
+        return 64 / Re
+    else:
+        return 0.316 / Re**0.25
+
+f_factor = np.array([friction_factor(Re) for Re in Re_range])
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Friction factor vs Re
+axes[0, 0].loglog(Re_range, f_factor, 'b-', linewidth=1.5)
+axes[0, 0].axvline(x=Re_crit_pipe, color='r', linestyle='--', alpha=0.7, label='Transition')
+axes[0, 0].set_xlabel('Re')
+axes[0, 0].set_ylabel('Friction Factor $f$')
+axes[0, 0].set_title('Moody Diagram (Smooth Pipe)')
+axes[0, 0].legend(loc='upper right', fontsize=8)
+axes[0, 0].grid(True, which='both', alpha=0.3)
+
+# Velocity profiles at different Re
+y_norm = np.linspace(0, 1, 100)
+for Re in [100, 1000, 5000]:
+    if Re < 2300:
+        u_norm = 1.5 * (1 - (2*y_norm - 1)**2)
+    else:
+        n = 7
+        u_norm = (y_norm)**(1/n)
+    axes[0, 1].plot(u_norm, y_norm, linewidth=1.5, label=f'Re = {Re}')
+
+axes[0, 1].set_xlabel('$u/u_{max}$')
+axes[0, 1].set_ylabel('$y/H$')
+axes[0, 1].set_title('Velocity Profile Shape vs Re')
+axes[0, 1].legend(loc='lower right', fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Pressure drop vs flow rate
+Q_range = np.linspace(1e-6, 1e-4, 100)
+D_pipe = 0.01
+L_pipe = 1.0
+
+def pressure_drop(Q, D, L_p):
+    A = np.pi * D**2 / 4
+    V = Q / A
+    Re = rho * V * D / mu
+    f = friction_factor(Re)
+    return f * (L_p/D) * (rho * V**2 / 2)
+
+dp_range = np.array([pressure_drop(Q, D_pipe, L_pipe) for Q in Q_range])
+
+axes[1, 0].plot(Q_range*1e6, dp_range/1000, 'b-', linewidth=1.5)
+axes[1, 0].set_xlabel('Flow Rate (mL/s)')
+axes[1, 0].set_ylabel('Pressure Drop (kPa)')
+axes[1, 0].set_title('Pressure Drop vs Flow Rate')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Entrance length
+Re_entrance = np.logspace(1, 4, 100)
+Le_lam = 0.06 * Re_entrance * D_pipe
+Le_turb = 4.4 * Re_entrance**(1/6) * D_pipe
+
+axes[1, 1].loglog(Re_entrance, Le_lam*1000, 'b-', linewidth=1.5, label='Laminar')
+axes[1, 1].loglog(Re_entrance[Re_entrance>2300], Le_turb[Re_entrance>2300]*1000,
+                  'r--', linewidth=1.5, label='Turbulent')
+axes[1, 1].axvline(x=2300, color='g', linestyle=':', alpha=0.7)
+axes[1, 1].set_xlabel('Re')
+axes[1, 1].set_ylabel('Entrance Length (mm)')
+axes[1, 1].set_title('Entrance Length vs Reynolds Number')
+axes[1, 1].legend(loc='upper left', fontsize=8)
+axes[1, 1].grid(True, which='both', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('navier_stokes_plot4.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{navier_stokes_plot4.pdf}
+\caption{Reynolds number effects on flow characteristics.}
+\end{figure}
+
+\section{Vorticity and Stream Function}
+
+\begin{pycode}
+# 2D flow visualization using stream function
+N = 50
+x_grid = np.linspace(0, L, N)
+y_grid = np.linspace(0, H, N)
+X, Y = np.meshgrid(x_grid, y_grid)
+
+# Analytical solution for Stokes flow in cavity (first mode)
+psi = np.sin(np.pi * X / L) * np.sinh(np.pi * Y / L)
+
+# Velocity components
+u_field = np.pi/L * np.sin(np.pi * X / L) * np.cosh(np.pi * Y / L)
+v_field = -np.pi/L * np.cos(np.pi * X / L) * np.sinh(np.pi * Y / L)
+
+# Vorticity
+omega_field = np.gradient(v_field, x_grid, axis=1) - np.gradient(u_field, y_grid, axis=0)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Stream function contours
+cs1 = axes[0, 0].contour(X*1000, Y*1000, psi, levels=20, cmap='coolwarm')
+axes[0, 0].set_xlabel('x (mm)')
+axes[0, 0].set_ylabel('y (mm)')
+axes[0, 0].set_title('Stream Function $\\psi$')
+axes[0, 0].set_aspect('equal')
+plt.colorbar(cs1, ax=axes[0, 0])
+
+# Velocity magnitude
+vel_mag = np.sqrt(u_field**2 + v_field**2)
+cs2 = axes[0, 1].contourf(X*1000, Y*1000, vel_mag, levels=20, cmap='viridis')
+axes[0, 1].set_xlabel('x (mm)')
+axes[0, 1].set_ylabel('y (mm)')
+axes[0, 1].set_title('Velocity Magnitude')
+axes[0, 1].set_aspect('equal')
+plt.colorbar(cs2, ax=axes[0, 1])
+
+# Vorticity field
+cs3 = axes[1, 0].contourf(X*1000, Y*1000, omega_field, levels=20, cmap='RdBu_r')
+axes[1, 0].set_xlabel('x (mm)')
+axes[1, 0].set_ylabel('y (mm)')
+axes[1, 0].set_title('Vorticity $\\omega$')
+axes[1, 0].set_aspect('equal')
+plt.colorbar(cs3, ax=axes[1, 0])
+
+# Velocity vectors
+skip = 3
+axes[1, 1].quiver(X[::skip, ::skip]*1000, Y[::skip, ::skip]*1000,
+                   u_field[::skip, ::skip], v_field[::skip, ::skip],
+                   scale=50, alpha=0.7)
+axes[1, 1].set_xlabel('x (mm)')
+axes[1, 1].set_ylabel('y (mm)')
+axes[1, 1].set_title('Velocity Vectors')
+axes[1, 1].set_aspect('equal')
+
+plt.tight_layout()
+plt.savefig('navier_stokes_plot5.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{navier_stokes_plot5.pdf}
+\caption{Flow field visualization: stream function, velocity magnitude, vorticity, and vectors.}
+\end{figure}
+
+\section{Oscillatory Flow (Stokes' Second Problem)}
+
+\begin{pycode}
+# Oscillating plate problem
+omega_osc = 2 * np.pi
+delta_stokes = np.sqrt(2 * nu / omega_osc)
+
+y_osc = np.linspace(0, 10*delta_stokes, 200)
+t_osc_values = np.linspace(0, 2*np.pi/omega_osc, 8)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Velocity profiles at different phases
+for i, t in enumerate(t_osc_values[:-1]):
+    phase = omega_osc * t
+    u_osc = U_wall * np.exp(-y_osc/delta_stokes) * np.cos(phase - y_osc/delta_stokes)
+    axes[0, 0].plot(u_osc*1000, y_osc/delta_stokes, linewidth=1,
+                    label=f'$\\omega t$ = {np.rad2deg(phase):.0f}')
+
+axes[0, 0].axvline(x=0, color='gray', linestyle='-', alpha=0.3)
+axes[0, 0].set_xlabel('Velocity (mm/s)')
+axes[0, 0].set_ylabel('$y/\\delta_s$')
+axes[0, 0].set_title("Stokes' Second Problem")
+axes[0, 0].legend(loc='upper right', fontsize=7)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Amplitude decay
+amplitude = U_wall * np.exp(-y_osc/delta_stokes)
+axes[0, 1].plot(amplitude*1000, y_osc/delta_stokes, 'b-', linewidth=1.5)
+axes[0, 1].axhline(y=1, color='r', linestyle='--', alpha=0.7, label='$\\delta_s$')
+axes[0, 1].set_xlabel('Amplitude (mm/s)')
+axes[0, 1].set_ylabel('$y/\\delta_s$')
+axes[0, 1].set_title('Velocity Amplitude Decay')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Phase lag
+phase_lag = y_osc / delta_stokes
+axes[1, 0].plot(np.rad2deg(phase_lag), y_osc/delta_stokes, 'b-', linewidth=1.5)
+axes[1, 0].set_xlabel('Phase Lag (degrees)')
+axes[1, 0].set_ylabel('$y/\\delta_s$')
+axes[1, 0].set_title('Phase Lag with Distance')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Stokes layer thickness vs frequency
+freq_range = np.logspace(-1, 2, 100)
+omega_range = 2 * np.pi * freq_range
+delta_range = np.sqrt(2 * nu / omega_range)
+
+axes[1, 1].loglog(freq_range, delta_range*1000, 'b-', linewidth=1.5)
+axes[1, 1].set_xlabel('Frequency (Hz)')
+axes[1, 1].set_ylabel('$\\delta_s$ (mm)')
+axes[1, 1].set_title('Stokes Layer Thickness vs Frequency')
+axes[1, 1].grid(True, which='both', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('navier_stokes_plot6.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{navier_stokes_plot6.pdf}
+\caption{Oscillatory flow: Stokes' second problem and Stokes layer characteristics.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Oscillatory Flow Parameters}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Oscillation Frequency & \py{f"{omega_osc/(2*np.pi):.2f}"} & Hz \\
+Stokes Layer Thickness & \py{f"{delta_stokes*1000:.3f}"} & mm \\
+Penetration Depth ($3\delta_s$) & \py{f"{3*delta_stokes*1000:.3f}"} & mm \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusions}
+
+This analysis of the Navier-Stokes equations demonstrated:
+
+\begin{enumerate}
+    \item \textbf{Couette Flow}: Linear velocity profile with wall shear stress $\tau_w = \py{f"{tau_wall_couette:.4f}"}$ Pa. Generalized solutions with pressure gradients show parabolic modifications.
+
+    \item \textbf{Poiseuille Flow}: Parabolic velocity profile with maximum velocity $u_{max} = \py{f"{u_max*1000:.2f}"}$ mm/s. The entrance length scales linearly with Reynolds number for laminar flow.
+
+    \item \textbf{Boundary Layers}: Blasius solution gives $f''(0) = \py{f"{f2_0_correct:.4f}"}$, with boundary layer thickness $\delta \propto x^{1/2}$.
+
+    \item \textbf{Reynolds Number Effects}: Critical $Re = 2300$ for pipe flow transition, with friction factor following the Blasius correlation in turbulent regime.
+
+    \item \textbf{Oscillatory Flows}: Stokes layer thickness $\delta_s = \py{f"{delta_stokes*1000:.3f}"}$ mm determines penetration depth of oscillations.
+\end{enumerate}
+
+\end{document}

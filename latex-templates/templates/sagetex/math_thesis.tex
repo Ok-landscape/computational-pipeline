@@ -1,0 +1,78 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{sagetex}
+\usepackage{float}
+\usepackage{graphicx}
+
+% Interaction with Beamer overlays (if converting to slides)
+% This resolves conflicts where Sage plots on specific slides
+% might not render correctly without explicit visibility control
+% Fixed: Changed from [1] to [2] to accept both slide number and plot arguments
+\newcommand{\sagevisible}[2]{\visible<#1->{\sageplot{#2}}}
+
+\title{Explorations in Partition Theory and Topology}
+\author{Department of Mathematics}
+
+\begin{document}
+\maketitle
+
+\section{Integer Partitions}
+
+The partition function $p(n)$ represents the number of distinct ways of representing $n$ as a sum of natural numbers. For large $n$, this computation is non-trivial.
+
+Using SageMath, we calculate the number of partitions for $n=100$:
+
+\begin{sageblock}
+n = 100
+partitions = number_of_partitions(n)
+factors = factor(partitions)
+\end{sageblock}
+
+The number of partitions of 100 is:
+\[ p(100) = \sage{partitions} \]
+
+This number can be factored into primes as:
+\[ \sage{factors} \]
+
+This demonstrates Sage's ability to handle arbitrary-precision integers, which would overflow standard types in C++ or basic Python.
+
+\section{Topological Surfaces}
+
+We visualize the behavior of the function $f(x, y) = \sin(x^2 + y^2)$ near the origin.
+
+\begin{sagesilent}
+var('x, y')
+# We use sagesilent because we don't want the plotting code
+# to appear in the final text, only the image.
+p = plot3d(sin(x^2 + y^2), (x, -2, 2), (y, -2, 2),
+           adaptive=True, color='automatic')
+\end{sagesilent}
+
+\begin{figure}[H]
+    \centering
+    % SageTeX handles the file naming automatically (e.g., plot-0.png)
+    \sageplot[width=0.8\textwidth]{p}
+    \caption{3D Plot of $f(x, y)$ computed by SageMath.}
+\end{figure}
+
+\section{Additional Symbolic Computation}
+
+SageMath excels at symbolic manipulation. Here we demonstrate polynomial factorization and calculus:
+
+\begin{sageblock}
+# Polynomial factorization
+poly = x^4 - 1
+factored = factor(poly)
+
+# Symbolic integration
+integral_result = integrate(sin(x)^2, x)
+\end{sageblock}
+
+The polynomial $x^4 - 1$ factors as:
+\[ \sage{factored} \]
+
+The indefinite integral of $\sin^2(x)$ is:
+\[ \int \sin^2(x) \, dx = \sage{integral_result} + C \]
+
+\end{document}

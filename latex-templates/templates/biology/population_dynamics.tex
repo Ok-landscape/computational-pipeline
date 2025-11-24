@@ -1,0 +1,426 @@
+% Population Dynamics Template
+% Topics: Lotka-Volterra predator-prey, stability analysis, limit cycles
+% Style: Tutorial with analytical and numerical approaches
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Population Dynamics: Predator-Prey Models and Stability Analysis}
+\author{Mathematical Biology Tutorial}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This tutorial presents a comprehensive analysis of predator-prey population dynamics
+using the Lotka-Volterra equations and their extensions. We examine the classical model,
+perform stability analysis of equilibrium points, and explore modifications including
+carrying capacity and functional responses. Computational analysis demonstrates phase
+portraits, limit cycles, and the ecological implications of parameter variations.
+\end{abstract}
+
+\section{Introduction}
+
+The Lotka-Volterra predator-prey model is a cornerstone of mathematical ecology,
+describing the coupled dynamics of two interacting species. Despite its simplicity,
+the model captures essential features of predator-prey oscillations observed in nature.
+
+\begin{definition}[Lotka-Volterra Equations]
+The classical predator-prey model is:
+\begin{align}
+\frac{dx}{dt} &= \alpha x - \beta xy \\
+\frac{dy}{dt} &= \delta xy - \gamma y
+\end{align}
+where $x$ is prey density, $y$ is predator density, $\alpha$ is prey growth rate,
+$\beta$ is predation rate, $\delta$ is predator growth efficiency, and $\gamma$ is
+predator death rate.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Equilibrium Analysis}
+
+\begin{theorem}[Equilibrium Points]
+The Lotka-Volterra system has two equilibrium points:
+\begin{enumerate}
+\item Trivial equilibrium: $(x^*, y^*) = (0, 0)$
+\item Coexistence equilibrium: $(x^*, y^*) = (\gamma/\delta, \alpha/\beta)$
+\end{enumerate}
+\end{theorem}
+
+\begin{theorem}[Stability of Coexistence Equilibrium]
+The Jacobian matrix at $(x^*, y^*)$ is:
+\begin{equation}
+J = \begin{pmatrix}
+0 & -\beta x^* \\
+\delta y^* & 0
+\end{pmatrix}
+\end{equation}
+The eigenvalues are $\lambda = \pm i\sqrt{\alpha\gamma}$, indicating a center (neutral
+stability). Trajectories form closed orbits around the equilibrium.
+\end{theorem}
+
+\subsection{Extensions}
+
+\begin{definition}[Logistic Prey Growth]
+Adding carrying capacity to prey growth:
+\begin{align}
+\frac{dx}{dt} &= \alpha x \left(1 - \frac{x}{K}\right) - \beta xy \\
+\frac{dy}{dt} &= \delta xy - \gamma y
+\end{align}
+This creates a globally stable equilibrium (spiral sink) for appropriate parameters.
+\end{definition}
+
+\begin{definition}[Holling Type II Functional Response]
+Predator satiation is modeled by:
+\begin{equation}
+\frac{dx}{dt} = \alpha x - \frac{\beta xy}{1 + \beta h x}
+\end{equation}
+where $h$ is handling time per prey item.
+\end{definition}
+
+\begin{remark}[Functional Responses]
+Holling classified functional responses as:
+\begin{itemize}
+\item \textbf{Type I}: Linear (constant attack rate)
+\item \textbf{Type II}: Saturating (handling time limitation)
+\item \textbf{Type III}: Sigmoidal (learning or switching behavior)
+\end{itemize}
+\end{remark}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+from scipy.linalg import eig
+
+np.random.seed(42)
+
+# Classic Lotka-Volterra
+def lotka_volterra(y, t, alpha, beta, delta, gamma):
+    x, p = y
+    dxdt = alpha * x - beta * x * p
+    dpdt = delta * x * p - gamma * p
+    return [dxdt, dpdt]
+
+# With logistic prey growth
+def lv_logistic(y, t, alpha, beta, delta, gamma, K):
+    x, p = y
+    dxdt = alpha * x * (1 - x/K) - beta * x * p
+    dpdt = delta * x * p - gamma * p
+    return [dxdt, dpdt]
+
+# With Type II functional response
+def lv_type2(y, t, alpha, beta, delta, gamma, h):
+    x, p = y
+    functional = (beta * x) / (1 + beta * h * x)
+    dxdt = alpha * x - functional * p
+    dpdt = delta * functional * p - gamma * p
+    return [dxdt, dpdt]
+
+# Rosenzweig-MacArthur model
+def rosenzweig_macarthur(y, t, r, K, a, h, e, d):
+    N, P = y
+    dNdt = r * N * (1 - N/K) - (a * N * P) / (1 + a * h * N)
+    dPdt = e * (a * N * P) / (1 + a * h * N) - d * P
+    return [dNdt, dPdt]
+
+# Parameters
+alpha = 1.0
+beta = 0.1
+delta = 0.075
+gamma = 1.5
+K = 100
+
+# Initial conditions
+x0, y0 = 10, 5
+initial = [x0, y0]
+
+# Time array
+t = np.linspace(0, 100, 2000)
+
+# Solve classic model
+solution = odeint(lotka_volterra, initial, t, args=(alpha, beta, delta, gamma))
+prey = solution[:, 0]
+predators = solution[:, 1]
+
+# Equilibrium points
+x_eq = gamma / delta
+y_eq = alpha / beta
+
+# Solve logistic model
+sol_logistic = odeint(lv_logistic, initial, t, args=(alpha, beta, delta, gamma, K))
+
+# Solve Type II model
+h = 0.5
+sol_type2 = odeint(lv_type2, initial, t, args=(alpha, beta, delta, gamma, h))
+
+# Rosenzweig-MacArthur with limit cycle
+sol_rm = odeint(rosenzweig_macarthur, [10, 2], t, args=(1.0, 50, 0.1, 0.5, 0.5, 0.3))
+
+# Multiple initial conditions for phase portrait
+ics = [[5, 2], [10, 5], [15, 3], [8, 8], [20, 6]]
+trajectories = []
+for ic in ics:
+    sol = odeint(lotka_volterra, ic, t, args=(alpha, beta, delta, gamma))
+    trajectories.append(sol)
+
+# Vector field for phase portrait
+x_range = np.linspace(0.1, 40, 20)
+y_range = np.linspace(0.1, 20, 20)
+X, Y = np.meshgrid(x_range, y_range)
+U = alpha * X - beta * X * Y
+V = delta * X * Y - gamma * Y
+speed = np.sqrt(U**2 + V**2)
+U_norm = U / speed
+V_norm = V / speed
+
+# Isoclines
+x_iso = np.linspace(0.1, 40, 200)
+prey_iso = alpha / beta * np.ones_like(x_iso)
+pred_iso = gamma / delta * np.ones_like(x_iso)
+
+# Period estimation
+prey_peaks = np.where((prey[1:-1] > prey[:-2]) & (prey[1:-1] > prey[2:]))[0] + 1
+if len(prey_peaks) >= 2:
+    period = np.mean(np.diff(t[prey_peaks]))
+else:
+    period = 0
+
+# Jacobian analysis
+J_eq = np.array([[0, -beta * x_eq],
+                 [delta * y_eq, 0]])
+eigenvalues, eigenvectors = eig(J_eq)
+
+# Conservation quantity
+H = delta * prey - gamma * np.log(prey) + beta * predators - alpha * np.log(predators)
+H0 = H[0]
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Time series
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t, prey, 'b-', linewidth=1.5, label='Prey')
+ax1.plot(t, predators, 'r-', linewidth=1.5, label='Predators')
+ax1.set_xlabel('Time')
+ax1.set_ylabel('Population')
+ax1.set_title('Classic Lotka-Volterra')
+ax1.legend(fontsize=8)
+
+# Plot 2: Phase portrait
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.quiver(X, Y, U_norm, V_norm, speed, cmap='viridis', alpha=0.6)
+for traj in trajectories:
+    ax2.plot(traj[:, 0], traj[:, 1], linewidth=1)
+ax2.plot(x_eq, y_eq, 'r*', markersize=12, label='Equilibrium')
+ax2.axhline(y=y_eq, color='green', linestyle='--', alpha=0.5)
+ax2.axvline(x=x_eq, color='blue', linestyle='--', alpha=0.5)
+ax2.set_xlabel('Prey')
+ax2.set_ylabel('Predator')
+ax2.set_title('Phase Portrait')
+ax2.set_xlim([0, 40])
+ax2.set_ylim([0, 20])
+
+# Plot 3: Logistic prey growth
+ax3 = fig.add_subplot(3, 3, 3)
+ax3.plot(t, sol_logistic[:, 0], 'b-', linewidth=1.5, label='Prey')
+ax3.plot(t, sol_logistic[:, 1], 'r-', linewidth=1.5, label='Predators')
+ax3.set_xlabel('Time')
+ax3.set_ylabel('Population')
+ax3.set_title('With Logistic Prey Growth')
+ax3.legend(fontsize=8)
+
+# Plot 4: Logistic phase space
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.plot(sol_logistic[:, 0], sol_logistic[:, 1], 'g-', linewidth=1)
+ax4.plot(sol_logistic[0, 0], sol_logistic[0, 1], 'ko', markersize=8)
+ax4.plot(sol_logistic[-1, 0], sol_logistic[-1, 1], 'r*', markersize=12)
+ax4.set_xlabel('Prey')
+ax4.set_ylabel('Predator')
+ax4.set_title('Logistic Model Phase Space')
+
+# Plot 5: Type II functional response
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.plot(t, sol_type2[:, 0], 'b-', linewidth=1.5, label='Prey')
+ax5.plot(t, sol_type2[:, 1], 'r-', linewidth=1.5, label='Predators')
+ax5.set_xlabel('Time')
+ax5.set_ylabel('Population')
+ax5.set_title('Type II Functional Response')
+ax5.legend(fontsize=8)
+
+# Plot 6: Rosenzweig-MacArthur limit cycle
+ax6 = fig.add_subplot(3, 3, 6)
+ax6.plot(sol_rm[500:, 0], sol_rm[500:, 1], 'purple', linewidth=1.5)
+ax6.set_xlabel('Prey')
+ax6.set_ylabel('Predator')
+ax6.set_title('Rosenzweig-MacArthur Limit Cycle')
+
+# Plot 7: Conserved quantity
+ax7 = fig.add_subplot(3, 3, 7)
+ax7.plot(t, H, 'b-', linewidth=1.5)
+ax7.axhline(y=H0, color='red', linestyle='--', alpha=0.7)
+ax7.set_xlabel('Time')
+ax7.set_ylabel('$H(x, y)$')
+ax7.set_title('Conserved Quantity')
+ax7.set_ylim([H0 - 1, H0 + 1])
+
+# Plot 8: Functional responses
+ax8 = fig.add_subplot(3, 3, 8)
+N_range = np.linspace(0, 50, 200)
+type1 = beta * N_range
+type2 = (beta * N_range) / (1 + beta * h * N_range)
+type3 = (beta * N_range**2) / (1 + beta * h * N_range**2)
+ax8.plot(N_range, type1, 'b-', linewidth=2, label='Type I')
+ax8.plot(N_range, type2, 'g-', linewidth=2, label='Type II')
+ax8.plot(N_range, type3, 'r-', linewidth=2, label='Type III')
+ax8.set_xlabel('Prey density $N$')
+ax8.set_ylabel('Predation rate')
+ax8.set_title('Functional Responses')
+ax8.legend(fontsize=8)
+
+# Plot 9: Parameter sensitivity
+ax9 = fig.add_subplot(3, 3, 9)
+alphas = [0.8, 1.0, 1.2]
+colors = ['blue', 'green', 'red']
+for a, c in zip(alphas, colors):
+    sol = odeint(lotka_volterra, initial, t, args=(a, beta, delta, gamma))
+    ax9.plot(t[:500], sol[:500, 0], color=c, linewidth=1.5, label=f'$\\alpha = {a}$')
+ax9.set_xlabel('Time')
+ax9.set_ylabel('Prey population')
+ax9.set_title('Prey Growth Rate Sensitivity')
+ax9.legend(fontsize=8)
+
+plt.tight_layout()
+plt.savefig('population_dynamics_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{population_dynamics_analysis.pdf}
+\caption{Predator-prey dynamics analysis: (a) Classic Lotka-Volterra time series;
+(b) Phase portrait with multiple trajectories and isoclines; (c-d) Logistic prey growth
+model showing damped oscillations; (e) Type II functional response dynamics; (f)
+Rosenzweig-MacArthur limit cycle; (g) Conserved quantity verification; (h) Comparison
+of functional responses; (i) Sensitivity to prey growth rate.}
+\label{fig:predprey}
+\end{figure}
+
+\section{Results}
+
+\subsection{Model Parameters}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Lotka-Volterra Model Parameters and Results}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Symbol & Value \\")
+print(r"\midrule")
+print(f"Prey growth rate & $\\alpha$ & {alpha} \\\\")
+print(f"Predation rate & $\\beta$ & {beta} \\\\")
+print(f"Predator efficiency & $\\delta$ & {delta} \\\\")
+print(f"Predator death rate & $\\gamma$ & {gamma} \\\\")
+print(r"\midrule")
+print(f"Equilibrium prey & $x^*$ & {x_eq:.2f} \\\\")
+print(f"Equilibrium predator & $y^*$ & {y_eq:.2f} \\\\")
+print(f"Oscillation period & $T$ & {period:.2f} \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:parameters}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Stability Analysis}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Stability Analysis at Coexistence Equilibrium}")
+print(r"\begin{tabular}{lc}")
+print(r"\toprule")
+print(r"Property & Value \\")
+print(r"\midrule")
+print(f"Eigenvalue 1 & ${eigenvalues[0]:.4f}$ \\\\")
+print(f"Eigenvalue 2 & ${eigenvalues[1]:.4f}$ \\\\")
+print(f"Angular frequency & $\\omega = {np.abs(eigenvalues[0].imag):.4f}$ \\\\")
+print(f"Theoretical period & $T = 2\\pi/\\omega = {2*np.pi/np.abs(eigenvalues[0].imag):.2f}$ \\\\")
+print(r"Stability type & Center (neutral) \\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:stability}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Conservation Law]
+The classical Lotka-Volterra system conserves the quantity:
+\begin{equation}
+H(x, y) = \delta x - \gamma \ln x + \beta y - \alpha \ln y
+\end{equation}
+This integral of motion ensures closed orbits in phase space.
+\end{example}
+
+\begin{remark}[Structural Instability]
+The classical model is structurally unstable: any perturbation to the equations
+(such as adding density dependence) changes the qualitative behavior from neutral
+cycles to either damped oscillations (stable spiral) or limit cycles.
+\end{remark}
+
+\begin{example}[Paradox of Enrichment]
+In the Rosenzweig-MacArthur model, increasing carrying capacity $K$ can destabilize
+the equilibrium. Beyond a critical $K$, the system transitions from a stable spiral
+to a limit cycle via a Hopf bifurcation. This counterintuitive result suggests that
+enriching an ecosystem can lead to larger oscillations and potential extinction.
+\end{example}
+
+\begin{remark}[Ecological Implications]
+Predator-prey oscillations explain phenomena such as:
+\begin{itemize}
+\item Lynx-hare cycles in Canadian fur trade records
+\item Phytoplankton-zooplankton dynamics in lakes
+\item Host-parasitoid population cycles
+\item Microbial predator-prey systems
+\end{itemize}
+The oscillation period depends on the geometric mean of growth and death rates.
+\end{remark}
+
+\section{Conclusions}
+
+This analysis demonstrates the rich dynamics of predator-prey systems:
+\begin{enumerate}
+\item Classic Lotka-Volterra produces neutral oscillations with period $T \approx \py{f"{period:.1f}"}$
+\item Equilibrium at $(x^*, y^*) = (\py{f"{x_eq:.1f}"}, \py{f"{y_eq:.1f}"}$) with eigenvalues $\lambda = \pm i\py{f"{np.abs(eigenvalues[0].imag):.3f}"}$
+\item Adding logistic prey growth creates damped oscillations (stable spiral)
+\item Type II functional response can generate limit cycles
+\item The conserved quantity $H$ ensures orbit closure in the classic model
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Murray, J.D. \textit{Mathematical Biology I: An Introduction}, 3rd ed. Springer, 2002.
+\item Edelstein-Keshet, L. \textit{Mathematical Models in Biology}. SIAM, 2005.
+\item Kot, M. \textit{Elements of Mathematical Ecology}. Cambridge, 2001.
+\end{itemize}
+
+\end{document}

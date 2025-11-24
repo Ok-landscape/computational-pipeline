@@ -1,0 +1,493 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments for textbook style
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Cosmological Expansion: From Hubble's Law to Dark Energy\\
+\large A Comprehensive Analysis of the $\Lambda$CDM Model}
+\author{Cosmology Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This comprehensive analysis explores the expansion history of the universe from observational foundations to theoretical frameworks. We examine Hubble's law and its modern calibrations, derive the Friedmann equations governing cosmic evolution, and analyze different cosmological models including matter-dominated, radiation-dominated, and dark energy-dominated universes. The $\Lambda$CDM concordance model is developed in detail, with computational analysis of the scale factor evolution, distance-redshift relations, and the cosmic age problem. We explore observational evidence from Type Ia supernovae, baryon acoustic oscillations, and cosmic microwave background measurements that constrain cosmological parameters.
+\end{abstract}
+
+\section{Introduction}
+
+The discovery that the universe is expanding stands as one of the most profound achievements of twentieth-century science. Edwin Hubble's 1929 observation of a linear relationship between galaxy distances and their recession velocities transformed our understanding of cosmic structure and evolution.
+
+\begin{definition}[Hubble's Law]
+The recession velocity $v$ of a galaxy is proportional to its distance $d$:
+\begin{equation}
+v = H_0 d
+\end{equation}
+where $H_0$ is the Hubble constant, currently measured at approximately \SI{70}{\km\per\s\per\Mpc}.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{The Friedmann Equations}
+
+General relativity applied to a homogeneous, isotropic universe yields the Friedmann equations:
+
+\begin{theorem}[First Friedmann Equation]
+The expansion rate of the universe is determined by its energy content:
+\begin{equation}
+H^2 = \left(\frac{\dot{a}}{a}\right)^2 = \frac{8\pi G}{3}\rho - \frac{kc^2}{a^2} + \frac{\Lambda c^2}{3}
+\end{equation}
+where $a(t)$ is the scale factor, $\rho$ is the total energy density, $k$ is the spatial curvature, and $\Lambda$ is the cosmological constant.
+\end{theorem}
+
+\begin{theorem}[Second Friedmann Equation]
+The acceleration of expansion:
+\begin{equation}
+\frac{\ddot{a}}{a} = -\frac{4\pi G}{3}\left(\rho + \frac{3p}{c^2}\right) + \frac{\Lambda c^2}{3}
+\end{equation}
+where $p$ is the pressure.
+\end{theorem}
+
+\subsection{Density Parameters}
+
+We define dimensionless density parameters relative to the critical density $\rho_c = 3H_0^2/(8\pi G)$:
+
+\begin{align}
+\Omega_m &= \frac{\rho_m}{\rho_c} \quad \text{(matter)} \\
+\Omega_r &= \frac{\rho_r}{\rho_c} \quad \text{(radiation)} \\
+\Omega_\Lambda &= \frac{\Lambda c^2}{3H_0^2} \quad \text{(dark energy)} \\
+\Omega_k &= -\frac{kc^2}{H_0^2 a_0^2} \quad \text{(curvature)}
+\end{align}
+
+\begin{remark}[Closure Relation]
+For a universe with these components:
+\begin{equation}
+\Omega_m + \Omega_r + \Omega_\Lambda + \Omega_k = 1
+\end{equation}
+\end{remark}
+
+\subsection{Redshift and Scale Factor}
+
+The cosmological redshift $z$ relates to the scale factor:
+\begin{equation}
+1 + z = \frac{a_0}{a(t)} = \frac{\lambda_{\text{obs}}}{\lambda_{\text{emit}}}
+\end{equation}
+
+The Hubble parameter at redshift $z$:
+\begin{equation}
+H(z) = H_0\sqrt{\Omega_r(1+z)^4 + \Omega_m(1+z)^3 + \Omega_k(1+z)^2 + \Omega_\Lambda}
+\end{equation}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.integrate import odeint, quad
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Physical constants
+c = 299792.458  # Speed of light (km/s)
+H0 = 70.0  # Hubble constant (km/s/Mpc)
+H0_si = H0 * 1000 / (3.086e22)  # Convert to 1/s
+Gyr_to_s = 3.154e16  # Seconds per Gyr
+
+# Cosmological models
+models = {
+    r'$\Lambda$CDM': {'Om': 0.3, 'Or': 8.5e-5, 'OL': 0.7, 'Ok': 0.0},
+    'Einstein-de Sitter': {'Om': 1.0, 'Or': 0.0, 'OL': 0.0, 'Ok': 0.0},
+    'Open Universe': {'Om': 0.3, 'Or': 0.0, 'OL': 0.0, 'Ok': 0.7},
+    'Dark Energy Dom.': {'Om': 0.05, 'Or': 0.0, 'OL': 0.95, 'Ok': 0.0}
+}
+
+# Hubble parameter as function of redshift
+def E(z, Om, Or, OL, Ok):
+    """Dimensionless Hubble parameter E(z) = H(z)/H0"""
+    return np.sqrt(Or*(1+z)**4 + Om*(1+z)**3 + Ok*(1+z)**2 + OL)
+
+# Comoving distance
+def comoving_distance(z, Om, Or, OL, Ok):
+    """Comoving distance in Mpc"""
+    integrand = lambda z_prime: 1.0 / E(z_prime, Om, Or, OL, Ok)
+    result, _ = quad(integrand, 0, z)
+    return (c/H0) * result
+
+# Luminosity distance
+def luminosity_distance(z, Om, Or, OL, Ok):
+    """Luminosity distance in Mpc"""
+    d_c = comoving_distance(z, Om, Or, OL, Ok)
+    return (1+z) * d_c
+
+# Angular diameter distance
+def angular_diameter_distance(z, Om, Or, OL, Ok):
+    """Angular diameter distance in Mpc"""
+    d_c = comoving_distance(z, Om, Or, OL, Ok)
+    return d_c / (1+z)
+
+# Lookback time
+def lookback_time(z, Om, Or, OL, Ok):
+    """Lookback time in Gyr"""
+    integrand = lambda z_prime: 1.0 / ((1+z_prime) * E(z_prime, Om, Or, OL, Ok))
+    result, _ = quad(integrand, 0, z)
+    return (1/H0) * (3.086e19/Gyr_to_s) * result
+
+# Age of universe
+def age_of_universe(Om, Or, OL, Ok):
+    """Age in Gyr"""
+    integrand = lambda a: 1.0 / (a * H0_si * np.sqrt(Om/a**3 + Or/a**4 + Ok/a**2 + OL))
+    result, _ = quad(integrand, 1e-10, 1)
+    return result / Gyr_to_s
+
+# Deceleration parameter
+def deceleration_parameter(z, Om, Or, OL):
+    """q(z) = -1 - d ln H / d ln(1+z)"""
+    E_sq = Or*(1+z)**4 + Om*(1+z)**3 + OL
+    q = (2*Or*(1+z)**4 + 1.5*Om*(1+z)**3) / E_sq - 1
+    return q
+
+# Scale factor evolution (solve Friedmann equation)
+def scale_factor_evolution(t_array, Om, Or, OL, Ok):
+    """Solve for a(t) given initial conditions"""
+    def da_dt(a, t):
+        if a <= 0:
+            return 0
+        return a * H0_si * np.sqrt(Om/a**3 + Or/a**4 + Ok/a**2 + OL)
+
+    a0 = 1e-6  # Start from very early time
+    a = odeint(da_dt, a0, t_array)[:, 0]
+    return a
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(14, 16))
+
+# Plot 1: Hubble parameter vs redshift
+ax1 = fig.add_subplot(3, 3, 1)
+z = np.linspace(0, 5, 200)
+colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+for idx, (name, params) in enumerate(models.items()):
+    H_z = H0 * E(z, params['Om'], params['Or'], params['OL'], params['Ok'])
+    ax1.plot(z, H_z, color=colors[idx], linewidth=2, label=name)
+
+ax1.set_xlabel('Redshift $z$')
+ax1.set_ylabel('$H(z)$ (km/s/Mpc)')
+ax1.set_title('Hubble Parameter Evolution')
+ax1.legend(fontsize=7, loc='upper left')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 5)
+
+# Plot 2: Luminosity distance
+ax2 = fig.add_subplot(3, 3, 2)
+z_plot = np.linspace(0.01, 3, 100)
+for idx, (name, params) in enumerate(models.items()):
+    d_L = np.array([luminosity_distance(zi, params['Om'], params['Or'], params['OL'], params['Ok']) for zi in z_plot])
+    ax2.plot(z_plot, d_L/1000, color=colors[idx], linewidth=2, label=name)
+
+ax2.set_xlabel('Redshift $z$')
+ax2.set_ylabel('$D_L$ (Gpc)')
+ax2.set_title('Luminosity Distance')
+ax2.legend(fontsize=7)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Angular diameter distance
+ax3 = fig.add_subplot(3, 3, 3)
+for idx, (name, params) in enumerate(models.items()):
+    d_A = np.array([angular_diameter_distance(zi, params['Om'], params['Or'], params['OL'], params['Ok']) for zi in z_plot])
+    ax3.plot(z_plot, d_A, color=colors[idx], linewidth=2, label=name)
+
+ax3.set_xlabel('Redshift $z$')
+ax3.set_ylabel('$D_A$ (Mpc)')
+ax3.set_title('Angular Diameter Distance')
+ax3.legend(fontsize=7)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Deceleration parameter
+ax4 = fig.add_subplot(3, 3, 4)
+z_q = np.linspace(0, 3, 100)
+for idx, (name, params) in enumerate(models.items()):
+    q_z = deceleration_parameter(z_q, params['Om'], params['Or'], params['OL'])
+    ax4.plot(z_q, q_z, color=colors[idx], linewidth=2, label=name)
+
+ax4.axhline(y=0, color='black', linestyle='-', alpha=0.5, linewidth=0.5)
+ax4.set_xlabel('Redshift $z$')
+ax4.set_ylabel('Deceleration $q(z)$')
+ax4.set_title('Acceleration History')
+ax4.legend(fontsize=7)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Lookback time
+ax5 = fig.add_subplot(3, 3, 5)
+z_t = np.linspace(0.01, 5, 50)
+for idx, (name, params) in enumerate(models.items()):
+    t_look = np.array([lookback_time(zi, params['Om'], params['Or'], params['OL'], params['Ok']) for zi in z_t])
+    ax5.plot(z_t, t_look, color=colors[idx], linewidth=2, label=name)
+
+ax5.set_xlabel('Redshift $z$')
+ax5.set_ylabel('Lookback Time (Gyr)')
+ax5.set_title('Lookback Time')
+ax5.legend(fontsize=7)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Density evolution
+ax6 = fig.add_subplot(3, 3, 6)
+z_dens = np.linspace(0, 10, 200)
+# For Lambda-CDM
+Om, Or, OL = 0.3, 8.5e-5, 0.7
+E_z = E(z_dens, Om, Or, OL, 0)
+Omega_m_z = Om * (1+z_dens)**3 / E_z**2
+Omega_r_z = Or * (1+z_dens)**4 / E_z**2
+Omega_L_z = OL / E_z**2
+
+ax6.plot(z_dens, Omega_m_z, 'b-', linewidth=2, label=r'$\Omega_m(z)$')
+ax6.plot(z_dens, Omega_r_z, 'r-', linewidth=2, label=r'$\Omega_r(z)$')
+ax6.plot(z_dens, Omega_L_z, 'g-', linewidth=2, label=r'$\Omega_\Lambda(z)$')
+ax6.axvline(x=0.3, color='gray', linestyle='--', alpha=0.5)
+ax6.axvline(x=3400, color='gray', linestyle=':', alpha=0.5)
+
+ax6.set_xlabel('Redshift $z$')
+ax6.set_ylabel(r'$\Omega_i(z)$')
+ax6.set_title('Density Parameter Evolution')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+ax6.set_xscale('log')
+ax6.set_xlim(0.1, 10)
+
+# Plot 7: Scale factor evolution
+ax7 = fig.add_subplot(3, 3, 7)
+t_Hubble = 1/H0_si/Gyr_to_s  # Hubble time in Gyr
+t_array = np.linspace(0.001, 30, 500) * Gyr_to_s
+
+for idx, (name, params) in enumerate(models.items()):
+    a = scale_factor_evolution(t_array, params['Om'], params['Or'], params['OL'], params['Ok'])
+    ax7.plot(t_array/Gyr_to_s, a, color=colors[idx], linewidth=2, label=name)
+
+ax7.axhline(y=1, color='gray', linestyle='--', alpha=0.5)
+ax7.axvline(x=13.8, color='gray', linestyle=':', alpha=0.5)
+ax7.set_xlabel('Time (Gyr)')
+ax7.set_ylabel('Scale Factor $a(t)$')
+ax7.set_title('Scale Factor Evolution')
+ax7.legend(fontsize=7, loc='upper left')
+ax7.grid(True, alpha=0.3)
+ax7.set_xlim(0, 30)
+ax7.set_ylim(0, 5)
+
+# Plot 8: Distance modulus (Hubble diagram)
+ax8 = fig.add_subplot(3, 3, 8)
+z_mu = np.linspace(0.01, 2, 100)
+for idx, (name, params) in enumerate(models.items()):
+    d_L = np.array([luminosity_distance(zi, params['Om'], params['Or'], params['OL'], params['Ok']) for zi in z_mu])
+    mu = 5 * np.log10(d_L) + 25  # Distance modulus
+    ax8.plot(z_mu, mu, color=colors[idx], linewidth=2, label=name)
+
+# Add simulated SN Ia data for Lambda-CDM
+z_sn = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.4])
+d_L_true = np.array([luminosity_distance(zi, 0.3, 8.5e-5, 0.7, 0) for zi in z_sn])
+mu_true = 5 * np.log10(d_L_true) + 25
+mu_obs = mu_true + np.random.normal(0, 0.15, len(z_sn))
+ax8.errorbar(z_sn, mu_obs, yerr=0.15, fmt='ko', markersize=5, capsize=3, label='SN Ia')
+
+ax8.set_xlabel('Redshift $z$')
+ax8.set_ylabel('Distance Modulus $\mu$')
+ax8.set_title('Hubble Diagram')
+ax8.legend(fontsize=7, loc='lower right')
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Equation of state parameter
+ax9 = fig.add_subplot(3, 3, 9)
+w_values = np.linspace(-1.5, 0.5, 100)
+z_test = 1.0
+effects = []
+for w in w_values:
+    # For w != -1, dark energy density evolves as (1+z)^(3(1+w))
+    E_w = np.sqrt(0.3*(1+z_test)**3 + 0.7*(1+z_test)**(3*(1+w)))
+    effects.append(E_w)
+
+ax9.plot(w_values, effects, 'b-', linewidth=2)
+ax9.axvline(x=-1, color='r', linestyle='--', alpha=0.7, label=r'$w=-1$ ($\Lambda$)')
+ax9.axvline(x=-1/3, color='g', linestyle=':', alpha=0.7, label=r'$w=-1/3$ (accel. boundary)')
+ax9.set_xlabel('Equation of State $w$')
+ax9.set_ylabel('$E(z=1)$')
+ax9.set_title('Dark Energy Equation of State')
+ax9.legend(fontsize=8)
+ax9.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('cosmological_expansion_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{cosmological_expansion_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Calculate key quantities for Lambda-CDM
+age_lcdm = age_of_universe(0.3, 8.5e-5, 0.7, 0)
+q0_lcdm = deceleration_parameter(0, 0.3, 8.5e-5, 0.7)
+z_transition = ((2*0.7)/0.3)**(1/3) - 1  # Matter-Lambda equality
+z_accel = (2*0.7/0.3)**(1/3) - 1  # Acceleration onset (q=0)
+\end{pycode}
+
+\section{Results and Discussion}
+
+\subsection{Key Cosmological Parameters}
+
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Cosmological Parameters for Different Models}')
+print(r'\begin{tabular}{lccccc}')
+print(r'\toprule')
+print(r'Model & $\Omega_m$ & $\Omega_\Lambda$ & Age (Gyr) & $q_0$ & Fate \\')
+print(r'\midrule')
+for name, params in models.items():
+    age = age_of_universe(params['Om'], params['Or'], params['OL'], params['Ok'])
+    q0 = deceleration_parameter(0, params['Om'], params['Or'], params['OL'])
+    if params['OL'] > 0:
+        fate = 'Accelerating'
+    elif params['Ok'] > 0:
+        fate = 'Expanding'
+    else:
+        fate = 'Recollapse'
+    print(f"{name} & {params['Om']:.2f} & {params['OL']:.2f} & {age:.1f} & {q0:.2f} & {fate} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{example}[$\Lambda$CDM Universe]
+For the concordance cosmological model with $\Omega_m = 0.3$ and $\Omega_\Lambda = 0.7$:
+\begin{itemize}
+    \item Age of the universe: \py{f"{age_lcdm:.2f}"} Gyr
+    \item Current deceleration parameter: $q_0 = $ \py{f"{q0_lcdm:.3f}"}
+    \item Matter-$\Lambda$ equality redshift: $z_{eq} = $ \py{f"{z_transition:.2f}"}
+    \item Hubble time: $1/H_0 = $ \py{f"{1/H0_si/Gyr_to_s:.1f}"} Gyr
+\end{itemize}
+\end{example}
+
+\subsection{Distance Measures}
+
+\begin{pycode}
+# Distance table at specific redshifts
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Distance Measures in $\Lambda$CDM Cosmology}')
+print(r'\begin{tabular}{ccccc}')
+print(r'\toprule')
+print(r'$z$ & $D_C$ (Mpc) & $D_L$ (Mpc) & $D_A$ (Mpc) & Lookback (Gyr) \\')
+print(r'\midrule')
+for z_val in [0.1, 0.5, 1.0, 2.0, 3.0]:
+    d_c = comoving_distance(z_val, 0.3, 8.5e-5, 0.7, 0)
+    d_l = luminosity_distance(z_val, 0.3, 8.5e-5, 0.7, 0)
+    d_a = angular_diameter_distance(z_val, 0.3, 8.5e-5, 0.7, 0)
+    t_lb = lookback_time(z_val, 0.3, 8.5e-5, 0.7, 0)
+    print(f"{z_val:.1f} & {d_c:.0f} & {d_l:.0f} & {d_a:.0f} & {t_lb:.2f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Observational Evidence for Dark Energy}
+
+The evidence for cosmic acceleration comes from multiple independent probes:
+
+\begin{enumerate}
+    \item \textbf{Type Ia Supernovae}: Standardizable candles show that distant SNe are fainter than expected in a decelerating universe
+    \item \textbf{Baryon Acoustic Oscillations}: Standard ruler measurements in galaxy surveys constrain $D_A(z)/r_s$
+    \item \textbf{Cosmic Microwave Background}: Angular power spectrum constrains $\Omega_m h^2$ and $\Omega_\Lambda$
+    \item \textbf{Cluster Counts}: Evolution of galaxy cluster abundance sensitive to $\sigma_8$ and $\Omega_m$
+\end{enumerate}
+
+\begin{remark}[Cosmic Coincidence Problem]
+We appear to live at a special epoch when $\Omega_m \approx \Omega_\Lambda$. Given that these densities scale differently with redshift ($\rho_m \propto a^{-3}$ vs. $\rho_\Lambda = $ const), this equality is a remarkable coincidence.
+\end{remark}
+
+\section{Dark Energy Models}
+
+\subsection{Cosmological Constant}
+The simplest dark energy model is Einstein's cosmological constant $\Lambda$:
+\begin{itemize}
+    \item Equation of state: $w = p/\rho = -1$ (constant)
+    \item Energy density: constant in time
+    \item Interpretation: vacuum energy
+\end{itemize}
+
+\subsection{Quintessence}
+Dynamical dark energy from a scalar field $\phi$:
+\begin{equation}
+\rho_\phi = \frac{1}{2}\dot{\phi}^2 + V(\phi), \quad p_\phi = \frac{1}{2}\dot{\phi}^2 - V(\phi)
+\end{equation}
+This gives $-1 < w < 1$ with possible time evolution.
+
+\section{The Cosmic Age Problem}
+
+\begin{pycode}
+# Age comparison
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Cosmic Age in Different Models vs. Oldest Stars}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Model & Age (Gyr) & Consistent? \\')
+print(r'\midrule')
+oldest_stars = 13.0  # Approximate age of oldest globular clusters
+for name, params in models.items():
+    age = age_of_universe(params['Om'], params['Or'], params['OL'], params['Ok'])
+    consistent = 'Yes' if age > oldest_stars else 'No'
+    print(f"{name} & {age:.1f} & {consistent} \\\\")
+print(r'\midrule')
+print(f"Oldest Stars & $\\sim${oldest_stars:.0f} & --- \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Perfect homogeneity}: Real universe has structure
+    \item \textbf{Constant $w$}: Dark energy EoS may evolve
+    \item \textbf{Flat geometry}: $\Omega_k$ constrained but not zero
+    \item \textbf{No perturbations}: Linear theory not included
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Time-varying dark energy: $w(z) = w_0 + w_a \cdot z/(1+z)$
+    \item Modified gravity: $f(R)$ theories
+    \item Interacting dark sector
+    \item Backreaction from inhomogeneities
+\end{itemize}
+
+\section{Conclusion}
+
+This analysis demonstrates the fundamental framework of modern cosmology:
+\begin{itemize}
+    \item The $\Lambda$CDM model provides an excellent fit to observations
+    \item Dark energy dominates the current epoch ($\Omega_\Lambda \approx 0.7$)
+    \item The universe is accelerating ($q_0 = $ \py{f"{q0_lcdm:.2f}"} $ < 0$)
+    \item Cosmic age of \py{f"{age_lcdm:.1f}"} Gyr is consistent with stellar ages
+    \item Future observations will constrain dark energy properties
+\end{itemize}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Peebles, P. J. E. (1993). \textit{Principles of Physical Cosmology}. Princeton University Press.
+    \item Weinberg, S. (2008). \textit{Cosmology}. Oxford University Press.
+    \item Planck Collaboration (2020). Planck 2018 results. VI. Cosmological parameters.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,421 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+\title{Support Vector Machines: Kernels and Classification}
+\author{Machine Learning Foundations}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive analysis of Support Vector Machines (SVM) including hard and soft margin classification, the kernel trick for nonlinear decision boundaries, hyperparameter tuning (C and gamma), and multi-class strategies. We visualize decision boundaries, support vectors, and margin regions.
+\end{abstract}
+
+\section{Introduction}
+Support Vector Machines find the maximum margin hyperplane separating classes:
+\begin{equation}
+\min_{w,b} \frac{1}{2}\|w\|^2 \quad \text{subject to} \quad y_i(w \cdot x_i + b) \geq 1
+\end{equation}
+
+For soft margin SVM with slack variables $\xi_i$:
+\begin{equation}
+\min_{w,b,\xi} \frac{1}{2}\|w\|^2 + C\sum_{i=1}^{n}\xi_i
+\end{equation}
+
+The kernel trick replaces dot products: $K(x_i, x_j) = \phi(x_i) \cdot \phi(x_j)$
+
+Common kernels:
+\begin{itemize}
+    \item Linear: $K(x, x') = x \cdot x'$
+    \item RBF: $K(x, x') = \exp(-\gamma \|x - x'\|^2)$
+    \item Polynomial: $K(x, x') = (x \cdot x' + c)^d$
+\end{itemize}
+
+\section{Computational Environment}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial.distance import cdist
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[H]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.85\textwidth]{' + filename + '}')
+    print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Data Generation}
+\begin{pycode}
+# Generate linearly separable data
+def make_linear_data(n_samples, margin=0.5, random_state=42):
+    np.random.seed(random_state)
+    n_per_class = n_samples // 2
+    X = np.vstack([
+        np.random.randn(n_per_class, 2) + [2, 2],
+        np.random.randn(n_per_class, 2) + [-2, -2]
+    ])
+    y = np.array([1]*n_per_class + [-1]*n_per_class)
+    idx = np.random.permutation(n_samples)
+    return X[idx], y[idx]
+
+# Generate nonlinear data (circles)
+def make_circles_data(n_samples, noise=0.1, random_state=42):
+    np.random.seed(random_state)
+    n_per_class = n_samples // 2
+    theta = np.linspace(0, 2*np.pi, n_per_class)
+    X_outer = np.column_stack([2*np.cos(theta), 2*np.sin(theta)])
+    X_inner = np.column_stack([0.5*np.cos(theta), 0.5*np.sin(theta)])
+    X = np.vstack([X_outer + noise*np.random.randn(n_per_class, 2),
+                   X_inner + noise*np.random.randn(n_per_class, 2)])
+    y = np.array([1]*n_per_class + [-1]*n_per_class)
+    idx = np.random.permutation(n_samples)
+    return X[idx], y[idx]
+
+# Create datasets
+X_linear, y_linear = make_linear_data(200)
+X_circles, y_circles = make_circles_data(200, noise=0.15)
+
+# Split
+X_linear_train, X_linear_test = X_linear[:150], X_linear[150:]
+y_linear_train, y_linear_test = y_linear[:150], y_linear[150:]
+X_circles_train, X_circles_test = X_circles[:150], X_circles[150:]
+y_circles_train, y_circles_test = y_circles[:150], y_circles[150:]
+
+# Plot datasets
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+axes[0].scatter(X_linear[y_linear==1, 0], X_linear[y_linear==1, 1],
+                c='blue', alpha=0.6, s=40, label='Class +1')
+axes[0].scatter(X_linear[y_linear==-1, 0], X_linear[y_linear==-1, 1],
+                c='red', alpha=0.6, s=40, label='Class -1')
+axes[0].set_xlabel('Feature 1')
+axes[0].set_ylabel('Feature 2')
+axes[0].set_title('Linearly Separable Data')
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+axes[1].scatter(X_circles[y_circles==1, 0], X_circles[y_circles==1, 1],
+                c='blue', alpha=0.6, s=40, label='Class +1')
+axes[1].scatter(X_circles[y_circles==-1, 0], X_circles[y_circles==-1, 1],
+                c='red', alpha=0.6, s=40, label='Class -1')
+axes[1].set_xlabel('Feature 1')
+axes[1].set_ylabel('Feature 2')
+axes[1].set_title('Nonlinearly Separable Data (Circles)')
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('svm_data.pdf', 'Classification datasets: linearly and nonlinearly separable.')
+\end{pycode}
+
+\section{SVM Implementation}
+\begin{pycode}
+class SVM:
+    def __init__(self, kernel='linear', C=1.0, gamma=1.0, degree=3):
+        self.kernel = kernel
+        self.C = C
+        self.gamma = gamma
+        self.degree = degree
+        self.alpha = None
+        self.support_vectors = None
+        self.support_labels = None
+        self.b = 0
+
+    def _kernel_function(self, X1, X2):
+        if self.kernel == 'linear':
+            return X1 @ X2.T
+        elif self.kernel == 'rbf':
+            sq_dist = cdist(X1, X2, 'sqeuclidean')
+            return np.exp(-self.gamma * sq_dist)
+        elif self.kernel == 'poly':
+            return (1 + X1 @ X2.T)**self.degree
+
+    def fit(self, X, y):
+        n_samples = len(X)
+        K = self._kernel_function(X, X)
+
+        # Simple SMO-like algorithm (simplified)
+        self.alpha = np.zeros(n_samples)
+        for _ in range(100):  # Iterations
+            for i in range(n_samples):
+                Ei = np.sum(self.alpha * y * K[i]) - y[i]
+                if (y[i] * Ei < -0.01 and self.alpha[i] < self.C) or \
+                   (y[i] * Ei > 0.01 and self.alpha[i] > 0):
+                    j = np.random.choice([k for k in range(n_samples) if k != i])
+                    Ej = np.sum(self.alpha * y * K[j]) - y[j]
+
+                    alpha_i_old, alpha_j_old = self.alpha[i], self.alpha[j]
+
+                    if y[i] != y[j]:
+                        L = max(0, self.alpha[j] - self.alpha[i])
+                        H = min(self.C, self.C + self.alpha[j] - self.alpha[i])
+                    else:
+                        L = max(0, self.alpha[i] + self.alpha[j] - self.C)
+                        H = min(self.C, self.alpha[i] + self.alpha[j])
+
+                    if L == H:
+                        continue
+
+                    eta = 2 * K[i, j] - K[i, i] - K[j, j]
+                    if eta >= 0:
+                        continue
+
+                    self.alpha[j] -= y[j] * (Ei - Ej) / eta
+                    self.alpha[j] = np.clip(self.alpha[j], L, H)
+                    self.alpha[i] += y[i] * y[j] * (alpha_j_old - self.alpha[j])
+
+        # Extract support vectors
+        sv_mask = self.alpha > 1e-5
+        self.support_vectors = X[sv_mask]
+        self.support_labels = y[sv_mask]
+        self.alpha = self.alpha[sv_mask]
+
+        # Compute bias
+        K_sv = self._kernel_function(self.support_vectors, self.support_vectors)
+        self.b = np.mean(self.support_labels -
+                         np.sum(self.alpha * self.support_labels * K_sv, axis=1))
+
+        return self
+
+    def decision_function(self, X):
+        K = self._kernel_function(X, self.support_vectors)
+        return np.sum(self.alpha * self.support_labels * K, axis=1) + self.b
+
+    def predict(self, X):
+        return np.sign(self.decision_function(X))
+
+    def score(self, X, y):
+        return np.mean(self.predict(X) == y)
+\end{pycode}
+
+\section{Linear SVM}
+\begin{pycode}
+def plot_svm_decision_boundary(model, X, y, ax, title):
+    h = 0.05
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+
+    Z = model.decision_function(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    # Decision boundary and margins
+    ax.contourf(xx, yy, Z, levels=[-100, 0, 100], alpha=0.3, colors=['red', 'blue'])
+    ax.contour(xx, yy, Z, levels=[-1, 0, 1], colors=['red', 'black', 'blue'],
+               linestyles=['--', '-', '--'], linewidths=[1, 2, 1])
+
+    # Data points
+    ax.scatter(X[y==1, 0], X[y==1, 1], c='blue', alpha=0.6, s=40)
+    ax.scatter(X[y==-1, 0], X[y==-1, 1], c='red', alpha=0.6, s=40)
+
+    # Support vectors
+    if model.support_vectors is not None:
+        ax.scatter(model.support_vectors[:, 0], model.support_vectors[:, 1],
+                   s=150, facecolors='none', edgecolors='black', linewidths=2)
+
+    ax.set_xlabel('Feature 1')
+    ax.set_ylabel('Feature 2')
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+
+# Train linear SVM
+svm_linear = SVM(kernel='linear', C=1.0)
+svm_linear.fit(X_linear_train, y_linear_train)
+
+linear_train_acc = svm_linear.score(X_linear_train, y_linear_train)
+linear_test_acc = svm_linear.score(X_linear_test, y_linear_test)
+n_sv_linear = len(svm_linear.support_vectors)
+
+# Visualize
+fig, ax = plt.subplots(figsize=(8, 6))
+plot_svm_decision_boundary(svm_linear, X_linear, y_linear, ax,
+                           f'Linear SVM (Accuracy: {linear_test_acc:.2f}, SVs: {n_sv_linear})')
+save_plot('svm_linear.pdf', 'Linear SVM decision boundary with support vectors highlighted.')
+\end{pycode}
+
+Linear SVM: Training accuracy = \py{f"{linear_train_acc:.3f}"}, Test accuracy = \py{f"{linear_test_acc:.3f}"}, Support vectors = \py{n_sv_linear}.
+
+\section{RBF Kernel SVM}
+\begin{pycode}
+# Train RBF SVM on circles data
+svm_rbf = SVM(kernel='rbf', C=10.0, gamma=1.0)
+svm_rbf.fit(X_circles_train, y_circles_train)
+
+rbf_train_acc = svm_rbf.score(X_circles_train, y_circles_train)
+rbf_test_acc = svm_rbf.score(X_circles_test, y_circles_test)
+n_sv_rbf = len(svm_rbf.support_vectors)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+plot_svm_decision_boundary(svm_rbf, X_circles, y_circles, ax,
+                           f'RBF SVM (Accuracy: {rbf_test_acc:.2f}, SVs: {n_sv_rbf})')
+save_plot('svm_rbf.pdf', 'RBF kernel SVM decision boundary for nonlinear data.')
+\end{pycode}
+
+RBF SVM: Training accuracy = \py{f"{rbf_train_acc:.3f}"}, Test accuracy = \py{f"{rbf_test_acc:.3f}"}.
+
+\section{Effect of C Parameter}
+\begin{pycode}
+# Compare different C values
+C_values = [0.01, 0.1, 1.0, 10.0]
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for ax, C in zip(axes.flat, C_values):
+    svm_temp = SVM(kernel='rbf', C=C, gamma=1.0)
+    svm_temp.fit(X_circles_train, y_circles_train)
+    acc = svm_temp.score(X_circles_test, y_circles_test)
+    n_sv = len(svm_temp.support_vectors)
+    plot_svm_decision_boundary(svm_temp, X_circles, y_circles, ax,
+                               f'C = {C}, Accuracy = {acc:.2f}, SVs = {n_sv}')
+
+plt.tight_layout()
+save_plot('svm_c_effect.pdf', 'Effect of regularization parameter C on SVM decision boundary.')
+\end{pycode}
+
+\section{Effect of Gamma Parameter}
+\begin{pycode}
+# Compare different gamma values
+gamma_values = [0.1, 0.5, 1.0, 5.0]
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for ax, gamma in zip(axes.flat, gamma_values):
+    svm_temp = SVM(kernel='rbf', C=1.0, gamma=gamma)
+    svm_temp.fit(X_circles_train, y_circles_train)
+    acc = svm_temp.score(X_circles_test, y_circles_test)
+    n_sv = len(svm_temp.support_vectors)
+    plot_svm_decision_boundary(svm_temp, X_circles, y_circles, ax,
+                               f'gamma = {gamma}, Acc = {acc:.2f}, SVs = {n_sv}')
+
+plt.tight_layout()
+save_plot('svm_gamma_effect.pdf', 'Effect of RBF kernel parameter gamma on decision boundary.')
+\end{pycode}
+
+\section{Kernel Comparison}
+\begin{pycode}
+# Compare different kernels
+kernels = ['linear', 'rbf', 'poly']
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+kernel_results = []
+for ax, kernel in zip(axes, kernels):
+    if kernel == 'linear':
+        svm_temp = SVM(kernel=kernel, C=1.0)
+    elif kernel == 'rbf':
+        svm_temp = SVM(kernel=kernel, C=10.0, gamma=1.0)
+    else:
+        svm_temp = SVM(kernel=kernel, C=1.0, degree=3)
+
+    svm_temp.fit(X_circles_train, y_circles_train)
+    acc = svm_temp.score(X_circles_test, y_circles_test)
+    n_sv = len(svm_temp.support_vectors)
+    kernel_results.append((kernel, acc, n_sv))
+    plot_svm_decision_boundary(svm_temp, X_circles, y_circles, ax,
+                               f'{kernel.upper()} Kernel (Acc: {acc:.2f})')
+
+plt.tight_layout()
+save_plot('svm_kernels.pdf', 'Comparison of different kernels on nonlinear data.')
+\end{pycode}
+
+\section{Hyperparameter Tuning}
+\begin{pycode}
+# Grid search over C and gamma
+C_range = [0.1, 1.0, 10.0]
+gamma_range = [0.1, 1.0, 10.0]
+
+results = np.zeros((len(C_range), len(gamma_range)))
+for i, C in enumerate(C_range):
+    for j, gamma in enumerate(gamma_range):
+        svm_temp = SVM(kernel='rbf', C=C, gamma=gamma)
+        svm_temp.fit(X_circles_train, y_circles_train)
+        results[i, j] = svm_temp.score(X_circles_test, y_circles_test)
+
+# Find best parameters
+best_idx = np.unravel_index(np.argmax(results), results.shape)
+best_C = C_range[best_idx[0]]
+best_gamma = gamma_range[best_idx[1]]
+best_score = results[best_idx]
+
+fig, ax = plt.subplots(figsize=(8, 6))
+im = ax.imshow(results, cmap='YlOrRd', aspect='auto')
+ax.set_xticks(range(len(gamma_range)))
+ax.set_yticks(range(len(C_range)))
+ax.set_xticklabels([str(g) for g in gamma_range])
+ax.set_yticklabels([str(c) for c in C_range])
+ax.set_xlabel('Gamma')
+ax.set_ylabel('C')
+ax.set_title('Grid Search: Test Accuracy')
+
+# Annotate cells
+for i in range(len(C_range)):
+    for j in range(len(gamma_range)):
+        ax.text(j, i, f'{results[i, j]:.2f}', ha='center', va='center',
+                color='white' if results[i, j] > 0.8 else 'black')
+
+plt.colorbar(im, label='Accuracy')
+save_plot('svm_gridsearch.pdf', 'Grid search heatmap for C and gamma hyperparameters.')
+\end{pycode}
+
+Best hyperparameters: $C = \py{best_C}$, $\gamma = \py{best_gamma}$ with accuracy \py{f"{best_score:.3f}"}.
+
+\section{Results Summary}
+\begin{table}[H]
+\centering
+\caption{SVM Model Performance}
+\begin{tabular}{lcccc}
+\toprule
+Model & Kernel & Test Accuracy & Support Vectors \\
+\midrule
+Linear Data & Linear & \py{f"{linear_test_acc:.3f}"} & \py{n_sv_linear} \\
+Circles Data & RBF & \py{f"{rbf_test_acc:.3f}"} & \py{n_sv_rbf} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Kernel Comparison on Circles Data}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Kernel & Test Accuracy & Support Vectors \\')
+print(r'\midrule')
+for k, a, s in kernel_results:
+    print(f'{k.upper()} & {a:.3f} & {s} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusion}
+This analysis demonstrated:
+\begin{itemize}
+    \item Hard and soft margin SVM classification
+    \item The kernel trick for nonlinear decision boundaries
+    \item Effect of C parameter on margin width and misclassifications
+    \item Effect of gamma on RBF kernel flexibility
+    \item Kernel selection based on data characteristics
+    \item Grid search for hyperparameter optimization
+\end{itemize}
+
+The RBF kernel with appropriate hyperparameters ($C = \py{best_C}$, $\gamma = \py{best_gamma}$) achieves \py{f"{best_score:.1%}"} accuracy on the nonlinear circles dataset.
+
+\end{document}

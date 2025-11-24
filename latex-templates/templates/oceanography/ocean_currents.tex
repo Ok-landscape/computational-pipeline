@@ -1,0 +1,480 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Ocean Currents: Geostrophic Flow and Wind-Driven Circulation}
+\author{Physical Oceanography Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Ocean currents are driven by wind stress, density differences, and Earth's rotation. This template explores geostrophic balance, Ekman spiral dynamics, Sverdrup transport, and western boundary current intensification.
+
+\section{Mathematical Framework}
+
+\subsection{Geostrophic Balance}
+Large-scale ocean flow balances Coriolis force and pressure gradient:
+\begin{equation}
+f \mathbf{k} \times \mathbf{u}_g = -\frac{1}{\rho_0} \nabla p
+\end{equation}
+where $f = 2\Omega \sin\phi$ is the Coriolis parameter.
+
+Component form:
+\begin{align}
+u_g &= -\frac{1}{\rho_0 f} \frac{\partial p}{\partial y} \\
+v_g &= \frac{1}{\rho_0 f} \frac{\partial p}{\partial x}
+\end{align}
+
+\subsection{Ekman Transport}
+Wind stress drives Ekman transport perpendicular to wind direction:
+\begin{equation}
+\mathbf{M}_E = \frac{\boldsymbol{\tau} \times \mathbf{k}}{\rho_0 f}
+\end{equation}
+
+The Ekman spiral describes velocity decay with depth:
+\begin{align}
+u(z) &= V_0 e^{z/D_E} \cos\left(\frac{\pi}{4} + \frac{z}{D_E}\right) \\
+v(z) &= V_0 e^{z/D_E} \sin\left(\frac{\pi}{4} + \frac{z}{D_E}\right)
+\end{align}
+where $D_E = \sqrt{2A_v/f}$ is the Ekman depth.
+
+\subsection{Sverdrup Balance}
+Wind stress curl drives meridional transport:
+\begin{equation}
+\beta V = \frac{1}{\rho_0} \nabla \times \boldsymbol{\tau}
+\end{equation}
+where $\beta = \partial f/\partial y$ is the planetary vorticity gradient.
+
+\subsection{Western Boundary Current}
+Munk's model includes lateral friction:
+\begin{equation}
+\beta v = A_H \nabla^4 \psi + \frac{1}{\rho_0 H} \left(\frac{\partial \tau_y}{\partial x} - \frac{\partial \tau_x}{\partial y}\right)
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+
+# Physical constants
+Omega = 7.292e-5  # Earth's rotation rate (rad/s)
+rho_0 = 1025      # Reference density (kg/m^3)
+g = 9.81          # Gravity (m/s^2)
+\end{pycode}
+
+\section{Geostrophic Flow Computation}
+
+\begin{pycode}
+# Create pressure field for geostrophic calculation
+nx, ny = 50, 50
+x = np.linspace(0, 1000e3, nx)  # 1000 km domain
+y = np.linspace(0, 1000e3, ny)
+X, Y = np.meshgrid(x, y)
+
+# Sea surface height anomaly (mesoscale eddy)
+eta = 0.3 * np.exp(-((X - 500e3)**2 + (Y - 500e3)**2) / (200e3)**2)
+
+# Coriolis parameter (mid-latitude)
+lat = 30  # degrees
+f = 2 * Omega * np.sin(np.radians(lat))
+beta = 2 * Omega * np.cos(np.radians(lat)) / 6.371e6
+
+# Geostrophic velocities from SSH gradient
+dx = x[1] - x[0]
+dy = y[1] - y[0]
+
+deta_dx = np.gradient(eta, dx, axis=1)
+deta_dy = np.gradient(eta, dy, axis=0)
+
+u_g = -g / f * deta_dy
+v_g = g / f * deta_dx
+
+speed = np.sqrt(u_g**2 + v_g**2)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Sea surface height
+im1 = axes[0, 0].contourf(X/1e3, Y/1e3, eta*100, levels=20, cmap='RdBu_r')
+axes[0, 0].set_xlabel('x (km)')
+axes[0, 0].set_ylabel('y (km)')
+axes[0, 0].set_title('Sea Surface Height Anomaly (cm)')
+plt.colorbar(im1, ax=axes[0, 0])
+
+# Plot 2: Geostrophic velocity vectors
+skip = 3
+axes[0, 1].quiver(X[::skip, ::skip]/1e3, Y[::skip, ::skip]/1e3,
+                  u_g[::skip, ::skip], v_g[::skip, ::skip],
+                  speed[::skip, ::skip], cmap='viridis', alpha=0.8)
+axes[0, 1].set_xlabel('x (km)')
+axes[0, 1].set_ylabel('y (km)')
+axes[0, 1].set_title('Geostrophic Velocity Field')
+
+# Plot 3: Speed magnitude
+im3 = axes[1, 0].contourf(X/1e3, Y/1e3, speed*100, levels=20, cmap='plasma')
+axes[1, 0].contour(X/1e3, Y/1e3, eta*100, levels=10, colors='white', linewidths=0.5)
+axes[1, 0].set_xlabel('x (km)')
+axes[1, 0].set_ylabel('y (km)')
+axes[1, 0].set_title('Current Speed (cm/s)')
+plt.colorbar(im3, ax=axes[1, 0])
+
+# Plot 4: Cross-section of velocity
+mid_idx = ny // 2
+axes[1, 1].plot(x/1e3, u_g[mid_idx, :]*100, 'b-', label='u (E-W)', linewidth=2)
+axes[1, 1].plot(x/1e3, v_g[mid_idx, :]*100, 'r-', label='v (N-S)', linewidth=2)
+axes[1, 1].axhline(y=0, color='k', linestyle='--', linewidth=0.5)
+axes[1, 1].set_xlabel('x (km)')
+axes[1, 1].set_ylabel('Velocity (cm/s)')
+axes[1, 1].set_title(f'Cross-section at y = {y[mid_idx]/1e3:.0f} km')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('geostrophic_flow.pdf', 'Geostrophic flow around a mesoscale eddy')
+
+max_speed = np.max(speed) * 100
+\end{pycode}
+
+\section{Ekman Spiral}
+
+\begin{pycode}
+# Ekman layer parameters
+A_v = 0.01  # Vertical eddy viscosity (m^2/s)
+D_E = np.sqrt(2 * A_v / f)  # Ekman depth
+
+# Wind stress
+tau_x = 0.1  # N/m^2 (eastward wind)
+tau_y = 0.0
+
+# Surface velocity
+V_0 = tau_x / (rho_0 * np.sqrt(A_v * f / 2))
+
+# Depth array
+z = np.linspace(0, -5 * D_E, 100)
+
+# Ekman spiral velocities
+u_ekman = V_0 * np.exp(z / D_E) * np.cos(np.pi/4 + z/D_E)
+v_ekman = V_0 * np.exp(z / D_E) * np.sin(np.pi/4 + z/D_E)
+
+# Ekman transport
+M_E_x = -tau_y / (rho_0 * f)
+M_E_y = tau_x / (rho_0 * f)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Ekman spiral hodograph
+axes[0, 0].plot(u_ekman*100, v_ekman*100, 'b-', linewidth=2)
+axes[0, 0].scatter([u_ekman[0]*100], [v_ekman[0]*100], c='red', s=100, zorder=5, label='Surface')
+axes[0, 0].scatter([0], [0], c='black', s=50, marker='x')
+axes[0, 0].arrow(0, 0, 5, 0, head_width=0.3, head_length=0.2, fc='green', ec='green', label='Wind')
+axes[0, 0].set_xlabel('u (cm/s)')
+axes[0, 0].set_ylabel('v (cm/s)')
+axes[0, 0].set_title('Ekman Spiral Hodograph')
+axes[0, 0].axis('equal')
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].legend()
+
+# Plot 2: Velocity profiles with depth
+axes[0, 1].plot(u_ekman*100, z, 'b-', label='u', linewidth=2)
+axes[0, 1].plot(v_ekman*100, z, 'r-', label='v', linewidth=2)
+axes[0, 1].axvline(x=0, color='k', linestyle='--', linewidth=0.5)
+axes[0, 1].axhline(y=-D_E, color='gray', linestyle=':', label=f'$D_E$ = {D_E:.1f} m')
+axes[0, 1].set_xlabel('Velocity (cm/s)')
+axes[0, 1].set_ylabel('Depth (m)')
+axes[0, 1].set_title('Ekman Velocity Profiles')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: 3D Ekman spiral
+from mpl_toolkits.mplot3d import Axes3D
+ax3d = fig.add_subplot(2, 2, 3, projection='3d')
+ax3d.plot(u_ekman*100, v_ekman*100, z, 'b-', linewidth=2)
+ax3d.scatter([u_ekman[0]*100], [v_ekman[0]*100], [z[0]], c='red', s=100)
+ax3d.set_xlabel('u (cm/s)')
+ax3d.set_ylabel('v (cm/s)')
+ax3d.set_zlabel('Depth (m)')
+ax3d.set_title('3D Ekman Spiral')
+
+# Plot 4: Cumulative transport
+cumulative_u = np.cumsum(u_ekman) * np.abs(z[1] - z[0])
+cumulative_v = np.cumsum(v_ekman) * np.abs(z[1] - z[0])
+axes[1, 1].plot(cumulative_u, z, 'b-', label='$M_x$', linewidth=2)
+axes[1, 1].plot(cumulative_v, z, 'r-', label='$M_y$', linewidth=2)
+axes[1, 1].axvline(x=M_E_y, color='r', linestyle='--', alpha=0.5, label=f'$M_E$ = {M_E_y:.2f}')
+axes[1, 1].set_xlabel('Cumulative Transport (m$^2$/s)')
+axes[1, 1].set_ylabel('Depth (m)')
+axes[1, 1].set_title('Ekman Transport Integration')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('ekman_spiral.pdf', 'Ekman spiral and transport in the surface boundary layer')
+\end{pycode}
+
+\section{Sverdrup Transport}
+
+\begin{pycode}
+# Basin setup for Sverdrup calculation
+Lx = 6000e3  # Basin width (m)
+Ly = 3000e3  # Basin length (m)
+nx, ny = 100, 50
+
+x_s = np.linspace(0, Lx, nx)
+y_s = np.linspace(0, Ly, ny)
+X_s, Y_s = np.meshgrid(x_s, y_s)
+
+# Latitude range (20-50 degrees N)
+lat_s = 20 + 30 * Y_s / Ly
+f_s = 2 * Omega * np.sin(np.radians(lat_s))
+beta_s = 2 * Omega * np.cos(np.radians(lat_s)) / 6.371e6
+
+# Wind stress (idealized westerlies/trades)
+tau_x_s = -0.1 * np.cos(2 * np.pi * Y_s / Ly)  # Sinusoidal wind pattern
+tau_y_s = np.zeros_like(X_s)
+
+# Wind stress curl
+dtau_x_dy = np.gradient(tau_x_s, y_s[1] - y_s[0], axis=0)
+curl_tau = -dtau_x_dy  # For tau_y = 0
+
+# Sverdrup transport
+V_sv = curl_tau / (rho_0 * beta_s)
+
+# Integrate from eastern boundary to get stream function
+psi = np.zeros_like(V_sv)
+for i in range(nx-2, -1, -1):
+    psi[:, i] = psi[:, i+1] - V_sv[:, i] * (x_s[1] - x_s[0])
+
+# Calculate interior velocities
+u_sv = -np.gradient(psi, y_s[1] - y_s[0], axis=0)
+v_sv = np.gradient(psi, x_s[1] - x_s[0], axis=1)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Wind stress pattern
+im1 = axes[0, 0].contourf(X_s/1e3, Y_s/1e3, tau_x_s, levels=20, cmap='RdBu_r')
+axes[0, 0].set_xlabel('x (km)')
+axes[0, 0].set_ylabel('y (km)')
+axes[0, 0].set_title('Zonal Wind Stress (N/m$^2$)')
+plt.colorbar(im1, ax=axes[0, 0])
+
+# Plot 2: Wind stress curl
+im2 = axes[0, 1].contourf(X_s/1e3, Y_s/1e3, curl_tau*1e7, levels=20, cmap='RdBu_r')
+axes[0, 1].set_xlabel('x (km)')
+axes[0, 1].set_ylabel('y (km)')
+axes[0, 1].set_title('Wind Stress Curl ($\\times 10^{-7}$ N/m$^3$)')
+plt.colorbar(im2, ax=axes[0, 1])
+
+# Plot 3: Sverdrup stream function
+levels = np.linspace(psi.min(), psi.max(), 20)
+im3 = axes[1, 0].contourf(X_s/1e3, Y_s/1e3, psi/1e6, levels=20, cmap='coolwarm')
+cs = axes[1, 0].contour(X_s/1e3, Y_s/1e3, psi/1e6, levels=15, colors='black', linewidths=0.5)
+axes[1, 0].set_xlabel('x (km)')
+axes[1, 0].set_ylabel('y (km)')
+axes[1, 0].set_title('Stream Function (Sv)')
+plt.colorbar(im3, ax=axes[1, 0])
+
+# Plot 4: Meridional transport
+axes[1, 1].plot(y_s/1e3, V_sv[:, nx//2]/1e6, 'b-', linewidth=2)
+axes[1, 1].axhline(y=0, color='k', linestyle='--', linewidth=0.5)
+axes[1, 1].set_xlabel('y (km)')
+axes[1, 1].set_ylabel('V (Sv/m)')
+axes[1, 1].set_title('Sverdrup Meridional Transport')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('sverdrup_transport.pdf', 'Sverdrup wind-driven circulation')
+
+max_transport = np.max(np.abs(psi)) / 1e6
+\end{pycode}
+
+\section{Western Boundary Current}
+
+\begin{pycode}
+# Munk layer solution for western boundary current
+# Simplified 1D model
+
+# Parameters
+A_H = 1e4  # Horizontal eddy viscosity (m^2/s)
+H = 1000   # Layer depth (m)
+L_basin = 5000e3  # Basin width (m)
+
+# Munk layer width
+delta_M = (A_H / beta)**0.333
+
+# Interior Sverdrup transport (constant for simplicity)
+psi_I = 30e6  # 30 Sv
+
+# Distance from western boundary
+x_wb = np.linspace(0, 500e3, 500)
+
+# Munk solution (normalized)
+xi = x_wb / delta_M
+psi_wb = psi_I * (1 - np.exp(-xi/2) * (np.cos(np.sqrt(3)/2 * xi) +
+                                        1/np.sqrt(3) * np.sin(np.sqrt(3)/2 * xi)))
+
+# Velocity in western boundary layer
+v_wb = np.gradient(psi_wb, x_wb[1] - x_wb[0]) / H
+
+# Also compute Stommel solution (bottom friction)
+r = 1e-7  # Bottom friction coefficient
+delta_S = r / beta
+psi_stommel = psi_I * (1 - np.exp(-x_wb / delta_S))
+v_stommel = np.gradient(psi_stommel, x_wb[1] - x_wb[0]) / H
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Stream function comparison
+axes[0, 0].plot(x_wb/1e3, psi_wb/1e6, 'b-', linewidth=2, label='Munk')
+axes[0, 0].plot(x_wb/1e3, psi_stommel/1e6, 'r--', linewidth=2, label='Stommel')
+axes[0, 0].axhline(y=psi_I/1e6, color='gray', linestyle=':', label='Interior')
+axes[0, 0].axvline(x=delta_M/1e3, color='b', linestyle=':', alpha=0.5)
+axes[0, 0].axvline(x=delta_S/1e3, color='r', linestyle=':', alpha=0.5)
+axes[0, 0].set_xlabel('Distance from western boundary (km)')
+axes[0, 0].set_ylabel('$\\psi$ (Sv)')
+axes[0, 0].set_title('Western Boundary Current Structure')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Velocity profiles
+axes[0, 1].plot(x_wb/1e3, v_wb*100, 'b-', linewidth=2, label='Munk')
+axes[0, 1].plot(x_wb/1e3, v_stommel*100, 'r--', linewidth=2, label='Stommel')
+axes[0, 1].set_xlabel('Distance from western boundary (km)')
+axes[0, 1].set_ylabel('v (cm/s)')
+axes[0, 1].set_title('Northward Velocity')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].set_xlim(0, 200)
+
+# Plot 3: 2D gyre circulation (simplified)
+nx_gyre, ny_gyre = 100, 50
+x_gyre = np.linspace(0, L_basin, nx_gyre)
+y_gyre = np.linspace(0, Ly, ny_gyre)
+X_gyre, Y_gyre = np.meshgrid(x_gyre, y_gyre)
+
+# Simple subtropical gyre
+psi_gyre = psi_I * np.sin(np.pi * Y_gyre / Ly)
+# Western intensification
+xi_gyre = X_gyre / delta_M
+wb_factor = 1 - np.exp(-xi_gyre/2) * (np.cos(np.sqrt(3)/2 * xi_gyre) +
+                                       1/np.sqrt(3) * np.sin(np.sqrt(3)/2 * xi_gyre))
+wb_factor = np.clip(wb_factor, 0, 1)
+psi_gyre = psi_gyre * wb_factor
+
+im3 = axes[1, 0].contourf(X_gyre/1e3, Y_gyre/1e3, psi_gyre/1e6, levels=20, cmap='coolwarm')
+cs = axes[1, 0].contour(X_gyre/1e3, Y_gyre/1e3, psi_gyre/1e6, levels=10, colors='black', linewidths=0.5)
+axes[1, 0].set_xlabel('x (km)')
+axes[1, 0].set_ylabel('y (km)')
+axes[1, 0].set_title('Subtropical Gyre with Western Intensification')
+plt.colorbar(im3, ax=axes[1, 0], label='$\\psi$ (Sv)')
+
+# Plot 4: Cross-basin transport profile
+mid_y = ny_gyre // 2
+axes[1, 1].plot(x_gyre/1e3, psi_gyre[mid_y, :]/1e6, 'b-', linewidth=2)
+axes[1, 1].axvline(x=delta_M/1e3, color='r', linestyle='--',
+                   label=f'$\\delta_M$ = {delta_M/1e3:.0f} km')
+axes[1, 1].set_xlabel('x (km)')
+axes[1, 1].set_ylabel('$\\psi$ (Sv)')
+axes[1, 1].set_title('Cross-basin Transport Profile')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('western_boundary.pdf', 'Western boundary current dynamics')
+
+max_wbc_vel = np.max(v_wb) * 100
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Geostrophic Flow Statistics}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Geostrophic flow around mesoscale eddy}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f"Maximum SSH anomaly & {np.max(eta)*100:.1f} cm \\\\")
+print(f"Maximum current speed & {max_speed:.1f} cm/s \\\\")
+print(f"Coriolis parameter & {f:.2e} s$^{{-1}}$ \\\\")
+print(f"Eddy radius & 200 km \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Ekman Layer Parameters}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Ekman spiral characteristics}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f"Ekman depth & {D_E:.1f} m \\\\")
+print(f"Surface velocity & {V_0*100:.1f} cm/s \\\\")
+print(f"Wind stress & {tau_x:.2f} N/m$^2$ \\\\")
+print(f"Ekman transport & {M_E_y:.2f} m$^2$/s \\\\")
+print(f"Surface deflection & 45$^\\circ$ \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Gyre Circulation}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Wind-driven gyre parameters}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f"Maximum transport & {max_transport:.1f} Sv \\\\")
+print(f"Munk layer width & {delta_M/1e3:.0f} km \\\\")
+print(f"Stommel layer width & {delta_S/1e3:.0f} km \\\\")
+print(f"Max WBC velocity & {max_wbc_vel:.1f} cm/s \\\\")
+print(f"Basin width & {L_basin/1e3:.0f} km \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Physical Summary}
+\begin{itemize}
+    \item Ekman depth: \py{f"{D_E:.1f}"} m
+    \item Munk boundary layer: \py{f"{delta_M/1e3:.0f}"} km
+    \item Maximum gyre transport: \py{f"{max_transport:.1f}"} Sv
+    \item WBC velocity: \py{f"{max_wbc_vel:.1f}"} cm/s
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates the fundamental dynamics of ocean circulation. Geostrophic balance governs large-scale flow, with velocities determined by pressure gradients and Earth's rotation. The Ekman spiral shows how wind stress drives surface currents deflected from the wind direction. Sverdrup theory relates interior transport to wind stress curl, while western boundary current intensification results from the need to close the gyre circulation and conserve vorticity.
+
+\end{document}

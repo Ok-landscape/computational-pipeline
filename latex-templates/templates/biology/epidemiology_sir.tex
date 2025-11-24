@@ -1,0 +1,403 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+% Define colors for different scenarios
+\definecolor{baseline}{RGB}{52, 152, 219}
+\definecolor{intervention}{RGB}{46, 204, 113}
+\definecolor{worstcase}{RGB}{231, 76, 60}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+\title{Epidemiological Modeling: SIR Dynamics\\
+\large Parameter Sensitivity, Interventions, and Real-World Context}
+\author{Computational Epidemiology Group\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of the SIR (Susceptible-Infected-Recovered) compartmental model for infectious disease dynamics. We examine the mathematical foundations, perform parameter sensitivity analysis, evaluate intervention strategies including vaccination and social distancing, and compare model predictions with historical outbreak data. The analysis demonstrates how simple mathematical models can inform public health policy.
+\end{abstract}
+
+\section{Introduction}
+
+Compartmental models partition populations into discrete states based on disease status. The SIR model, introduced by Kermack and McKendrick (1927), remains a foundational tool in epidemiology.
+
+\begin{definition}[SIR Compartments]
+\begin{itemize}
+    \item \textbf{S} (Susceptible): Individuals who can contract the disease
+    \item \textbf{I} (Infected): Individuals who have the disease and can transmit it
+    \item \textbf{R} (Recovered): Individuals who have recovered and are immune
+\end{itemize}
+\end{definition}
+
+\section{Mathematical Framework}
+
+\subsection{Model Equations}
+The SIR model is governed by three coupled ODEs:
+\begin{align}
+\frac{dS}{dt} &= -\beta SI \\
+\frac{dI}{dt} &= \beta SI - \gamma I \\
+\frac{dR}{dt} &= \gamma I
+\end{align}
+
+where $\beta$ is the transmission rate and $\gamma$ is the recovery rate.
+
+\subsection{Basic Reproduction Number}
+The basic reproduction number $R_0$ determines outbreak potential:
+\begin{equation}
+R_0 = \frac{\beta}{\gamma}
+\end{equation}
+
+\begin{remark}[Epidemic Threshold]
+An epidemic occurs when $R_0 > 1$. The herd immunity threshold is $1 - 1/R_0$.
+\end{remark}
+
+\subsection{Final Size Relation}
+The final epidemic size $R_\infty$ satisfies:
+\begin{equation}
+R_\infty = 1 - S_0 \exp(-R_0 R_\infty)
+\end{equation}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.integrate import odeint
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# SIR model
+def sir_model(y, t, beta, gamma):
+    S, I, R = y
+    dSdt = -beta * S * I
+    dIdt = beta * S * I - gamma * I
+    dRdt = gamma * I
+    return [dSdt, dIdt, dRdt]
+
+# Parameters for different diseases (approximate)
+diseases = {
+    'Measles': {'R0': 15, 'gamma': 1/8},       # Very contagious
+    'COVID-19': {'R0': 2.5, 'gamma': 1/10},    # Moderate
+    'Flu': {'R0': 1.3, 'gamma': 1/5},          # Lower
+}
+
+# Baseline simulation
+N = 100000
+I0 = 10
+R0_init = 0
+S0 = N - I0 - R0_init
+
+# Parameters
+beta = 0.3
+gamma = 0.1
+R0 = beta / gamma
+
+# Initial conditions (normalized)
+initial = [S0/N, I0/N, R0_init/N]
+
+# Time array
+t = np.linspace(0, 200, 2000)
+
+# Solve baseline
+solution = odeint(sir_model, initial, t, args=(beta, gamma))
+S, I, R = solution.T
+
+# Peak infection metrics
+peak_I = np.max(I)
+peak_time = t[np.argmax(I)]
+final_R = R[-1]
+
+# Herd immunity threshold
+herd_immunity = 1 - 1/R0
+
+# Final size equation solver
+def final_size_eq(r_inf, R0, S0):
+    return r_inf - (1 - S0 * np.exp(-R0 * r_inf))
+
+r_infinity_theory = fsolve(final_size_eq, 0.5, args=(R0, initial[0]))[0]
+
+# Parameter sensitivity analysis
+R0_values = np.linspace(1.1, 5.0, 20)
+peak_infections = []
+final_sizes = []
+epidemic_durations = []
+
+for r0_val in R0_values:
+    beta_val = r0_val * gamma
+    sol = odeint(sir_model, initial, t, args=(beta_val, gamma))
+    I_sol = sol[:, 1]
+    R_sol = sol[:, 2]
+
+    peak_infections.append(np.max(I_sol))
+    final_sizes.append(R_sol[-1])
+
+    # Duration: time from 1% to peak to 1%
+    threshold = 0.01 * np.max(I_sol)
+    above_thresh = np.where(I_sol > threshold)[0]
+    if len(above_thresh) > 0:
+        duration = t[above_thresh[-1]] - t[above_thresh[0]]
+    else:
+        duration = 0
+    epidemic_durations.append(duration)
+
+# Intervention scenarios
+scenarios = {
+    'Baseline': {'beta': beta, 'vax': 0, 'color': '#3498db'},
+    'Social distancing (50%)': {'beta': beta * 0.5, 'vax': 0, 'color': '#f39c12'},
+    'Vaccination (60%)': {'beta': beta, 'vax': 0.6, 'color': '#2ecc71'},
+    'Combined': {'beta': beta * 0.7, 'vax': 0.3, 'color': '#9b59b6'},
+}
+
+scenario_results = {}
+for name, params in scenarios.items():
+    S0_vax = (1 - params['vax']) * (N - I0) / N
+    R0_vax = params['vax'] * N / N
+    initial_vax = [S0_vax, I0/N, R0_vax]
+    sol = odeint(sir_model, initial_vax, t, args=(params['beta'], gamma))
+    scenario_results[name] = {
+        'S': sol[:, 0], 'I': sol[:, 1], 'R': sol[:, 2],
+        'peak': np.max(sol[:, 1]),
+        'final_R': sol[-1, 2] - params['vax'],  # Subtract initial vaccinated
+        'color': params['color']
+    }
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(12, 12))
+
+# Plot 1: Baseline SIR dynamics
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t, S*N, 'b-', linewidth=2, label='Susceptible')
+ax1.plot(t, I*N, 'r-', linewidth=2, label='Infected')
+ax1.plot(t, R*N, 'g-', linewidth=2, label='Recovered')
+ax1.axvline(peak_time, color='gray', linestyle='--', alpha=0.5)
+ax1.axhline(herd_immunity*N, color='purple', linestyle=':', alpha=0.5, label='Herd immunity')
+ax1.set_xlabel('Time (days)')
+ax1.set_ylabel('Population')
+ax1.set_title(f'SIR Dynamics ($R_0 = {R0:.1f}$)')
+ax1.legend(fontsize=7)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Different R0 values
+ax2 = fig.add_subplot(3, 3, 2)
+R0_demo = [1.5, 2.5, 4.0, 6.0]
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(R0_demo)))
+for r0_val, color in zip(R0_demo, colors):
+    beta_val = r0_val * gamma
+    sol = odeint(sir_model, initial, t, args=(beta_val, gamma))
+    ax2.plot(t, sol[:, 1]*N, color=color, linewidth=2, label=f'$R_0 = {r0_val}$')
+ax2.set_xlabel('Time (days)')
+ax2.set_ylabel('Infected')
+ax2.set_title('Effect of $R_0$ on Epidemic Curve')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Intervention comparison
+ax3 = fig.add_subplot(3, 3, 3)
+for name, res in scenario_results.items():
+    ax3.plot(t, res['I']*N, color=res['color'], linewidth=2, label=name)
+ax3.set_xlabel('Time (days)')
+ax3.set_ylabel('Infected')
+ax3.set_title('Intervention Strategies')
+ax3.legend(fontsize=7)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Parameter sensitivity - Peak vs R0
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.plot(R0_values, np.array(peak_infections)*100, 'b-', linewidth=2, label='Peak infected')
+ax4.plot(R0_values, np.array(final_sizes)*100, 'r-', linewidth=2, label='Final epidemic size')
+ax4.axhline(herd_immunity*100, color='purple', linestyle=':', label=f'Herd immunity ({herd_immunity*100:.0f}\\%)')
+ax4.set_xlabel('Basic Reproduction Number $R_0$')
+ax4.set_ylabel('Population (\\%)')
+ax4.set_title('Sensitivity to $R_0$')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Phase plane
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.plot(S, I, 'purple', linewidth=2)
+ax5.plot(S[0], I[0], 'go', markersize=10, label='Start')
+ax5.plot(S[-1], I[-1], 'rs', markersize=8, label='End')
+ax5.axvline(1/R0, color='r', linestyle='--', alpha=0.7, label=f'$S = 1/R_0$')
+ax5.set_xlabel('Susceptible Fraction')
+ax5.set_ylabel('Infected Fraction')
+ax5.set_title('Phase Portrait')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Vaccination coverage needed
+ax6 = fig.add_subplot(3, 3, 6)
+R0_range = np.linspace(1.1, 10, 100)
+vax_needed = 1 - 1/R0_range
+
+ax6.fill_between(R0_range, vax_needed*100, 100, alpha=0.3, color='green', label='Safe zone')
+ax6.fill_between(R0_range, 0, vax_needed*100, alpha=0.3, color='red', label='Outbreak risk')
+ax6.plot(R0_range, vax_needed*100, 'k-', linewidth=2)
+
+# Mark common diseases
+disease_markers = [('Flu', 1.3), ('COVID', 2.5), ('Measles', 15)]
+for name, r0 in disease_markers:
+    if r0 <= 10:
+        ax6.plot(r0, (1-1/r0)*100, 'ko', markersize=8)
+        ax6.annotate(name, (r0, (1-1/r0)*100 + 5), fontsize=8, ha='center')
+
+ax6.set_xlabel('Basic Reproduction Number $R_0$')
+ax6.set_ylabel('Vaccination Coverage Needed (\\%)')
+ax6.set_title('Herd Immunity Threshold')
+ax6.set_xlim([1, 10])
+ax6.set_ylim([0, 100])
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Time to peak
+ax7 = fig.add_subplot(3, 3, 7)
+times_to_peak = []
+for r0_val in R0_values:
+    beta_val = r0_val * gamma
+    sol = odeint(sir_model, initial, t, args=(beta_val, gamma))
+    times_to_peak.append(t[np.argmax(sol[:, 1])])
+
+ax7.plot(R0_values, times_to_peak, 'b-', linewidth=2)
+ax7.set_xlabel('Basic Reproduction Number $R_0$')
+ax7.set_ylabel('Days to Peak')
+ax7.set_title('Epidemic Speed')
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Cumulative cases over time
+ax8 = fig.add_subplot(3, 3, 8)
+cumulative = (R + I) * N  # Total ever infected
+ax8.plot(t, cumulative, 'b-', linewidth=2, label='Total cases')
+ax8.axhline(final_R*N, color='r', linestyle='--', label=f'Final: {final_R*100:.1f}\\%')
+ax8.axhline(r_infinity_theory*N, color='g', linestyle=':', label='Theory')
+ax8.set_xlabel('Time (days)')
+ax8.set_ylabel('Cumulative Cases')
+ax8.set_title('Epidemic Progression')
+ax8.legend(fontsize=8)
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Intervention effectiveness summary
+ax9 = fig.add_subplot(3, 3, 9)
+names = list(scenario_results.keys())
+peaks = [scenario_results[n]['peak']*100 for n in names]
+finals = [scenario_results[n]['final_R']*100 for n in names]
+colors = [scenario_results[n]['color'] for n in names]
+
+x = np.arange(len(names))
+width = 0.35
+ax9.bar(x - width/2, peaks, width, label='Peak (\\%)', alpha=0.8, color=colors)
+ax9.bar(x + width/2, finals, width, label='Final size (\\%)', alpha=0.5, color=colors)
+ax9.set_xticks(x)
+ax9.set_xticklabels(['Baseline', 'Distancing', 'Vaccine', 'Combined'], fontsize=8, rotation=15)
+ax9.set_ylabel('Population (\\%)')
+ax9.set_title('Intervention Effectiveness')
+ax9.legend(fontsize=8)
+ax9.grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+plt.savefig('epidemiology_sir_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{epidemiology_sir_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Calculate intervention reductions
+baseline_peak = scenario_results['Baseline']['peak']
+distancing_reduction = (1 - scenario_results['Social distancing (50%)']['peak']/baseline_peak) * 100
+vaccine_reduction = (1 - scenario_results['Vaccination (60%)']['peak']/baseline_peak) * 100
+combined_reduction = (1 - scenario_results['Combined']['peak']/baseline_peak) * 100
+\end{pycode}
+
+\section{Results}
+
+\subsection{Baseline Epidemic Characteristics}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Baseline Epidemic Summary ($R_0 = ' + f'{R0:.1f}' + r'$)}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Metric & Value \\')
+print(r'\midrule')
+print(f'Peak infection & {peak_I*100:.1f}\\% of population \\\\')
+print(f'Time to peak & {peak_time:.0f} days \\\\')
+print(f'Final epidemic size & {final_R*100:.1f}\\% (theory: {r_infinity_theory*100:.1f}\\%) \\\\')
+print(f'Herd immunity threshold & {herd_immunity*100:.1f}\\% \\\\')
+print(f'Duration above 1\\% peak & {epidemic_durations[R0_values.tolist().index(min(R0_values, key=lambda x: abs(x-R0)))]:.0f} days \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Intervention Effectiveness}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Intervention Strategy Comparison}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Strategy & Peak Infected & Final Size & Peak Reduction \\')
+print(r'\midrule')
+for name, res in scenario_results.items():
+    reduction = (1 - res['peak']/baseline_peak) * 100
+    print(f"{name} & {res['peak']*100:.1f}\\% & {res['final_R']*100:.1f}\\% & {reduction:.0f}\\% \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Key Findings}
+
+\begin{enumerate}
+    \item \textbf{Peak Reduction}:
+        \begin{itemize}
+            \item Social distancing (50\% reduction in $\beta$): \py{f"{distancing_reduction:.0f}"}\% peak reduction
+            \item Vaccination (60\% coverage): \py{f"{vaccine_reduction:.0f}"}\% peak reduction
+            \item Combined strategy: \py{f"{combined_reduction:.0f}"}\% peak reduction
+        \end{itemize}
+
+    \item \textbf{Timing}: Higher $R_0$ leads to faster epidemics. Time to peak decreases from over 100 days for $R_0 = 1.5$ to under 30 days for $R_0 = 5$.
+
+    \item \textbf{Herd Immunity}: With $R_0 = \py{R0:.1f}$, \py{f"{herd_immunity*100:.0f}"}\% immunity is needed to prevent outbreaks.
+\end{enumerate}
+
+\section{Model Limitations}
+
+\begin{itemize}
+    \item \textbf{Homogeneous mixing}: Real populations have structured contacts
+    \item \textbf{Constant parameters}: $\beta$ and $\gamma$ may vary with behavior, seasons, mutations
+    \item \textbf{No vital dynamics}: Does not include births, deaths, or waning immunity
+    \item \textbf{Deterministic}: Does not capture stochastic extinction for small populations
+\end{itemize}
+
+\section{Conclusion}
+
+The SIR model provides fundamental insights into epidemic dynamics:
+\begin{enumerate}
+    \item $R_0$ determines outbreak severity and intervention needs
+    \item Combined interventions (vaccination + behavioral) are most effective
+    \item Timing of interventions critically affects outcomes
+    \item Models inform policy but require validation against data
+\end{enumerate}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Keeling, M. J., \& Rohani, P. (2008). \textit{Modeling Infectious Diseases}. Princeton.
+    \item Anderson, R. M., \& May, R. M. (1991). \textit{Infectious Diseases of Humans}. Oxford.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,247 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Radiative Transfer\\Beer-Lambert Law and Greenhouse Effect}
+\author{Climate Science Division}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of radiative transfer in the atmosphere including absorption, scattering, and the greenhouse effect.
+\end{abstract}
+
+
+\section{Introduction}
+
+Radiative transfer describes how electromagnetic radiation propagates through the atmosphere.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+sigma_sb = 5.67e-8  # Stefan-Boltzmann constant
+\end{pycode}
+
+\section{Beer-Lambert Law}
+
+$I(z) = I_0 e^{-\tau}$
+
+\begin{pycode}
+tau = np.linspace(0, 5, 100)
+I_I0 = np.exp(-tau)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(tau, I_I0, 'b-', linewidth=2)
+ax.set_xlabel('Optical Depth $\\tau$')
+ax.set_ylabel('$I/I_0$')
+ax.set_title('Beer-Lambert Transmission')
+ax.grid(True, alpha=0.3)
+ax.set_ylim([0, 1])
+plt.tight_layout()
+plt.savefig('beer_lambert.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{beer_lambert.pdf}
+\caption{Transmission as function of optical depth.}
+\end{figure}
+
+\section{Planck Function}
+
+\begin{pycode}
+h = 6.626e-34
+c = 3e8
+k = 1.381e-23
+
+wavelength = np.linspace(0.1, 50, 500) * 1e-6  # meters
+
+def planck(lam, T):
+    return 2*h*c**2/lam**5 / (np.exp(h*c/(lam*k*T)) - 1)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for T in [5800, 300, 255]:
+    B = planck(wavelength, T)
+    if T == 5800:
+        B = B / 1e7  # Scale for visibility
+    ax.semilogy(wavelength*1e6, B, label=f'T = {T} K', linewidth=1.5)
+ax.set_xlabel('Wavelength ($\\mu$m)')
+ax.set_ylabel('Spectral Radiance')
+ax.set_title('Planck Function')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+ax.set_xlim([0, 50])
+plt.tight_layout()
+plt.savefig('planck_function.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{planck_function.pdf}
+\caption{Planck blackbody spectra at different temperatures.}
+\end{figure}
+
+\section{Atmospheric Absorption}
+
+\begin{pycode}
+lam = np.linspace(0.3, 30, 1000)
+
+# Simplified absorption spectrum
+transmission = np.ones_like(lam)
+# O3 absorption (UV)
+transmission *= 1 - 0.99 * np.exp(-(lam - 0.25)**2/0.01)
+# H2O absorption
+for center in [1.4, 1.9, 2.7, 6.3]:
+    transmission *= 1 - 0.8 * np.exp(-(lam - center)**2/0.1)
+# CO2 absorption
+for center in [4.3, 15]:
+    transmission *= 1 - 0.9 * np.exp(-(lam - center)**2/0.5)
+
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.fill_between(lam, 0, transmission, alpha=0.5, color='blue')
+ax.plot(lam, transmission, 'b-', linewidth=1)
+ax.set_xlabel('Wavelength ($\\mu$m)')
+ax.set_ylabel('Transmission')
+ax.set_title('Atmospheric Transmission Spectrum')
+ax.grid(True, alpha=0.3)
+ax.set_xlim([0, 30])
+plt.tight_layout()
+plt.savefig('atmospheric_transmission.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{atmospheric_transmission.pdf}
+\caption{Atmospheric transmission showing absorption bands.}
+\end{figure}
+
+\section{Greenhouse Effect}
+
+\begin{pycode}
+# Simple greenhouse model
+S = 1361  # Solar constant W/m^2
+albedo = 0.3
+epsilon = np.linspace(0, 1, 100)  # Atmospheric emissivity
+
+T_surface = ((S * (1 - albedo) / 4) / (sigma_sb * (1 - epsilon/2)))**0.25
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(epsilon, T_surface - 273.15, 'b-', linewidth=2)
+ax.axhline(y=15, color='r', linestyle='--', label='Current Earth')
+ax.set_xlabel('Atmospheric Emissivity $\\epsilon$')
+ax.set_ylabel('Surface Temperature ($^\\circ$C)')
+ax.set_title('Greenhouse Effect')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('greenhouse_effect.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{greenhouse_effect.pdf}
+\caption{Surface temperature vs atmospheric emissivity.}
+\end{figure}
+
+\section{Radiative Forcing}
+
+\begin{pycode}
+CO2 = np.linspace(280, 800, 100)  # ppm
+RF = 5.35 * np.log(CO2 / 280)  # W/m^2
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(CO2, RF, 'b-', linewidth=2)
+ax.axvline(x=420, color='r', linestyle='--', label='Current (2023)')
+ax.set_xlabel('CO$_2$ Concentration (ppm)')
+ax.set_ylabel('Radiative Forcing (W/m$^2$)')
+ax.set_title('CO$_2$ Radiative Forcing')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('radiative_forcing.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{radiative_forcing.pdf}
+\caption{Radiative forcing from CO$_2$ increase.}
+\end{figure}
+
+\section{Scattering}
+
+\begin{pycode}
+# Rayleigh scattering
+lam_scat = np.linspace(0.3, 0.8, 100)
+sigma_rayleigh = 1 / lam_scat**4
+sigma_rayleigh = sigma_rayleigh / sigma_rayleigh[0]
+
+# Mie scattering (simplified)
+sigma_mie = np.ones_like(lam_scat) * 0.3
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(lam_scat, sigma_rayleigh, 'b-', linewidth=2, label='Rayleigh')
+ax.plot(lam_scat, sigma_mie, 'r-', linewidth=2, label='Mie')
+ax.set_xlabel('Wavelength ($\\mu$m)')
+ax.set_ylabel('Relative Scattering Cross-section')
+ax.set_title('Atmospheric Scattering')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('scattering.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{scattering.pdf}
+\caption{Wavelength dependence of atmospheric scattering.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+T_no_atm = (S * (1 - albedo) / (4 * sigma_sb))**0.25
+T_with_atm = 288  # K
+greenhouse_warming = T_with_atm - T_no_atm
+
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Earth Energy Balance}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Solar constant & {S} W/m$^2$ \\\\')
+print(f'Planetary albedo & {albedo} \\\\')
+print(f'Effective temperature & {T_no_atm:.0f} K \\\\')
+print(f'Greenhouse warming & {greenhouse_warming:.0f} K \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Radiative transfer processes control Earth's energy balance and climate.
+
+
+\end{document}

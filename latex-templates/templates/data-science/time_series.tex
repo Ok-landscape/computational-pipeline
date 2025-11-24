@@ -1,0 +1,497 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+\title{Time Series Analysis and Forecasting}
+\author{Computational Data Science}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive analysis of time series data, including decomposition into trend, seasonality, and residual components, autocorrelation analysis, ARIMA modeling, and forecasting with prediction intervals. The analysis demonstrates statistical tests for stationarity and model selection criteria.
+\end{abstract}
+
+\section{Introduction}
+Time series analysis is fundamental to understanding temporal patterns in data. A time series $\{y_t\}$ can be decomposed as:
+\begin{equation}
+y_t = T_t + S_t + R_t
+\end{equation}
+where $T_t$ is the trend component, $S_t$ is the seasonal component, and $R_t$ is the residual.
+
+The ARIMA$(p,d,q)$ model combines autoregression, differencing, and moving average:
+\begin{equation}
+\phi(B)(1-B)^d y_t = \theta(B)\epsilon_t
+\end{equation}
+where $B$ is the backshift operator, $\phi(B)$ is the AR polynomial, and $\theta(B)$ is the MA polynomial.
+
+\section{Computational Environment}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats, signal
+from scipy.fft import fft, fftfreq
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[H]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.85\textwidth]{' + filename + '}')
+    print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Data Generation and Overview}
+\begin{pycode}
+# Generate synthetic time series with trend, seasonality, and noise
+n = 200
+t = np.arange(n)
+
+# Components
+trend = 0.05 * t + 0.0002 * t**2
+seasonal_period = 12
+seasonality = 3 * np.sin(2 * np.pi * t / seasonal_period)
+noise = np.random.normal(0, 1.5, n)
+
+# Combined series
+y = trend + seasonality + noise
+
+# Basic statistics
+mean_y = np.mean(y)
+std_y = np.std(y)
+min_y = np.min(y)
+max_y = np.max(y)
+
+# Plot raw series
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.plot(t, y, 'b-', linewidth=0.8, alpha=0.8)
+ax.set_xlabel('Time')
+ax.set_ylabel('Value')
+ax.set_title('Raw Time Series Data')
+ax.grid(True, alpha=0.3)
+save_plot('ts_raw_series.pdf', 'Original time series showing trend and seasonal patterns.')
+\end{pycode}
+
+The generated time series has $n = \py{n}$ observations with mean $\mu = \py{f"{mean_y:.2f}"}$ and standard deviation $\sigma = \py{f"{std_y:.2f}"}$.
+
+\section{Time Series Decomposition}
+\begin{pycode}
+# Classical decomposition using moving average
+def moving_average(x, window):
+    weights = np.ones(window) / window
+    return np.convolve(x, weights, mode='same')
+
+# Extract trend
+window = seasonal_period
+trend_est = moving_average(y, window)
+
+# Detrend to get seasonal + residual
+detrended = y - trend_est
+
+# Estimate seasonal pattern
+seasonal_est = np.zeros(n)
+for i in range(seasonal_period):
+    indices = np.arange(i, n, seasonal_period)
+    seasonal_est[indices] = np.mean(detrended[indices])
+
+# Residual
+residual = y - trend_est - seasonal_est
+
+# Plot decomposition
+fig, axes = plt.subplots(4, 1, figsize=(10, 10), sharex=True)
+
+axes[0].plot(t, y, 'b-', linewidth=0.8)
+axes[0].set_ylabel('Observed')
+axes[0].set_title('Time Series Decomposition')
+axes[0].grid(True, alpha=0.3)
+
+axes[1].plot(t, trend_est, 'r-', linewidth=1.5)
+axes[1].set_ylabel('Trend')
+axes[1].grid(True, alpha=0.3)
+
+axes[2].plot(t, seasonal_est, 'g-', linewidth=1)
+axes[2].set_ylabel('Seasonal')
+axes[2].grid(True, alpha=0.3)
+
+axes[3].plot(t, residual, 'purple', linewidth=0.8)
+axes[3].set_ylabel('Residual')
+axes[3].set_xlabel('Time')
+axes[3].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('ts_decomposition.pdf', 'Classical additive decomposition of the time series.')
+\end{pycode}
+
+\section{Autocorrelation Analysis}
+The autocorrelation function (ACF) measures correlation at different lags:
+\begin{equation}
+\rho_k = \frac{\sum_{t=k+1}^{n}(y_t - \bar{y})(y_{t-k} - \bar{y})}{\sum_{t=1}^{n}(y_t - \bar{y})^2}
+\end{equation}
+
+The partial autocorrelation function (PACF) measures correlation controlling for intermediate lags.
+
+\begin{pycode}
+def acf(x, nlags):
+    """Compute autocorrelation function."""
+    n = len(x)
+    x = x - np.mean(x)
+    result = np.correlate(x, x, mode='full')
+    result = result[n-1:] / result[n-1]
+    return result[:nlags+1]
+
+def pacf(x, nlags):
+    """Compute partial autocorrelation using Durbin-Levinson."""
+    r = acf(x, nlags)
+    pacf_vals = np.zeros(nlags + 1)
+    pacf_vals[0] = 1.0
+    pacf_vals[1] = r[1]
+
+    phi = np.zeros((nlags + 1, nlags + 1))
+    phi[1, 1] = r[1]
+
+    for k in range(2, nlags + 1):
+        num = r[k] - sum(phi[k-1, j] * r[k-j] for j in range(1, k))
+        den = 1 - sum(phi[k-1, j] * r[j] for j in range(1, k))
+        phi[k, k] = num / den if den != 0 else 0
+        for j in range(1, k):
+            phi[k, j] = phi[k-1, j] - phi[k, k] * phi[k-1, k-j]
+        pacf_vals[k] = phi[k, k]
+
+    return pacf_vals
+
+nlags = 40
+acf_vals = acf(y, nlags)
+pacf_vals = pacf(y, nlags)
+
+# Confidence bounds (95%)
+conf_bound = 1.96 / np.sqrt(n)
+
+fig, axes = plt.subplots(2, 1, figsize=(10, 6))
+
+# ACF plot
+axes[0].bar(range(nlags+1), acf_vals, width=0.3, color='steelblue', alpha=0.8)
+axes[0].axhline(conf_bound, color='r', linestyle='--', linewidth=1)
+axes[0].axhline(-conf_bound, color='r', linestyle='--', linewidth=1)
+axes[0].axhline(0, color='k', linewidth=0.5)
+axes[0].set_xlabel('Lag')
+axes[0].set_ylabel('ACF')
+axes[0].set_title('Autocorrelation Function')
+axes[0].set_xlim(-0.5, nlags+0.5)
+
+# PACF plot
+axes[1].bar(range(nlags+1), pacf_vals, width=0.3, color='darkgreen', alpha=0.8)
+axes[1].axhline(conf_bound, color='r', linestyle='--', linewidth=1)
+axes[1].axhline(-conf_bound, color='r', linestyle='--', linewidth=1)
+axes[1].axhline(0, color='k', linewidth=0.5)
+axes[1].set_xlabel('Lag')
+axes[1].set_ylabel('PACF')
+axes[1].set_title('Partial Autocorrelation Function')
+axes[1].set_xlim(-0.5, nlags+0.5)
+
+plt.tight_layout()
+save_plot('ts_acf_pacf.pdf', 'ACF and PACF plots with 95\\% confidence bounds.')
+\end{pycode}
+
+\section{Stationarity Testing}
+A time series is stationary if its statistical properties remain constant over time. The Augmented Dickey-Fuller test checks for unit roots.
+
+\begin{pycode}
+# Simple ADF test implementation
+def adf_test(y, max_lag=None):
+    """Augmented Dickey-Fuller test for stationarity."""
+    n = len(y)
+    if max_lag is None:
+        max_lag = int(np.floor(12 * (n/100)**(1/4)))
+
+    # First difference
+    dy = np.diff(y)
+    y_lag = y[:-1]
+
+    # Regression: dy = alpha + beta*y_{t-1} + sum(gamma_i * dy_{t-i}) + e
+    # Simplified: just test coefficient on y_{t-1}
+    X = np.column_stack([np.ones(len(dy)), y_lag])
+    coeffs = np.linalg.lstsq(X, dy, rcond=None)[0]
+
+    # Compute test statistic
+    residuals = dy - X @ coeffs
+    se = np.sqrt(np.sum(residuals**2) / (len(dy) - 2))
+    se_beta = se / np.sqrt(np.sum((y_lag - np.mean(y_lag))**2))
+
+    adf_stat = coeffs[1] / se_beta
+
+    # Critical values (approximate)
+    critical_values = {0.01: -3.43, 0.05: -2.86, 0.10: -2.57}
+
+    return adf_stat, critical_values
+
+adf_stat, critical = adf_test(y)
+is_stationary = adf_stat < critical[0.05]
+
+# Test on differenced series
+dy = np.diff(y)
+adf_diff, _ = adf_test(dy)
+\end{pycode}
+
+\begin{table}[H]
+\centering
+\caption{Augmented Dickey-Fuller Test Results}
+\begin{tabular}{lcc}
+\toprule
+Series & ADF Statistic & Stationary (5\%) \\
+\midrule
+Original & \py{f"{adf_stat:.3f}"} & \py{"Yes" if is_stationary else "No"} \\
+First Difference & \py{f"{adf_diff:.3f}"} & \py{"Yes" if adf_diff < -2.86 else "No"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Critical values: 1\%: $-3.43$, 5\%: $-2.86$, 10\%: $-2.57$.
+
+\section{ARIMA Model Fitting}
+\begin{pycode}
+# Simple AR(p) model fitting
+def fit_ar(y, p):
+    """Fit AR(p) model using OLS."""
+    n = len(y)
+    Y = y[p:]
+    X = np.column_stack([y[p-i-1:n-i-1] for i in range(p)])
+    X = np.column_stack([np.ones(len(Y)), X])
+
+    coeffs = np.linalg.lstsq(X, Y, rcond=None)[0]
+    fitted = X @ coeffs
+    residuals = Y - fitted
+
+    # Information criteria
+    k = p + 1
+    n_eff = len(Y)
+    sse = np.sum(residuals**2)
+    aic = n_eff * np.log(sse/n_eff) + 2*k
+    bic = n_eff * np.log(sse/n_eff) + k*np.log(n_eff)
+
+    return coeffs, residuals, aic, bic, fitted
+
+# Model selection
+results = []
+for p in range(1, 7):
+    coeffs, resid, aic, bic, fitted = fit_ar(y, p)
+    results.append((p, aic, bic, np.std(resid)))
+
+best_p = min(results, key=lambda x: x[1])[0]
+coeffs_best, resid_best, aic_best, bic_best, fitted_best = fit_ar(y, best_p)
+
+# Plot model selection
+fig, ax = plt.subplots(figsize=(8, 4))
+ps = [r[0] for r in results]
+aics = [r[1] for r in results]
+bics = [r[2] for r in results]
+
+ax.plot(ps, aics, 'bo-', label='AIC', linewidth=1.5, markersize=6)
+ax.plot(ps, bics, 'rs-', label='BIC', linewidth=1.5, markersize=6)
+ax.axvline(best_p, color='gray', linestyle='--', alpha=0.7, label=f'Best p={best_p}')
+ax.set_xlabel('AR Order (p)')
+ax.set_ylabel('Information Criterion')
+ax.set_title('Model Order Selection')
+ax.legend()
+ax.grid(True, alpha=0.3)
+save_plot('ts_model_selection.pdf', 'AIC and BIC criteria for AR model order selection.')
+\end{pycode}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Model Comparison Results}')
+print(r'\begin{tabular}{cccc}')
+print(r'\toprule')
+print(r'AR Order & AIC & BIC & Residual Std \\')
+print(r'\midrule')
+for r in results[:min(6, len(results))]:
+    print(f'{r[0]} & {r[1]:.2f} & {r[2]:.2f} & {r[3]:.3f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+The optimal model is AR(\py{best_p}) with AIC = \py{f"{aic_best:.2f}"}.
+
+\section{Residual Diagnostics}
+\begin{pycode}
+# Residual analysis
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Time plot of residuals
+axes[0, 0].plot(resid_best, 'b-', linewidth=0.8)
+axes[0, 0].axhline(0, color='r', linestyle='--')
+axes[0, 0].set_xlabel('Time')
+axes[0, 0].set_ylabel('Residual')
+axes[0, 0].set_title('Residuals Over Time')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Histogram of residuals
+axes[0, 1].hist(resid_best, bins=20, density=True, alpha=0.7, color='steelblue', edgecolor='black')
+x_norm = np.linspace(min(resid_best), max(resid_best), 100)
+axes[0, 1].plot(x_norm, stats.norm.pdf(x_norm, np.mean(resid_best), np.std(resid_best)), 'r-', linewidth=2)
+axes[0, 1].set_xlabel('Residual')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].set_title('Residual Distribution')
+
+# Q-Q plot
+stats.probplot(resid_best, dist="norm", plot=axes[1, 0])
+axes[1, 0].set_title('Normal Q-Q Plot')
+axes[1, 0].grid(True, alpha=0.3)
+
+# ACF of residuals
+acf_resid = acf(resid_best, 20)
+axes[1, 1].bar(range(21), acf_resid, width=0.3, color='darkgreen', alpha=0.8)
+axes[1, 1].axhline(1.96/np.sqrt(len(resid_best)), color='r', linestyle='--')
+axes[1, 1].axhline(-1.96/np.sqrt(len(resid_best)), color='r', linestyle='--')
+axes[1, 1].set_xlabel('Lag')
+axes[1, 1].set_ylabel('ACF')
+axes[1, 1].set_title('ACF of Residuals')
+
+plt.tight_layout()
+save_plot('ts_diagnostics.pdf', 'Residual diagnostic plots for model validation.')
+
+# Normality test
+_, shapiro_p = stats.shapiro(resid_best[:50])  # Shapiro limited to 5000
+# Ljung-Box test (simplified)
+lb_stat = len(resid_best) * np.sum(acf(resid_best, 10)[1:]**2)
+\end{pycode}
+
+\section{Forecasting}
+\begin{pycode}
+# Forecast using fitted AR model
+def forecast_ar(y, coeffs, h):
+    """Generate h-step ahead forecasts."""
+    p = len(coeffs) - 1
+    forecasts = np.zeros(h)
+    history = list(y[-p:])
+
+    for i in range(h):
+        pred = coeffs[0] + sum(coeffs[j+1] * history[-j-1] for j in range(p))
+        forecasts[i] = pred
+        history.append(pred)
+
+    return forecasts
+
+h = 24  # Forecast horizon
+forecasts = forecast_ar(y, coeffs_best, h)
+
+# Simple prediction intervals (based on residual std)
+sigma = np.std(resid_best)
+intervals = []
+for i in range(1, h+1):
+    se = sigma * np.sqrt(i)  # Simplified; grows with horizon
+    lower = forecasts[i-1] - 1.96 * se
+    upper = forecasts[i-1] + 1.96 * se
+    intervals.append((lower, upper))
+
+# Plot forecasts
+fig, ax = plt.subplots(figsize=(10, 5))
+
+# Historical data
+ax.plot(t[-50:], y[-50:], 'b-', linewidth=1, label='Observed')
+
+# Fitted values
+t_fitted = t[best_p:]
+ax.plot(t_fitted[-50:], fitted_best[-50:], 'g--', linewidth=1, alpha=0.7, label='Fitted')
+
+# Forecasts
+t_forecast = np.arange(n, n + h)
+ax.plot(t_forecast, forecasts, 'r-', linewidth=2, label='Forecast')
+
+# Prediction intervals
+lower = [iv[0] for iv in intervals]
+upper = [iv[1] for iv in intervals]
+ax.fill_between(t_forecast, lower, upper, alpha=0.3, color='red', label='95% PI')
+
+ax.set_xlabel('Time')
+ax.set_ylabel('Value')
+ax.set_title(f'Time Series Forecast (AR({best_p}))')
+ax.legend(loc='upper left')
+ax.grid(True, alpha=0.3)
+save_plot('ts_forecast.pdf', 'Out-of-sample forecasts with 95\\% prediction intervals.')
+\end{pycode}
+
+\section{Spectral Analysis}
+\begin{pycode}
+# Power spectral density
+freqs = fftfreq(n, 1)
+spectrum = np.abs(fft(y))**2 / n
+
+# Only positive frequencies
+pos_mask = freqs > 0
+freqs_pos = freqs[pos_mask]
+spectrum_pos = spectrum[pos_mask]
+
+# Find dominant frequency
+dominant_idx = np.argmax(spectrum_pos)
+dominant_freq = freqs_pos[dominant_idx]
+dominant_period = 1 / dominant_freq if dominant_freq > 0 else np.inf
+
+# Periodogram
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.semilogy(freqs_pos, spectrum_pos, 'b-', linewidth=0.8)
+ax.axvline(dominant_freq, color='r', linestyle='--', alpha=0.7,
+           label=f'Dominant: T={dominant_period:.1f}')
+ax.set_xlabel('Frequency')
+ax.set_ylabel('Power Spectral Density')
+ax.set_title('Periodogram')
+ax.legend()
+ax.grid(True, alpha=0.3)
+save_plot('ts_spectrum.pdf', 'Power spectral density showing dominant frequencies.')
+\end{pycode}
+
+The dominant period detected is approximately \py{f"{dominant_period:.1f}"} time units, which corresponds to the seasonal period of \py{seasonal_period} embedded in the data.
+
+\section{Summary Statistics}
+\begin{table}[H]
+\centering
+\caption{Comprehensive Time Series Analysis Summary}
+\begin{tabular}{lr}
+\toprule
+Statistic & Value \\
+\midrule
+Sample Size & \py{n} \\
+Mean & \py{f"{mean_y:.3f}"} \\
+Standard Deviation & \py{f"{std_y:.3f}"} \\
+Minimum & \py{f"{min_y:.3f}"} \\
+Maximum & \py{f"{max_y:.3f}"} \\
+ADF Statistic & \py{f"{adf_stat:.3f}"} \\
+Best AR Order & \py{best_p} \\
+Residual Std & \py{f"{np.std(resid_best):.3f}"} \\
+Dominant Period & \py{f"{dominant_period:.2f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+This analysis demonstrated comprehensive time series methodology including:
+\begin{itemize}
+    \item Additive decomposition into trend, seasonal, and residual components
+    \item ACF/PACF analysis for identifying temporal dependencies
+    \item Stationarity testing using the Augmented Dickey-Fuller test
+    \item AR model fitting with AIC/BIC model selection
+    \item Residual diagnostics for model validation
+    \item Forecasting with prediction intervals
+    \item Spectral analysis for frequency domain insights
+\end{itemize}
+
+The AR(\py{best_p}) model provides reasonable forecasts, with the spectral analysis confirming the seasonal pattern at period \py{f"{dominant_period:.1f}"}.
+
+\end{document}

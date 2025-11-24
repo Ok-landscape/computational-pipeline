@@ -1,0 +1,578 @@
+\documentclass[11pt,a4paper]{article}
+
+% Document Setup
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+
+% PythonTeX Setup
+\usepackage[makestderr]{pythontex}
+
+\title{Diffusion in Materials Science: Computational Analysis}
+\author{Materials Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents computational analysis of diffusion phenomena in materials science. We examine Fick's first and second laws, analytical solutions including error function profiles, numerical simulation of concentration evolution, and the Kirkendall effect in binary diffusion couples. Python-based computations provide quantitative analysis with dynamic visualization.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction to Diffusion}
+
+Diffusion is the net movement of atoms or molecules from regions of high concentration to regions of low concentration. This fundamental transport phenomenon governs numerous materials processes including:
+\begin{itemize}
+    \item Heat treatment and phase transformations
+    \item Oxidation and corrosion mechanisms
+    \item Semiconductor doping and device fabrication
+    \item Sintering and powder metallurgy
+\end{itemize}
+
+% Initialize Python environment
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.special import erf, erfc
+from scipy.integrate import odeint
+from mpl_toolkits.mplot3d import Axes3D
+
+plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 10
+plt.rcParams['text.usetex'] = True
+
+# Physical constants and parameters
+k_B = 8.617e-5  # Boltzmann constant (eV/K)
+
+def save_fig(filename):
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+\end{pycode}
+
+\section{Fick's Laws of Diffusion}
+
+\subsection{Fick's First Law}
+
+Fick's first law describes steady-state diffusion where the flux is proportional to the concentration gradient:
+\begin{equation}
+J = -D \frac{\partial C}{\partial x}
+\end{equation}
+where $J$ is the diffusion flux (\si{\mol\per\square\meter\per\second}), $D$ is the diffusion coefficient (\si{\square\meter\per\second}), and $C$ is concentration.
+
+\begin{pycode}
+# Steady-state diffusion through a membrane
+D = 1e-10  # m^2/s (typical for metals)
+L = 0.01  # membrane thickness (m)
+C1 = 100  # concentration at x=0 (mol/m^3)
+C2 = 10   # concentration at x=L (mol/m^3)
+
+# Calculate steady-state flux
+J_ss = -D * (C2 - C1) / L
+
+# Position array
+x = np.linspace(0, L*1000, 100)  # convert to mm
+C_ss = C1 + (C2 - C1) * x / (L*1000)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
+
+# Concentration profile
+ax1.plot(x, C_ss, 'b-', linewidth=2)
+ax1.set_xlabel('Position (mm)')
+ax1.set_ylabel('Concentration (mol/m$^3$)')
+ax1.set_title("Steady-State Concentration Profile")
+ax1.grid(True, alpha=0.3)
+ax1.fill_between(x, 0, C_ss, alpha=0.3)
+
+# Flux visualization
+x_flux = np.linspace(0, L*1000, 10)
+ax2.quiver(x_flux, np.ones_like(x_flux)*50, np.ones_like(x_flux)*2,
+           np.zeros_like(x_flux), scale=30, color='red', width=0.01)
+ax2.set_xlim(0, L*1000)
+ax2.set_ylim(0, 100)
+ax2.set_xlabel('Position (mm)')
+ax2.set_ylabel('Concentration (mol/m$^3$)')
+ax2.set_title(f'Diffusion Flux: J = {J_ss:.2e} mol/m$^2$/s')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('ficks_first_law.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{ficks_first_law.pdf}
+\caption{Fick's first law: (a) steady-state concentration profile, (b) constant flux through membrane.}
+\end{figure}
+
+The calculated steady-state flux is $J = \py{f"{J_ss:.3e}"}$ \si{\mol\per\square\meter\per\second}.
+
+\subsection{Fick's Second Law}
+
+For non-steady-state diffusion, Fick's second law describes the time evolution of concentration:
+\begin{equation}
+\frac{\partial C}{\partial t} = D \frac{\partial^2 C}{\partial x^2}
+\end{equation}
+
+\section{Analytical Solutions}
+
+\subsection{Error Function Solutions}
+
+For semi-infinite solid with constant surface concentration:
+\begin{equation}
+\frac{C(x,t) - C_0}{C_s - C_0} = 1 - \text{erf}\left(\frac{x}{2\sqrt{Dt}}\right)
+\end{equation}
+
+\begin{pycode}
+# Error function solution parameters
+D = 5e-11  # m^2/s
+C0 = 0     # Initial concentration
+Cs = 1     # Surface concentration (normalized)
+
+# Time points
+times = [1, 10, 100, 1000]  # hours
+colors = plt.cm.viridis(np.linspace(0, 1, len(times)))
+
+x = np.linspace(0, 5e-3, 200)  # depth in meters
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Concentration profiles at different times
+for t_hr, color in zip(times, colors):
+    t = t_hr * 3600  # convert to seconds
+    C = Cs * erfc(x / (2 * np.sqrt(D * t)))
+    ax1.plot(x*1000, C, color=color, linewidth=2, label=f't = {t_hr} hr')
+
+ax1.set_xlabel('Depth (mm)')
+ax1.set_ylabel('Normalized Concentration $C/C_s$')
+ax1.set_title('Concentration Profiles (Error Function Solution)')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Diffusion penetration depth vs time
+t_range = np.linspace(1, 1000, 100) * 3600
+penetration = 2 * np.sqrt(D * t_range)
+
+ax2.plot(t_range/3600, penetration*1000, 'b-', linewidth=2)
+ax2.set_xlabel('Time (hours)')
+ax2.set_ylabel('Penetration Depth $2\\sqrt{Dt}$ (mm)')
+ax2.set_title('Diffusion Penetration Depth')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('error_function_solution.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{error_function_solution.pdf}
+\caption{Error function solution showing concentration profiles at different times and penetration depth evolution.}
+\end{figure}
+
+\subsection{Thin-Film (Gaussian) Solution}
+
+For an instantaneous planar source at $x=0$:
+\begin{equation}
+C(x,t) = \frac{M}{\sqrt{4\pi Dt}} \exp\left(-\frac{x^2}{4Dt}\right)
+\end{equation}
+
+\begin{pycode}
+# Gaussian solution parameters
+D = 1e-10  # m^2/s
+M = 1e-6   # surface mass (mol/m^2)
+
+times = [10, 100, 1000, 10000]  # seconds
+x = np.linspace(-2e-3, 2e-3, 300)
+
+fig, ax = plt.subplots(figsize=(9, 6))
+colors = plt.cm.plasma(np.linspace(0.2, 0.9, len(times)))
+
+for t, color in zip(times, colors):
+    C = (M / np.sqrt(4 * np.pi * D * t)) * np.exp(-x**2 / (4 * D * t))
+    ax.plot(x*1000, C*1e6, color=color, linewidth=2, label=f't = {t} s')
+
+ax.set_xlabel('Position (mm)')
+ax.set_ylabel('Concentration ($\\mu$mol/m$^3$)')
+ax.set_title('Gaussian Diffusion from Thin-Film Source')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+save_fig('gaussian_solution.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{gaussian_solution.pdf}
+\caption{Gaussian diffusion profile evolution from an instantaneous thin-film source.}
+\end{figure}
+
+\section{Temperature Dependence of Diffusion}
+
+The diffusion coefficient follows the Arrhenius relationship:
+\begin{equation}
+D = D_0 \exp\left(-\frac{Q}{RT}\right)
+\end{equation}
+
+\begin{pycode}
+# Arrhenius parameters for various systems
+systems = {
+    'C in Fe-$\\alpha$': {'D0': 6.2e-7, 'Q': 80},
+    'C in Fe-$\\gamma$': {'D0': 2.3e-5, 'Q': 148},
+    'Fe in Fe-$\\alpha$': {'D0': 2.0e-4, 'Q': 251},
+    'Cu in Cu': {'D0': 7.8e-5, 'Q': 211},
+    'Al in Al': {'D0': 1.7e-4, 'Q': 142}
+}
+
+R = 8.314  # J/(mol*K)
+T = np.linspace(300, 1400, 200)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Arrhenius plot
+for name, params in systems.items():
+    D = params['D0'] * np.exp(-params['Q']*1000 / (R * T))
+    ax1.semilogy(1000/T, D, linewidth=2, label=name)
+
+ax1.set_xlabel('1000/T (K$^{-1}$)')
+ax1.set_ylabel('D (m$^2$/s)')
+ax1.set_title('Arrhenius Plot of Diffusion Coefficients')
+ax1.legend(fontsize=8)
+ax1.grid(True, alpha=0.3)
+
+# Q vs D0 comparison
+D0_vals = [p['D0'] for p in systems.values()]
+Q_vals = [p['Q'] for p in systems.values()]
+names = list(systems.keys())
+
+ax2.scatter(D0_vals, Q_vals, s=100, c=range(len(systems)), cmap='viridis')
+for i, name in enumerate(names):
+    ax2.annotate(name.replace('$\\alpha$', 'a').replace('$\\gamma$', 'g'),
+                 (D0_vals[i], Q_vals[i]), xytext=(5, 5),
+                 textcoords='offset points', fontsize=8)
+ax2.set_xscale('log')
+ax2.set_xlabel('$D_0$ (m$^2$/s)')
+ax2.set_ylabel('Q (kJ/mol)')
+ax2.set_title('Activation Energy vs Pre-exponential Factor')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('arrhenius_diffusion.pdf')
+
+# Calculate specific values for table
+T_test = 1000  # K
+D_table = []
+for name, params in systems.items():
+    D = params['D0'] * np.exp(-params['Q']*1000 / (R * T_test))
+    D_table.append((name.replace('$\\alpha$', 'alpha').replace('$\\gamma$', 'gamma'),
+                   params['D0'], params['Q'], D))
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{arrhenius_diffusion.pdf}
+\caption{Temperature dependence of diffusion: Arrhenius behavior for various material systems.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Diffusion Parameters for Various Systems}
+\begin{tabular}{lccc}
+\toprule
+System & $D_0$ (\si{\square\meter\per\second}) & Q (\si{\kilo\joule\per\mol}) & D at 1000 K \\
+\midrule
+\py{'C in Fe-alpha'} & \py{f"{6.2e-7:.2e}"} & 80 & \py{f"{6.2e-7 * np.exp(-80000/(8.314*1000)):.2e}"} \\
+\py{'C in Fe-gamma'} & \py{f"{2.3e-5:.2e}"} & 148 & \py{f"{2.3e-5 * np.exp(-148000/(8.314*1000)):.2e}"} \\
+\py{'Fe in Fe-alpha'} & \py{f"{2.0e-4:.2e}"} & 251 & \py{f"{2.0e-4 * np.exp(-251000/(8.314*1000)):.2e}"} \\
+\py{'Cu in Cu'} & \py{f"{7.8e-5:.2e}"} & 211 & \py{f"{7.8e-5 * np.exp(-211000/(8.314*1000)):.2e}"} \\
+\py{'Al in Al'} & \py{f"{1.7e-4:.2e}"} & 142 & \py{f"{1.7e-4 * np.exp(-142000/(8.314*1000)):.2e}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Numerical Simulation of Diffusion}
+
+\subsection{Finite Difference Method}
+
+We solve Fick's second law numerically using explicit finite differences:
+\begin{equation}
+C_i^{n+1} = C_i^n + \frac{D \Delta t}{(\Delta x)^2}\left(C_{i+1}^n - 2C_i^n + C_{i-1}^n\right)
+\end{equation}
+
+\begin{pycode}
+# Numerical diffusion simulation
+D = 1e-10  # m^2/s
+L = 0.01   # domain length (m)
+nx = 100   # spatial points
+dx = L / (nx - 1)
+dt = 0.5 * dx**2 / D  # stability criterion
+
+# Initial condition: step function
+x = np.linspace(0, L, nx)
+C = np.zeros(nx)
+C[x < L/2] = 1.0
+
+# Store profiles at different times
+t_save = [0, 1000, 5000, 20000]
+profiles = {0: C.copy()}
+
+# Time evolution
+t = 0
+for step in range(20001):
+    C_new = C.copy()
+    for i in range(1, nx-1):
+        C_new[i] = C[i] + D * dt / dx**2 * (C[i+1] - 2*C[i] + C[i-1])
+    C = C_new
+    t += dt
+    if step in t_save[1:]:
+        profiles[step] = C.copy()
+
+# Plot results
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+colors = plt.cm.viridis(np.linspace(0, 1, len(t_save)))
+for step, color in zip(t_save, colors):
+    t_actual = step * dt
+    ax1.plot(x*1000, profiles[step], color=color, linewidth=2,
+             label=f't = {t_actual:.0f} s')
+
+ax1.set_xlabel('Position (mm)')
+ax1.set_ylabel('Concentration (normalized)')
+ax1.set_title('Numerical Diffusion Simulation')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Conservation of mass check
+mass = [np.trapz(profiles[step], x) for step in t_save]
+steps_plot = [s * dt for s in t_save]
+ax2.plot(steps_plot, mass, 'bo-', linewidth=2, markersize=8)
+ax2.axhline(mass[0], color='r', linestyle='--', label='Initial mass')
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Total Mass (mol/m$^2$)')
+ax2.set_title('Mass Conservation Check')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('numerical_diffusion.pdf')
+
+# Stability parameter
+Fo = D * dt / dx**2
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{numerical_diffusion.pdf}
+\caption{Finite difference solution of Fick's second law with mass conservation verification.}
+\end{figure}
+
+The Fourier number (stability criterion) is $Fo = \py{f"{Fo:.3f}"}$, which satisfies $Fo \leq 0.5$ for stability.
+
+\section{Kirkendall Effect}
+
+The Kirkendall effect demonstrates unequal diffusion rates in binary diffusion couples, resulting in marker movement and void formation.
+
+\begin{pycode}
+# Kirkendall effect simulation
+# Binary diffusion couple: A-B system
+L = 0.02   # 20 mm total
+nx = 200
+x = np.linspace(0, L, nx)
+dx = L / (nx - 1)
+
+# Diffusion coefficients (A diffuses faster than B)
+D_A = 2e-10  # m^2/s
+D_B = 5e-11  # m^2/s
+
+# Initial concentrations
+C_A = np.zeros(nx)
+C_B = np.zeros(nx)
+C_A[x < L/2] = 1.0  # Pure A on left
+C_B[x >= L/2] = 1.0  # Pure B on right
+
+# Time stepping
+dt = 0.25 * dx**2 / max(D_A, D_B)
+n_steps = 10000
+
+# Track marker position (initially at interface)
+marker_pos = L/2
+
+# Store results
+times = [0, 2500, 5000, 10000]
+results = {0: {'C_A': C_A.copy(), 'C_B': C_B.copy(), 'marker': marker_pos}}
+
+for step in range(1, n_steps+1):
+    # Update A
+    C_A_new = C_A.copy()
+    for i in range(1, nx-1):
+        C_A_new[i] = C_A[i] + D_A * dt / dx**2 * (C_A[i+1] - 2*C_A[i] + C_A[i-1])
+
+    # Update B
+    C_B_new = C_B.copy()
+    for i in range(1, nx-1):
+        C_B_new[i] = C_B[i] + D_B * dt / dx**2 * (C_B[i+1] - 2*C_B[i] + C_B[i-1])
+
+    C_A = C_A_new
+    C_B = C_B_new
+
+    # Calculate marker velocity (proportional to flux difference)
+    i_marker = int(marker_pos / dx)
+    if 0 < i_marker < nx-1:
+        J_A = -D_A * (C_A[i_marker+1] - C_A[i_marker-1]) / (2*dx)
+        J_B = -D_B * (C_B[i_marker+1] - C_B[i_marker-1]) / (2*dx)
+        v_marker = -(J_A - J_B) / (C_A[i_marker] + C_B[i_marker] + 1e-10)
+        marker_pos += v_marker * dt * 1000  # scale for visibility
+
+    if step in times:
+        results[step] = {'C_A': C_A.copy(), 'C_B': C_B.copy(), 'marker': marker_pos}
+
+# Plot results
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for idx, (step, ax) in enumerate(zip(times, axes.flat)):
+    data = results[step]
+    t = step * dt
+    ax.plot(x*1000, data['C_A'], 'b-', linewidth=2, label='Species A')
+    ax.plot(x*1000, data['C_B'], 'r-', linewidth=2, label='Species B')
+    ax.axvline(L*500, color='k', linestyle='--', alpha=0.5, label='Initial interface')
+    ax.axvline(data['marker']*1000, color='g', linestyle='-', linewidth=2, label='Marker')
+    ax.set_xlabel('Position (mm)')
+    ax.set_ylabel('Concentration')
+    ax.set_title(f't = {t:.0f} s')
+    ax.legend(fontsize=8)
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('kirkendall_effect.pdf')
+
+marker_shift = (results[n_steps]['marker'] - L/2) * 1000
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{kirkendall_effect.pdf}
+\caption{Kirkendall effect in a binary diffusion couple showing marker movement due to unequal diffusivities.}
+\end{figure}
+
+The marker shifted by \py{f"{marker_shift:.3f}"} mm toward the faster-diffusing side, demonstrating the Kirkendall effect.
+
+\section{Interdiffusion Coefficient}
+
+The interdiffusion (chemical) coefficient can be determined using the Matano-Boltzmann analysis:
+\begin{equation}
+\tilde{D} = -\frac{1}{2t}\left(\frac{dx}{dC}\right)_{C^*} \int_0^{C^*} x \, dC
+\end{equation}
+
+\begin{pycode}
+# Matano-Boltzmann analysis
+# Generate synthetic interdiffusion profile
+x = np.linspace(-5, 5, 1000)  # mm
+t = 3600  # 1 hour
+
+# Interdiffusion profile (error function)
+D_tilde = 1e-10  # m^2/s
+C = 0.5 * erfc(x*1e-3 / (2*np.sqrt(D_tilde * t)))
+
+# Matano analysis at different concentrations
+C_star = [0.2, 0.4, 0.6, 0.8]
+D_calc = []
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.plot(x, C, 'b-', linewidth=2)
+ax1.set_xlabel('Position (mm)')
+ax1.set_ylabel('Concentration')
+ax1.set_title('Interdiffusion Profile')
+ax1.grid(True, alpha=0.3)
+
+for C_s in C_star:
+    # Find position at C*
+    idx = np.argmin(np.abs(C - C_s))
+    x_s = x[idx]
+
+    # Calculate dx/dC
+    dCdx = np.gradient(C, x*1e-3)[idx]
+    dxdC = 1/dCdx if dCdx != 0 else 0
+
+    # Integrate
+    integral = np.trapz(x[:idx]*1e-3, C[:idx])
+
+    # Calculate D
+    D = -dxdC * integral / (2*t)
+    D_calc.append(D)
+
+    ax1.axhline(C_s, color='r', linestyle='--', alpha=0.5)
+    ax1.plot(x_s, C_s, 'ro', markersize=8)
+
+ax2.plot(C_star, [d*1e10 for d in D_calc], 'bo-', linewidth=2, markersize=10)
+ax2.axhline(D_tilde*1e10, color='r', linestyle='--', label=f'True D = {D_tilde:.0e}')
+ax2.set_xlabel('Concentration')
+ax2.set_ylabel('$\\tilde{D}$ ($\\times 10^{-10}$ m$^2$/s)')
+ax2.set_title('Matano-Boltzmann Analysis')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('matano_analysis.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{matano_analysis.pdf}
+\caption{Matano-Boltzmann analysis for determining concentration-dependent interdiffusion coefficient.}
+\end{figure}
+
+\section{3D Diffusion Visualization}
+
+\begin{pycode}
+# 3D visualization of diffusion evolution
+D = 1e-10
+x = np.linspace(0, 10, 100)
+t = np.linspace(0.1, 100, 100)
+X, T = np.meshgrid(x, t)
+
+# Concentration field C(x,t)
+C = erfc(X*1e-3 / (2*np.sqrt(D * T * 3600)))
+
+fig = plt.figure(figsize=(10, 7))
+ax = fig.add_subplot(111, projection='3d')
+
+surf = ax.plot_surface(X, T, C, cmap='viridis', alpha=0.8)
+ax.set_xlabel('Position (mm)')
+ax.set_ylabel('Time (hours)')
+ax.set_zlabel('Concentration')
+ax.set_title('3D Visualization of Diffusion Evolution')
+
+fig.colorbar(surf, shrink=0.5, aspect=10, label='Concentration')
+
+save_fig('diffusion_3d.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{diffusion_3d.pdf}
+\caption{Three-dimensional visualization of concentration evolution during diffusion.}
+\end{figure}
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of diffusion in materials science:
+\begin{enumerate}
+    \item Fick's laws provide the mathematical framework for both steady-state and transient diffusion
+    \item Error function solutions enable analytical calculation of penetration profiles
+    \item Temperature dependence follows Arrhenius behavior with characteristic activation energies
+    \item Numerical methods allow simulation of complex boundary conditions
+    \item The Kirkendall effect demonstrates the physical consequences of unequal diffusivities
+    \item Matano-Boltzmann analysis enables experimental determination of diffusion coefficients
+\end{enumerate}
+
+\end{document}

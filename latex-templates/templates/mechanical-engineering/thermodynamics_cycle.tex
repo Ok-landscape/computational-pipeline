@@ -1,0 +1,435 @@
+\documentclass[11pt,a4paper]{article}
+
+% Document Setup
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+
+% PythonTeX Setup
+\usepackage[makestderr]{pythontex}
+
+\title{Thermodynamic Cycles: Efficiency Analysis}
+\author{Mechanical Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents computational analysis of thermodynamic power cycles including Carnot, Otto, Diesel, and Rankine cycles. We examine ideal and actual cycle efficiencies, P-v and T-s diagrams, and parametric studies. Python-based computations provide quantitative analysis with dynamic visualization.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction to Thermodynamic Cycles}
+
+Thermodynamic cycles convert heat into work. The four cycles analyzed here are:
+\begin{itemize}
+    \item Carnot cycle: Maximum possible efficiency (theoretical ideal)
+    \item Otto cycle: Spark-ignition internal combustion engines
+    \item Diesel cycle: Compression-ignition engines
+    \item Rankine cycle: Steam power plants
+\end{itemize}
+
+% Initialize Python environment
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+
+plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 10
+plt.rcParams['text.usetex'] = True
+
+# Air properties (ideal gas)
+gamma = 1.4
+cp = 1005  # J/kgK
+cv = cp / gamma
+R = cp - cv
+
+def save_fig(filename):
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+\end{pycode}
+
+\section{Carnot Cycle}
+
+The Carnot efficiency sets the maximum limit:
+\begin{equation}
+\eta_{Carnot} = 1 - \frac{T_L}{T_H}
+\end{equation}
+
+\begin{pycode}
+# Carnot cycle analysis
+T_L = 300  # K (cold reservoir)
+T_H_range = np.linspace(400, 1500, 100)
+eta_carnot = 1 - T_L / T_H_range
+
+# T-s diagram for Carnot cycle
+T_H = 1000  # K
+s1, s2 = 0, 1  # kJ/kgK
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Efficiency vs temperature
+ax1.plot(T_H_range, eta_carnot * 100, 'b-', linewidth=2)
+ax1.axhline(50, color='r', linestyle='--', alpha=0.5, label='50\\% efficiency')
+ax1.set_xlabel('Hot Reservoir Temperature $T_H$ (K)')
+ax1.set_ylabel('Carnot Efficiency (\\%)')
+ax1.set_title(f'Carnot Efficiency ($T_L$ = {T_L} K)')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# T-s diagram
+s_cycle = [s1, s2, s2, s1, s1]
+T_cycle = [T_L, T_L, T_H, T_H, T_L]
+ax2.plot(s_cycle, T_cycle, 'b-', linewidth=2)
+ax2.fill(s_cycle, T_cycle, alpha=0.3)
+ax2.set_xlabel('Entropy $s$ (kJ/kg$\\cdot$K)')
+ax2.set_ylabel('Temperature $T$ (K)')
+ax2.set_title('Carnot Cycle T-s Diagram')
+ax2.grid(True, alpha=0.3)
+
+# Label processes
+ax2.annotate('1-2: Isothermal expansion', xy=(0.5, T_H), xytext=(0.6, T_H+100),
+            arrowprops=dict(arrowstyle='->', color='black'), fontsize=9)
+ax2.annotate('3-4: Isothermal compression', xy=(0.5, T_L), xytext=(0.6, T_L-100),
+            arrowprops=dict(arrowstyle='->', color='black'), fontsize=9)
+
+plt.tight_layout()
+save_fig('carnot_cycle.pdf')
+
+eta_carnot_design = 1 - T_L / T_H
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{carnot_cycle.pdf}
+\caption{Carnot cycle: efficiency dependence on temperature and T-s diagram.}
+\end{figure}
+
+Carnot efficiency at $T_H = 1000$ K: $\eta = \py{f"{eta_carnot_design*100:.1f}"}$\%
+
+\section{Otto Cycle}
+
+The Otto cycle efficiency depends on compression ratio:
+\begin{equation}
+\eta_{Otto} = 1 - \frac{1}{r^{\gamma-1}}
+\end{equation}
+
+\begin{pycode}
+# Otto cycle analysis
+r_range = np.linspace(4, 14, 100)  # Compression ratio
+eta_otto = 1 - 1/r_range**(gamma-1)
+
+# P-v diagram for specific compression ratio
+r = 10
+P1 = 100e3  # Pa
+T1 = 300    # K
+V1 = 1      # m^3 (normalized)
+V2 = V1/r
+
+# State points
+T2 = T1 * r**(gamma-1)
+P2 = P1 * r**gamma
+
+# Heat addition (constant volume)
+q_in = 1000e3  # J/kg
+T3 = T2 + q_in/cv
+P3 = P2 * T3/T2
+
+# Expansion
+T4 = T3 / r**(gamma-1)
+P4 = P3 / r**gamma
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Efficiency vs compression ratio
+axes[0, 0].plot(r_range, eta_otto * 100, 'b-', linewidth=2)
+axes[0, 0].axvline(r, color='r', linestyle='--', alpha=0.5, label=f'r = {r}')
+axes[0, 0].set_xlabel('Compression Ratio $r$')
+axes[0, 0].set_ylabel('Thermal Efficiency (\\%)')
+axes[0, 0].set_title('Otto Cycle Efficiency')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# P-v diagram
+V = np.linspace(V2, V1, 100)
+P_12 = P1 * (V1/V)**gamma  # Compression (1-2)
+P_34 = P3 * (V2/V)**gamma  # Expansion (3-4)
+
+axes[0, 1].plot(V, P_12/1e6, 'b-', linewidth=2)
+axes[0, 1].plot(V, P_34/1e6, 'r-', linewidth=2)
+axes[0, 1].plot([V2, V2], [P2/1e6, P3/1e6], 'g-', linewidth=2)  # 2-3
+axes[0, 1].plot([V1, V1], [P4/1e6, P1/1e6], 'g-', linewidth=2)  # 4-1
+axes[0, 1].set_xlabel('Volume $V/V_1$')
+axes[0, 1].set_ylabel('Pressure (MPa)')
+axes[0, 1].set_title('Otto Cycle P-v Diagram')
+axes[0, 1].grid(True, alpha=0.3)
+
+# T-s diagram (approximate)
+s = np.array([0, 0, 0.7, 0.7, 0])
+T = np.array([T1, T2, T3, T4, T1])
+axes[1, 0].plot(s, T, 'b-o', linewidth=2, markersize=8)
+axes[1, 0].set_xlabel('Entropy $s$ (kJ/kg$\\cdot$K)')
+axes[1, 0].set_ylabel('Temperature (K)')
+axes[1, 0].set_title('Otto Cycle T-s Diagram')
+axes[1, 0].grid(True, alpha=0.3)
+for i, txt in enumerate(['1', '2', '3', '4']):
+    axes[1, 0].annotate(txt, (s[i], T[i]), xytext=(5, 5), textcoords='offset points')
+
+# Effect of gamma
+gamma_range = [1.2, 1.3, 1.4, 1.5]
+for g in gamma_range:
+    eta = 1 - 1/r_range**(g-1)
+    axes[1, 1].plot(r_range, eta * 100, linewidth=1.5, label=f'$\\gamma$ = {g}')
+
+axes[1, 1].set_xlabel('Compression Ratio $r$')
+axes[1, 1].set_ylabel('Thermal Efficiency (\\%)')
+axes[1, 1].set_title('Effect of Specific Heat Ratio')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('otto_cycle.pdf')
+
+eta_otto_design = 1 - 1/r**(gamma-1)
+W_net = q_in * eta_otto_design
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{otto_cycle.pdf}
+\caption{Otto cycle analysis: efficiency, P-v diagram, T-s diagram, and gamma effect.}
+\end{figure}
+
+Otto efficiency at $r = 10$: $\eta = \py{f"{eta_otto_design*100:.1f}"}$\%, Net work = \py{f"{W_net/1000:.0f}"} kJ/kg
+
+\section{Diesel Cycle}
+
+The Diesel cycle efficiency includes the cutoff ratio:
+\begin{equation}
+\eta_{Diesel} = 1 - \frac{1}{r^{\gamma-1}} \cdot \frac{r_c^{\gamma} - 1}{\gamma(r_c - 1)}
+\end{equation}
+
+\begin{pycode}
+# Diesel cycle analysis
+r = 20  # Compression ratio (higher than Otto)
+r_c_range = np.linspace(1.5, 4, 100)  # Cutoff ratio
+
+eta_diesel = 1 - (1/r**(gamma-1)) * (r_c_range**gamma - 1)/(gamma*(r_c_range - 1))
+
+# Compare with Otto at same compression ratio
+eta_otto_r20 = 1 - 1/r**(gamma-1)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Efficiency vs cutoff ratio
+ax1.plot(r_c_range, eta_diesel * 100, 'b-', linewidth=2, label='Diesel')
+ax1.axhline(eta_otto_r20 * 100, color='r', linestyle='--', linewidth=2, label=f'Otto (r={r})')
+ax1.set_xlabel('Cutoff Ratio $r_c$')
+ax1.set_ylabel('Thermal Efficiency (\\%)')
+ax1.set_title(f'Diesel Cycle Efficiency (r = {r})')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Comparison of Otto and Diesel
+r_comp = np.linspace(8, 24, 100)
+eta_otto_comp = 1 - 1/r_comp**(gamma-1)
+r_c = 2.5  # Fixed cutoff ratio
+eta_diesel_comp = 1 - (1/r_comp**(gamma-1)) * (r_c**gamma - 1)/(gamma*(r_c - 1))
+
+ax2.plot(r_comp, eta_otto_comp * 100, 'b-', linewidth=2, label='Otto')
+ax2.plot(r_comp, eta_diesel_comp * 100, 'r-', linewidth=2, label=f'Diesel ($r_c$={r_c})')
+ax2.set_xlabel('Compression Ratio $r$')
+ax2.set_ylabel('Thermal Efficiency (\\%)')
+ax2.set_title('Otto vs Diesel Cycle Comparison')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('diesel_cycle.pdf')
+
+r_c_design = 2.5
+eta_diesel_design = 1 - (1/r**(gamma-1)) * (r_c_design**gamma - 1)/(gamma*(r_c_design - 1))
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{diesel_cycle.pdf}
+\caption{Diesel cycle: efficiency dependence on cutoff ratio and comparison with Otto.}
+\end{figure}
+
+Diesel efficiency at $r = 20$, $r_c = 2.5$: $\eta = \py{f"{eta_diesel_design*100:.1f}"}$\%
+
+\section{Rankine Cycle}
+
+The Rankine cycle uses phase change for higher efficiency:
+
+\begin{pycode}
+# Simplified Rankine cycle analysis
+# Using approximate steam properties
+
+# Operating conditions
+P_boiler = 10e6  # Pa (10 MPa)
+P_condenser = 10e3  # Pa (10 kPa)
+T_boiler = 500 + 273  # K
+
+# Simplified enthalpy calculations (kJ/kg)
+h1 = 191.8  # Saturated liquid at condenser pressure
+h2 = h1 + 0.00101 * (P_boiler - P_condenser)/1000  # Pump work (approximate)
+h3 = 3373.6  # Superheated steam at boiler conditions
+h4s = 2345  # Isentropic expansion to condenser pressure
+
+# Actual expansion with turbine efficiency
+eta_turbine = 0.85
+h4 = h3 - eta_turbine * (h3 - h4s)
+
+# Cycle efficiency
+W_turbine = h3 - h4
+W_pump = h2 - h1
+Q_in = h3 - h2
+eta_rankine = (W_turbine - W_pump) / Q_in
+
+# Effect of boiler pressure
+P_boiler_range = np.linspace(1, 20, 50)  # MPa
+eta_range = []
+
+for P in P_boiler_range:
+    # Simplified model: efficiency increases with pressure
+    h3_approx = 2800 + 50*P  # Approximate
+    h4s_approx = 2400 - 5*P
+    h4_approx = h3_approx - 0.85 * (h3_approx - h4s_approx)
+    Q_approx = h3_approx - 200
+    W_approx = h3_approx - h4_approx
+    eta_range.append(W_approx / Q_approx * 100)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# T-s diagram
+s = [0.6, 0.7, 6.5, 7.0]  # Approximate entropy values
+T = [319, 584, 773, 319]  # Temperature in K
+
+axes[0, 0].plot(s, T, 'b-o', linewidth=2, markersize=8)
+axes[0, 0].fill(s, T, alpha=0.3)
+axes[0, 0].set_xlabel('Entropy $s$ (kJ/kg$\\cdot$K)')
+axes[0, 0].set_ylabel('Temperature $T$ (K)')
+axes[0, 0].set_title('Rankine Cycle T-s Diagram')
+axes[0, 0].grid(True, alpha=0.3)
+for i, txt in enumerate(['1', '2', '3', '4']):
+    axes[0, 0].annotate(txt, (s[i], T[i]), xytext=(5, 5), textcoords='offset points')
+
+# Efficiency vs boiler pressure
+axes[0, 1].plot(P_boiler_range, eta_range, 'b-', linewidth=2)
+axes[0, 1].set_xlabel('Boiler Pressure (MPa)')
+axes[0, 1].set_ylabel('Thermal Efficiency (\\%)')
+axes[0, 1].set_title('Rankine Efficiency vs Boiler Pressure')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Energy flow diagram
+components = ['Turbine Work', 'Pump Work', 'Net Work']
+values = [W_turbine, W_pump, W_turbine - W_pump]
+colors = ['green', 'red', 'blue']
+
+axes[1, 0].bar(components, values, color=colors, alpha=0.7)
+axes[1, 0].set_ylabel('Energy (kJ/kg)')
+axes[1, 0].set_title('Rankine Cycle Energy Balance')
+axes[1, 0].grid(True, alpha=0.3, axis='y')
+
+# Effect of reheat
+# Simplified: reheat increases efficiency by ~3-5%
+base_eta = np.array(eta_range)
+reheat_eta = base_eta * 1.04
+
+axes[1, 1].plot(P_boiler_range, base_eta, 'b-', linewidth=2, label='Simple')
+axes[1, 1].plot(P_boiler_range, reheat_eta, 'r--', linewidth=2, label='With Reheat')
+axes[1, 1].set_xlabel('Boiler Pressure (MPa)')
+axes[1, 1].set_ylabel('Thermal Efficiency (\\%)')
+axes[1, 1].set_title('Effect of Reheat on Efficiency')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('rankine_cycle.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{rankine_cycle.pdf}
+\caption{Rankine cycle: T-s diagram, pressure effect, energy balance, and reheat improvement.}
+\end{figure}
+
+Rankine efficiency: $\eta = \py{f"{eta_rankine*100:.1f}"}$\%, Net work = \py{f"{W_turbine - W_pump:.0f}"} kJ/kg
+
+\section{Cycle Comparison}
+
+\begin{pycode}
+# Compare all cycles
+cycles = ['Carnot', 'Otto (r=10)', 'Diesel (r=20)', 'Rankine']
+efficiencies = [
+    (1 - 300/1000) * 100,
+    (1 - 1/10**(gamma-1)) * 100,
+    (1 - (1/20**(gamma-1)) * (2.5**gamma - 1)/(gamma*(2.5 - 1))) * 100,
+    eta_rankine * 100
+]
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+colors = ['gold', 'blue', 'green', 'red']
+bars = ax.bar(cycles, efficiencies, color=colors, alpha=0.7)
+
+ax.set_ylabel('Thermal Efficiency (\\%)')
+ax.set_title('Comparison of Thermodynamic Cycles')
+ax.grid(True, alpha=0.3, axis='y')
+
+for bar, eff in zip(bars, efficiencies):
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
+            f'{eff:.1f}\\%', ha='center', fontsize=10)
+
+save_fig('cycle_comparison.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{cycle_comparison.pdf}
+\caption{Comparison of thermal efficiencies for different thermodynamic cycles.}
+\end{figure}
+
+\section{Summary Table}
+
+\begin{table}[H]
+\centering
+\caption{Thermodynamic Cycle Parameters}
+\begin{tabular}{lcccc}
+\toprule
+Cycle & Key Parameter & Efficiency Formula & Typical $\eta$ & Application \\
+\midrule
+Carnot & $T_H/T_L$ & $1 - T_L/T_H$ & 70\% & Theoretical \\
+Otto & $r$ & $1 - r^{1-\gamma}$ & 60\% & Gasoline engines \\
+Diesel & $r$, $r_c$ & Complex & 55\% & Diesel engines \\
+Rankine & $P_{boiler}$ & Energy balance & 35\% & Power plants \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of thermodynamic cycles:
+\begin{enumerate}
+    \item Carnot efficiency sets the theoretical maximum for any heat engine
+    \item Otto efficiency increases with compression ratio but is limited by knock
+    \item Diesel cycles achieve higher compression ratios but lower peak efficiency
+    \item Rankine cycles use phase change for effective heat addition
+    \item Reheat and regeneration improve Rankine cycle efficiency
+    \item Actual efficiencies are lower due to irreversibilities
+\end{enumerate}
+
+\end{document}

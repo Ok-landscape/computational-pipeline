@@ -1,0 +1,908 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage[makestderr]{pythontex}
+
+\title{Robotics: PID Motor Control and Tuning}
+\author{Computational Robotics Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive analysis of Proportional-Integral-Derivative (PID) control for robotic motor systems. We implement continuous and discrete PID controllers, analyze the effects of each gain component on system response, explore automatic tuning methods including Ziegler-Nichols and Cohen-Coon, and demonstrate applications to DC motor position and velocity control. The analysis includes stability margins, frequency response, and performance metrics for practical robotics applications.
+\end{abstract}
+
+\section{Introduction}
+PID control is the most widely used feedback control strategy in industrial automation and robotics. Despite its simplicity, properly tuned PID controllers can achieve excellent performance for a wide range of systems. Understanding the role of each component and systematic tuning methods is essential for robotics engineers.
+
+\section{Mathematical Framework}
+
+\subsection{PID Control Law}
+The continuous-time PID controller output is:
+\begin{equation}
+u(t) = K_p e(t) + K_i \int_0^t e(\tau) d\tau + K_d \frac{de(t)}{dt}
+\end{equation}
+
+where $e(t) = r(t) - y(t)$ is the error between reference $r(t)$ and output $y(t)$.
+
+\subsection{Transfer Function Form}
+In the Laplace domain:
+\begin{equation}
+C(s) = K_p + \frac{K_i}{s} + K_d s = K_p \left(1 + \frac{1}{T_i s} + T_d s\right)
+\end{equation}
+
+where $T_i = K_p/K_i$ is the integral time and $T_d = K_d/K_p$ is the derivative time.
+
+\subsection{Discrete PID Controller}
+For digital implementation with sampling period $T_s$:
+\begin{equation}
+u[k] = K_p e[k] + K_i T_s \sum_{j=0}^{k} e[j] + K_d \frac{e[k] - e[k-1]}{T_s}
+\end{equation}
+
+\subsection{DC Motor Model}
+A DC motor with armature dynamics:
+\begin{equation}
+G(s) = \frac{\Theta(s)}{V(s)} = \frac{K_m}{s(Js + b)(Ls + R) + K_m K_b}
+\end{equation}
+
+Simplified (neglecting inductance):
+\begin{equation}
+G(s) = \frac{K}{s(\tau s + 1)}
+\end{equation}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.integrate import odeint
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Store results
+results = {}
+
+# DC Motor parameters
+J = 0.01    # Moment of inertia (kg.m^2)
+b = 0.1     # Viscous friction (N.m.s)
+K = 0.01    # Motor constant
+R = 1.0     # Armature resistance (Ohm)
+L = 0.5     # Armature inductance (H)
+
+# Simplified motor transfer function: K_motor / (s * (tau*s + 1))
+K_motor = K / (R * b + K**2)
+tau_motor = J * R / (R * b + K**2)
+
+results['K_motor'] = K_motor
+results['tau_motor'] = tau_motor
+\end{pycode}
+
+\subsection{Effect of PID Gains}
+
+\begin{pycode}
+# Simulation function for PID control
+def simulate_pid_continuous(Kp, Ki, Kd, t_span, setpoint=1.0):
+    """Simulate PID control of DC motor"""
+    dt = t_span[1] - t_span[0]
+    n = len(t_span)
+
+    # State: [theta, theta_dot]
+    y = np.zeros(n)
+    u = np.zeros(n)
+    e = np.zeros(n)
+
+    # PID state
+    integral = 0
+    prev_error = 0
+
+    # Motor state
+    theta = 0
+    theta_dot = 0
+
+    for i in range(n):
+        # Error
+        e[i] = setpoint - theta
+
+        # PID control
+        integral += e[i] * dt
+        if i > 0:
+            derivative = (e[i] - prev_error) / dt
+        else:
+            derivative = 0
+
+        u[i] = Kp * e[i] + Ki * integral + Kd * derivative
+        u[i] = np.clip(u[i], -10, 10)  # Saturation
+
+        # Motor dynamics (simplified)
+        theta_ddot = (K_motor * u[i] - theta_dot) / tau_motor
+        theta_dot += theta_ddot * dt
+        theta += theta_dot * dt
+
+        y[i] = theta
+        prev_error = e[i]
+
+    return y, u, e
+
+# Time vector
+t = np.linspace(0, 5, 1000)
+
+# Different P gains
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Effect of Kp
+ax1 = axes[0, 0]
+for Kp in [1, 5, 20, 50]:
+    y, u, e = simulate_pid_continuous(Kp, 0, 0, t)
+    ax1.plot(t, y, label=f'$K_p$ = {Kp}')
+ax1.axhline(y=1, color='k', linestyle='--', alpha=0.5, label='Setpoint')
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Position (rad)')
+ax1.set_title('Effect of Proportional Gain')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Effect of Ki
+ax2 = axes[0, 1]
+Kp_base = 20
+for Ki in [0, 5, 20, 50]:
+    y, u, e = simulate_pid_continuous(Kp_base, Ki, 0, t)
+    ax2.plot(t, y, label=f'$K_i$ = {Ki}')
+ax2.axhline(y=1, color='k', linestyle='--', alpha=0.5, label='Setpoint')
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Position (rad)')
+ax2.set_title(f'Effect of Integral Gain ($K_p$ = {Kp_base})')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+# Effect of Kd
+ax3 = axes[1, 0]
+for Kd in [0, 0.1, 0.5, 1.0]:
+    y, u, e = simulate_pid_continuous(Kp_base, 10, Kd, t)
+    ax3.plot(t, y, label=f'$K_d$ = {Kd}')
+ax3.axhline(y=1, color='k', linestyle='--', alpha=0.5, label='Setpoint')
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('Position (rad)')
+ax3.set_title(f'Effect of Derivative Gain ($K_p$ = {Kp_base}, $K_i$ = 10)')
+ax3.legend()
+ax3.grid(True, alpha=0.3)
+
+# Control effort comparison
+ax4 = axes[1, 1]
+gains_sets = [(10, 0, 0), (20, 10, 0), (20, 10, 0.5)]
+labels = ['P only', 'PI', 'PID']
+for gains, label in zip(gains_sets, labels):
+    y, u, e = simulate_pid_continuous(*gains, t)
+    ax4.plot(t, u, label=label)
+ax4.set_xlabel('Time (s)')
+ax4.set_ylabel('Control Input (V)')
+ax4.set_title('Control Effort Comparison')
+ax4.legend()
+ax4.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('pid_gain_effects.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{pid_gain_effects.pdf}')
+print(r'\caption{Effects of PID gains on system response: (a) proportional gain, (b) integral gain, (c) derivative gain, (d) control effort.}')
+print(r'\label{fig:gains}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Performance Metrics Calculation}
+
+\begin{pycode}
+def calculate_metrics(t, y, setpoint=1.0):
+    """Calculate step response performance metrics"""
+    # Find settling time (2% criterion)
+    settled = np.abs(y - setpoint) < 0.02 * setpoint
+    if np.any(settled):
+        idx = np.where(settled)[0]
+        # Find first index after which it stays settled
+        for i in idx:
+            if np.all(settled[i:]):
+                settling_time = t[i]
+                break
+        else:
+            settling_time = t[-1]
+    else:
+        settling_time = t[-1]
+
+    # Rise time (10% to 90%)
+    y10 = 0.1 * setpoint
+    y90 = 0.9 * setpoint
+    t10_idx = np.where(y >= y10)[0]
+    t90_idx = np.where(y >= y90)[0]
+    if len(t10_idx) > 0 and len(t90_idx) > 0:
+        rise_time = t[t90_idx[0]] - t[t10_idx[0]]
+    else:
+        rise_time = t[-1]
+
+    # Overshoot
+    overshoot = max(0, (np.max(y) - setpoint) / setpoint * 100)
+
+    # Steady-state error
+    ss_error = abs(setpoint - np.mean(y[-100:]))
+
+    return {
+        'settling_time': settling_time,
+        'rise_time': rise_time,
+        'overshoot': overshoot,
+        'ss_error': ss_error
+    }
+
+# Calculate metrics for different controllers
+t_long = np.linspace(0, 10, 2000)
+controllers = {
+    'P': (30, 0, 0),
+    'PI': (20, 15, 0),
+    'PD': (30, 0, 0.8),
+    'PID': (25, 20, 0.5)
+}
+
+metrics_data = {}
+for name, gains in controllers.items():
+    y, u, e = simulate_pid_continuous(*gains, t_long)
+    metrics_data[name] = calculate_metrics(t_long, y)
+    metrics_data[name]['gains'] = gains
+
+results['p_settling'] = metrics_data['P']['settling_time']
+results['pi_settling'] = metrics_data['PI']['settling_time']
+results['pid_settling'] = metrics_data['PID']['settling_time']
+results['p_overshoot'] = metrics_data['P']['overshoot']
+results['pi_overshoot'] = metrics_data['PI']['overshoot']
+results['pid_overshoot'] = metrics_data['PID']['overshoot']
+results['p_ss_error'] = metrics_data['P']['ss_error']
+results['pi_ss_error'] = metrics_data['PI']['ss_error']
+results['pid_ss_error'] = metrics_data['PID']['ss_error']
+\end{pycode}
+
+\subsection{Ziegler-Nichols Tuning Method}
+
+\begin{pycode}
+# Ziegler-Nichols ultimate gain method
+def find_ultimate_gain(K_range):
+    """Find ultimate gain Ku and period Tu"""
+    for Ku in K_range:
+        y, u, e = simulate_pid_continuous(Ku, 0, 0, t_long)
+        # Check for sustained oscillation
+        peaks = []
+        for i in range(1, len(y) - 1):
+            if y[i] > y[i-1] and y[i] > y[i+1]:
+                peaks.append(i)
+
+        if len(peaks) > 4:
+            # Check if oscillation amplitude is constant
+            amplitudes = [y[peaks[i]] for i in range(len(peaks))]
+            if len(amplitudes) > 2:
+                amp_variation = np.std(amplitudes[-3:]) / np.mean(amplitudes[-3:])
+                if amp_variation < 0.1:  # Nearly constant amplitude
+                    # Calculate period
+                    periods = [t_long[peaks[i+1]] - t_long[peaks[i]] for i in range(len(peaks)-1)]
+                    Tu = np.mean(periods[-3:])
+                    return Ku, Tu
+    return None, None
+
+# For demonstration, use approximate values
+Ku = 80  # Ultimate gain
+Tu = 0.5  # Ultimate period
+
+# Ziegler-Nichols tuning rules
+zn_rules = {
+    'P': (0.5 * Ku, 0, 0),
+    'PI': (0.45 * Ku, 0.54 * Ku / Tu, 0),
+    'PID': (0.6 * Ku, 1.2 * Ku / Tu, 0.075 * Ku * Tu)
+}
+
+results['Ku'] = Ku
+results['Tu'] = Tu
+results['zn_Kp'] = zn_rules['PID'][0]
+results['zn_Ki'] = zn_rules['PID'][1]
+results['zn_Kd'] = zn_rules['PID'][2]
+
+# Plot ZN tuned responses
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+ax1 = axes[0, 0]
+for name, gains in zn_rules.items():
+    y, u, e = simulate_pid_continuous(*gains, t_long)
+    ax1.plot(t_long, y, label=f'ZN-{name}')
+ax1.axhline(y=1, color='k', linestyle='--', alpha=0.5)
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Position (rad)')
+ax1.set_title('Ziegler-Nichols Tuned Responses')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim([0, 5])
+
+# Manual vs ZN tuning comparison
+ax2 = axes[0, 1]
+manual_pid = (25, 20, 0.5)
+zn_pid = zn_rules['PID']
+y_manual, _, _ = simulate_pid_continuous(*manual_pid, t_long)
+y_zn, _, _ = simulate_pid_continuous(*zn_pid, t_long)
+ax2.plot(t_long, y_manual, label='Manual Tuning')
+ax2.plot(t_long, y_zn, label='ZN Tuning')
+ax2.axhline(y=1, color='k', linestyle='--', alpha=0.5)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Position (rad)')
+ax2.set_title('Manual vs Ziegler-Nichols PID')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim([0, 5])
+
+# Disturbance rejection
+ax3 = axes[1, 0]
+t_dist = np.linspace(0, 10, 2000)
+dt = t_dist[1] - t_dist[0]
+
+def simulate_with_disturbance(Kp, Ki, Kd, t_span, setpoint=1.0):
+    n = len(t_span)
+    y = np.zeros(n)
+    u = np.zeros(n)
+
+    integral = 0
+    prev_error = 0
+    theta = 0
+    theta_dot = 0
+
+    for i in range(n):
+        # Add disturbance at t=5
+        disturbance = 0.3 if t_span[i] > 5 else 0
+
+        e = setpoint - theta
+        integral += e * dt
+        derivative = (e - prev_error) / dt if i > 0 else 0
+
+        u[i] = Kp * e + Ki * integral + Kd * derivative
+        u[i] = np.clip(u[i], -10, 10)
+
+        theta_ddot = (K_motor * (u[i] - disturbance) - theta_dot) / tau_motor
+        theta_dot += theta_ddot * dt
+        theta += theta_dot * dt
+
+        y[i] = theta
+        prev_error = e
+
+    return y, u
+
+y_p, _ = simulate_with_disturbance(30, 0, 0, t_dist)
+y_pi, _ = simulate_with_disturbance(20, 15, 0, t_dist)
+y_pid, _ = simulate_with_disturbance(25, 20, 0.5, t_dist)
+
+ax3.plot(t_dist, y_p, label='P')
+ax3.plot(t_dist, y_pi, label='PI')
+ax3.plot(t_dist, y_pid, label='PID')
+ax3.axhline(y=1, color='k', linestyle='--', alpha=0.5)
+ax3.axvline(x=5, color='r', linestyle=':', alpha=0.5, label='Disturbance')
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('Position (rad)')
+ax3.set_title('Disturbance Rejection')
+ax3.legend()
+ax3.grid(True, alpha=0.3)
+
+# Noise sensitivity
+ax4 = axes[1, 1]
+def simulate_with_noise(Kp, Ki, Kd, t_span, noise_std=0.01):
+    n = len(t_span)
+    dt = t_span[1] - t_span[0]
+    y = np.zeros(n)
+    u = np.zeros(n)
+
+    integral = 0
+    prev_error = 0
+    theta = 0
+    theta_dot = 0
+
+    for i in range(n):
+        # Measurement noise
+        y_measured = theta + noise_std * np.random.randn()
+
+        e = 1.0 - y_measured
+        integral += e * dt
+        derivative = (e - prev_error) / dt if i > 0 else 0
+
+        u[i] = Kp * e + Ki * integral + Kd * derivative
+        u[i] = np.clip(u[i], -10, 10)
+
+        theta_ddot = (K_motor * u[i] - theta_dot) / tau_motor
+        theta_dot += theta_ddot * dt
+        theta += theta_dot * dt
+
+        y[i] = theta
+        prev_error = e
+
+    return y, u
+
+y_low_kd, u_low = simulate_with_noise(25, 20, 0.1, t_long, 0.02)
+y_high_kd, u_high = simulate_with_noise(25, 20, 1.0, t_long, 0.02)
+
+ax4.plot(t_long, u_low, alpha=0.7, label='$K_d$ = 0.1')
+ax4.plot(t_long, u_high, alpha=0.7, label='$K_d$ = 1.0')
+ax4.set_xlabel('Time (s)')
+ax4.set_ylabel('Control Input (V)')
+ax4.set_title('Noise Sensitivity (Control Signal)')
+ax4.legend()
+ax4.grid(True, alpha=0.3)
+ax4.set_xlim([0, 5])
+
+plt.tight_layout()
+plt.savefig('pid_tuning.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{pid_tuning.pdf}')
+print(r'\caption{PID tuning analysis: (a) Ziegler-Nichols responses, (b) manual vs ZN tuning, (c) disturbance rejection, (d) noise sensitivity.}')
+print(r'\label{fig:tuning}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Discrete PID Implementation}
+
+\begin{pycode}
+# Discrete PID with anti-windup
+def discrete_pid(Kp, Ki, Kd, Ts, t_span, setpoint=1.0, windup_limit=5):
+    n = len(t_span)
+    y = np.zeros(n)
+    u = np.zeros(n)
+    e = np.zeros(n)
+
+    integral = 0
+    prev_error = 0
+    theta = 0
+    theta_dot = 0
+
+    for i in range(n):
+        e[i] = setpoint - theta
+
+        # Anti-windup: only integrate if not saturated
+        new_integral = integral + e[i] * Ts
+        if abs(new_integral) < windup_limit:
+            integral = new_integral
+
+        derivative = (e[i] - prev_error) / Ts if i > 0 else 0
+
+        u[i] = Kp * e[i] + Ki * integral + Kd * derivative
+        u[i] = np.clip(u[i], -10, 10)
+
+        # Motor update at discrete time
+        for _ in range(10):  # Sub-stepping for stability
+            theta_ddot = (K_motor * u[i] - theta_dot) / tau_motor
+            theta_dot += theta_ddot * Ts / 10
+            theta += theta_dot * Ts / 10
+
+        y[i] = theta
+        prev_error = e[i]
+
+    return y, u, e
+
+# Compare different sampling rates
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1 = axes[0]
+sampling_periods = [0.001, 0.01, 0.05, 0.1]
+for Ts in sampling_periods:
+    t_disc = np.arange(0, 5, Ts)
+    y, u, e = discrete_pid(25, 20, 0.5, Ts, t_disc)
+    ax1.plot(t_disc, y, label=f'$T_s$ = {Ts*1000:.0f} ms')
+ax1.axhline(y=1, color='k', linestyle='--', alpha=0.5)
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Position (rad)')
+ax1.set_title('Effect of Sampling Period')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Anti-windup comparison
+ax2 = axes[1]
+t_aw = np.linspace(0, 8, 1600)
+Ts_aw = t_aw[1] - t_aw[0]
+
+# With saturation (setpoint = 2)
+y_no_aw, u_no_aw, _ = discrete_pid(25, 20, 0.5, Ts_aw, t_aw, setpoint=2.0, windup_limit=100)
+y_aw, u_aw, _ = discrete_pid(25, 20, 0.5, Ts_aw, t_aw, setpoint=2.0, windup_limit=2)
+
+ax2.plot(t_aw, y_no_aw, label='Without Anti-windup')
+ax2.plot(t_aw, y_aw, label='With Anti-windup')
+ax2.axhline(y=2, color='k', linestyle='--', alpha=0.5)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Position (rad)')
+ax2.set_title('Anti-Windup Effect')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('pid_discrete.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{pid_discrete.pdf}')
+print(r'\caption{Discrete PID implementation: (a) effect of sampling period, (b) anti-windup mechanism.}')
+print(r'\label{fig:discrete}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Velocity Control Mode}
+
+\begin{pycode}
+# Velocity control instead of position
+def simulate_velocity_control(Kp, Ki, Kd, t_span, setpoint=10.0):
+    dt = t_span[1] - t_span[0]
+    n = len(t_span)
+
+    omega = np.zeros(n)  # Angular velocity
+    u = np.zeros(n)
+
+    integral = 0
+    prev_error = 0
+    theta_dot = 0
+
+    for i in range(n):
+        e = setpoint - theta_dot
+
+        integral += e * dt
+        derivative = (e - prev_error) / dt if i > 0 else 0
+
+        u[i] = Kp * e + Ki * integral + Kd * derivative
+        u[i] = np.clip(u[i], -10, 10)
+
+        # First-order velocity dynamics
+        theta_ddot = (K_motor * u[i] - theta_dot) / tau_motor
+        theta_dot += theta_ddot * dt
+
+        omega[i] = theta_dot
+        prev_error = e
+
+    return omega, u
+
+# Velocity control response
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+t_vel = np.linspace(0, 3, 600)
+
+# Different velocity setpoints
+ax1 = axes[0, 0]
+for v_sp in [5, 10, 15, 20]:
+    omega, u = simulate_velocity_control(2, 10, 0.05, t_vel, v_sp)
+    ax1.plot(t_vel, omega, label=f'$\\omega_{{sp}}$ = {v_sp} rad/s')
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Angular Velocity (rad/s)')
+ax1.set_title('Velocity Control Response')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Trapezoidal velocity profile tracking
+ax2 = axes[0, 1]
+t_trap = np.linspace(0, 5, 1000)
+dt = t_trap[1] - t_trap[0]
+
+# Generate trapezoidal profile
+v_profile = np.zeros_like(t_trap)
+for i, ti in enumerate(t_trap):
+    if ti < 1:
+        v_profile[i] = 10 * ti
+    elif ti < 4:
+        v_profile[i] = 10
+    else:
+        v_profile[i] = 10 * (5 - ti)
+
+# Track profile
+omega_track = np.zeros_like(t_trap)
+u_track = np.zeros_like(t_trap)
+integral = 0
+prev_error = 0
+theta_dot = 0
+Kp, Ki, Kd = 3, 15, 0.05
+
+for i in range(len(t_trap)):
+    e = v_profile[i] - theta_dot
+    integral += e * dt
+    derivative = (e - prev_error) / dt if i > 0 else 0
+    u_track[i] = Kp * e + Ki * integral + Kd * derivative
+    u_track[i] = np.clip(u_track[i], -10, 10)
+    theta_ddot = (K_motor * u_track[i] - theta_dot) / tau_motor
+    theta_dot += theta_ddot * dt
+    omega_track[i] = theta_dot
+    prev_error = e
+
+ax2.plot(t_trap, v_profile, 'r--', linewidth=2, label='Reference')
+ax2.plot(t_trap, omega_track, 'b-', linewidth=1, label='Actual')
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Angular Velocity (rad/s)')
+ax2.set_title('Trapezoidal Profile Tracking')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+# Cascaded position-velocity control
+ax3 = axes[1, 0]
+t_casc = np.linspace(0, 5, 1000)
+dt = t_casc[1] - t_casc[0]
+
+theta_ref = 5.0  # Position setpoint
+theta = 0
+theta_dot = 0
+pos_history = []
+
+# Outer loop gains (position)
+Kp_pos = 5
+# Inner loop gains (velocity)
+Kp_vel, Ki_vel, Kd_vel = 2, 10, 0.05
+
+integral_vel = 0
+prev_error_vel = 0
+
+for i in range(len(t_casc)):
+    # Outer loop: position -> velocity command
+    pos_error = theta_ref - theta
+    vel_cmd = Kp_pos * pos_error
+    vel_cmd = np.clip(vel_cmd, -20, 20)
+
+    # Inner loop: velocity control
+    vel_error = vel_cmd - theta_dot
+    integral_vel += vel_error * dt
+    derivative_vel = (vel_error - prev_error_vel) / dt if i > 0 else 0
+    u = Kp_vel * vel_error + Ki_vel * integral_vel + Kd_vel * derivative_vel
+    u = np.clip(u, -10, 10)
+
+    theta_ddot = (K_motor * u - theta_dot) / tau_motor
+    theta_dot += theta_ddot * dt
+    theta += theta_dot * dt
+
+    pos_history.append(theta)
+    prev_error_vel = vel_error
+
+ax3.plot(t_casc, pos_history, 'b-', linewidth=2)
+ax3.axhline(y=theta_ref, color='r', linestyle='--', label='Setpoint')
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('Position (rad)')
+ax3.set_title('Cascaded Position-Velocity Control')
+ax3.legend()
+ax3.grid(True, alpha=0.3)
+
+# Multi-setpoint trajectory
+ax4 = axes[1, 1]
+t_multi = np.linspace(0, 15, 3000)
+dt = t_multi[1] - t_multi[0]
+
+# Position setpoints
+setpoints = [(0, 2), (5, 2), (5, 5), (10, 5), (10, 0), (15, 0)]
+pos_ref = np.zeros_like(t_multi)
+for i, ti in enumerate(t_multi):
+    for (t_start, sp) in setpoints:
+        if ti >= t_start:
+            pos_ref[i] = sp
+
+# Simulate
+theta = 0
+theta_dot = 0
+pos_actual = []
+integral_vel = 0
+prev_error_vel = 0
+
+for i in range(len(t_multi)):
+    pos_error = pos_ref[i] - theta
+    vel_cmd = Kp_pos * pos_error
+    vel_cmd = np.clip(vel_cmd, -15, 15)
+
+    vel_error = vel_cmd - theta_dot
+    integral_vel += vel_error * dt
+    derivative_vel = (vel_error - prev_error_vel) / dt if i > 0 else 0
+    u = Kp_vel * vel_error + Ki_vel * integral_vel + Kd_vel * derivative_vel
+    u = np.clip(u, -10, 10)
+
+    theta_ddot = (K_motor * u - theta_dot) / tau_motor
+    theta_dot += theta_ddot * dt
+    theta += theta_dot * dt
+
+    pos_actual.append(theta)
+    prev_error_vel = vel_error
+
+ax4.plot(t_multi, pos_ref, 'r--', linewidth=2, label='Reference')
+ax4.plot(t_multi, pos_actual, 'b-', linewidth=1, label='Actual')
+ax4.set_xlabel('Time (s)')
+ax4.set_ylabel('Position (rad)')
+ax4.set_title('Multi-Setpoint Trajectory Tracking')
+ax4.legend()
+ax4.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('pid_velocity.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{pid_velocity.pdf}')
+print(r'\caption{Velocity control modes: (a) step response, (b) profile tracking, (c) cascaded control, (d) multi-setpoint trajectory.}')
+print(r'\label{fig:velocity}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Frequency Response Analysis}
+
+\begin{pycode}
+# Bode plot of open-loop transfer function
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Motor transfer function
+num_motor = [K_motor]
+den_motor = [tau_motor, 1, 0]
+motor_sys = signal.TransferFunction(num_motor, den_motor)
+
+# PID controllers
+Kp, Ki, Kd = 25, 20, 0.5
+num_pid = [Kd, Kp, Ki]
+den_pid = [1, 0]
+pid_sys = signal.TransferFunction(num_pid, den_pid)
+
+# Open-loop = PID * Motor
+num_ol = np.convolve(num_pid, num_motor)
+den_ol = np.convolve(den_pid, den_motor)
+ol_sys = signal.TransferFunction(num_ol, den_ol)
+
+# Frequency range
+w = np.logspace(-2, 3, 1000)
+
+# Bode plot
+w_bode, mag_bode, phase_bode = signal.bode(ol_sys, w)
+
+ax1 = axes[0, 0]
+ax1.semilogx(w_bode, mag_bode, 'b-', linewidth=2)
+ax1.axhline(y=0, color='k', linestyle='--', alpha=0.5)
+ax1.set_xlabel('Frequency (rad/s)')
+ax1.set_ylabel('Magnitude (dB)')
+ax1.set_title('Open-Loop Bode Plot - Magnitude')
+ax1.grid(True, alpha=0.3, which='both')
+
+ax2 = axes[0, 1]
+ax2.semilogx(w_bode, phase_bode, 'b-', linewidth=2)
+ax2.axhline(y=-180, color='r', linestyle='--', alpha=0.5, label='-180 deg')
+ax2.set_xlabel('Frequency (rad/s)')
+ax2.set_ylabel('Phase (deg)')
+ax2.set_title('Open-Loop Bode Plot - Phase')
+ax2.grid(True, alpha=0.3, which='both')
+ax2.legend()
+
+# Gain and phase margins
+# Find crossover frequencies
+mag_linear = 10**(mag_bode/20)
+gain_crossover_idx = np.argmin(np.abs(mag_linear - 1))
+phase_crossover_idx = np.argmin(np.abs(phase_bode + 180))
+
+gain_margin = -mag_bode[phase_crossover_idx]  # dB
+phase_margin = 180 + phase_bode[gain_crossover_idx]  # degrees
+
+results['gain_margin'] = gain_margin
+results['phase_margin'] = phase_margin
+results['gain_crossover'] = w_bode[gain_crossover_idx]
+results['phase_crossover'] = w_bode[phase_crossover_idx]
+
+# Closed-loop response
+num_cl = num_ol
+den_cl = np.polyadd(den_ol, num_ol)
+cl_sys = signal.TransferFunction(num_cl, den_cl)
+
+w_cl, mag_cl, phase_cl = signal.bode(cl_sys, w)
+
+ax3 = axes[1, 0]
+ax3.semilogx(w_cl, mag_cl, 'b-', linewidth=2)
+ax3.axhline(y=-3, color='r', linestyle='--', alpha=0.5, label='-3 dB')
+ax3.set_xlabel('Frequency (rad/s)')
+ax3.set_ylabel('Magnitude (dB)')
+ax3.set_title('Closed-Loop Frequency Response')
+ax3.grid(True, alpha=0.3, which='both')
+ax3.legend()
+
+# Find bandwidth
+mag_cl_linear = 10**(mag_cl/20)
+bw_idx = np.where(mag_cl_linear < 0.707)[0]
+if len(bw_idx) > 0:
+    bandwidth = w_cl[bw_idx[0]]
+else:
+    bandwidth = w_cl[-1]
+results['bandwidth'] = bandwidth
+
+# Nyquist plot
+ax4 = axes[1, 1]
+w_nyq = np.logspace(-2, 2, 500)
+_, H = signal.freqresp(ol_sys, w_nyq)
+ax4.plot(H.real, H.imag, 'b-', linewidth=2)
+ax4.plot(H.real, -H.imag, 'b--', linewidth=1, alpha=0.5)  # Negative frequencies
+ax4.plot(-1, 0, 'rx', markersize=10, markeredgewidth=3, label='Critical Point')
+ax4.set_xlabel('Real')
+ax4.set_ylabel('Imaginary')
+ax4.set_title('Nyquist Plot')
+ax4.grid(True, alpha=0.3)
+ax4.legend()
+ax4.axis('equal')
+ax4.set_xlim([-3, 3])
+ax4.set_ylim([-3, 3])
+
+plt.tight_layout()
+plt.savefig('pid_frequency.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{pid_frequency.pdf}')
+print(r'\caption{Frequency response analysis: (a) open-loop magnitude, (b) open-loop phase, (c) closed-loop response, (d) Nyquist plot.}')
+print(r'\label{fig:frequency}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\section{Results and Discussion}
+
+\subsection{Performance Metrics Comparison}
+
+\begin{table}[H]
+\centering
+\caption{Controller Performance Comparison}
+\label{tab:performance}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Controller} & \textbf{Settling Time (s)} & \textbf{Overshoot (\%)} & \textbf{SS Error} & \textbf{Gains} \\
+\midrule
+P & \py{f"{results['p_settling']:.3f}"} & \py{f"{results['p_overshoot']:.1f}"} & \py{f"{results['p_ss_error']:.4f}"} & $K_p$ = 30 \\
+PI & \py{f"{results['pi_settling']:.3f}"} & \py{f"{results['pi_overshoot']:.1f}"} & \py{f"{results['pi_ss_error']:.6f}"} & $K_p$ = 20, $K_i$ = 15 \\
+PID & \py{f"{results['pid_settling']:.3f}"} & \py{f"{results['pid_overshoot']:.1f}"} & \py{f"{results['pid_ss_error']:.6f}"} & $K_p$ = 25, $K_i$ = 20, $K_d$ = 0.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ziegler-Nichols Tuning Results}
+
+Using the ultimate gain method with $K_u = \py{f"{results['Ku']:.1f}"}$ and $T_u = \py{f"{results['Tu']:.2f}"}$ s:
+
+\begin{table}[H]
+\centering
+\caption{Ziegler-Nichols PID Parameters}
+\label{tab:zn}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Parameter} & \textbf{Formula} & \textbf{Value} \\
+\midrule
+$K_p$ & $0.6 K_u$ & \py{f"{results['zn_Kp']:.2f}"} \\
+$K_i$ & $1.2 K_u / T_u$ & \py{f"{results['zn_Ki']:.2f}"} \\
+$K_d$ & $0.075 K_u T_u$ & \py{f"{results['zn_Kd']:.4f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Stability Margins}
+
+The frequency response analysis reveals:
+\begin{itemize}
+    \item Gain margin: \py{f"{results['gain_margin']:.2f}"} dB at \py{f"{results['phase_crossover']:.2f}"} rad/s
+    \item Phase margin: \py{f"{results['phase_margin']:.2f}"} degrees at \py{f"{results['gain_crossover']:.2f}"} rad/s
+    \item Closed-loop bandwidth: \py{f"{results['bandwidth']:.2f}"} rad/s
+\end{itemize}
+
+\subsection{Motor Parameters}
+
+The simplified DC motor model parameters:
+\begin{itemize}
+    \item Motor gain constant: $K = \py{f"{results['K_motor']:.4f}"}$
+    \item Time constant: $\tau = \py{f"{results['tau_motor']:.4f}"}$ s
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrated comprehensive PID controller design and tuning for robotic motor control. Key findings include:
+\begin{enumerate}
+    \item Proportional control provides fast response but steady-state error
+    \item Integral action eliminates steady-state error but increases overshoot
+    \item Derivative action reduces overshoot and improves stability but amplifies noise
+    \item Ziegler-Nichols provides a good starting point but may require further tuning
+    \item Cascaded control architecture improves both position and velocity performance
+    \item Adequate stability margins (GM > 6 dB, PM > 45 deg) ensure robust operation
+\end{enumerate}
+
+The methods presented form the foundation for practical PID implementation in robotic systems, with considerations for discrete implementation, anti-windup, and noise mitigation.
+
+\end{document}

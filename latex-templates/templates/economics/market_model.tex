@@ -1,0 +1,343 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{supply}{RGB}{46, 204, 113}
+\definecolor{demand}{RGB}{231, 76, 60}
+\definecolor{equilib}{RGB}{52, 152, 219}
+
+\title{Market Economics:\\
+Supply, Demand, Elasticity, and Welfare Analysis}
+\author{Department of Economics\\Technical Report EC-2024-002}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a computational analysis of market models. We examine supply and demand curves, compute market equilibrium, analyze price elasticity, measure consumer and producer surplus, and evaluate the welfare effects of taxes and price controls.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Market equilibrium occurs where supply equals demand:
+\begin{equation}
+Q_d(P) = Q_s(P)
+\end{equation}
+
+\section{Linear Supply and Demand}
+\begin{align}
+Q_d &= a - bP \quad \text{(Demand)} \\
+Q_s &= c + dP \quad \text{(Supply)}
+\end{align}
+
+Equilibrium: $P^* = \frac{a - c}{b + d}$, $Q^* = \frac{ad + bc}{b + d}$
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+from scipy.integrate import quad
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Market parameters
+a, b = 100, 1  # Demand: Q = a - b*P
+c, d = 0, 2    # Supply: Q = c + d*P
+
+def demand(P):
+    return a - b * P
+
+def supply(P):
+    return c + d * P
+
+def inverse_demand(Q):
+    return (a - Q) / b
+
+def inverse_supply(Q):
+    return (Q - c) / d
+
+# Equilibrium
+P_eq = (a - c) / (b + d)
+Q_eq = a - b * P_eq
+
+# Elasticity functions
+def price_elasticity_demand(P, Q):
+    return -b * P / Q
+
+def price_elasticity_supply(P, Q):
+    return d * P / Q
+
+# Welfare measures
+def consumer_surplus(P_eq, Q_eq):
+    return 0.5 * (a/b - P_eq) * Q_eq
+
+def producer_surplus(P_eq, Q_eq):
+    return 0.5 * (P_eq - c/d) * Q_eq
+
+CS = consumer_surplus(P_eq, Q_eq)
+PS = producer_surplus(P_eq, Q_eq)
+\end{pycode}
+
+\chapter{Market Equilibrium}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Basic supply and demand
+ax = axes[0, 0]
+P_range = np.linspace(0, 50, 100)
+Q_d = demand(P_range)
+Q_s = supply(P_range)
+
+ax.plot(Q_d, P_range, 'r-', linewidth=2, label='Demand')
+ax.plot(Q_s, P_range, 'g-', linewidth=2, label='Supply')
+ax.plot(Q_eq, P_eq, 'bo', markersize=10, zorder=5)
+ax.axhline(P_eq, color='blue', linestyle='--', alpha=0.5)
+ax.axvline(Q_eq, color='blue', linestyle='--', alpha=0.5)
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('Price $P$')
+ax.set_title(f'Market Equilibrium: $P^* = {P_eq:.1f}$, $Q^* = {Q_eq:.1f}$')
+ax.legend()
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 50)
+ax.grid(True, alpha=0.3)
+
+# Consumer and producer surplus
+ax = axes[0, 1]
+ax.plot(Q_d, P_range, 'r-', linewidth=2, label='Demand')
+ax.plot(Q_s, P_range, 'g-', linewidth=2, label='Supply')
+
+# CS: area below demand, above price
+Q_cs = np.linspace(0, Q_eq, 100)
+P_cs = inverse_demand(Q_cs)
+ax.fill_between(Q_cs, P_eq, P_cs, alpha=0.3, color='red', label='CS')
+
+# PS: area above supply, below price
+Q_ps = np.linspace(0, Q_eq, 100)
+P_ps = inverse_supply(Q_ps)
+ax.fill_between(Q_ps, P_ps, P_eq, alpha=0.3, color='green', label='PS')
+
+ax.plot(Q_eq, P_eq, 'bo', markersize=10, zorder=5)
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('Price $P$')
+ax.set_title(f'Welfare: CS = {CS:.1f}, PS = {PS:.1f}')
+ax.legend()
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 50)
+ax.grid(True, alpha=0.3)
+
+# Effect of tax
+tax = 10
+P_buyers = P_eq + tax * b / (b + d)
+P_sellers = P_eq - tax * d / (b + d)
+Q_tax = demand(P_buyers)
+
+ax = axes[1, 0]
+ax.plot(Q_d, P_range, 'r-', linewidth=2, label='Demand')
+ax.plot(Q_s, P_range, 'g-', linewidth=2, label='Supply')
+ax.plot(Q_s + tax * d, P_range, 'g--', linewidth=2, alpha=0.5, label='Supply + Tax')
+
+ax.plot(Q_eq, P_eq, 'bo', markersize=8, label='No tax')
+ax.plot(Q_tax, P_buyers, 'rs', markersize=8, label='Buyer price')
+ax.plot(Q_tax, P_sellers, 'gs', markersize=8, label='Seller price')
+
+# Tax revenue
+ax.fill_between([Q_tax, Q_tax], [P_sellers, P_sellers], [P_buyers, P_buyers],
+                 alpha=0.3, color='blue')
+ax.annotate('Tax Revenue', xy=(Q_tax/2, (P_buyers + P_sellers)/2),
+            fontsize=9, ha='center')
+
+# Deadweight loss
+ax.fill([Q_tax, Q_eq, Q_tax], [P_sellers, P_eq, P_buyers],
+        alpha=0.3, color='gray')
+
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('Price $P$')
+ax.set_title(f'Tax Effect: $\\tau = {tax}$')
+ax.legend(loc='upper right', fontsize=8)
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 50)
+ax.grid(True, alpha=0.3)
+
+# Elasticity along demand curve
+ax = axes[1, 1]
+Q_range = np.linspace(1, 99, 100)
+P_range_el = inverse_demand(Q_range)
+elasticity = np.abs(price_elasticity_demand(P_range_el, Q_range))
+
+ax.plot(Q_range, elasticity, 'b-', linewidth=2)
+ax.axhline(1, color='red', linestyle='--', alpha=0.5, label='Unit elastic')
+ax.fill_between(Q_range, 0, elasticity, where=elasticity > 1, alpha=0.3, color='blue', label='Elastic')
+ax.fill_between(Q_range, 0, elasticity, where=elasticity <= 1, alpha=0.3, color='green', label='Inelastic')
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('$|\\varepsilon_d|$')
+ax.set_title('Price Elasticity of Demand')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim(0, 10)
+
+plt.tight_layout()
+plt.savefig('market_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Tax calculations
+tax_revenue = tax * Q_tax
+DWL = 0.5 * tax * (Q_eq - Q_tax)
+elasticity_eq = price_elasticity_demand(P_eq, Q_eq)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{market_analysis.pdf}
+\caption{Market analysis: (a) equilibrium, (b) welfare surplus, (c) tax effects, (d) elasticity.}
+\end{figure}
+
+\chapter{Price Elasticity}
+
+\section{Definition}
+Price elasticity of demand:
+\begin{equation}
+\varepsilon_d = \frac{\partial Q_d}{\partial P} \cdot \frac{P}{Q_d}
+\end{equation}
+
+\begin{itemize}
+    \item $|\varepsilon_d| > 1$: Elastic (revenue increases with price decrease)
+    \item $|\varepsilon_d| < 1$: Inelastic (revenue decreases with price decrease)
+    \item $|\varepsilon_d| = 1$: Unit elastic
+\end{itemize}
+
+\chapter{Welfare Analysis}
+
+\begin{pycode}
+# Compare different market scenarios
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Price ceiling (below equilibrium)
+ax = axes[0]
+P_ceiling = P_eq - 10
+Q_supplied = supply(P_ceiling)
+Q_demanded = demand(P_ceiling)
+
+P_range = np.linspace(0, 50, 100)
+ax.plot(demand(P_range), P_range, 'r-', linewidth=2, label='Demand')
+ax.plot(supply(P_range), P_range, 'g-', linewidth=2, label='Supply')
+ax.axhline(P_ceiling, color='blue', linestyle='-', linewidth=2, label='Price ceiling')
+ax.fill_between([Q_supplied, Q_demanded], 0, P_ceiling, alpha=0.2, color='gray')
+ax.annotate('Shortage', xy=((Q_supplied + Q_demanded)/2, P_ceiling/2),
+            fontsize=10, ha='center')
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('Price $P$')
+ax.set_title('Price Ceiling (Shortage)')
+ax.legend()
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 50)
+ax.grid(True, alpha=0.3)
+
+# Price floor (above equilibrium)
+ax = axes[1]
+P_floor = P_eq + 10
+Q_supplied = supply(P_floor)
+Q_demanded = demand(P_floor)
+
+ax.plot(demand(P_range), P_range, 'r-', linewidth=2, label='Demand')
+ax.plot(supply(P_range), P_range, 'g-', linewidth=2, label='Supply')
+ax.axhline(P_floor, color='orange', linestyle='-', linewidth=2, label='Price floor')
+ax.fill_between([Q_demanded, Q_supplied], P_floor, 50, alpha=0.2, color='gray')
+ax.annotate('Surplus', xy=((Q_demanded + Q_supplied)/2, (P_floor + 50)/2),
+            fontsize=10, ha='center')
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('Price $P$')
+ax.set_title('Price Floor (Surplus)')
+ax.legend()
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 50)
+ax.grid(True, alpha=0.3)
+
+# Demand shift
+ax = axes[2]
+a_new = 120  # Increased demand
+P_eq_new = (a_new - c) / (b + d)
+Q_eq_new = a_new - b * P_eq_new
+
+ax.plot(demand(P_range), P_range, 'r-', linewidth=2, alpha=0.5, label='$D_1$')
+ax.plot(a_new - b * P_range, P_range, 'r--', linewidth=2, label='$D_2$')
+ax.plot(supply(P_range), P_range, 'g-', linewidth=2, label='Supply')
+ax.plot(Q_eq, P_eq, 'bo', markersize=8, label='Old eq')
+ax.plot(Q_eq_new, P_eq_new, 'ro', markersize=8, label='New eq')
+ax.annotate('', xy=(Q_eq_new, P_eq_new), xytext=(Q_eq, P_eq),
+            arrowprops=dict(arrowstyle='->', color='black'))
+ax.set_xlabel('Quantity $Q$')
+ax.set_ylabel('Price $P$')
+ax.set_title('Demand Shift')
+ax.legend()
+ax.set_xlim(0, 120)
+ax.set_ylim(0, 50)
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('market_interventions.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{market_interventions.pdf}
+\caption{Market interventions: price ceiling creates shortage, price floor creates surplus, demand shift moves equilibrium.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+market_results = [
+    ('Equilibrium price', f'{P_eq:.2f}', 'dollars'),
+    ('Equilibrium quantity', f'{Q_eq:.2f}', 'units'),
+    ('Consumer surplus', f'{CS:.2f}', 'dollars'),
+    ('Producer surplus', f'{PS:.2f}', 'dollars'),
+    ('Total welfare', f'{CS + PS:.2f}', 'dollars'),
+    ('Elasticity at equilibrium', f'{abs(elasticity_eq):.2f}', ''),
+    ('Tax revenue', f'{tax_revenue:.2f}', 'dollars'),
+    ('Deadweight loss', f'{DWL:.2f}', 'dollars'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Market equilibrium results}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Variable & Value & Units \\
+\midrule
+\py{market_results[0][0]} & \py{market_results[0][1]} & \py{market_results[0][2]} \\
+\py{market_results[1][0]} & \py{market_results[1][1]} & \py{market_results[1][2]} \\
+\py{market_results[2][0]} & \py{market_results[2][1]} & \py{market_results[2][2]} \\
+\py{market_results[3][0]} & \py{market_results[3][1]} & \py{market_results[3][2]} \\
+\py{market_results[4][0]} & \py{market_results[4][1]} & \py{market_results[4][2]} \\
+\py{market_results[5][0]} & \py{market_results[5][1]} & \py{market_results[5][2]} \\
+\py{market_results[6][0]} & \py{market_results[6][1]} & \py{market_results[6][2]} \\
+\py{market_results[7][0]} & \py{market_results[7][1]} & \py{market_results[7][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Market equilibrium maximizes total welfare (CS + PS)
+    \item Taxes create deadweight loss proportional to elasticities
+    \item Price controls create shortages or surpluses
+    \item Elasticity determines tax incidence between buyers and sellers
+    \item Welfare analysis quantifies policy effects
+\end{enumerate}
+
+\end{document}

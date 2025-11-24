@@ -6,5 +6,9 @@
 !notebooks/published/
 !notebooks/published/*.ipynb
 
+# Except latex-templates directory
+!latex-templates/
+!latex-templates/**
+
 # And README
 !README.md

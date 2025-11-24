@@ -1,0 +1,137 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{xcolor}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlsng}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hldef}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs} % Required for xtable aesthetics
+
+\title{Phase III Clinical Trial Analysis}
+\author{Bioinformatics Division}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+\maketitle
+
+\section{Statistical Analysis Protocol}
+
+We investigate the efficacy of Treatment A vs. Placebo. The analysis is performed using R version 4.5.1.
+
+% Global Chunk Options
+% echo=TRUE: Show R code in the document (transparency)
+% warning=FALSE: Suppress warning messages in final PDF
+% dev='pdf': Generate high-quality vector graphics
+
+
+\section{Data Ingestion and Summary}
+
+\begin{kframe}
+\begin{alltt}
+\hlcom{# Simulate Clinical Data}
+\hlkwd{set.seed}\hldef{(}\hlnum{2024}\hldef{)}
+\hldef{n} \hlkwb{<-} \hlnum{50}
+\hldef{df} \hlkwb{<-} \hlkwd{data.frame}\hldef{(}
+  \hlkwc{id} \hldef{=} \hlnum{1}\hlopt{:}\hldef{(}\hlnum{2}\hlopt{*}\hldef{n),}
+  \hlkwc{group} \hldef{=} \hlkwd{factor}\hldef{(}\hlkwd{rep}\hldef{(}\hlkwd{c}\hldef{(}\hlsng{"Placebo"}\hldef{,} \hlsng{"Treatment"}\hldef{),} \hlkwc{each}\hldef{=n)),}
+  \hlkwc{recovery_days} \hldef{=} \hlkwd{c}\hldef{(}\hlkwd{rnorm}\hldef{(n,} \hlkwc{mean}\hldef{=}\hlnum{14}\hldef{,} \hlkwc{sd}\hldef{=}\hlnum{3}\hldef{),} \hlkwd{rnorm}\hldef{(n,} \hlkwc{mean}\hldef{=}\hlnum{10}\hldef{,} \hlkwc{sd}\hldef{=}\hlnum{2.5}\hldef{))}
+\hldef{)}
+
+\hlcom{# Descriptive Statistics Table}
+\hldef{summary_stats} \hlkwb{<-} \hlkwd{aggregate}\hldef{(recovery_days} \hlopt{~} \hldef{group,} \hlkwc{data}\hldef{=df,} \hlkwc{FUN}\hldef{=}\hlkwa{function}\hldef{(}\hlkwc{x}\hldef{)} \hlkwd{c}\hldef{(}\hlkwc{Mean}\hldef{=}\hlkwd{mean}\hldef{(x),} \hlkwc{SD}\hldef{=}\hlkwd{sd}\hldef{(x)))}
+\hldef{summary_stats} \hlkwb{<-} \hlkwd{do.call}\hldef{(data.frame, summary_stats)} \hlcom{# Flatten structure}
+
+\hlcom{# Print as LaTeX table using xtable}
+\hlkwd{print}\hldef{(}\hlkwd{xtable}\hldef{(summary_stats,} \hlkwc{caption}\hldef{=}\hlsng{"Descriptive Statistics by Group"}\hldef{),}
+      \hlkwc{booktabs}\hldef{=}\hlnum{TRUE}\hldef{,} \hlkwc{include.rownames}\hldef{=}\hlnum{FALSE}\hldef{)}
+\end{alltt}
+\end{kframe}% latex table generated in R 4.5.1 by xtable 1.8-4 package
+% Sat Nov 22 21:54:49 2025
+\begin{table}[ht]
+\centering
+\begin{tabular}{lrr}
+  \toprule
+group & recovery\_days.Mean & recovery\_days.SD \\ 
+  \midrule
+Placebo & 13.77 & 3.19 \\ 
+  Treatment & 9.76 & 2.48 \\ 
+   \bottomrule
+\end{tabular}
+\caption{Descriptive Statistics by Group} 
+\end{table}
+
+
+The table above is generated dynamically. If the underlying dataset \texttt{df} changes, the table updates automatically without manual re-formatting.
+
+\section{Hypothesis Testing and Visualization}
+
+We perform an independent t-test to compare the groups.
+
+
+
+The t-test yields a p-value of < 0.001.
+This indicates a statistically significant difference.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{ggplot}\hldef{(df,} \hlkwd{aes}\hldef{(}\hlkwc{x}\hldef{=group,} \hlkwc{y}\hldef{=recovery_days,} \hlkwc{fill}\hldef{=group))} \hlopt{+}
+  \hlkwd{geom_boxplot}\hldef{(}\hlkwc{alpha}\hldef{=}\hlnum{0.7}\hldef{)} \hlopt{+}
+  \hlkwd{geom_jitter}\hldef{(}\hlkwc{width}\hldef{=}\hlnum{0.2}\hldef{,} \hlkwc{alpha}\hldef{=}\hlnum{0.5}\hldef{)} \hlopt{+}
+  \hlkwd{theme_minimal}\hldef{()} \hlopt{+}
+  \hlkwd{labs}\hldef{(}\hlkwc{y}\hldef{=}\hlsng{"Days to Recovery"}\hldef{,} \hlkwc{x}\hldef{=}\hlsng{"Study Group"}\hldef{)} \hlopt{+}
+  \hlkwd{scale_fill_brewer}\hldef{(}\hlkwc{palette}\hldef{=}\hlsng{"Pastel1"}\hldef{)}
+\end{alltt}
+\end{kframe}\begin{figure}
+\includegraphics[width=\maxwidth]{figure/boxplot-1} \caption[Distribution of Recovery Days by Treatment Group]{Distribution of Recovery Days by Treatment Group}\label{fig:boxplot}
+\end{figure}
+
+\end{knitrout}
+
+\end{document}

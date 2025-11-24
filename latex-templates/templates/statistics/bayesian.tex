@@ -1,0 +1,446 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+
+\title{Bayesian Inference: From Prior to Posterior\\
+\large Parameter Estimation with Markov Chain Monte Carlo}
+\author{Statistical Methods Research Group\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This tutorial provides a comprehensive introduction to Bayesian inference for parameter estimation. We implement conjugate prior analysis for binomial data and develop a Metropolis-Hastings MCMC sampler for Bayesian linear regression. The analysis includes prior sensitivity analysis, posterior visualization, convergence diagnostics, and credible interval computation. Results demonstrate the philosophical and practical advantages of the Bayesian approach over frequentist methods.
+\end{abstract}
+
+\section{Introduction to Bayesian Thinking}
+
+Bayesian inference provides a principled framework for updating beliefs in light of new evidence. Unlike frequentist statistics, which treats parameters as fixed unknowns, Bayesian statistics treats parameters as random variables with probability distributions.
+
+\begin{theorem}[Bayes' Theorem]
+For parameter $\theta$ and data $D$:
+\begin{equation}
+\underbrace{p(\theta|D)}_{\text{posterior}} = \frac{\overbrace{p(D|\theta)}^{\text{likelihood}} \cdot \overbrace{p(\theta)}^{\text{prior}}}{\underbrace{p(D)}_{\text{evidence}}}
+\end{equation}
+\end{theorem}
+
+The posterior distribution combines prior knowledge with observed data, providing a complete description of uncertainty about the parameter.
+
+\section{Part I: Conjugate Prior Analysis}
+
+\subsection{Problem: Estimating Success Probability}
+We observe $k$ successes in $n$ Bernoulli trials and wish to estimate the success probability $\theta$.
+
+\subsection{Beta-Binomial Conjugacy}
+With a Beta prior $\theta \sim \text{Beta}(\alpha, \beta)$ and binomial likelihood:
+\begin{equation}
+p(\theta|k, n) = \text{Beta}(\alpha + k, \beta + n - k)
+\end{equation}
+
+This conjugacy allows for analytical posterior computation.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+from scipy.optimize import minimize
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Part 1: Conjugate prior analysis for binomial data
+# Observed data: coin flips
+n_flips = 100
+true_prob = 0.65
+flips = np.random.binomial(1, true_prob, n_flips)
+k_heads = np.sum(flips)
+
+# Different priors to test
+priors = [
+    ('Uninformative', 1, 1),      # Uniform
+    ('Skeptical', 2, 8),          # Prior belief: low probability
+    ('Optimistic', 8, 2),         # Prior belief: high probability
+    ('Strong prior', 50, 50),     # Strong belief: 0.5
+]
+
+theta = np.linspace(0, 1, 1000)
+
+# Calculate posteriors
+results_conjugate = {}
+for name, alpha, beta in priors:
+    prior = stats.beta(alpha, beta)
+    posterior = stats.beta(alpha + k_heads, beta + n_flips - k_heads)
+
+    # Point estimates
+    posterior_mean = (alpha + k_heads) / (alpha + beta + n_flips)
+    posterior_mode = (alpha + k_heads - 1) / (alpha + beta + n_flips - 2)
+    credible_interval = posterior.ppf([0.025, 0.975])
+
+    results_conjugate[name] = {
+        'prior': prior,
+        'posterior': posterior,
+        'mean': posterior_mean,
+        'mode': posterior_mode,
+        'ci': credible_interval
+    }
+
+# Part 2: MCMC for Bayesian Linear Regression
+# Generate synthetic data
+n_samples = 50
+X = np.random.uniform(0, 10, n_samples)
+true_slope = 2.5
+true_intercept = 1.0
+true_sigma = 1.5
+y = true_intercept + true_slope * X + np.random.normal(0, true_sigma, n_samples)
+
+# Design matrix
+X_design = np.column_stack([np.ones(n_samples), X])
+
+# Log posterior (unnormalized)
+def log_posterior(params, X, y):
+    intercept, slope, log_sigma = params
+    sigma = np.exp(log_sigma)
+
+    # Likelihood
+    y_pred = intercept + slope * X
+    log_lik = -0.5 * n_samples * np.log(2 * np.pi * sigma**2)
+    log_lik -= 0.5 * np.sum((y - y_pred)**2) / sigma**2
+
+    # Priors (weakly informative)
+    log_prior = stats.norm(0, 10).logpdf(intercept)
+    log_prior += stats.norm(0, 10).logpdf(slope)
+    log_prior += stats.norm(0, 1).logpdf(log_sigma)  # Log-normal for sigma
+
+    return log_lik + log_prior
+
+# Metropolis-Hastings MCMC
+def metropolis_hastings(log_post, init, n_iter, proposal_sd):
+    n_params = len(init)
+    samples = np.zeros((n_iter, n_params))
+    samples[0] = init
+    current = init
+    current_log_post = log_post(current, X, y)
+    accepted = 0
+
+    for i in range(1, n_iter):
+        # Propose new state
+        proposal = current + np.random.normal(0, proposal_sd, n_params)
+
+        # Calculate acceptance probability
+        proposal_log_post = log_post(proposal, X, y)
+        log_alpha = proposal_log_post - current_log_post
+
+        # Accept or reject
+        if np.log(np.random.uniform()) < log_alpha:
+            current = proposal
+            current_log_post = proposal_log_post
+            accepted += 1
+
+        samples[i] = current
+
+    acceptance_rate = accepted / n_iter
+    return samples, acceptance_rate
+
+# Run MCMC
+n_iter = 10000
+burn_in = 2000
+init_params = [0, 1, 0]  # intercept, slope, log_sigma
+proposal_sd = np.array([0.1, 0.05, 0.1])
+
+samples, acceptance_rate = metropolis_hastings(log_posterior, init_params, n_iter, proposal_sd)
+samples_post_burnin = samples[burn_in:]
+
+# Extract parameter estimates
+intercept_samples = samples_post_burnin[:, 0]
+slope_samples = samples_post_burnin[:, 1]
+sigma_samples = np.exp(samples_post_burnin[:, 2])
+
+# Point estimates
+intercept_mean = np.mean(intercept_samples)
+slope_mean = np.mean(slope_samples)
+sigma_mean = np.mean(sigma_samples)
+
+# Credible intervals
+intercept_ci = np.percentile(intercept_samples, [2.5, 97.5])
+slope_ci = np.percentile(slope_samples, [2.5, 97.5])
+sigma_ci = np.percentile(sigma_samples, [2.5, 97.5])
+
+# Compute R-hat (Gelman-Rubin diagnostic) - simplified version
+def compute_rhat(chain):
+    n = len(chain) // 2
+    chain1 = chain[:n]
+    chain2 = chain[n:]
+
+    mean1 = np.mean(chain1)
+    mean2 = np.mean(chain2)
+    overall_mean = np.mean(chain)
+
+    B = n * ((mean1 - overall_mean)**2 + (mean2 - overall_mean)**2)
+    W = (np.var(chain1) + np.var(chain2)) / 2
+
+    if W == 0:
+        return np.nan
+    var_est = ((n - 1) * W + B) / n
+    return np.sqrt(var_est / W)
+
+rhat_intercept = compute_rhat(intercept_samples)
+rhat_slope = compute_rhat(slope_samples)
+
+# Effective sample size (simplified)
+def ess(chain):
+    n = len(chain)
+    acf = np.correlate(chain - np.mean(chain), chain - np.mean(chain), mode='full')
+    acf = acf[n-1:] / acf[n-1]
+    # Sum until first negative
+    sum_acf = 0
+    for i in range(1, n):
+        if acf[i] < 0:
+            break
+        sum_acf += acf[i]
+    return n / (1 + 2 * sum_acf)
+
+ess_slope = ess(slope_samples)
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(12, 12))
+
+# Plot 1: Prior sensitivity analysis
+ax1 = fig.add_subplot(3, 3, 1)
+colors = ['#3498db', '#e74c3c', '#2ecc71', '#9b59b6']
+for (name, res), color in zip(results_conjugate.items(), colors):
+    ax1.plot(theta, res['prior'].pdf(theta), '--', color=color, alpha=0.5, linewidth=1)
+    ax1.plot(theta, res['posterior'].pdf(theta), '-', color=color, linewidth=2, label=name)
+ax1.axvline(true_prob, color='k', linestyle=':', label=f'True $\\theta$={true_prob}')
+ax1.axvline(k_heads/n_flips, color='gray', linestyle='--', alpha=0.5, label='MLE')
+ax1.set_xlabel('$\\theta$')
+ax1.set_ylabel('Density')
+ax1.set_title('Prior Sensitivity: Beta-Binomial')
+ax1.legend(fontsize=7)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Prior vs Posterior (single case)
+ax2 = fig.add_subplot(3, 3, 2)
+uninf = results_conjugate['Uninformative']
+ax2.fill_between(theta, uninf['prior'].pdf(theta), alpha=0.3, color='blue', label='Prior')
+ax2.fill_between(theta, uninf['posterior'].pdf(theta), alpha=0.5, color='red', label='Posterior')
+ax2.axvline(true_prob, color='k', linestyle=':', linewidth=2, label=f'True $\\theta$')
+
+# Shade credible interval
+ci = uninf['ci']
+mask = (theta >= ci[0]) & (theta <= ci[1])
+ax2.fill_between(theta[mask], uninf['posterior'].pdf(theta[mask]),
+                  alpha=0.7, color='darkred', label='95\\% CI')
+ax2.set_xlabel('$\\theta$')
+ax2.set_ylabel('Density')
+ax2.set_title(f'Posterior Update (n={n_flips}, k={k_heads})')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: MCMC trace plots
+ax3 = fig.add_subplot(3, 3, 3)
+ax3.plot(samples[:, 1], 'k-', linewidth=0.3, alpha=0.7)
+ax3.axhline(true_slope, color='r', linestyle='--', label=f'True slope = {true_slope}')
+ax3.axvline(burn_in, color='b', linestyle=':', alpha=0.7, label='Burn-in')
+ax3.set_xlabel('Iteration')
+ax3.set_ylabel('Slope')
+ax3.set_title('MCMC Trace Plot')
+ax3.legend(fontsize=8)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Slope posterior distribution
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.hist(slope_samples, bins=50, density=True, alpha=0.7, color='#3498db', edgecolor='black')
+ax4.axvline(true_slope, color='r', linestyle='--', linewidth=2, label=f'True = {true_slope}')
+ax4.axvline(slope_mean, color='g', linestyle='-', linewidth=2, label=f'Mean = {slope_mean:.2f}')
+ax4.axvline(slope_ci[0], color='orange', linestyle=':', linewidth=2)
+ax4.axvline(slope_ci[1], color='orange', linestyle=':', linewidth=2, label=f'95\\% CI')
+ax4.set_xlabel('Slope')
+ax4.set_ylabel('Density')
+ax4.set_title('Posterior: Slope')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Joint posterior (slope vs intercept)
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.scatter(intercept_samples[::10], slope_samples[::10], alpha=0.3, s=5, c='#3498db')
+ax5.plot(true_intercept, true_slope, 'r*', markersize=15, label='True values')
+ax5.plot(intercept_mean, slope_mean, 'g^', markersize=10, label='Posterior mean')
+ax5.set_xlabel('Intercept')
+ax5.set_ylabel('Slope')
+ax5.set_title('Joint Posterior')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Posterior predictive
+ax6 = fig.add_subplot(3, 3, 6)
+ax6.scatter(X, y, alpha=0.6, s=30, color='black', label='Data')
+
+# Plot regression lines from posterior samples
+x_plot = np.linspace(0, 10, 100)
+for i in range(0, len(intercept_samples), 100):
+    y_pred = intercept_samples[i] + slope_samples[i] * x_plot
+    ax6.plot(x_plot, y_pred, 'b-', alpha=0.05, linewidth=1)
+
+# Mean prediction
+y_mean = intercept_mean + slope_mean * x_plot
+ax6.plot(x_plot, y_mean, 'r-', linewidth=2, label='Mean prediction')
+
+# True line
+y_true = true_intercept + true_slope * x_plot
+ax6.plot(x_plot, y_true, 'g--', linewidth=2, label='True line')
+
+ax6.set_xlabel('$x$')
+ax6.set_ylabel('$y$')
+ax6.set_title('Posterior Predictive Distribution')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Autocorrelation
+ax7 = fig.add_subplot(3, 3, 7)
+lags = 50
+acf_slope = np.correlate(slope_samples - np.mean(slope_samples),
+                          slope_samples - np.mean(slope_samples), mode='full')
+acf_slope = acf_slope[len(acf_slope)//2:len(acf_slope)//2 + lags]
+acf_slope = acf_slope / acf_slope[0]
+ax7.bar(range(lags), acf_slope, color='#3498db', alpha=0.7)
+ax7.axhline(0, color='k', linewidth=0.5)
+ax7.axhline(0.05, color='r', linestyle='--', alpha=0.5)
+ax7.axhline(-0.05, color='r', linestyle='--', alpha=0.5)
+ax7.set_xlabel('Lag')
+ax7.set_ylabel('ACF')
+ax7.set_title('Autocorrelation (Slope)')
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Sequential updating (learning curve)
+ax8 = fig.add_subplot(3, 3, 8)
+data_sizes = [5, 10, 20, 50, 100]
+posterior_means = []
+posterior_stds = []
+for n in data_sizes:
+    k = np.sum(flips[:n])
+    post = stats.beta(1 + k, 1 + n - k)
+    posterior_means.append(post.mean())
+    posterior_stds.append(post.std())
+
+ax8.errorbar(data_sizes, posterior_means, yerr=1.96*np.array(posterior_stds),
+             fmt='o-', capsize=5, color='#3498db', label='Posterior mean')
+ax8.axhline(true_prob, color='r', linestyle='--', label=f'True $\\theta$')
+ax8.set_xlabel('Sample Size')
+ax8.set_ylabel('Posterior Mean')
+ax8.set_title('Bayesian Learning Curve')
+ax8.legend(fontsize=8)
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Comparison table placeholder
+ax9 = fig.add_subplot(3, 3, 9)
+ax9.axis('off')
+table_data = [
+    ['Parameter', 'True', 'Mean', '95\\% CI'],
+    ['Intercept', f'{true_intercept:.2f}', f'{intercept_mean:.2f}', f'[{intercept_ci[0]:.2f}, {intercept_ci[1]:.2f}]'],
+    ['Slope', f'{true_slope:.2f}', f'{slope_mean:.2f}', f'[{slope_ci[0]:.2f}, {slope_ci[1]:.2f}]'],
+    ['$\\sigma$', f'{true_sigma:.2f}', f'{sigma_mean:.2f}', f'[{sigma_ci[0]:.2f}, {sigma_ci[1]:.2f}]']
+]
+table = ax9.table(cellText=table_data, loc='center', cellLoc='center')
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1.2, 1.5)
+ax9.set_title('Linear Regression Results')
+
+plt.tight_layout()
+plt.savefig('bayesian_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{bayesian_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Store results for text
+mle_estimate = k_heads / n_flips
+uninf_ci = results_conjugate['Uninformative']['ci']
+\end{pycode}
+
+\section{Results}
+
+\subsection{Conjugate Prior Analysis}
+
+For the coin flip experiment with $n = \py{n_flips}$ trials and $k = \py{k_heads}$ heads:
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Posterior Summaries Under Different Priors}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Prior & Posterior Mean & Posterior Mode & 95\% Credible Interval \\')
+print(r'\midrule')
+for name, res in results_conjugate.items():
+    ci = res['ci']
+    print(f"{name} & {res['mean']:.3f} & {res['mode']:.3f} & [{ci[0]:.3f}, {ci[1]:.3f}] \\\\")
+print(r'\midrule')
+print(f"MLE & {mle_estimate:.3f} & -- & -- \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{example}[Credible vs. Confidence Interval]
+The 95\% credible interval [\py{f"{uninf_ci[0]:.3f}"}, \py{f"{uninf_ci[1]:.3f}"}] can be interpreted as: ``There is a 95\% probability that $\theta$ lies in this interval, given the observed data.'' This interpretation is \emph{not} valid for frequentist confidence intervals.
+\end{example}
+
+\subsection{MCMC Linear Regression}
+
+The Metropolis-Hastings sampler ran for \py{n_iter} iterations with acceptance rate \py{f"{acceptance_rate:.1%}"}.
+
+\textbf{Convergence Diagnostics:}
+\begin{itemize}
+    \item $\hat{R}$ (slope): \py{f"{rhat_slope:.3f}"} (target: $< 1.1$)
+    \item Effective sample size: \py{f"{ess_slope:.0f}"} of \py{n_iter - burn_in}
+\end{itemize}
+
+\textbf{Parameter Estimates:}
+\begin{itemize}
+    \item Intercept: \py{f"{intercept_mean:.2f}"} (95\% CI: [\py{f"{intercept_ci[0]:.2f}"}, \py{f"{intercept_ci[1]:.2f}"}])
+    \item Slope: \py{f"{slope_mean:.2f}"} (95\% CI: [\py{f"{slope_ci[0]:.2f}"}, \py{f"{slope_ci[1]:.2f}"}])
+    \item $\sigma$: \py{f"{sigma_mean:.2f}"} (95\% CI: [\py{f"{sigma_ci[0]:.2f}"}, \py{f"{sigma_ci[1]:.2f}"}])
+\end{itemize}
+
+\section{Discussion}
+
+\subsection{Advantages of Bayesian Inference}
+\begin{enumerate}
+    \item \textbf{Interpretable uncertainty}: Credible intervals have direct probabilistic meaning
+    \item \textbf{Prior knowledge}: Can incorporate domain expertise
+    \item \textbf{Sequential updating}: Posteriors become priors for new data
+    \item \textbf{Full distribution}: Access to entire posterior, not just point estimates
+\end{enumerate}
+
+\subsection{Practical Considerations}
+\begin{itemize}
+    \item \textbf{Prior selection}: Use weakly informative priors to regularize
+    \item \textbf{MCMC tuning}: Adjust proposal distribution for 20-50\% acceptance
+    \item \textbf{Convergence}: Run multiple chains, check $\hat{R}$ and ESS
+    \item \textbf{Model checking}: Posterior predictive checks
+\end{itemize}
+
+\section{Conclusion}
+This tutorial demonstrated Bayesian inference through conjugate analysis and MCMC. The Bayesian framework provides intuitive uncertainty quantification and naturally incorporates prior information. Modern computational methods like MCMC make Bayesian analysis tractable for complex models.
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Gelman, A., et al. (2013). \textit{Bayesian Data Analysis}. Chapman \& Hall/CRC.
+    \item McElreath, R. (2020). \textit{Statistical Rethinking}. CRC Press.
+    \item Kruschke, J. (2014). \textit{Doing Bayesian Data Analysis}. Academic Press.
+\end{itemize}
+
+\end{document}

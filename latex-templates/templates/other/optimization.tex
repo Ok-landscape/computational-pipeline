@@ -1,0 +1,1019 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage[makestderr]{pythontex}
+
+\title{Optimization: Gradient Descent Methods and Convergence Analysis}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Optimization algorithms find minima of objective functions and are fundamental to machine learning, scientific computing, and engineering design. This document demonstrates gradient descent variants (vanilla, momentum, RMSprop, Adam), Newton's method, quasi-Newton methods (BFGS), and constrained optimization. Using PythonTeX, we compare convergence behavior on standard test functions and analyze the effects of hyperparameters on optimization performance.
+\end{abstract}
+
+\section{Introduction}
+Optimization algorithms find minima of objective functions. This analysis compares gradient descent variants on test functions, demonstrating convergence behavior, hyperparameter sensitivity, and the tradeoffs between different optimization strategies. Applications span machine learning (neural network training), scientific computing (parameter estimation), and engineering (design optimization).
+
+\section{Mathematical Framework}
+
+\subsection{First-Order Methods}
+Gradient descent update:
+\begin{equation}
+x_{k+1} = x_k - \alpha \nabla f(x_k)
+\end{equation}
+
+Momentum update (heavy ball method):
+\begin{equation}
+v_{k+1} = \beta v_k + \alpha \nabla f(x_k), \quad x_{k+1} = x_k - v_{k+1}
+\end{equation}
+
+Nesterov accelerated gradient:
+\begin{equation}
+v_{k+1} = \beta v_k + \alpha \nabla f(x_k - \beta v_k), \quad x_{k+1} = x_k - v_{k+1}
+\end{equation}
+
+\subsection{Adaptive Learning Rates}
+RMSprop:
+\begin{equation}
+s_k = \rho s_{k-1} + (1-\rho) (\nabla f(x_k))^2, \quad x_{k+1} = x_k - \frac{\alpha}{\sqrt{s_k + \epsilon}} \nabla f(x_k)
+\end{equation}
+
+Adam (Adaptive Moment Estimation):
+\begin{align}
+m_k &= \beta_1 m_{k-1} + (1-\beta_1) \nabla f(x_k) \\
+v_k &= \beta_2 v_{k-1} + (1-\beta_2) (\nabla f(x_k))^2 \\
+\hat{m}_k &= \frac{m_k}{1-\beta_1^k}, \quad \hat{v}_k = \frac{v_k}{1-\beta_2^k} \\
+x_{k+1} &= x_k - \frac{\alpha}{\sqrt{\hat{v}_k} + \epsilon} \hat{m}_k
+\end{align}
+
+\subsection{Second-Order Methods}
+Newton's method:
+\begin{equation}
+x_{k+1} = x_k - [H_f(x_k)]^{-1} \nabla f(x_k)
+\end{equation}
+where $H_f$ is the Hessian matrix.
+
+BFGS (quasi-Newton):
+\begin{equation}
+x_{k+1} = x_k - \alpha_k B_k^{-1} \nabla f(x_k)
+\end{equation}
+where $B_k$ approximates the Hessian using gradient differences.
+
+\subsection{Convergence Rates}
+For $\mu$-strongly convex functions with $L$-Lipschitz gradients:
+\begin{itemize}
+    \item Gradient descent: $\mathcal{O}((1 - \mu/L)^k)$
+    \item Momentum: $\mathcal{O}((1 - \sqrt{\mu/L})^k)$
+    \item Newton's method: quadratic convergence near optimum
+\end{itemize}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import minimize, minimize_scalar
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Test Functions}
+
+\begin{pycode}
+# Define test functions and their gradients
+
+# Rosenbrock function (banana function)
+def rosenbrock(x):
+    return (1 - x[0])**2 + 100*(x[1] - x[0]**2)**2
+
+def rosenbrock_grad(x):
+    dx = -2*(1 - x[0]) - 400*x[0]*(x[1] - x[0]**2)
+    dy = 200*(x[1] - x[0]**2)
+    return np.array([dx, dy])
+
+def rosenbrock_hess(x):
+    h11 = 2 - 400*x[1] + 1200*x[0]**2
+    h12 = -400*x[0]
+    h22 = 200
+    return np.array([[h11, h12], [h12, h22]])
+
+# Beale function
+def beale(x):
+    term1 = (1.5 - x[0] + x[0]*x[1])**2
+    term2 = (2.25 - x[0] + x[0]*x[1]**2)**2
+    term3 = (2.625 - x[0] + x[0]*x[1]**3)**2
+    return term1 + term2 + term3
+
+def beale_grad(x):
+    dx = (2*(1.5 - x[0] + x[0]*x[1])*(-1 + x[1]) +
+          2*(2.25 - x[0] + x[0]*x[1]**2)*(-1 + x[1]**2) +
+          2*(2.625 - x[0] + x[0]*x[1]**3)*(-1 + x[1]**3))
+    dy = (2*(1.5 - x[0] + x[0]*x[1])*x[0] +
+          2*(2.25 - x[0] + x[0]*x[1]**2)*2*x[0]*x[1] +
+          2*(2.625 - x[0] + x[0]*x[1]**3)*3*x[0]*x[1]**2)
+    return np.array([dx, dy])
+
+# Rastrigin function (multimodal)
+def rastrigin(x):
+    A = 10
+    n = len(x)
+    return A*n + sum(xi**2 - A*np.cos(2*np.pi*xi) for xi in x)
+
+def rastrigin_grad(x):
+    A = 10
+    return np.array([2*xi + 2*np.pi*A*np.sin(2*np.pi*xi) for xi in x])
+
+# Quadratic function (for analysis)
+def quadratic(x, A=None, b=None):
+    if A is None:
+        A = np.array([[10, 0], [0, 1]])
+    if b is None:
+        b = np.zeros(2)
+    return 0.5 * x @ A @ x - b @ x
+
+def quadratic_grad(x, A=None, b=None):
+    if A is None:
+        A = np.array([[10, 0], [0, 1]])
+    if b is None:
+        b = np.zeros(2)
+    return A @ x - b
+
+# Store optimal values
+rosenbrock_opt = np.array([1.0, 1.0])
+beale_opt = np.array([3.0, 0.5])
+rastrigin_opt = np.array([0.0, 0.0])
+quadratic_opt = np.array([0.0, 0.0])
+\end{pycode}
+
+\section{Gradient Descent Variants}
+
+\begin{pycode}
+# Implement optimization algorithms
+
+def gradient_descent(x0, grad_f, alpha=0.001, n_iter=1000):
+    """Vanilla gradient descent."""
+    x = x0.copy()
+    history = [x.copy()]
+    for _ in range(n_iter):
+        x = x - alpha * grad_f(x)
+        history.append(x.copy())
+    return np.array(history)
+
+def momentum_gd(x0, grad_f, alpha=0.001, beta=0.9, n_iter=1000):
+    """Gradient descent with momentum."""
+    x = x0.copy()
+    v = np.zeros_like(x)
+    history = [x.copy()]
+    for _ in range(n_iter):
+        v = beta*v + alpha*grad_f(x)
+        x = x - v
+        history.append(x.copy())
+    return np.array(history)
+
+def nesterov_gd(x0, grad_f, alpha=0.001, beta=0.9, n_iter=1000):
+    """Nesterov accelerated gradient."""
+    x = x0.copy()
+    v = np.zeros_like(x)
+    history = [x.copy()]
+    for _ in range(n_iter):
+        x_lookahead = x - beta*v
+        v = beta*v + alpha*grad_f(x_lookahead)
+        x = x - v
+        history.append(x.copy())
+    return np.array(history)
+
+def rmsprop(x0, grad_f, alpha=0.001, rho=0.9, eps=1e-8, n_iter=1000):
+    """RMSprop optimizer."""
+    x = x0.copy()
+    s = np.zeros_like(x)
+    history = [x.copy()]
+    for _ in range(n_iter):
+        g = grad_f(x)
+        s = rho*s + (1-rho)*g**2
+        x = x - alpha * g / (np.sqrt(s) + eps)
+        history.append(x.copy())
+    return np.array(history)
+
+def adam(x0, grad_f, alpha=0.001, beta1=0.9, beta2=0.999, eps=1e-8, n_iter=1000):
+    """Adam optimizer."""
+    x = x0.copy()
+    m = np.zeros_like(x)
+    v = np.zeros_like(x)
+    history = [x.copy()]
+    for t in range(1, n_iter+1):
+        g = grad_f(x)
+        m = beta1*m + (1-beta1)*g
+        v = beta2*v + (1-beta2)*g**2
+        m_hat = m / (1 - beta1**t)
+        v_hat = v / (1 - beta2**t)
+        x = x - alpha * m_hat / (np.sqrt(v_hat) + eps)
+        history.append(x.copy())
+    return np.array(history)
+
+# Run optimizers on Rosenbrock
+x0 = np.array([-1.5, 1.5])
+n_iter = 5000
+
+hist_gd = gradient_descent(x0, rosenbrock_grad, alpha=0.001, n_iter=n_iter)
+hist_mom = momentum_gd(x0, rosenbrock_grad, alpha=0.001, beta=0.9, n_iter=n_iter)
+hist_nest = nesterov_gd(x0, rosenbrock_grad, alpha=0.001, beta=0.9, n_iter=n_iter)
+hist_rms = rmsprop(x0, rosenbrock_grad, alpha=0.01, n_iter=n_iter)
+hist_adam = adam(x0, rosenbrock_grad, alpha=0.01, n_iter=n_iter)
+
+# Compute objective values
+f_gd = [rosenbrock(x) for x in hist_gd]
+f_mom = [rosenbrock(x) for x in hist_mom]
+f_nest = [rosenbrock(x) for x in hist_nest]
+f_rms = [rosenbrock(x) for x in hist_rms]
+f_adam = [rosenbrock(x) for x in hist_adam]
+
+# Contour plot of Rosenbrock
+x = np.linspace(-2, 2, 100)
+y = np.linspace(-1, 3, 100)
+X, Y = np.meshgrid(x, y)
+Z = (1 - X)**2 + 100*(Y - X**2)**2
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Optimization paths
+axes[0, 0].contour(X, Y, Z, levels=np.logspace(0, 3, 20), cmap='viridis', alpha=0.7)
+axes[0, 0].plot(hist_gd[:, 0], hist_gd[:, 1], 'b.-', markersize=1, linewidth=0.5, label='GD', alpha=0.7)
+axes[0, 0].plot(hist_mom[:, 0], hist_mom[:, 1], 'r.-', markersize=1, linewidth=0.5, label='Momentum', alpha=0.7)
+axes[0, 0].plot(hist_adam[:, 0], hist_adam[:, 1], 'g.-', markersize=1, linewidth=0.5, label='Adam', alpha=0.7)
+axes[0, 0].plot(1, 1, 'k*', markersize=15, label='Optimum')
+axes[0, 0].set_xlabel('$x_1$')
+axes[0, 0].set_ylabel('$x_2$')
+axes[0, 0].set_title('Optimization Paths on Rosenbrock')
+axes[0, 0].legend(fontsize=8)
+
+# Convergence comparison
+axes[0, 1].semilogy(f_gd, 'b-', linewidth=1, label='GD')
+axes[0, 1].semilogy(f_mom, 'r-', linewidth=1, label='Momentum')
+axes[0, 1].semilogy(f_nest, 'm-', linewidth=1, label='Nesterov')
+axes[0, 1].semilogy(f_rms, 'c-', linewidth=1, label='RMSprop')
+axes[0, 1].semilogy(f_adam, 'g-', linewidth=1, label='Adam')
+axes[0, 1].set_xlabel('Iteration')
+axes[0, 1].set_ylabel('$f(x)$')
+axes[0, 1].set_title('Convergence Comparison')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Effect of learning rate
+alphas = [0.0001, 0.0005, 0.001, 0.002]
+for alpha in alphas:
+    hist = gradient_descent(x0, rosenbrock_grad, alpha=alpha, n_iter=2000)
+    f_vals = [rosenbrock(x) for x in hist]
+    axes[1, 0].semilogy(f_vals, linewidth=1, label=f'$\\alpha = {alpha}$')
+axes[1, 0].set_xlabel('Iteration')
+axes[1, 0].set_ylabel('$f(x)$')
+axes[1, 0].set_title('Effect of Learning Rate (GD)')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Effect of momentum
+betas = [0.0, 0.5, 0.9, 0.99]
+for beta in betas:
+    hist = momentum_gd(x0, rosenbrock_grad, alpha=0.001, beta=beta, n_iter=2000)
+    f_vals = [rosenbrock(x) for x in hist]
+    axes[1, 1].semilogy(f_vals, linewidth=1, label=f'$\\beta = {beta}$')
+axes[1, 1].set_xlabel('Iteration')
+axes[1, 1].set_ylabel('$f(x)$')
+axes[1, 1].set_title('Effect of Momentum')
+axes[1, 1].legend(fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('optimization_gradient_descent.pdf', 'Gradient descent variants on Rosenbrock function')
+
+# Store final values
+final_gd = rosenbrock(hist_gd[-1])
+final_mom = rosenbrock(hist_mom[-1])
+final_nest = rosenbrock(hist_nest[-1])
+final_rms = rosenbrock(hist_rms[-1])
+final_adam = rosenbrock(hist_adam[-1])
+\end{pycode}
+
+\section{Second-Order Methods}
+
+\begin{pycode}
+# Newton's method
+def newton_method(x0, grad_f, hess_f, n_iter=100, tol=1e-10):
+    """Newton's method with Hessian."""
+    x = x0.copy()
+    history = [x.copy()]
+    for _ in range(n_iter):
+        g = grad_f(x)
+        H = hess_f(x)
+        try:
+            dx = np.linalg.solve(H, -g)
+        except:
+            break
+        x = x + dx
+        history.append(x.copy())
+        if np.linalg.norm(g) < tol:
+            break
+    return np.array(history)
+
+# BFGS quasi-Newton
+def bfgs(x0, f, grad_f, n_iter=1000, tol=1e-10):
+    """BFGS quasi-Newton method."""
+    n = len(x0)
+    x = x0.copy()
+    B = np.eye(n)  # Approximate inverse Hessian
+    history = [x.copy()]
+
+    for _ in range(n_iter):
+        g = grad_f(x)
+        if np.linalg.norm(g) < tol:
+            break
+
+        # Search direction
+        d = -B @ g
+
+        # Line search (backtracking)
+        alpha = 1.0
+        c = 0.5
+        rho = 0.5
+        while f(x + alpha*d) > f(x) + c*alpha*g@d:
+            alpha *= rho
+
+        # Update
+        s = alpha * d
+        x_new = x + s
+        y = grad_f(x_new) - g
+
+        # BFGS update
+        if y @ s > 1e-10:
+            rho_k = 1.0 / (y @ s)
+            I = np.eye(n)
+            B = (I - rho_k * np.outer(s, y)) @ B @ (I - rho_k * np.outer(y, s)) + rho_k * np.outer(s, s)
+
+        x = x_new
+        history.append(x.copy())
+
+    return np.array(history)
+
+# Run second-order methods
+x0_newton = np.array([0.5, 0.5])  # Start closer for Newton
+hist_newton = newton_method(x0_newton, rosenbrock_grad, rosenbrock_hess, n_iter=100)
+hist_bfgs = bfgs(x0, rosenbrock, rosenbrock_grad, n_iter=1000)
+
+f_newton = [rosenbrock(x) for x in hist_newton]
+f_bfgs = [rosenbrock(x) for x in hist_bfgs]
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Newton's method path
+axes[0, 0].contour(X, Y, Z, levels=np.logspace(0, 3, 20), cmap='viridis', alpha=0.7)
+axes[0, 0].plot(hist_newton[:, 0], hist_newton[:, 1], 'ro-', markersize=6, linewidth=1.5, label='Newton')
+axes[0, 0].plot(1, 1, 'k*', markersize=15)
+axes[0, 0].set_xlabel('$x_1$')
+axes[0, 0].set_ylabel('$x_2$')
+axes[0, 0].set_title(f"Newton's Method ({len(hist_newton)-1} iterations)")
+axes[0, 0].legend()
+
+# BFGS path
+axes[0, 1].contour(X, Y, Z, levels=np.logspace(0, 3, 20), cmap='viridis', alpha=0.7)
+axes[0, 1].plot(hist_bfgs[:, 0], hist_bfgs[:, 1], 'go-', markersize=3, linewidth=0.8, label='BFGS')
+axes[0, 1].plot(1, 1, 'k*', markersize=15)
+axes[0, 1].set_xlabel('$x_1$')
+axes[0, 1].set_ylabel('$x_2$')
+axes[0, 1].set_title(f'BFGS Method ({len(hist_bfgs)-1} iterations)')
+axes[0, 1].legend()
+
+# Convergence comparison (log scale)
+axes[1, 0].semilogy(f_newton, 'r-o', markersize=6, linewidth=1.5, label='Newton')
+axes[1, 0].semilogy(f_bfgs, 'g-', linewidth=1, label='BFGS')
+axes[1, 0].semilogy(f_adam[:500], 'b-', linewidth=1, label='Adam')
+axes[1, 0].set_xlabel('Iteration')
+axes[1, 0].set_ylabel('$f(x)$')
+axes[1, 0].set_title('Second-Order vs First-Order Convergence')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Convergence rate analysis (distance to optimum)
+dist_newton = [np.linalg.norm(x - rosenbrock_opt) for x in hist_newton]
+dist_bfgs = [np.linalg.norm(x - rosenbrock_opt) for x in hist_bfgs]
+dist_adam = [np.linalg.norm(x - rosenbrock_opt) for x in hist_adam[:500]]
+
+axes[1, 1].semilogy(dist_newton, 'r-o', markersize=6, linewidth=1.5, label='Newton')
+axes[1, 1].semilogy(dist_bfgs, 'g-', linewidth=1, label='BFGS')
+axes[1, 1].semilogy(dist_adam, 'b-', linewidth=1, label='Adam')
+axes[1, 1].set_xlabel('Iteration')
+axes[1, 1].set_ylabel('$||x - x^*||$')
+axes[1, 1].set_title('Distance to Optimum')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('optimization_second_order.pdf', "Second-order methods: Newton and BFGS")
+
+final_newton = rosenbrock(hist_newton[-1])
+final_bfgs = rosenbrock(hist_bfgs[-1])
+newton_iters = len(hist_newton) - 1
+bfgs_iters = len(hist_bfgs) - 1
+\end{pycode}
+
+\section{Condition Number and Convergence}
+
+\begin{pycode}
+# Analyze effect of condition number on convergence
+# Quadratic function f(x) = 0.5 * x'Ax with different condition numbers
+
+def make_quadratic(kappa):
+    """Create quadratic with condition number kappa."""
+    A = np.array([[kappa, 0], [0, 1]])
+    return A
+
+def run_gd_quadratic(A, x0, alpha, n_iter):
+    """Run GD on quadratic."""
+    history = [x0.copy()]
+    x = x0.copy()
+    for _ in range(n_iter):
+        g = A @ x
+        x = x - alpha * g
+        history.append(x.copy())
+    return np.array(history)
+
+# Test different condition numbers
+kappas = [1, 5, 10, 50, 100]
+x0_quad = np.array([5.0, 5.0])
+n_iter_quad = 200
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Convergence for different condition numbers
+for kappa in kappas:
+    A = make_quadratic(kappa)
+    # Optimal step size for quadratic
+    L = kappa
+    mu = 1
+    alpha_opt = 2 / (L + mu)
+
+    hist = run_gd_quadratic(A, x0_quad, alpha_opt, n_iter_quad)
+    f_vals = [0.5 * x @ A @ x for x in hist]
+    axes[0, 0].semilogy(f_vals, linewidth=1.5, label=f'$\\kappa = {kappa}$')
+
+axes[0, 0].set_xlabel('Iteration')
+axes[0, 0].set_ylabel('$f(x)$')
+axes[0, 0].set_title('Effect of Condition Number (optimal $\\alpha$)')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Theoretical vs actual convergence rate
+kappa_range = np.arange(1, 101)
+theory_rate = (kappa_range - 1) / (kappa_range + 1)
+axes[0, 1].plot(kappa_range, theory_rate, 'b-', linewidth=2, label='$(\\kappa-1)/(\\kappa+1)$')
+axes[0, 1].set_xlabel('Condition number $\\kappa$')
+axes[0, 1].set_ylabel('Convergence rate')
+axes[0, 1].set_title('Theoretical Convergence Rate (GD)')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Effect of step size on ill-conditioned problem
+kappa_ill = 100
+A_ill = make_quadratic(kappa_ill)
+alphas_quad = [0.001, 0.005, 0.01, 0.019, 0.02]
+
+for alpha in alphas_quad:
+    hist = run_gd_quadratic(A_ill, x0_quad, alpha, n_iter_quad)
+    f_vals = [0.5 * x @ A_ill @ x for x in hist]
+    axes[1, 0].semilogy(f_vals, linewidth=1, label=f'$\\alpha = {alpha}$')
+
+axes[1, 0].set_xlabel('Iteration')
+axes[1, 0].set_ylabel('$f(x)$')
+axes[1, 0].set_title(f'Step Size Sensitivity ($\\kappa = {kappa_ill}$)')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_ylim([1e-15, 1e5])
+
+# Compare GD vs momentum on ill-conditioned
+A_ill = make_quadratic(100)
+hist_gd_ill = run_gd_quadratic(A_ill, x0_quad, 0.01, 500)
+
+# Momentum for quadratic
+def run_momentum_quadratic(A, x0, alpha, beta, n_iter):
+    x = x0.copy()
+    v = np.zeros_like(x)
+    history = [x.copy()]
+    for _ in range(n_iter):
+        g = A @ x
+        v = beta*v + alpha*g
+        x = x - v
+        history.append(x.copy())
+    return np.array(history)
+
+hist_mom_ill = run_momentum_quadratic(A_ill, x0_quad, 0.01, 0.9, 500)
+
+f_gd_ill = [0.5 * x @ A_ill @ x for x in hist_gd_ill]
+f_mom_ill = [0.5 * x @ A_ill @ x for x in hist_mom_ill]
+
+axes[1, 1].semilogy(f_gd_ill, 'b-', linewidth=1.5, label='GD')
+axes[1, 1].semilogy(f_mom_ill, 'r-', linewidth=1.5, label='Momentum')
+axes[1, 1].set_xlabel('Iteration')
+axes[1, 1].set_ylabel('$f(x)$')
+axes[1, 1].set_title(f'GD vs Momentum ($\\kappa = 100$)')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('optimization_condition_number.pdf', 'Effect of condition number on convergence')
+\end{pycode}
+
+\section{Constrained Optimization}
+
+\begin{pycode}
+# Constrained optimization using penalty methods and Lagrange multipliers
+
+# Problem: minimize f(x) subject to g(x) <= 0
+# f(x) = (x1-1)^2 + (x2-2)^2
+# g(x) = x1^2 + x2^2 - 1 <= 0
+
+def objective_constrained(x):
+    return (x[0] - 1)**2 + (x[1] - 2)**2
+
+def objective_grad(x):
+    return np.array([2*(x[0] - 1), 2*(x[1] - 2)])
+
+def constraint(x):
+    return x[0]**2 + x[1]**2 - 1
+
+def constraint_grad(x):
+    return np.array([2*x[0], 2*x[1]])
+
+# Penalty method
+def penalty_method(x0, f, g, grad_f, grad_g, rho_init=1, rho_mult=10, n_outer=5, n_inner=500):
+    """Solve constrained problem using quadratic penalty."""
+    x = x0.copy()
+    rho = rho_init
+    history = [x.copy()]
+    rhos = [rho]
+
+    for _ in range(n_outer):
+        # Inner optimization
+        for _ in range(n_inner):
+            violation = max(0, g(x))
+            grad = grad_f(x) + 2*rho*violation*grad_g(x)
+            x = x - 0.01 * grad
+            history.append(x.copy())
+
+        rho *= rho_mult
+        rhos.append(rho)
+
+    return np.array(history), rhos
+
+# Augmented Lagrangian method
+def augmented_lagrangian(x0, f, g, grad_f, grad_g, rho=10, n_outer=10, n_inner=100):
+    """Augmented Lagrangian method."""
+    x = x0.copy()
+    lam = 0  # Lagrange multiplier
+    history = [x.copy()]
+    multipliers = [lam]
+
+    for _ in range(n_outer):
+        # Inner optimization
+        for _ in range(n_inner):
+            violation = g(x)
+            grad = grad_f(x) + lam*grad_g(x) + rho*max(0, violation)*grad_g(x)
+            x = x - 0.01 * grad
+            history.append(x.copy())
+
+        # Update multiplier
+        lam = max(0, lam + rho * g(x))
+        multipliers.append(lam)
+
+    return np.array(history), multipliers
+
+# Projected gradient descent
+def projected_gd(x0, grad_f, project, alpha=0.1, n_iter=500):
+    """Projected gradient descent."""
+    x = x0.copy()
+    history = [x.copy()]
+    for _ in range(n_iter):
+        x = x - alpha * grad_f(x)
+        x = project(x)  # Project onto feasible set
+        history.append(x.copy())
+    return np.array(history)
+
+def project_to_ball(x, radius=1):
+    """Project onto unit ball."""
+    norm = np.linalg.norm(x)
+    if norm > radius:
+        return radius * x / norm
+    return x
+
+# Run methods
+x0_con = np.array([0.0, 0.0])
+hist_penalty, rhos = penalty_method(x0_con, objective_constrained, constraint,
+                                     objective_grad, constraint_grad)
+hist_al, multipliers = augmented_lagrangian(x0_con, objective_constrained, constraint,
+                                             objective_grad, constraint_grad)
+hist_proj = projected_gd(x0_con, objective_grad, project_to_ball, alpha=0.1, n_iter=500)
+
+# Analytical solution
+# Optimum on boundary: x* = (1, 2)/sqrt(5)
+x_opt_con = np.array([1, 2]) / np.sqrt(5)
+f_opt_con = objective_constrained(x_opt_con)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Contour plot with constraint
+theta_c = np.linspace(0, 2*np.pi, 100)
+x_circle = np.cos(theta_c)
+y_circle = np.sin(theta_c)
+
+x_con = np.linspace(-1.5, 2, 100)
+y_con = np.linspace(-1, 3, 100)
+X_con, Y_con = np.meshgrid(x_con, y_con)
+Z_con = (X_con - 1)**2 + (Y_con - 2)**2
+
+axes[0, 0].contour(X_con, Y_con, Z_con, levels=20, cmap='viridis', alpha=0.7)
+axes[0, 0].plot(x_circle, y_circle, 'r-', linewidth=2, label='Constraint')
+axes[0, 0].fill(x_circle, y_circle, alpha=0.2, color='gray')
+axes[0, 0].plot(hist_penalty[-1, 0], hist_penalty[-1, 1], 'bo', markersize=10, label='Penalty')
+axes[0, 0].plot(hist_al[-1, 0], hist_al[-1, 1], 'g^', markersize=10, label='Aug. Lagrangian')
+axes[0, 0].plot(hist_proj[-1, 0], hist_proj[-1, 1], 'rs', markersize=10, label='Projected GD')
+axes[0, 0].plot(x_opt_con[0], x_opt_con[1], 'k*', markersize=15, label='Optimum')
+axes[0, 0].set_xlabel('$x_1$')
+axes[0, 0].set_ylabel('$x_2$')
+axes[0, 0].set_title('Constrained Optimization')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].set_xlim([-1.5, 2])
+axes[0, 0].set_ylim([-1, 3])
+
+# Convergence to optimum
+f_penalty = [objective_constrained(x) for x in hist_penalty]
+f_al = [objective_constrained(x) for x in hist_al]
+f_proj = [objective_constrained(x) for x in hist_proj]
+
+axes[0, 1].plot(f_penalty, 'b-', linewidth=1, label='Penalty', alpha=0.7)
+axes[0, 1].plot(f_al, 'g-', linewidth=1, label='Aug. Lagrangian', alpha=0.7)
+axes[0, 1].plot(f_proj, 'r-', linewidth=1, label='Projected GD', alpha=0.7)
+axes[0, 1].axhline(y=f_opt_con, color='k', linestyle='--', label=f'Optimal = {f_opt_con:.4f}')
+axes[0, 1].set_xlabel('Iteration')
+axes[0, 1].set_ylabel('$f(x)$')
+axes[0, 1].set_title('Objective Value')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Constraint violation
+viol_penalty = [max(0, constraint(x)) for x in hist_penalty]
+viol_al = [max(0, constraint(x)) for x in hist_al]
+viol_proj = [max(0, constraint(x)) for x in hist_proj]
+
+axes[1, 0].semilogy(viol_penalty, 'b-', linewidth=1, label='Penalty')
+axes[1, 0].semilogy(viol_al, 'g-', linewidth=1, label='Aug. Lagrangian')
+axes[1, 0].semilogy(viol_proj, 'r-', linewidth=1, label='Projected GD')
+axes[1, 0].set_xlabel('Iteration')
+axes[1, 0].set_ylabel('Constraint violation')
+axes[1, 0].set_title('Constraint Satisfaction')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Lagrange multiplier evolution
+axes[1, 1].plot(multipliers, 'g-o', markersize=6, linewidth=1.5)
+axes[1, 1].set_xlabel('Outer iteration')
+axes[1, 1].set_ylabel('$\\lambda$')
+axes[1, 1].set_title('Lagrange Multiplier Evolution')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Theoretical optimal multiplier
+lam_opt = 2 * np.sqrt(5) - 2
+axes[1, 1].axhline(y=lam_opt, color='r', linestyle='--', label=f'$\\lambda^* = {lam_opt:.3f}$')
+axes[1, 1].legend()
+
+plt.tight_layout()
+save_plot('optimization_constrained.pdf', 'Constrained optimization methods')
+
+final_penalty = objective_constrained(hist_penalty[-1])
+final_al = objective_constrained(hist_al[-1])
+final_proj = objective_constrained(hist_proj[-1])
+\end{pycode}
+
+\section{Stochastic Optimization}
+
+\begin{pycode}
+# Stochastic gradient descent for noisy gradients
+
+def sgd(x0, grad_f, batch_grad_f, alpha=0.01, n_iter=1000, noise_std=0.1):
+    """Stochastic gradient descent with noisy gradients."""
+    x = x0.copy()
+    history = [x.copy()]
+    for _ in range(n_iter):
+        # Noisy gradient estimate
+        g = grad_f(x) + noise_std * np.random.randn(len(x))
+        x = x - alpha * g
+        history.append(x.copy())
+    return np.array(history)
+
+def sgd_with_decay(x0, grad_f, alpha0=0.1, decay=0.001, n_iter=1000, noise_std=0.5):
+    """SGD with learning rate decay."""
+    x = x0.copy()
+    history = [x.copy()]
+    for t in range(1, n_iter+1):
+        alpha = alpha0 / (1 + decay * t)
+        g = grad_f(x) + noise_std * np.random.randn(len(x))
+        x = x - alpha * g
+        history.append(x.copy())
+    return np.array(history)
+
+def mini_batch_sgd(x0, grad_f, batch_size=10, alpha=0.01, n_iter=1000, noise_std=0.5):
+    """Mini-batch SGD with averaged gradients."""
+    x = x0.copy()
+    history = [x.copy()]
+    for _ in range(n_iter):
+        # Average over batch
+        g = grad_f(x) + noise_std * np.random.randn(len(x)) / np.sqrt(batch_size)
+        x = x - alpha * g
+        history.append(x.copy())
+    return np.array(history)
+
+# Run stochastic methods on simple quadratic
+A_quad = np.array([[5, 0], [0, 1]])
+def quad_grad(x):
+    return A_quad @ x
+
+x0_sgd = np.array([5.0, 5.0])
+n_iter_sgd = 2000
+
+hist_sgd = sgd(x0_sgd, quad_grad, None, alpha=0.01, noise_std=1.0)
+hist_sgd_decay = sgd_with_decay(x0_sgd, quad_grad, alpha0=0.1, decay=0.01, noise_std=1.0, n_iter=n_iter_sgd)
+hist_minibatch = mini_batch_sgd(x0_sgd, quad_grad, batch_size=32, alpha=0.05, noise_std=1.0, n_iter=n_iter_sgd)
+
+# Full batch for comparison
+hist_full = run_gd_quadratic(A_quad, x0_sgd, 0.1, n_iter_sgd)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Optimization paths
+axes[0, 0].plot(hist_sgd[:500, 0], hist_sgd[:500, 1], 'b-', linewidth=0.3, alpha=0.5, label='SGD')
+axes[0, 0].plot(hist_full[:500, 0], hist_full[:500, 1], 'r-', linewidth=1.5, label='Full batch')
+axes[0, 0].plot(0, 0, 'k*', markersize=15)
+axes[0, 0].set_xlabel('$x_1$')
+axes[0, 0].set_ylabel('$x_2$')
+axes[0, 0].set_title('SGD vs Full Batch GD')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Convergence with noise
+f_sgd = [0.5 * x @ A_quad @ x for x in hist_sgd]
+f_decay = [0.5 * x @ A_quad @ x for x in hist_sgd_decay]
+f_mini = [0.5 * x @ A_quad @ x for x in hist_minibatch]
+f_full = [0.5 * x @ A_quad @ x for x in hist_full]
+
+axes[0, 1].semilogy(f_sgd, 'b-', linewidth=0.5, alpha=0.5, label='SGD')
+axes[0, 1].semilogy(f_decay, 'g-', linewidth=0.5, alpha=0.5, label='SGD + decay')
+axes[0, 1].semilogy(f_mini, 'c-', linewidth=0.5, alpha=0.5, label='Mini-batch')
+axes[0, 1].semilogy(f_full, 'r-', linewidth=1.5, label='Full batch')
+axes[0, 1].set_xlabel('Iteration')
+axes[0, 1].set_ylabel('$f(x)$')
+axes[0, 1].set_title('Stochastic Optimization Convergence')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Moving average
+window = 50
+f_sgd_avg = np.convolve(f_sgd, np.ones(window)/window, mode='valid')
+f_decay_avg = np.convolve(f_decay, np.ones(window)/window, mode='valid')
+f_mini_avg = np.convolve(f_mini, np.ones(window)/window, mode='valid')
+
+axes[1, 0].semilogy(f_sgd_avg, 'b-', linewidth=1.5, label='SGD')
+axes[1, 0].semilogy(f_decay_avg, 'g-', linewidth=1.5, label='SGD + decay')
+axes[1, 0].semilogy(f_mini_avg, 'c-', linewidth=1.5, label='Mini-batch')
+axes[1, 0].set_xlabel('Iteration')
+axes[1, 0].set_ylabel('$f(x)$ (moving avg)')
+axes[1, 0].set_title(f'Smoothed Convergence (window={window})')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Variance reduction with batch size
+batch_sizes = [1, 4, 16, 64]
+final_variances = []
+for bs in batch_sizes:
+    # Run multiple trials
+    finals = []
+    for _ in range(20):
+        hist = mini_batch_sgd(x0_sgd, quad_grad, batch_size=bs, alpha=0.01, noise_std=1.0, n_iter=500)
+        finals.append(0.5 * hist[-1] @ A_quad @ hist[-1])
+    final_variances.append(np.var(finals))
+
+axes[1, 1].loglog(batch_sizes, final_variances, 'o-', markersize=8, linewidth=2)
+axes[1, 1].set_xlabel('Batch size')
+axes[1, 1].set_ylabel('Variance of final $f(x)$')
+axes[1, 1].set_title('Variance Reduction with Batch Size')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('optimization_stochastic.pdf', 'Stochastic gradient descent methods')
+\end{pycode}
+
+\section{Comparison on Multiple Test Functions}
+
+\begin{pycode}
+# Compare optimizers on different test functions
+
+test_functions = {
+    'Rosenbrock': (rosenbrock, rosenbrock_grad, np.array([-1.5, 1.5]), np.array([1, 1])),
+    'Beale': (beale, beale_grad, np.array([0.0, 0.0]), np.array([3, 0.5])),
+    'Quadratic': (lambda x: quadratic(x), lambda x: quadratic_grad(x), np.array([5, 5]), np.array([0, 0]))
+}
+
+results = {}
+n_iter_compare = 2000
+
+for name, (f, grad, x0, opt) in test_functions.items():
+    results[name] = {}
+
+    # Run optimizers
+    hist = gradient_descent(x0, grad, alpha=0.001, n_iter=n_iter_compare)
+    results[name]['GD'] = np.linalg.norm(hist[-1] - opt)
+
+    hist = momentum_gd(x0, grad, alpha=0.001, beta=0.9, n_iter=n_iter_compare)
+    results[name]['Momentum'] = np.linalg.norm(hist[-1] - opt)
+
+    hist = adam(x0, grad, alpha=0.01, n_iter=n_iter_compare)
+    results[name]['Adam'] = np.linalg.norm(hist[-1] - opt)
+
+    hist = bfgs(x0, f, grad, n_iter=n_iter_compare)
+    results[name]['BFGS'] = np.linalg.norm(hist[-1] - opt)
+
+# Visualization
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Bar chart comparison
+functions = list(results.keys())
+methods = ['GD', 'Momentum', 'Adam', 'BFGS']
+x_pos = np.arange(len(functions))
+width = 0.2
+
+for i, method in enumerate(methods):
+    values = [results[fn][method] for fn in functions]
+    axes[0].bar(x_pos + i*width, values, width, label=method)
+
+axes[0].set_ylabel('Final distance to optimum')
+axes[0].set_xticks(x_pos + 1.5*width)
+axes[0].set_xticklabels(functions)
+axes[0].set_title('Optimizer Comparison')
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+axes[0].set_yscale('log')
+
+# Iteration counts to reach tolerance
+tol = 1e-3
+iter_counts = {}
+
+for name, (f, grad, x0, opt) in test_functions.items():
+    iter_counts[name] = {}
+
+    for method_name, method in [('GD', lambda x0, g: gradient_descent(x0, g, alpha=0.001, n_iter=10000)),
+                                 ('Momentum', lambda x0, g: momentum_gd(x0, g, alpha=0.001, beta=0.9, n_iter=10000)),
+                                 ('Adam', lambda x0, g: adam(x0, g, alpha=0.01, n_iter=10000))]:
+        hist = method(x0, grad)
+        distances = [np.linalg.norm(x - opt) for x in hist]
+        # Find first iteration below tolerance
+        below_tol = np.where(np.array(distances) < tol)[0]
+        if len(below_tol) > 0:
+            iter_counts[name][method_name] = below_tol[0]
+        else:
+            iter_counts[name][method_name] = 10000
+
+# Heatmap of iteration counts
+data = np.array([[iter_counts[fn][m] for m in ['GD', 'Momentum', 'Adam']] for fn in functions])
+im = axes[1].imshow(data, cmap='YlOrRd', aspect='auto')
+
+axes[1].set_xticks(range(3))
+axes[1].set_yticks(range(len(functions)))
+axes[1].set_xticklabels(['GD', 'Momentum', 'Adam'])
+axes[1].set_yticklabels(functions)
+
+for i in range(len(functions)):
+    for j in range(3):
+        text = axes[1].text(j, i, f'{data[i, j]:.0f}', ha='center', va='center')
+
+plt.colorbar(im, ax=axes[1], label='Iterations')
+axes[1].set_title(f'Iterations to reach $||x - x^*|| < {tol}$')
+
+plt.tight_layout()
+save_plot('optimization_comparison.pdf', 'Optimizer comparison across test functions')
+\end{pycode}
+
+\section{Results Summary}
+
+\begin{pycode}
+# Create comprehensive results table
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Optimization Results on Rosenbrock Function}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Method & Final $f(x)$ & Iterations \\')
+print(r'\midrule')
+print(f'Gradient Descent & {final_gd:.6f} & {n_iter} \\\\')
+print(f'Momentum & {final_mom:.6f} & {n_iter} \\\\')
+print(f'Nesterov & {final_nest:.6f} & {n_iter} \\\\')
+print(f'RMSprop & {final_rms:.6f} & {n_iter} \\\\')
+print(f'Adam & {final_adam:.6f} & {n_iter} \\\\')
+print(f"Newton's Method & {final_newton:.6f} & {newton_iters} \\\\")
+print(f'BFGS & {final_bfgs:.6f} & {bfgs_iters} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+
+# Constrained optimization results
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Constrained Optimization Results}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Method & Final $f(x)$ & Constraint Violation \\')
+print(r'\midrule')
+print(f'Penalty Method & {final_penalty:.4f} & {max(0, constraint(hist_penalty[-1])):.6f} \\\\')
+print(f'Aug. Lagrangian & {final_al:.4f} & {max(0, constraint(hist_al[-1])):.6f} \\\\')
+print(f'Projected GD & {final_proj:.4f} & {max(0, constraint(hist_proj[-1])):.6f} \\\\')
+print(f'Analytical Opt. & {f_opt_con:.4f} & 0.0 \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+
+# Method comparison
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Optimizer Performance Comparison}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Function & GD & Momentum & Adam & BFGS \\')
+print(r'\midrule')
+for name in results.keys():
+    gd = results[name]['GD']
+    mom = results[name]['Momentum']
+    adam_r = results[name]['Adam']
+    bfgs_r = results[name]['BFGS']
+    print(f'{name} & {gd:.2e} & {mom:.2e} & {adam_r:.2e} & {bfgs_r:.2e} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+
+Optimization results:
+\begin{itemize}
+    \item Final value (GD): \py{f"{final_gd:.6f}"}
+    \item Final value (Momentum): \py{f"{final_mom:.6f}"}
+    \item Final value (Nesterov): \py{f"{final_nest:.6f}"}
+    \item Final value (RMSprop): \py{f"{final_rms:.6f}"}
+    \item Final value (Adam): \py{f"{final_adam:.6f}"}
+    \item Final value (Newton): \py{f"{final_newton:.6f}"} in \py{f"{newton_iters}"} iterations
+    \item Final value (BFGS): \py{f"{final_bfgs:.6f}"} in \py{f"{bfgs_iters}"} iterations
+    \item Optimal point: $(1, 1)$
+    \item Constrained optimum: \py{f"{f_opt_con:.4f}"} at \py{f"({x_opt_con[0]:.3f}, {x_opt_con[1]:.3f})"}
+\end{itemize}
+
+\section{Conclusion}
+
+This analysis compared optimization methods across different problem classes:
+
+\begin{enumerate}
+    \item \textbf{First-order methods}: Momentum accelerates convergence by accumulating past gradients. Adaptive methods (RMSprop, Adam) automatically tune per-parameter learning rates, making them robust across problems.
+
+    \item \textbf{Second-order methods}: Newton's method achieves quadratic convergence near the optimum but requires Hessian computation. BFGS approximates the Hessian using gradient differences, providing superlinear convergence without explicit second derivatives.
+
+    \item \textbf{Condition number effects}: Ill-conditioned problems (high $\kappa$) slow gradient descent significantly. Momentum and adaptive methods partially mitigate this effect.
+
+    \item \textbf{Constrained optimization}: Penalty methods, augmented Lagrangian, and projected gradient descent handle constraints through different mechanisms. Augmented Lagrangian combines benefits of penalty and dual methods.
+
+    \item \textbf{Stochastic optimization}: Mini-batch SGD with learning rate decay balances noise reduction and computational efficiency. Batch size controls variance of gradient estimates.
+\end{enumerate}
+
+Learning rate selection is critical: too small leads to slow convergence, too large causes divergence. Adaptive methods like Adam are popular in deep learning due to their robustness to hyperparameter choices.
+
+\end{document}

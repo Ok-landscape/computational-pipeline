@@ -1,0 +1,525 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Sentiment Analysis: Lexicon-Based and Machine Learning Approaches}
+\author{Natural Language Processing Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Sentiment analysis determines the emotional tone of text, classifying it as positive, negative, or neutral. This template implements two complementary approaches: lexicon-based scoring (similar to VADER) and a Naive Bayes classifier.
+
+\section{Mathematical Framework}
+
+\subsection{Lexicon-Based Sentiment Scoring}
+The compound sentiment score aggregates individual word scores:
+\begin{equation}
+S_{compound} = \frac{\sum_{i=1}^{n} v_i}{\sqrt{\left(\sum_{i=1}^{n} v_i\right)^2 + \alpha}}
+\end{equation}
+where $v_i$ is the valence score for word $i$ and $\alpha$ is a normalization constant.
+
+\subsection{Naive Bayes Classification}
+For text classification, we use Bayes' theorem:
+\begin{equation}
+P(c|d) = \frac{P(d|c)P(c)}{P(d)}
+\end{equation}
+Under the naive independence assumption:
+\begin{equation}
+P(d|c) = \prod_{i=1}^{n} P(w_i|c)
+\end{equation}
+
+Using log-probabilities to avoid underflow:
+\begin{equation}
+\log P(c|d) \propto \log P(c) + \sum_{i=1}^{n} \log P(w_i|c)
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter, defaultdict
+import re
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Lexicon-Based Sentiment Analysis}
+
+\begin{pycode}
+# VADER-like sentiment lexicon (simplified)
+sentiment_lexicon = {
+    # Positive words
+    'good': 1.9, 'great': 3.1, 'excellent': 3.4, 'amazing': 3.6,
+    'wonderful': 3.2, 'fantastic': 3.4, 'love': 3.2, 'happy': 2.7,
+    'best': 3.0, 'beautiful': 2.9, 'perfect': 3.4, 'awesome': 3.3,
+    'nice': 1.8, 'pleasant': 2.1, 'helpful': 2.0, 'recommend': 2.4,
+    # Negative words
+    'bad': -2.5, 'terrible': -3.4, 'awful': -3.5, 'horrible': -3.6,
+    'hate': -3.3, 'worst': -3.4, 'poor': -2.6, 'disappointing': -2.7,
+    'broken': -2.3, 'waste': -2.8, 'useless': -2.9, 'avoid': -2.5,
+    'problem': -1.8, 'fail': -2.8, 'wrong': -2.1, 'annoying': -2.3,
+    # Intensifiers and negations
+    'very': 0.3, 'really': 0.3, 'extremely': 0.4, 'not': -0.74,
+    'never': -0.74, 'barely': -0.4, 'hardly': -0.4
+}
+
+# Booster words that modify intensity
+boosters = {'very': 0.293, 'really': 0.293, 'extremely': 0.326,
+            'absolutely': 0.312, 'completely': 0.296, 'totally': 0.287}
+
+def normalize_score(score, alpha=15):
+    """Normalize score to [-1, 1] range using VADER-like normalization"""
+    return score / np.sqrt(score**2 + alpha)
+
+def lexicon_sentiment(text):
+    """Calculate sentiment scores using lexicon-based approach"""
+    words = re.findall(r'\b\w+\b', text.lower())
+
+    pos_sum = 0
+    neg_sum = 0
+    scores = []
+
+    for i, word in enumerate(words):
+        if word in sentiment_lexicon:
+            score = sentiment_lexicon[word]
+
+            # Check for preceding booster
+            if i > 0 and words[i-1] in boosters:
+                if score > 0:
+                    score += boosters[words[i-1]]
+                else:
+                    score -= boosters[words[i-1]]
+
+            # Check for negation
+            if i > 0 and words[i-1] in ['not', 'never', "n't"]:
+                score *= -0.5
+
+            scores.append(score)
+            if score > 0:
+                pos_sum += score
+            else:
+                neg_sum += score
+
+    compound = normalize_score(sum(scores)) if scores else 0
+
+    # Normalize positive and negative to [0, 1]
+    total = pos_sum + abs(neg_sum)
+    if total > 0:
+        pos = pos_sum / total
+        neg = abs(neg_sum) / total
+        neu = 1 - (pos + neg)
+    else:
+        pos = neg = 0
+        neu = 1.0
+
+    return {'compound': compound, 'pos': pos, 'neg': neg, 'neu': neu}
+\end{pycode}
+
+\section{Sample Text Analysis}
+
+\begin{pycode}
+# Sample reviews for analysis
+sample_texts = [
+    "This product is absolutely amazing! Best purchase I've ever made. Highly recommend!",
+    "Terrible quality, completely broken on arrival. Worst experience ever. Avoid!",
+    "It's okay, nothing special. Does what it's supposed to do.",
+    "Really love this! Great quality and very helpful customer service.",
+    "Very disappointing. The product failed after one week. Poor design.",
+    "Fantastic! Exceeded all my expectations. Wonderful purchase!",
+    "Not bad, but not great either. Some minor problems.",
+    "Absolutely horrible. Total waste of money. Never buying again.",
+    "Good value for the price. Nice quality overall.",
+    "Perfect! Beautiful design and excellent functionality. Amazing product!"
+]
+
+# Analyze all samples
+results = []
+for text in sample_texts:
+    scores = lexicon_sentiment(text)
+    results.append(scores)
+
+# Extract compound scores
+compound_scores = [r['compound'] for r in results]
+
+# Create sentiment distribution plot
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Compound scores bar chart
+colors = ['green' if s > 0.05 else 'red' if s < -0.05 else 'gray' for s in compound_scores]
+axes[0, 0].barh(range(len(compound_scores)), compound_scores, color=colors, alpha=0.7)
+axes[0, 0].axvline(x=0, color='black', linestyle='-', linewidth=0.5)
+axes[0, 0].axvline(x=0.05, color='green', linestyle='--', alpha=0.5)
+axes[0, 0].axvline(x=-0.05, color='red', linestyle='--', alpha=0.5)
+axes[0, 0].set_xlabel('Compound Score')
+axes[0, 0].set_ylabel('Document Index')
+axes[0, 0].set_title('Sentiment Compound Scores')
+axes[0, 0].set_xlim(-1, 1)
+
+# Plot 2: Sentiment component breakdown
+pos_scores = [r['pos'] for r in results]
+neg_scores = [r['neg'] for r in results]
+neu_scores = [r['neu'] for r in results]
+
+x = np.arange(len(results))
+width = 0.25
+axes[0, 1].bar(x - width, pos_scores, width, label='Positive', color='green', alpha=0.7)
+axes[0, 1].bar(x, neu_scores, width, label='Neutral', color='gray', alpha=0.7)
+axes[0, 1].bar(x + width, neg_scores, width, label='Negative', color='red', alpha=0.7)
+axes[0, 1].set_xlabel('Document Index')
+axes[0, 1].set_ylabel('Score')
+axes[0, 1].set_title('Sentiment Components')
+axes[0, 1].legend()
+axes[0, 1].set_xticks(x)
+
+# Plot 3: Score distribution histogram
+axes[1, 0].hist(compound_scores, bins=15, range=(-1, 1), color='steelblue',
+                edgecolor='black', alpha=0.7)
+axes[1, 0].axvline(x=np.mean(compound_scores), color='red', linestyle='--',
+                   label=f'Mean: {np.mean(compound_scores):.2f}')
+axes[1, 0].set_xlabel('Compound Score')
+axes[1, 0].set_ylabel('Frequency')
+axes[1, 0].set_title('Score Distribution')
+axes[1, 0].legend()
+
+# Plot 4: Polarity scatter plot
+axes[1, 1].scatter(pos_scores, neg_scores, c=compound_scores, cmap='RdYlGn',
+                   s=100, alpha=0.7, edgecolors='black')
+axes[1, 1].set_xlabel('Positive Score')
+axes[1, 1].set_ylabel('Negative Score')
+axes[1, 1].set_title('Polarity Distribution')
+cbar = plt.colorbar(axes[1, 1].collections[0], ax=axes[1, 1])
+cbar.set_label('Compound')
+
+plt.tight_layout()
+save_plot('sentiment_lexicon.pdf', 'Lexicon-based sentiment analysis results')
+\end{pycode}
+
+\section{Naive Bayes Classifier Implementation}
+
+\begin{pycode}
+class NaiveBayesSentiment:
+    def __init__(self, alpha=1.0):
+        """Initialize with Laplace smoothing parameter"""
+        self.alpha = alpha
+        self.class_priors = {}
+        self.word_probs = {}
+        self.vocab = set()
+
+    def tokenize(self, text):
+        """Simple tokenization"""
+        return re.findall(r'\b\w+\b', text.lower())
+
+    def fit(self, texts, labels):
+        """Train the classifier"""
+        # Count documents per class
+        class_counts = Counter(labels)
+        total_docs = len(labels)
+
+        # Calculate class priors
+        for c in class_counts:
+            self.class_priors[c] = class_counts[c] / total_docs
+
+        # Count words per class
+        word_counts = defaultdict(lambda: defaultdict(int))
+        class_word_totals = defaultdict(int)
+
+        for text, label in zip(texts, labels):
+            words = self.tokenize(text)
+            for word in words:
+                self.vocab.add(word)
+                word_counts[label][word] += 1
+                class_word_totals[label] += 1
+
+        # Calculate word probabilities with Laplace smoothing
+        vocab_size = len(self.vocab)
+        self.word_probs = {}
+
+        for c in class_counts:
+            self.word_probs[c] = {}
+            for word in self.vocab:
+                count = word_counts[c][word]
+                self.word_probs[c][word] = (count + self.alpha) / \
+                                           (class_word_totals[c] + self.alpha * vocab_size)
+
+        self.class_word_totals = class_word_totals
+        self.vocab_size = vocab_size
+
+    def predict_proba(self, text):
+        """Calculate log-probabilities for each class"""
+        words = self.tokenize(text)
+        log_probs = {}
+
+        for c in self.class_priors:
+            log_prob = np.log(self.class_priors[c])
+
+            for word in words:
+                if word in self.vocab:
+                    log_prob += np.log(self.word_probs[c][word])
+                else:
+                    # Handle unknown words
+                    log_prob += np.log(self.alpha /
+                                      (self.class_word_totals[c] + self.alpha * self.vocab_size))
+
+            log_probs[c] = log_prob
+
+        # Convert to probabilities
+        max_log = max(log_probs.values())
+        probs = {c: np.exp(lp - max_log) for c, lp in log_probs.items()}
+        total = sum(probs.values())
+        probs = {c: p/total for c, p in probs.items()}
+
+        return probs
+
+    def predict(self, text):
+        """Predict class label"""
+        probs = self.predict_proba(text)
+        return max(probs, key=probs.get)
+
+# Training data
+train_texts = [
+    "I love this movie so much", "Great film excellent acting",
+    "Best movie I have ever seen", "Wonderful story beautiful cinematography",
+    "Amazing performance highly recommend", "Fantastic movie loved every minute",
+    "Perfect film masterpiece", "Brilliant acting great direction",
+    "Terrible movie waste of time", "Horrible film awful acting",
+    "Worst movie ever made", "Boring story bad direction",
+    "Disappointing film poor quality", "Dreadful movie avoid at all costs",
+    "Bad acting terrible script", "Awful waste of money"
+]
+
+train_labels = ['positive'] * 8 + ['negative'] * 8
+
+# Train classifier
+nb_classifier = NaiveBayesSentiment(alpha=1.0)
+nb_classifier.fit(train_texts, train_labels)
+
+# Test predictions
+test_texts = [
+    "This movie was absolutely wonderful and amazing",
+    "Terrible film with horrible acting",
+    "Good movie but some boring parts",
+    "I really loved the great performances",
+    "Worst experience ever very disappointing"
+]
+
+predictions = []
+probabilities = []
+for text in test_texts:
+    pred = nb_classifier.predict(text)
+    prob = nb_classifier.predict_proba(text)
+    predictions.append(pred)
+    probabilities.append(prob)
+\end{pycode}
+
+\section{Word Cloud Visualization}
+
+\begin{pycode}
+# Create word frequency analysis for visualization
+from collections import Counter
+
+# Combine all positive and negative words
+positive_texts = ' '.join([t for t, l in zip(train_texts, train_labels) if l == 'positive'])
+negative_texts = ' '.join([t for t, l in zip(train_texts, train_labels) if l == 'negative'])
+
+def get_word_freq(text):
+    words = re.findall(r'\b\w+\b', text.lower())
+    # Remove stopwords
+    stopwords = {'i', 'the', 'a', 'an', 'is', 'was', 'of', 'to', 'and', 'this', 'that', 'it', 'so'}
+    words = [w for w in words if w not in stopwords and len(w) > 2]
+    return Counter(words)
+
+pos_freq = get_word_freq(positive_texts)
+neg_freq = get_word_freq(negative_texts)
+
+# Create word cloud-like visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Positive word frequencies
+pos_words, pos_counts = zip(*pos_freq.most_common(10))
+y_pos = np.arange(len(pos_words))
+axes[0, 0].barh(y_pos, pos_counts, color='green', alpha=0.7)
+axes[0, 0].set_yticks(y_pos)
+axes[0, 0].set_yticklabels(pos_words)
+axes[0, 0].set_xlabel('Frequency')
+axes[0, 0].set_title('Top Positive Words')
+axes[0, 0].invert_yaxis()
+
+# Plot 2: Negative word frequencies
+neg_words, neg_counts = zip(*neg_freq.most_common(10))
+y_neg = np.arange(len(neg_words))
+axes[0, 1].barh(y_neg, neg_counts, color='red', alpha=0.7)
+axes[0, 1].set_yticks(y_neg)
+axes[0, 1].set_yticklabels(neg_words)
+axes[0, 1].set_xlabel('Frequency')
+axes[0, 1].set_title('Top Negative Words')
+axes[0, 1].invert_yaxis()
+
+# Plot 3: Word importance (log probability ratios)
+common_words = list(set(pos_freq.keys()) & set(neg_freq.keys()) |
+                   set(list(pos_freq.keys())[:5]) | set(list(neg_freq.keys())[:5]))
+
+if len(common_words) > 0:
+    # Calculate log-odds ratio for top words
+    word_scores = []
+    for word in nb_classifier.vocab:
+        if word in nb_classifier.word_probs['positive'] and word in nb_classifier.word_probs['negative']:
+            log_ratio = np.log(nb_classifier.word_probs['positive'][word] /
+                              nb_classifier.word_probs['negative'][word])
+            word_scores.append((word, log_ratio))
+
+    # Sort by absolute value and get top words
+    word_scores.sort(key=lambda x: abs(x[1]), reverse=True)
+    top_words = word_scores[:15]
+
+    words, scores = zip(*top_words)
+    colors = ['green' if s > 0 else 'red' for s in scores]
+    y_pos = np.arange(len(words))
+    axes[1, 0].barh(y_pos, scores, color=colors, alpha=0.7)
+    axes[1, 0].axvline(x=0, color='black', linestyle='-', linewidth=0.5)
+    axes[1, 0].set_yticks(y_pos)
+    axes[1, 0].set_yticklabels(words)
+    axes[1, 0].set_xlabel('Log Probability Ratio (Pos/Neg)')
+    axes[1, 0].set_title('Word Sentiment Scores')
+
+# Plot 4: Classification probabilities for test samples
+test_labels = [f'Test {i+1}' for i in range(len(test_texts))]
+pos_probs = [p['positive'] for p in probabilities]
+neg_probs = [p['negative'] for p in probabilities]
+
+x = np.arange(len(test_texts))
+width = 0.35
+axes[1, 1].bar(x - width/2, pos_probs, width, label='Positive', color='green', alpha=0.7)
+axes[1, 1].bar(x + width/2, neg_probs, width, label='Negative', color='red', alpha=0.7)
+axes[1, 1].set_xlabel('Test Sample')
+axes[1, 1].set_ylabel('Probability')
+axes[1, 1].set_title('Classification Probabilities')
+axes[1, 1].set_xticks(x)
+axes[1, 1].set_xticklabels(test_labels, rotation=45)
+axes[1, 1].legend()
+axes[1, 1].axhline(y=0.5, color='gray', linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+save_plot('sentiment_wordcloud.pdf', 'Word frequency analysis and classification results')
+\end{pycode}
+
+\section{Comparative Analysis}
+
+\begin{pycode}
+# Compare lexicon-based and Naive Bayes results
+comparison_texts = [
+    "Absolutely fantastic movie with brilliant performances",
+    "Terrible waste of time boring and dull",
+    "Good film but nothing special",
+    "Loved it wonderful experience highly recommend"
+]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Get both scores
+lexicon_scores = [lexicon_sentiment(t)['compound'] for t in comparison_texts]
+nb_probs = [nb_classifier.predict_proba(t)['positive'] * 2 - 1 for t in comparison_texts]  # Scale to [-1, 1]
+
+# Scatter plot comparison
+axes[0].scatter(lexicon_scores, nb_probs, s=100, alpha=0.7, edgecolors='black')
+axes[0].plot([-1, 1], [-1, 1], 'r--', alpha=0.5, label='Perfect agreement')
+axes[0].set_xlabel('Lexicon Score')
+axes[0].set_ylabel('Naive Bayes Score (scaled)')
+axes[0].set_title('Method Comparison')
+axes[0].set_xlim(-1.1, 1.1)
+axes[0].set_ylim(-1.1, 1.1)
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+# Bar comparison
+x = np.arange(len(comparison_texts))
+width = 0.35
+axes[1].bar(x - width/2, lexicon_scores, width, label='Lexicon', alpha=0.7)
+axes[1].bar(x + width/2, nb_probs, width, label='Naive Bayes', alpha=0.7)
+axes[1].set_xlabel('Text Index')
+axes[1].set_ylabel('Sentiment Score')
+axes[1].set_title('Side-by-Side Comparison')
+axes[1].set_xticks(x)
+axes[1].legend()
+axes[1].axhline(y=0, color='black', linestyle='-', linewidth=0.5)
+
+plt.tight_layout()
+save_plot('sentiment_comparison.pdf', 'Comparison of lexicon-based and Naive Bayes approaches')
+
+# Calculate correlation
+correlation = np.corrcoef(lexicon_scores, nb_probs)[0, 1]
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Lexicon Analysis Results}
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Lexicon-based sentiment scores for sample texts}')
+print(r'\begin{tabular}{ccccc}')
+print(r'\toprule')
+print(r'Doc & Compound & Positive & Neutral & Negative \\')
+print(r'\midrule')
+
+for i, r in enumerate(results):
+    print(f"{i+1} & {r['compound']:.3f} & {r['pos']:.3f} & {r['neu']:.3f} & {r['neg']:.3f} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Naive Bayes Classification Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Naive Bayes classification results}')
+print(r'\begin{tabular}{clcc}')
+print(r'\toprule')
+print(r'Test & Prediction & P(Positive) & P(Negative) \\')
+print(r'\midrule')
+
+for i, (pred, prob) in enumerate(zip(predictions, probabilities)):
+    print(f"{i+1} & {pred} & {prob['positive']:.3f} & {prob['negative']:.3f} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Statistical Summary}
+\begin{itemize}
+    \item Mean compound score: \py{f"{np.mean(compound_scores):.3f}"}
+    \item Standard deviation: \py{f"{np.std(compound_scores):.3f}"}
+    \item Positive documents: \py{f"{sum(1 for s in compound_scores if s > 0.05)}"}
+    \item Negative documents: \py{f"{sum(1 for s in compound_scores if s < -0.05)}"}
+    \item Vocabulary size: \py{f"{len(nb_classifier.vocab)}"}
+    \item Method correlation: \py{f"{correlation:.3f}"}
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates two fundamental approaches to sentiment analysis. The lexicon-based method provides interpretable scores based on word valence, while Naive Bayes learns from labeled examples using probabilistic principles. Both methods show strong agreement (correlation: \py{f"{correlation:.2f}"}) on clear sentiment cases, with differences primarily in handling neutral or mixed-sentiment text.
+
+\end{document}

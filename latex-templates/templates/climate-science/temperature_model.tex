@@ -1,0 +1,438 @@
+% Temperature Model Template
+% Topics: Energy balance, radiative forcing, climate sensitivity, feedback analysis
+% Style: Research article with model validation
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Global Temperature Modeling: Energy Balance and Climate Sensitivity}
+\author{Climate Dynamics Research Group}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This study presents energy balance models for global mean surface temperature,
+examining radiative forcing from greenhouse gases and the response of the climate system.
+We analyze zero-dimensional and one-dimensional models, calculate climate sensitivity
+from different feedback mechanisms, and compare model projections with observations.
+The analysis quantifies transient and equilibrium climate response to CO$_2$ forcing.
+\end{abstract}
+
+\section{Introduction}
+
+Earth's global mean surface temperature is determined by the balance between incoming
+solar radiation and outgoing longwave radiation. Perturbations to this balance from
+greenhouse gas increases lead to warming until a new equilibrium is reached.
+
+\begin{definition}[Radiative Forcing]
+Radiative forcing $F$ is the change in net radiative flux at the tropopause due to
+a change in an external driver. For CO$_2$:
+\begin{equation}
+F = 5.35 \ln\left(\frac{C}{C_0}\right) \quad \text{W/m}^2
+\end{equation}
+where $C$ is CO$_2$ concentration and $C_0$ is the reference (pre-industrial) value.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Zero-Dimensional Energy Balance}
+
+\begin{theorem}[Planetary Energy Balance]
+The rate of change of Earth's heat content is:
+\begin{equation}
+C_p \frac{dT}{dt} = F - \lambda \Delta T
+\end{equation}
+where $C_p$ is heat capacity, $F$ is radiative forcing, $\lambda$ is the climate
+feedback parameter, and $\Delta T = T - T_0$ is the temperature anomaly.
+\end{theorem}
+
+\begin{definition}[Climate Sensitivity]
+Equilibrium climate sensitivity (ECS) is the warming for doubled CO$_2$:
+\begin{equation}
+\text{ECS} = \frac{F_{2\times\text{CO}_2}}{\lambda} = \frac{3.7}{\lambda} \quad \text{K}
+\end{equation}
+With $\lambda \approx 1.2$ W/(m$^2$K), ECS $\approx$ 3 K.
+\end{definition}
+
+\subsection{Climate Feedbacks}
+
+\begin{theorem}[Feedback Analysis]
+The total feedback parameter is the sum of individual feedbacks:
+\begin{equation}
+\lambda = \lambda_0 + \lambda_{WV} + \lambda_{LR} + \lambda_A + \lambda_C
+\end{equation}
+where $\lambda_0$ is the Planck response (no feedbacks), and other terms are water
+vapor, lapse rate, albedo, and cloud feedbacks.
+\end{theorem}
+
+\begin{remark}[Feedback Values]
+Typical feedback values (W m$^{-2}$ K$^{-1}$):
+\begin{itemize}
+\item Planck (blackbody): $\lambda_0 \approx 3.2$ (negative, stabilizing)
+\item Water vapor: $\lambda_{WV} \approx -1.8$ (positive, amplifying)
+\item Lapse rate: $\lambda_{LR} \approx 0.6$ (negative)
+\item Albedo: $\lambda_A \approx -0.3$ (positive)
+\item Cloud: $\lambda_C \approx -0.5$ (positive, uncertain)
+\end{itemize}
+Net: $\lambda \approx 1.2$ W/(m$^2$K)
+\end{remark}
+
+\subsection{Transient Climate Response}
+
+\begin{definition}[TCR and ECS]
+\begin{itemize}
+\item \textbf{Transient Climate Response (TCR)}: Warming at time of CO$_2$ doubling
+under 1\%/yr increase ($\sim$70 years)
+\item \textbf{Equilibrium Climate Sensitivity (ECS)}: Final equilibrium warming
+for doubled CO$_2$
+\end{itemize}
+Typically TCR/ECS $\approx$ 0.5--0.7 due to ocean heat uptake.
+\end{definition}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+np.random.seed(42)
+
+# Energy balance model
+def ebm_single(T, t, F_func, C_eff, lambda_val):
+    F = F_func(t)
+    dTdt = (F - lambda_val * T) / C_eff
+    return dTdt
+
+# Two-box model (surface + deep ocean)
+def ebm_twobox(y, t, F_func, C_s, C_d, lambda_val, gamma):
+    T_s, T_d = y
+    F = F_func(t)
+    dTs = (F - lambda_val * T_s - gamma * (T_s - T_d)) / C_s
+    dTd = gamma * (T_s - T_d) / C_d
+    return [dTs, dTd]
+
+# Parameters
+C_eff = 10.0  # Effective heat capacity (W yr m^-2 K^-1)
+C_s = 8.0     # Surface layer
+C_d = 100.0   # Deep ocean
+lambda_val = 1.2  # Climate feedback (W m^-2 K^-1)
+gamma = 0.5   # Ocean heat exchange
+
+# Forcing scenarios
+CO2_pi = 280  # Pre-industrial CO2 (ppm)
+
+def forcing_step(t):
+    """Step doubling of CO2"""
+    return 3.7 if t > 0 else 0
+
+def forcing_ramp(t):
+    """1%/yr CO2 increase"""
+    if t < 0:
+        return 0
+    elif t < 70:
+        return 5.35 * np.log(1.01**t)
+    else:
+        return 5.35 * np.log(2)
+
+def forcing_historical(t):
+    """Simplified historical forcing"""
+    if t < 1850:
+        return 0
+    elif t < 2020:
+        CO2 = 280 * np.exp(0.004 * (t - 1850))
+        return 5.35 * np.log(CO2 / 280)
+    else:
+        return 3.0
+
+def forcing_rcp(t, scenario='4.5'):
+    """RCP scenario forcing"""
+    F_2020 = 3.0
+    if t < 2020:
+        return forcing_historical(t)
+    if scenario == '2.6':
+        return F_2020 + 0.5 * (1 - np.exp(-0.05 * (t - 2020)))
+    elif scenario == '4.5':
+        return F_2020 + 1.5 * (1 - np.exp(-0.03 * (t - 2020)))
+    else:  # 8.5
+        return F_2020 + 0.08 * (t - 2020)
+
+# Time arrays
+t_step = np.linspace(-10, 200, 500)
+t_ramp = np.linspace(-10, 140, 500)
+t_hist = np.linspace(1850, 2100, 251)
+
+# Solve step response
+T_step = odeint(ebm_single, 0, t_step, args=(forcing_step, C_eff, lambda_val))[:, 0]
+y0_2box = [0, 0]
+T_2box_step = odeint(ebm_twobox, y0_2box, t_step,
+                     args=(forcing_step, C_s, C_d, lambda_val, gamma))
+
+# Solve ramp response
+T_ramp = odeint(ebm_single, 0, t_ramp, args=(forcing_ramp, C_eff, lambda_val))[:, 0]
+T_2box_ramp = odeint(ebm_twobox, y0_2box, t_ramp,
+                     args=(forcing_ramp, C_s, C_d, lambda_val, gamma))
+
+# Historical simulation
+T_hist = odeint(ebm_single, 0, t_hist,
+                args=(lambda t: forcing_historical(t), C_eff, lambda_val))[:, 0]
+
+# RCP scenarios
+T_rcp26 = odeint(ebm_single, 0, t_hist,
+                 args=(lambda t: forcing_rcp(t, '2.6'), C_eff, lambda_val))[:, 0]
+T_rcp45 = odeint(ebm_single, 0, t_hist,
+                 args=(lambda t: forcing_rcp(t, '4.5'), C_eff, lambda_val))[:, 0]
+T_rcp85 = odeint(ebm_single, 0, t_hist,
+                 args=(lambda t: forcing_rcp(t, '8.5'), C_eff, lambda_val))[:, 0]
+
+# Climate sensitivity calculation
+ECS = 3.7 / lambda_val
+TCR = T_ramp[np.argmin(np.abs(t_ramp - 70))]
+
+# Feedback analysis
+lambda_0 = 3.2   # Planck
+lambda_wv = -1.8  # Water vapor
+lambda_lr = 0.6   # Lapse rate
+lambda_a = -0.3   # Albedo
+lambda_c = -0.5   # Cloud
+feedbacks = {
+    'Planck': lambda_0,
+    'Water vapor': lambda_wv,
+    'Lapse rate': lambda_lr,
+    'Albedo': lambda_a,
+    'Cloud': lambda_c
+}
+lambda_total = sum(feedbacks.values())
+
+# ECS uncertainty range
+lambda_range = np.linspace(0.8, 2.0, 100)
+ECS_range = 3.7 / lambda_range
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Step response
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t_step, T_step, 'b-', linewidth=2, label='1-box')
+ax1.plot(t_step, T_2box_step[:, 0], 'r-', linewidth=2, label='2-box surface')
+ax1.plot(t_step, T_2box_step[:, 1], 'r--', linewidth=1.5, label='2-box deep')
+ax1.axhline(y=ECS, color='gray', linestyle='--', alpha=0.7, label=f'ECS = {ECS:.1f} K')
+ax1.set_xlabel('Time (years)')
+ax1.set_ylabel('$\\Delta T$ (K)')
+ax1.set_title('Step Response (2xCO$_2$)')
+ax1.legend(fontsize=7)
+ax1.set_xlim([-10, 200])
+
+# Plot 2: Ramp response
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.plot(t_ramp, T_ramp, 'b-', linewidth=2, label='Temperature')
+forcing_ramp_arr = np.array([forcing_ramp(t) for t in t_ramp])
+ax2_twin = ax2.twinx()
+ax2_twin.plot(t_ramp, forcing_ramp_arr, 'r--', linewidth=1.5, label='Forcing')
+ax2.axvline(x=70, color='gray', linestyle=':', alpha=0.7)
+ax2.scatter([70], [TCR], s=100, c='green', zorder=5, label=f'TCR = {TCR:.2f} K')
+ax2.set_xlabel('Time (years)')
+ax2.set_ylabel('$\\Delta T$ (K)', color='b')
+ax2_twin.set_ylabel('Forcing (W/m$^2$)', color='r')
+ax2.set_title('1\\%/yr CO$_2$ Increase')
+ax2.legend(fontsize=8, loc='upper left')
+
+# Plot 3: Historical + projections
+ax3 = fig.add_subplot(3, 3, 3)
+ax3.plot(t_hist, T_hist, 'k-', linewidth=2, label='Historical')
+ax3.plot(t_hist, T_rcp26, 'g-', linewidth=2, label='RCP 2.6')
+ax3.plot(t_hist, T_rcp45, 'b-', linewidth=2, label='RCP 4.5')
+ax3.plot(t_hist, T_rcp85, 'r-', linewidth=2, label='RCP 8.5')
+ax3.axhline(y=1.5, color='orange', linestyle=':', label='1.5 K')
+ax3.axhline(y=2.0, color='red', linestyle=':', label='2.0 K')
+ax3.set_xlabel('Year')
+ax3.set_ylabel('$\\Delta T$ (K)')
+ax3.set_title('Temperature Projections')
+ax3.legend(fontsize=7, loc='upper left')
+
+# Plot 4: Feedback analysis
+ax4 = fig.add_subplot(3, 3, 4)
+names = list(feedbacks.keys())
+values = list(feedbacks.values())
+colors = ['gray', 'blue', 'cyan', 'orange', 'purple']
+bars = ax4.barh(names, values, color=colors)
+ax4.axvline(x=0, color='black', linewidth=0.5)
+ax4.set_xlabel('Feedback (W m$^{-2}$ K$^{-1}$)')
+ax4.set_title(f'Feedback Components ($\\lambda_{{total}}$ = {lambda_total:.1f})')
+
+# Plot 5: ECS distribution
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.plot(lambda_range, ECS_range, 'b-', linewidth=2)
+ax5.axhline(y=3.0, color='red', linestyle='--', alpha=0.7, label='Best estimate')
+ax5.fill_between([1.0, 1.5], 0, 6, alpha=0.2, color='green', label='Likely range')
+ax5.set_xlabel('$\\lambda$ (W m$^{-2}$ K$^{-1}$)')
+ax5.set_ylabel('ECS (K)')
+ax5.set_title('ECS vs Feedback Parameter')
+ax5.legend(fontsize=8)
+ax5.set_ylim([0, 6])
+
+# Plot 6: Warming rate
+ax6 = fig.add_subplot(3, 3, 6)
+dT_dt = np.diff(T_hist) / np.diff(t_hist)
+ax6.plot(t_hist[1:], dT_dt * 10, 'b-', linewidth=1.5)  # per decade
+ax6.set_xlabel('Year')
+ax6.set_ylabel('Warming rate (K/decade)')
+ax6.set_title('Rate of Temperature Change')
+
+# Plot 7: Ocean heat uptake
+ax7 = fig.add_subplot(3, 3, 7)
+ax7.plot(t_step, T_2box_step[:, 0] - T_2box_step[:, 1], 'purple', linewidth=2)
+ax7.set_xlabel('Time (years)')
+ax7.set_ylabel('$T_s - T_d$ (K)')
+ax7.set_title('Surface-Deep Ocean Temperature Difference')
+
+# Plot 8: Forcing components
+ax8 = fig.add_subplot(3, 3, 8)
+# Different forcing agents (simplified)
+t_forcing = np.linspace(1850, 2020, 100)
+CO2_forcing = 5.35 * np.log(280 * np.exp(0.004 * (t_forcing - 1850)) / 280)
+CH4_forcing = 0.3 * (1 - np.exp(-0.01 * (t_forcing - 1850)))
+aerosol_forcing = -0.5 * (1 - np.exp(-0.02 * (t_forcing - 1850)))
+ax8.plot(t_forcing, CO2_forcing, 'r-', linewidth=2, label='CO$_2$')
+ax8.plot(t_forcing, CH4_forcing, 'g-', linewidth=2, label='CH$_4$')
+ax8.plot(t_forcing, aerosol_forcing, 'b-', linewidth=2, label='Aerosols')
+ax8.plot(t_forcing, CO2_forcing + CH4_forcing + aerosol_forcing, 'k--',
+         linewidth=2, label='Total')
+ax8.set_xlabel('Year')
+ax8.set_ylabel('Forcing (W/m$^2$)')
+ax8.set_title('Radiative Forcing Components')
+ax8.legend(fontsize=8)
+
+# Plot 9: Energy imbalance
+ax9 = fig.add_subplot(3, 3, 9)
+F_arr = np.array([forcing_historical(t) for t in t_hist])
+N = F_arr - lambda_val * T_hist  # Net energy imbalance
+ax9.plot(t_hist, N, 'b-', linewidth=2)
+ax9.axhline(y=0, color='black', linewidth=0.5)
+ax9.set_xlabel('Year')
+ax9.set_ylabel('N (W/m$^2$)')
+ax9.set_title('Planetary Energy Imbalance')
+ax9.fill_between(t_hist, 0, N, where=N > 0, alpha=0.3, color='red', label='Heating')
+ax9.legend(fontsize=8)
+
+plt.tight_layout()
+plt.savefig('temperature_model_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Key results
+T_2020 = T_hist[np.argmin(np.abs(t_hist - 2020))]
+T_2100_rcp45 = T_rcp45[-1]
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{temperature_model_analysis.pdf}
+\caption{Climate temperature modeling: (a) Step response to CO$_2$ doubling; (b) Ramp
+response showing TCR; (c) Historical and projected temperatures; (d) Feedback component
+analysis; (e) ECS dependence on feedback parameter; (f) Warming rate over time;
+(g) Ocean heat uptake dynamics; (h) Radiative forcing components; (i) Planetary energy
+imbalance.}
+\label{fig:temperature}
+\end{figure}
+
+\section{Results}
+
+\subsection{Climate Sensitivity}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Climate Sensitivity Parameters}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Value & Units \\")
+print(r"\midrule")
+print(f"Feedback parameter $\\lambda$ & {lambda_val} & W m$^{{-2}}$ K$^{{-1}}$ \\\\")
+print(f"Equilibrium Climate Sensitivity & {ECS:.1f} & K \\\\")
+print(f"Transient Climate Response & {TCR:.2f} & K \\\\")
+print(f"TCR/ECS ratio & {TCR/ECS:.2f} & --- \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:sensitivity}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Temperature Projections}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Projected Temperature Changes}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Scenario & 2100 $\Delta T$ (K) & Exceeds 2 K? \\")
+print(r"\midrule")
+print(f"RCP 2.6 & {T_rcp26[-1]:.1f} & {'No' if T_rcp26[-1] < 2 else 'Yes'} \\\\")
+print(f"RCP 4.5 & {T_rcp45[-1]:.1f} & {'No' if T_rcp45[-1] < 2 else 'Yes'} \\\\")
+print(f"RCP 8.5 & {T_rcp85[-1]:.1f} & {'No' if T_rcp85[-1] < 2 else 'Yes'} \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:projections}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Equilibrium vs Transient Response]
+The TCR of $\py{f"{TCR:.2f}"}$ K is smaller than the ECS of $\py{f"{ECS:.1f}"}$ K because
+the deep ocean absorbs heat. The ratio TCR/ECS = $\py{f"{TCR/ECS:.2f}"}$ indicates that
+only $\sim$\py{f"{TCR/ECS*100:.0f}"}\% of equilibrium warming is realized at the time
+of CO$_2$ doubling.
+\end{example}
+
+\begin{remark}[Feedback Uncertainty]
+Cloud feedback remains the largest source of uncertainty in ECS estimates. Positive
+cloud feedback (reduced low clouds with warming) increases ECS, while negative feedback
+decreases it. Current estimates range from $-0.2$ to $-1.2$ W m$^{-2}$ K$^{-1}$.
+\end{remark}
+
+\begin{example}[Committed Warming]
+Even if emissions stop, warming continues due to:
+\begin{itemize}
+\item Ocean thermal inertia (decades to equilibrate)
+\item Reduction in aerosol cooling (immediate)
+\item Carbon cycle feedbacks (decades to centuries)
+\end{itemize}
+This "committed warming" adds $\sim$0.5 K to current warming.
+\end{example}
+
+\section{Conclusions}
+
+This temperature modeling analysis demonstrates:
+\begin{enumerate}
+\item ECS is $\py{f"{ECS:.1f}"}$ K with feedback parameter $\lambda = \py{f"{lambda_val}"}$ W m$^{-2}$ K$^{-1}$
+\item TCR is $\py{f"{TCR:.2f}"}$ K, approximately \py{f"{TCR/ECS*100:.0f}"}\% of ECS
+\item Current warming is $\sim$\py{f"{T_2020:.1f}"} K above pre-industrial
+\item RCP 4.5 projects $\py{f"{T_2100_rcp45:.1f}"}$ K warming by 2100
+\item Water vapor and cloud feedbacks dominate sensitivity uncertainty
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Hartmann, D.L. \textit{Global Physical Climatology}, 2nd ed. Elsevier, 2016.
+\item Held, I.M. \& Soden, B.J. Water vapor feedback and global warming. \textit{Annu. Rev. Energy Environ.} 25, 441--475, 2000.
+\item Sherwood, S.C. et al. An assessment of Earth's climate sensitivity using multiple lines of evidence. \textit{Rev. Geophys.} 58, e2019RG000678, 2020.
+\end{itemize}
+
+\end{document}

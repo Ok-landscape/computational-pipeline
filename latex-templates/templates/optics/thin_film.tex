@@ -1,0 +1,732 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[makestderr]{pythontex}
+
+\title{Optics: Thin Film Interference and Coatings}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Thin film interference creates colors in soap bubbles and enables anti-reflection coatings, high reflectors, and narrow-band filters. This analysis computes reflectance and transmittance spectra for single-layer and multi-layer thin film structures using Fresnel equations and the transfer matrix method, with applications in optical coating design.
+
+\section{Mathematical Framework}
+
+\subsection{Fresnel Equations}
+At normal incidence, the amplitude reflection coefficient:
+\begin{equation}
+r_{ij} = \frac{n_i - n_j}{n_i + n_j}
+\end{equation}
+
+For oblique incidence:
+\begin{align}
+r_s &= \frac{n_i\cos\theta_i - n_t\cos\theta_t}{n_i\cos\theta_i + n_t\cos\theta_t} \\
+r_p &= \frac{n_t\cos\theta_i - n_i\cos\theta_t}{n_t\cos\theta_i + n_i\cos\theta_t}
+\end{align}
+
+\subsection{Single Layer Reflectance}
+For a single layer on a substrate:
+\begin{equation}
+R = \left|\frac{r_{01} + r_{12}e^{2i\delta}}{1 + r_{01}r_{12}e^{2i\delta}}\right|^2
+\end{equation}
+where $\delta = \frac{2\pi n_1 d \cos\theta_1}{\lambda}$ is the optical phase thickness.
+
+\subsection{Transfer Matrix Method}
+For a layer with refractive index $n$ and thickness $d$:
+\begin{equation}
+M = \begin{pmatrix} \cos\delta & \frac{i\sin\delta}{\eta} \\ i\eta\sin\delta & \cos\delta \end{pmatrix}
+\end{equation}
+where $\eta = n\cos\theta$ for s-polarization and $\eta = n/\cos\theta$ for p-polarization.
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Single Layer Anti-Reflection Coating}
+\begin{pycode}
+def fresnel_r(n1, n2):
+    """Fresnel reflection coefficient at normal incidence."""
+    return (n1 - n2) / (n1 + n2)
+
+def single_layer_reflectance(wavelength, d, n0, n1, n2):
+    """Reflectance of single layer thin film."""
+    # Phase thickness
+    delta = 2 * np.pi * n1 * d / wavelength
+
+    # Fresnel coefficients
+    r01 = fresnel_r(n0, n1)
+    r12 = fresnel_r(n1, n2)
+
+    # Total reflection coefficient
+    r = (r01 + r12 * np.exp(2j * delta)) / (1 + r01 * r12 * np.exp(2j * delta))
+
+    return np.abs(r)**2
+
+# Wavelength range
+wavelengths = np.linspace(400e-9, 800e-9, 500)
+
+# Single layer anti-reflection coating (MgF2 on glass)
+n_air = 1.0
+n_MgF2 = 1.38
+n_glass = 1.52
+d_AR = 550e-9 / (4 * n_MgF2)  # Quarter-wave at 550 nm
+
+R_AR = [single_layer_reflectance(lam, d_AR, n_air, n_MgF2, n_glass) for lam in wavelengths]
+
+# Uncoated glass
+R_glass = fresnel_r(n_air, n_glass)**2 * np.ones_like(wavelengths)
+
+# Optimal coating: n_coating = sqrt(n_substrate)
+n_optimal = np.sqrt(n_glass)
+d_optimal = 550e-9 / (4 * n_optimal)
+R_optimal = [single_layer_reflectance(lam, d_optimal, n_air, n_optimal, n_glass) for lam in wavelengths]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Anti-reflection coating
+axes[0, 0].plot(wavelengths*1e9, np.array(R_AR)*100, 'b-', linewidth=2, label='MgF$_2$ ($n = 1.38$)')
+axes[0, 0].plot(wavelengths*1e9, np.array(R_optimal)*100, 'g--', linewidth=2, label=f'Optimal ($n = {n_optimal:.2f}$)')
+axes[0, 0].plot(wavelengths*1e9, R_glass*100, 'r--', linewidth=1.5, label='Uncoated')
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Reflectance (\\%)')
+axes[0, 0].set_title('Single Layer Anti-Reflection Coating')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Reflectance vs film thickness
+thicknesses = np.linspace(0, 1000e-9, 200)
+wavelength_plot = 550e-9
+R_vs_d = [single_layer_reflectance(wavelength_plot, d, n_air, n_MgF2, n_glass) for d in thicknesses]
+
+axes[0, 1].plot(thicknesses*1e9, np.array(R_vs_d)*100, 'b-', linewidth=2)
+axes[0, 1].axvline(x=d_AR*1e9, color='red', linestyle='--', alpha=0.7, label='QW thickness')
+axes[0, 1].axhline(y=0, color='gray', linestyle='-', alpha=0.3)
+axes[0, 1].set_xlabel('Film Thickness (nm)')
+axes[0, 1].set_ylabel('Reflectance (\\%)')
+axes[0, 1].set_title(f'Reflectance vs Thickness ($\\lambda = 550$ nm)')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Different coating materials
+coating_materials = [
+    ('MgF$_2$', 1.38, 'blue'),
+    ('SiO$_2$', 1.46, 'green'),
+    ('Al$_2$O$_3$', 1.76, 'orange'),
+    ('ZrO$_2$', 2.0, 'red')
+]
+
+for name, n_coat, color in coating_materials:
+    d_coat = 550e-9 / (4 * n_coat)
+    R_coat = [single_layer_reflectance(lam, d_coat, n_air, n_coat, n_glass) for lam in wavelengths]
+    axes[1, 0].plot(wavelengths*1e9, np.array(R_coat)*100, color=color, linewidth=2, label=name)
+
+axes[1, 0].axhline(y=R_glass[0]*100, color='gray', linestyle='--', alpha=0.5, label='Uncoated')
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('Reflectance (\\%)')
+axes[1, 0].set_title('Different Coating Materials')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: V-coating (two-layer AR)
+n_L = 1.38  # MgF2
+n_H = 2.0   # ZrO2
+
+# V-coating: QWOT of each material
+d_L = 550e-9 / (4 * n_L)
+d_H = 550e-9 / (4 * n_H)
+
+# Two-layer calculation
+def two_layer_reflectance(wavelength, d1, n1, d2, n2, n0, n_sub):
+    delta1 = 2 * np.pi * n1 * d1 / wavelength
+    delta2 = 2 * np.pi * n2 * d2 / wavelength
+
+    r01 = fresnel_r(n0, n1)
+    r12 = fresnel_r(n1, n2)
+    r23 = fresnel_r(n2, n_sub)
+
+    # Calculate using characteristic matrix method
+    M1 = np.array([[np.cos(delta1), 1j*np.sin(delta1)/n1],
+                   [1j*n1*np.sin(delta1), np.cos(delta1)]])
+    M2 = np.array([[np.cos(delta2), 1j*np.sin(delta2)/n2],
+                   [1j*n2*np.sin(delta2), np.cos(delta2)]])
+
+    M = M1 @ M2
+
+    # Reflection coefficient
+    r = (n0*M[0,0] + n0*n_sub*M[0,1] - M[1,0] - n_sub*M[1,1]) / \
+        (n0*M[0,0] + n0*n_sub*M[0,1] + M[1,0] + n_sub*M[1,1])
+
+    return np.abs(r)**2
+
+R_V = [two_layer_reflectance(lam, d_L, n_L, d_H, n_H, n_air, n_glass) for lam in wavelengths]
+
+axes[1, 1].plot(wavelengths*1e9, np.array(R_AR)*100, 'b-', linewidth=2, label='Single MgF$_2$')
+axes[1, 1].plot(wavelengths*1e9, np.array(R_V)*100, 'g-', linewidth=2, label='V-coating (MgF$_2$/ZrO$_2$)')
+axes[1, 1].axhline(y=R_glass[0]*100, color='gray', linestyle='--', alpha=0.5, label='Uncoated')
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Reflectance (\\%)')
+axes[1, 1].set_title('Single vs Two-Layer AR Coating')
+axes[1, 1].legend(fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('ar_coating.pdf', 'Anti-reflection coatings: single layer, material comparison, and V-coating.')
+
+# Calculate minimum reflectance
+R_min = min(R_AR)
+\end{pycode}
+
+\section{High Reflector (Dielectric Mirror)}
+\begin{pycode}
+def multi_layer_reflectance(wavelength, layers, n_substrate, n_ambient=1.0):
+    """Reflectance of multi-layer stack using transfer matrix method."""
+    # Initialize transfer matrix
+    M = np.eye(2, dtype=complex)
+
+    for n, d in layers:
+        # Phase thickness
+        delta = 2 * np.pi * n * d / wavelength
+
+        # Layer matrix
+        M_layer = np.array([
+            [np.cos(delta), 1j * np.sin(delta) / n],
+            [1j * n * np.sin(delta), np.cos(delta)]
+        ])
+        M = M @ M_layer
+
+    # Calculate reflection coefficient
+    eta0 = n_ambient
+    etas = n_substrate
+
+    num = eta0 * M[0, 0] + eta0 * etas * M[0, 1] - M[1, 0] - etas * M[1, 1]
+    den = eta0 * M[0, 0] + eta0 * etas * M[0, 1] + M[1, 0] + etas * M[1, 1]
+
+    r = num / den
+    return np.abs(r)**2
+
+# High/low index materials
+n_H = 2.3  # TiO2
+n_L = 1.38  # MgF2
+lambda_0 = 550e-9
+d_H = lambda_0 / (4 * n_H)
+d_L = lambda_0 / (4 * n_L)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: HR mirror with different number of pairs
+pair_counts = [2, 4, 8, 16]
+colors_pairs = ['blue', 'green', 'orange', 'red']
+
+for n_pairs, color in zip(pair_counts, colors_pairs):
+    layers_HR = []
+    for i in range(n_pairs):
+        layers_HR.append((n_H, d_H))
+        layers_HR.append((n_L, d_L))
+
+    R_HR = [multi_layer_reflectance(lam, layers_HR, n_glass) for lam in wavelengths]
+    axes[0, 0].plot(wavelengths*1e9, np.array(R_HR)*100, color=color, linewidth=2,
+                    label=f'{n_pairs} pairs')
+
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Reflectance (\\%)')
+axes[0, 0].set_title('High Reflector: (HL)$^N$ Stack')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].set_ylim([0, 105])
+
+# Plot 2: Peak reflectance vs number of pairs
+pair_range = np.arange(1, 21)
+peak_reflectances = []
+
+for n_pairs in pair_range:
+    layers = []
+    for i in range(n_pairs):
+        layers.append((n_H, d_H))
+        layers.append((n_L, d_L))
+
+    R_peak = multi_layer_reflectance(lambda_0, layers, n_glass)
+    peak_reflectances.append(R_peak * 100)
+
+axes[0, 1].plot(pair_range, peak_reflectances, 'b-', linewidth=2)
+axes[0, 1].axhline(y=99.9, color='gray', linestyle='--', alpha=0.7, label='99.9\\%')
+axes[0, 1].set_xlabel('Number of H/L Pairs')
+axes[0, 1].set_ylabel('Peak Reflectance (\\%)')
+axes[0, 1].set_title('Peak Reflectance vs Stack Layers')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Bandwidth of HR mirror
+# Theoretical bandwidth: Delta_lambda/lambda_0 = (4/pi) * arcsin((n_H - n_L)/(n_H + n_L))
+contrast = (n_H - n_L) / (n_H + n_L)
+bandwidth_theory = (4/np.pi) * np.arcsin(contrast)
+
+# Measure bandwidth from 16-pair stack
+n_pairs = 16
+layers_16 = []
+for i in range(n_pairs):
+    layers_16.append((n_H, d_H))
+    layers_16.append((n_L, d_L))
+
+R_16 = np.array([multi_layer_reflectance(lam, layers_16, n_glass) for lam in wavelengths])
+T_16 = 1 - R_16
+
+axes[1, 0].semilogy(wavelengths*1e9, T_16*100, 'b-', linewidth=2)
+axes[1, 0].axhline(y=0.1, color='gray', linestyle='--', alpha=0.7, label='T = 0.1\\%')
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('Transmittance (\\%)')
+axes[1, 0].set_title(f'HR Mirror Stop Band ({n_pairs} pairs)')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3, which='both')
+
+# Plot 4: Effect of index contrast
+contrasts = [
+    (1.8, 1.38, 'Low contrast'),
+    (2.0, 1.38, 'Medium contrast'),
+    (2.3, 1.38, 'High contrast'),
+    (2.5, 1.38, 'Very high contrast')
+]
+colors_contrast = ['blue', 'green', 'orange', 'red']
+
+n_pairs = 8
+for (nH, nL, label), color in zip(contrasts, colors_contrast):
+    dH = lambda_0 / (4 * nH)
+    dL = lambda_0 / (4 * nL)
+    layers = []
+    for i in range(n_pairs):
+        layers.append((nH, dH))
+        layers.append((nL, dL))
+
+    R = [multi_layer_reflectance(lam, layers, n_glass) for lam in wavelengths]
+    axes[1, 1].plot(wavelengths*1e9, np.array(R)*100, color=color, linewidth=2, label=label)
+
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Reflectance (\\%)')
+axes[1, 1].set_title('Effect of Index Contrast')
+axes[1, 1].legend(fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('hr_mirror.pdf', 'High reflector mirrors: layer count, peak reflectance, stop band, and index contrast.')
+
+# Calculate max reflectance for results
+R_max_HR = max(peak_reflectances)
+\end{pycode}
+
+\section{Narrow-Band Filters}
+\begin{pycode}
+# Fabry-Perot interference filter
+def fabry_perot_filter(wavelength, d_cavity, n_cavity, layers_mirror, n_sub):
+    """
+    Fabry-Perot filter: mirror / cavity / mirror on substrate.
+    """
+    # Build full stack: front mirror + cavity + back mirror
+    full_stack = layers_mirror + [(n_cavity, d_cavity)] + layers_mirror[::-1]
+    return multi_layer_reflectance(wavelength, full_stack, n_sub)
+
+# Design filter centered at 550 nm
+n_cavity = 1.38  # MgF2 spacer
+d_cavity = 550e-9 / (2 * n_cavity)  # Half-wave spacer
+
+# Mirror layers
+mirror_pairs = 5
+mirror_layers = []
+for i in range(mirror_pairs):
+    mirror_layers.append((n_H, d_H))
+    mirror_layers.append((n_L, d_L))
+
+# Fine wavelength grid for filter
+wavelengths_fine = np.linspace(500e-9, 600e-9, 1000)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Narrow-band filter transmission
+T_filter = []
+for lam in wavelengths_fine:
+    R = fabry_perot_filter(lam, d_cavity, n_cavity, mirror_layers, n_glass)
+    T_filter.append((1 - R) * 100)
+
+axes[0, 0].plot(wavelengths_fine*1e9, T_filter, 'b-', linewidth=2)
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Transmittance (\\%)')
+axes[0, 0].set_title('Narrow-Band Filter (5 pairs each mirror)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Filter with different mirror reflectivity
+mirror_pair_counts = [3, 5, 7, 9]
+colors_filter = ['blue', 'green', 'orange', 'red']
+
+for pairs, color in zip(mirror_pair_counts, colors_filter):
+    m_layers = []
+    for i in range(pairs):
+        m_layers.append((n_H, d_H))
+        m_layers.append((n_L, d_L))
+
+    T = []
+    for lam in wavelengths_fine:
+        R = fabry_perot_filter(lam, d_cavity, n_cavity, m_layers, n_glass)
+        T.append((1 - R) * 100)
+
+    axes[0, 1].plot(wavelengths_fine*1e9, T, color=color, linewidth=2, label=f'{pairs} pairs')
+
+axes[0, 1].set_xlabel('Wavelength (nm)')
+axes[0, 1].set_ylabel('Transmittance (\\%)')
+axes[0, 1].set_title('Filter Bandwidth vs Mirror Reflectivity')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Edge filter (long-pass)
+def edge_filter(wavelength, layers, n_sub, n_ambient=1.0):
+    """Edge filter design."""
+    return multi_layer_reflectance(wavelength, layers, n_sub, n_ambient)
+
+# Design long-pass at 500 nm
+lambda_edge = 500e-9
+d_H_edge = lambda_edge / (4 * n_H)
+d_L_edge = lambda_edge / (4 * n_L)
+
+edge_pairs = 20
+edge_layers = []
+for i in range(edge_pairs):
+    edge_layers.append((n_H, d_H_edge))
+    edge_layers.append((n_L, d_L_edge))
+
+T_edge = []
+wavelengths_edge = np.linspace(400e-9, 700e-9, 500)
+for lam in wavelengths_edge:
+    R = edge_filter(lam, edge_layers, n_glass)
+    T_edge.append((1 - R) * 100)
+
+axes[1, 0].plot(wavelengths_edge*1e9, T_edge, 'b-', linewidth=2)
+axes[1, 0].axvline(x=500, color='red', linestyle='--', alpha=0.7, label='Design $\\lambda$')
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('Transmittance (\\%)')
+axes[1, 0].set_title('Edge Filter (Long-Pass)')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Bandpass filter using two edge filters
+lambda_short = 450e-9  # Short-pass edge
+lambda_long = 550e-9   # Long-pass edge
+
+# Short-pass
+d_H_short = lambda_short / (4 * n_H)
+d_L_short = lambda_short / (4 * n_L)
+short_layers = []
+for i in range(15):
+    short_layers.append((n_H, d_H_short))
+    short_layers.append((n_L, d_L_short))
+
+# Long-pass
+d_H_long = lambda_long / (4 * n_H)
+d_L_long = lambda_long / (4 * n_L)
+long_layers = []
+for i in range(15):
+    long_layers.append((n_H, d_H_long))
+    long_layers.append((n_L, d_L_long))
+
+T_bandpass = []
+for lam in wavelengths_edge:
+    R_short = edge_filter(lam, short_layers, n_glass)
+    R_long = edge_filter(lam, long_layers, n_glass)
+    # Combined transmission
+    T = (1 - R_short) * (1 - R_long) * 100
+    T_bandpass.append(T)
+
+axes[1, 1].plot(wavelengths_edge*1e9, T_bandpass, 'purple', linewidth=2)
+axes[1, 1].axvline(x=450, color='blue', linestyle='--', alpha=0.5)
+axes[1, 1].axvline(x=550, color='red', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Transmittance (\\%)')
+axes[1, 1].set_title('Bandpass Filter (Edge Filter Combination)')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('narrow_band.pdf', 'Narrow-band filters: Fabry-P\\'erot, bandwidth control, and bandpass design.')
+\end{pycode}
+
+\section{Angle Dependence and Polarization}
+\begin{pycode}
+# Oblique incidence calculations
+def snell_angle(n1, n2, theta1):
+    """Calculate refracted angle using Snell's law."""
+    sin_theta2 = n1 * np.sin(theta1) / n2
+    if np.abs(sin_theta2) > 1:
+        return np.pi/2  # Total internal reflection
+    return np.arcsin(sin_theta2)
+
+def oblique_layer_matrix(n, d, wavelength, theta, polarization='s'):
+    """Transfer matrix for layer at oblique incidence."""
+    theta_in_layer = snell_angle(1.0, n, theta)
+    delta = 2 * np.pi * n * d * np.cos(theta_in_layer) / wavelength
+
+    if polarization == 's':
+        eta = n * np.cos(theta_in_layer)
+    else:  # p-polarization
+        eta = n / np.cos(theta_in_layer)
+
+    M = np.array([
+        [np.cos(delta), 1j * np.sin(delta) / eta],
+        [1j * eta * np.sin(delta), np.cos(delta)]
+    ])
+    return M
+
+def oblique_multilayer_reflectance(wavelength, layers, n_sub, theta, polarization='s'):
+    """Reflectance at oblique incidence."""
+    M = np.eye(2, dtype=complex)
+
+    for n, d in layers:
+        M_layer = oblique_layer_matrix(n, d, wavelength, theta, polarization)
+        M = M @ M_layer
+
+    # Calculate terminal admittances
+    theta_sub = snell_angle(1.0, n_sub, theta)
+
+    if polarization == 's':
+        eta0 = np.cos(theta)
+        etas = n_sub * np.cos(theta_sub)
+    else:
+        eta0 = 1.0 / np.cos(theta)
+        etas = n_sub / np.cos(theta_sub)
+
+    num = eta0 * M[0, 0] + eta0 * etas * M[0, 1] - M[1, 0] - etas * M[1, 1]
+    den = eta0 * M[0, 0] + eta0 * etas * M[0, 1] + M[1, 0] + etas * M[1, 1]
+
+    r = num / den
+    return np.abs(r)**2
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: AR coating at different angles
+angles = [0, 15, 30, 45]
+colors_angle = ['blue', 'green', 'orange', 'red']
+
+for angle, color in zip(angles, colors_angle):
+    theta = np.deg2rad(angle)
+    R_s = []
+    R_p = []
+    for lam in wavelengths:
+        d_AR_eff = d_AR  # Could adjust for angle
+        Rs = single_layer_reflectance(lam, d_AR_eff, n_air, n_MgF2, n_glass)  # Simplified
+        R_s.append(Rs * 100)
+        R_p.append(Rs * 100)
+
+    # More accurate calculation for one wavelength
+    layers_AR = [(n_MgF2, d_AR)]
+    Rs_accurate = [oblique_multilayer_reflectance(lam, layers_AR, n_glass, theta, 's') * 100 for lam in wavelengths]
+
+    axes[0, 0].plot(wavelengths*1e9, Rs_accurate, color=color, linewidth=2, label=f'{angle}$^\\circ$')
+
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Reflectance (\\%)')
+axes[0, 0].set_title('AR Coating: Angle Dependence (s-pol)')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: s vs p polarization
+theta_45 = np.deg2rad(45)
+layers_test = [(n_MgF2, d_AR)]
+
+R_s_45 = [oblique_multilayer_reflectance(lam, layers_test, n_glass, theta_45, 's') * 100 for lam in wavelengths]
+R_p_45 = [oblique_multilayer_reflectance(lam, layers_test, n_glass, theta_45, 'p') * 100 for lam in wavelengths]
+
+axes[0, 1].plot(wavelengths*1e9, R_s_45, 'b-', linewidth=2, label='s-polarization')
+axes[0, 1].plot(wavelengths*1e9, R_p_45, 'r--', linewidth=2, label='p-polarization')
+axes[0, 1].set_xlabel('Wavelength (nm)')
+axes[0, 1].set_ylabel('Reflectance (\\%)')
+axes[0, 1].set_title('Polarization Dependence at 45$^\\circ$')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Blue shift with angle (HR mirror)
+angles_shift = np.linspace(0, 60, 50)
+layers_HR_8 = []
+for i in range(8):
+    layers_HR_8.append((n_H, d_H))
+    layers_HR_8.append((n_L, d_L))
+
+# Find peak wavelength at each angle
+peak_wavelengths = []
+for angle in angles_shift:
+    theta = np.deg2rad(angle)
+    # Search for peak
+    max_R = 0
+    peak_lam = lambda_0
+    for lam in wavelengths:
+        R = oblique_multilayer_reflectance(lam, layers_HR_8, n_glass, theta, 's')
+        if R > max_R:
+            max_R = R
+            peak_lam = lam
+    peak_wavelengths.append(peak_lam * 1e9)
+
+axes[1, 0].plot(angles_shift, peak_wavelengths, 'b-', linewidth=2)
+axes[1, 0].axhline(y=550, color='gray', linestyle='--', alpha=0.5, label='Normal incidence')
+axes[1, 0].set_xlabel('Angle of incidence (degrees)')
+axes[1, 0].set_ylabel('Peak wavelength (nm)')
+axes[1, 0].set_title('Blue Shift of HR Mirror with Angle')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Polarizing beam splitter concept
+# At Brewster angle, p-pol has minimum reflection
+angles_brewster = np.linspace(0, 85, 100)
+R_glass_s = []
+R_glass_p = []
+
+for angle in angles_brewster:
+    theta = np.deg2rad(angle)
+    theta_t = snell_angle(1.0, n_glass, theta)
+
+    # Fresnel coefficients
+    rs = (np.cos(theta) - n_glass * np.cos(theta_t)) / (np.cos(theta) + n_glass * np.cos(theta_t))
+    rp = (n_glass * np.cos(theta) - np.cos(theta_t)) / (n_glass * np.cos(theta) + np.cos(theta_t))
+
+    R_glass_s.append(np.abs(rs)**2 * 100)
+    R_glass_p.append(np.abs(rp)**2 * 100)
+
+axes[1, 1].plot(angles_brewster, R_glass_s, 'b-', linewidth=2, label='s-polarization')
+axes[1, 1].plot(angles_brewster, R_glass_p, 'r-', linewidth=2, label='p-polarization')
+
+# Brewster angle
+theta_B = np.rad2deg(np.arctan(n_glass))
+axes[1, 1].axvline(x=theta_B, color='green', linestyle='--', alpha=0.7, label=f'Brewster: {theta_B:.1f}$^\\circ$')
+
+axes[1, 1].set_xlabel('Angle of incidence (degrees)')
+axes[1, 1].set_ylabel('Reflectance (\\%)')
+axes[1, 1].set_title('Glass Surface: s vs p Polarization')
+axes[1, 1].legend(fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('angle_dependence.pdf', 'Angle and polarization effects: AR coating, s/p splitting, blue shift, and Brewster angle.')
+\end{pycode}
+
+\section{Soap Bubbles and Natural Thin Films}
+\begin{pycode}
+# Soap bubble (thin water film in air)
+n_water = 1.33
+d_bubble = 300e-9
+R_bubble = [single_layer_reflectance(lam, d_bubble, n_air, n_water, n_air) for lam in wavelengths]
+
+# Oil slick on water
+n_oil = 1.5
+d_oil = 400e-9
+R_oil = [single_layer_reflectance(lam, d_oil, n_air, n_oil, n_water) for lam in wavelengths]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Soap bubble colors
+axes[0, 0].plot(wavelengths*1e9, np.array(R_bubble)*100, 'b-', linewidth=2)
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Reflectance (\\%)')
+axes[0, 0].set_title(f'Soap Bubble ($d = {d_bubble*1e9:.0f}$ nm)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Different bubble thicknesses
+bubble_thicknesses = [100e-9, 200e-9, 300e-9, 400e-9, 500e-9]
+colors_bubble = plt.cm.rainbow(np.linspace(0, 1, len(bubble_thicknesses)))
+
+for d, color in zip(bubble_thicknesses, colors_bubble):
+    R = [single_layer_reflectance(lam, d, n_air, n_water, n_air) for lam in wavelengths]
+    axes[0, 1].plot(wavelengths*1e9, np.array(R)*100, color=color, linewidth=2,
+                    label=f'{d*1e9:.0f} nm')
+
+axes[0, 1].set_xlabel('Wavelength (nm)')
+axes[0, 1].set_ylabel('Reflectance (\\%)')
+axes[0, 1].set_title('Soap Bubble Thickness Variation')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Oil slick colors
+axes[1, 0].plot(wavelengths*1e9, np.array(R_oil)*100, 'purple', linewidth=2)
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('Reflectance (\\%)')
+axes[1, 0].set_title(f'Oil Slick on Water ($d = {d_oil*1e9:.0f}$ nm)')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Color map vs thickness
+thicknesses_color = np.linspace(50e-9, 600e-9, 100)
+wavelengths_vis = np.linspace(400e-9, 700e-9, 100)
+
+T_color = np.zeros((len(thicknesses_color), len(wavelengths_vis)))
+
+for i, d in enumerate(thicknesses_color):
+    for j, lam in enumerate(wavelengths_vis):
+        R = single_layer_reflectance(lam, d, n_air, n_water, n_air)
+        T_color[i, j] = R
+
+im = axes[1, 1].pcolormesh(wavelengths_vis*1e9, thicknesses_color*1e9, T_color,
+                            cmap='hot', shading='auto')
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Film thickness (nm)')
+axes[1, 1].set_title('Reflectance Color Map (Soap Film)')
+plt.colorbar(im, ax=axes[1, 1], label='Reflectance')
+
+plt.tight_layout()
+save_plot('natural_films.pdf', 'Natural thin films: soap bubbles, oil slicks, and thickness-dependent colors.')
+\end{pycode}
+
+\section{Results Summary}
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of Thin Film Parameters}')
+print(r'\begin{tabular}{lll}')
+print(r'\toprule')
+print(r'Configuration & Parameter & Value \\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Anti-Reflection Coating}} \\')
+print(f'Uncoated glass & Reflectance & {R_glass[0]*100:.2f}\\% \\\\')
+print(f'MgF$_2$ coating & Min reflectance & {R_min*100:.3f}\\% \\\\')
+print(f'QW thickness & $d$ & {d_AR*1e9:.1f} nm \\\\')
+print(f'Optimal $n$ & $\\sqrt{{n_{{sub}}}}$ & {n_optimal:.2f} \\\\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{High Reflector}} \\')
+print(f'Peak reflectance & 16 pairs & {R_max_HR:.1f}\\% \\\\')
+print(f'TiO$_2$ index & $n_H$ & {n_H:.2f} \\\\')
+print(f'MgF$_2$ index & $n_L$ & {n_L:.2f} \\\\')
+print(f'Stop band & Theory & {bandwidth_theory*100:.0f}\\% of $\\lambda_0$ \\\\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Brewster Angle}} \\')
+print(f'Glass & $\\theta_B$ & {theta_B:.1f}$^\\circ$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+\begin{itemize}
+    \item \textbf{Uncoated glass reflectance}: \py{f"{R_glass[0]*100:.2f}"}\%
+    \item \textbf{Minimum AR coating reflectance}: \py{f"{R_min*100:.3f}"}\%
+    \item \textbf{Quarter-wave AR thickness}: \py{f"{d_AR*1e9:.1f}"} nm
+    \item \textbf{Optimal coating index}: $n = \sqrt{n_{glass}} = $ \py{f"{n_optimal:.3f}"}
+    \item \textbf{High reflector peak (16 pairs)}: \py{f"{R_max_HR:.1f}"}\%
+    \item \textbf{Stop band width}: $\approx$ \py{f"{bandwidth_theory*100:.0f}"}\% of $\lambda_0$
+    \item \textbf{Brewster angle (glass)}: \py{f"{theta_B:.1f}"}$^\circ$
+\end{itemize}
+
+\section{Conclusion}
+Thin film interference enables precise control of optical properties through constructive and destructive interference. A single quarter-wave MgF$_2$ layer reduces glass reflectance from 4\% to below 1\% at the design wavelength. Multi-layer stacks can achieve reflectances exceeding 99.99\% for high-power laser mirrors. The transfer matrix method provides an efficient algorithm for analyzing arbitrary layer structures. Angular dependence causes blue-shifting of spectral features and polarization splitting, exploited in polarizing beam splitters. These principles underpin technologies from camera lenses to laser mirrors, interference filters, and optical telecommunications components.
+
+\end{document}

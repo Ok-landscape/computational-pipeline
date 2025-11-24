@@ -1,0 +1,603 @@
+\documentclass[11pt,a4paper]{article}
+
+% Document Setup
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+
+% PythonTeX Setup
+\usepackage[makestderr]{pythontex}
+
+\title{Heat Transfer Analysis: Conduction, Convection, and Fins}
+\author{Mechanical Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents computational analysis of heat transfer mechanisms including conduction through composite walls, convection correlations, fin analysis, and heat exchanger design. Python-based computations provide quantitative analysis with dynamic visualization of temperature distributions and heat flux.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction to Heat Transfer}
+
+Heat transfer is the thermal energy in transit due to a temperature difference. The three modes are:
+\begin{itemize}
+    \item Conduction: Energy transfer through molecular interactions
+    \item Convection: Energy transfer by fluid motion
+    \item Radiation: Energy transfer by electromagnetic waves
+\end{itemize}
+
+% Initialize Python environment
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+
+plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 10
+plt.rcParams['text.usetex'] = True
+
+def save_fig(filename):
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+\end{pycode}
+
+\section{Conduction Heat Transfer}
+
+\subsection{Fourier's Law}
+
+The rate of heat conduction is proportional to the temperature gradient:
+\begin{equation}
+q = -k \frac{dT}{dx}
+\end{equation}
+where $k$ is thermal conductivity (\si{\watt\per\meter\per\kelvin}).
+
+\subsection{Composite Wall Analysis}
+
+For a composite wall with convection on both sides:
+\begin{equation}
+q = \frac{T_{i} - T_{o}}{R_{total}} = \frac{T_{i} - T_{o}}{\frac{1}{h_i A} + \sum\frac{L_j}{k_j A} + \frac{1}{h_o A}}
+\end{equation}
+
+\begin{pycode}
+# Composite wall analysis
+# Three-layer wall: brick + insulation + plaster
+materials = [
+    {'name': 'Brick', 'k': 0.72, 'L': 0.23},  # W/mK, m
+    {'name': 'Insulation', 'k': 0.038, 'L': 0.08},
+    {'name': 'Plaster', 'k': 0.48, 'L': 0.02}
+]
+
+h_i = 10  # W/m2K (inside convection)
+h_o = 25  # W/m2K (outside convection)
+T_i = 22  # C (inside temperature)
+T_o = -5  # C (outside temperature)
+
+# Calculate thermal resistances (per unit area)
+R_i = 1/h_i
+R_o = 1/h_o
+R_total = R_i + R_o
+
+x_positions = [0]
+T_positions = [T_i]
+
+# Calculate temperature at each interface
+q = 0  # Will be calculated
+current_T = T_i - (T_i - T_o) * R_i  # Temperature at inner surface
+
+R_materials = []
+for mat in materials:
+    R = mat['L'] / mat['k']
+    R_materials.append(R)
+    R_total += R
+
+# Heat flux
+q = (T_i - T_o) / R_total
+
+# Temperature profile
+T_positions = [T_i]
+x_positions = [0]
+
+# Inner convection boundary
+T_s1 = T_i - q * R_i
+T_positions.append(T_s1)
+x = 0
+x_positions.append(x)
+
+# Through each material layer
+for mat, R in zip(materials, R_materials):
+    x += mat['L']
+    T_next = T_positions[-1] - q * R
+    x_positions.append(x)
+    T_positions.append(T_next)
+
+# Outer surface
+T_positions.append(T_o)
+x_positions.append(x_positions[-1])
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+# Temperature profile
+ax1.plot(np.array(x_positions)*100, T_positions, 'b-o', linewidth=2, markersize=8)
+ax1.axhline(0, color='k', linestyle='--', alpha=0.3)
+
+# Shade regions
+colors = ['#FFB6C1', '#90EE90', '#ADD8E6']
+x_start = 0
+for i, (mat, color) in enumerate(zip(materials, colors)):
+    ax1.axvspan(x_start*100, (x_start + mat['L'])*100, alpha=0.3, color=color, label=mat['name'])
+    x_start += mat['L']
+
+ax1.set_xlabel('Position (cm)')
+ax1.set_ylabel('Temperature ($^\\circ$C)')
+ax1.set_title('Temperature Profile Through Composite Wall')
+ax1.legend(loc='upper right')
+ax1.grid(True, alpha=0.3)
+
+# Thermal resistance breakdown
+resistances = [R_i] + R_materials + [R_o]
+labels = ['Conv (in)'] + [m['name'] for m in materials] + ['Conv (out)']
+colors_bar = ['yellow'] + colors + ['yellow']
+
+ax2.bar(labels, resistances, color=colors_bar, alpha=0.7)
+ax2.set_ylabel('Thermal Resistance (m$^2$K/W)')
+ax2.set_title(f'Resistance Breakdown (Total = {R_total:.3f} m$^2$K/W)')
+ax2.grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+save_fig('composite_wall.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{composite_wall.pdf}
+\caption{Composite wall analysis: temperature profile and thermal resistance breakdown.}
+\end{figure}
+
+Heat flux through wall: $q = \py{f"{q:.1f}"}$ \si{\watt\per\square\meter}
+
+\section{Convection Heat Transfer}
+
+\subsection{Convection Correlations}
+
+The heat transfer coefficient depends on the Nusselt number:
+\begin{equation}
+h = \frac{Nu \cdot k}{L_c}
+\end{equation}
+
+\begin{pycode}
+# Convection correlations for different geometries
+def Nu_flat_plate_laminar(Re, Pr):
+    """Laminar flow over flat plate"""
+    return 0.664 * Re**0.5 * Pr**(1/3)
+
+def Nu_flat_plate_turbulent(Re, Pr):
+    """Turbulent flow over flat plate"""
+    return 0.037 * Re**0.8 * Pr**(1/3)
+
+def Nu_cylinder_crossflow(Re, Pr):
+    """Cross-flow over cylinder (Churchill-Bernstein)"""
+    return 0.3 + (0.62 * Re**0.5 * Pr**(1/3)) / (1 + (0.4/Pr)**(2/3))**0.25 * \
+           (1 + (Re/282000)**(5/8))**(4/5)
+
+def Nu_pipe_turbulent(Re, Pr):
+    """Fully developed turbulent flow in pipe (Dittus-Boelter)"""
+    return 0.023 * Re**0.8 * Pr**0.4
+
+# Calculate for air flow
+Pr = 0.71  # Prandtl number for air
+Re_range = np.logspace(3, 6, 100)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# External flow correlations
+Nu_plate_lam = [Nu_flat_plate_laminar(Re, Pr) for Re in Re_range if Re < 5e5]
+Nu_plate_turb = [Nu_flat_plate_turbulent(Re, Pr) for Re in Re_range if Re >= 5e5]
+Nu_cyl = [Nu_cylinder_crossflow(Re, Pr) for Re in Re_range]
+
+ax1.loglog(Re_range[Re_range < 5e5], Nu_plate_lam, 'b-', linewidth=2, label='Flat plate (laminar)')
+ax1.loglog(Re_range[Re_range >= 5e5], Nu_plate_turb, 'b--', linewidth=2, label='Flat plate (turbulent)')
+ax1.loglog(Re_range, Nu_cyl, 'r-', linewidth=2, label='Cylinder cross-flow')
+ax1.axvline(5e5, color='k', linestyle=':', alpha=0.5)
+ax1.set_xlabel('Reynolds Number')
+ax1.set_ylabel('Nusselt Number')
+ax1.set_title('External Flow Correlations')
+ax1.legend()
+ax1.grid(True, which='both', alpha=0.3)
+
+# Internal flow correlation
+Re_pipe = np.logspace(4, 6, 50)
+Nu_pipe = [Nu_pipe_turbulent(Re, Pr) for Re in Re_pipe]
+
+ax2.loglog(Re_pipe, Nu_pipe, 'g-', linewidth=2, label='Dittus-Boelter (heating)')
+ax2.set_xlabel('Reynolds Number')
+ax2.set_ylabel('Nusselt Number')
+ax2.set_title('Internal Flow Correlation (Turbulent Pipe)')
+ax2.legend()
+ax2.grid(True, which='both', alpha=0.3)
+
+plt.tight_layout()
+save_fig('convection_correlations.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{convection_correlations.pdf}
+\caption{Convection heat transfer correlations for external and internal flows.}
+\end{figure}
+
+\section{Extended Surfaces (Fins)}
+
+\subsection{Fin Temperature Distribution}
+
+For a fin with adiabatic tip:
+\begin{equation}
+\frac{\theta}{\theta_b} = \frac{\cosh[m(L-x)]}{\cosh(mL)}
+\end{equation}
+where $m = \sqrt{\frac{hP}{kA_c}}$ and $\theta = T - T_{\infty}$.
+
+\begin{pycode}
+# Fin analysis
+k_fin = 200  # W/mK (aluminum)
+h_fin = 50   # W/m2K
+L_fin = 0.1  # m (fin length)
+t_fin = 0.005  # m (fin thickness)
+w_fin = 0.05  # m (fin width)
+
+# Cross-section parameters
+P = 2 * (t_fin + w_fin)  # perimeter
+A_c = t_fin * w_fin  # cross-sectional area
+m = np.sqrt(h_fin * P / (k_fin * A_c))
+
+T_b = 100  # C (base temperature)
+T_inf = 25  # C (ambient temperature)
+theta_b = T_b - T_inf
+
+# Temperature distribution
+x = np.linspace(0, L_fin, 100)
+theta = theta_b * np.cosh(m * (L_fin - x)) / np.cosh(m * L_fin)
+T_fin = theta + T_inf
+
+# Heat transfer rate
+q_fin = np.sqrt(h_fin * P * k_fin * A_c) * theta_b * np.tanh(m * L_fin)
+
+# Maximum possible heat transfer (if entire fin at base temperature)
+A_fin = P * L_fin  # fin surface area
+q_max = h_fin * A_fin * theta_b
+
+# Fin efficiency
+eta_fin = q_fin / q_max
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Temperature distribution
+axes[0, 0].plot(x*100, T_fin, 'b-', linewidth=2)
+axes[0, 0].axhline(T_inf, color='r', linestyle='--', label=f'$T_\\infty$ = {T_inf}$^\\circ$C')
+axes[0, 0].set_xlabel('Distance from Base (cm)')
+axes[0, 0].set_ylabel('Temperature ($^\\circ$C)')
+axes[0, 0].set_title('Fin Temperature Distribution')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Temperature ratio
+axes[0, 1].plot(x*100, theta/theta_b * 100, 'g-', linewidth=2)
+axes[0, 1].set_xlabel('Distance from Base (cm)')
+axes[0, 1].set_ylabel('Temperature Ratio $\\theta/\\theta_b$ (\\%)')
+axes[0, 1].set_title('Normalized Temperature Distribution')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Effect of fin length
+L_range = np.linspace(0.01, 0.2, 50)
+eta_range = []
+q_range = []
+for L in L_range:
+    mL = m * L
+    q = np.sqrt(h_fin * P * k_fin * A_c) * theta_b * np.tanh(mL)
+    A_s = P * L
+    q_max_L = h_fin * A_s * theta_b
+    eta = q / q_max_L
+    eta_range.append(eta * 100)
+    q_range.append(q)
+
+axes[1, 0].plot(L_range*100, eta_range, 'r-', linewidth=2)
+axes[1, 0].axvline(L_fin*100, color='k', linestyle='--', alpha=0.5)
+axes[1, 0].set_xlabel('Fin Length (cm)')
+axes[1, 0].set_ylabel('Fin Efficiency (\\%)')
+axes[1, 0].set_title('Fin Efficiency vs Length')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Heat transfer rate
+axes[1, 1].plot(L_range*100, q_range, 'm-', linewidth=2)
+axes[1, 1].axvline(L_fin*100, color='k', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Fin Length (cm)')
+axes[1, 1].set_ylabel('Heat Transfer Rate (W)')
+axes[1, 1].set_title('Fin Heat Transfer vs Length')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('fin_analysis.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fin_analysis.pdf}
+\caption{Fin analysis: temperature distribution, efficiency, and heat transfer rate.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Fin Performance Parameters}
+\begin{tabular}{lcc}
+\toprule
+Parameter & Value & Units \\
+\midrule
+Fin parameter $m$ & \py{f"{m:.2f}"} & 1/m \\
+Product $mL$ & \py{f"{m*L_fin:.2f}"} & -- \\
+Fin efficiency & \py{f"{eta_fin*100:.1f}"} & \% \\
+Heat transfer rate & \py{f"{q_fin:.1f}"} & W \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Heat Exchanger Analysis}
+
+\subsection{LMTD Method}
+
+For counter-flow heat exchangers:
+\begin{equation}
+\Delta T_{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln(\Delta T_1/\Delta T_2)}
+\end{equation}
+
+\begin{pycode}
+# Counter-flow heat exchanger analysis
+# Hot fluid (oil): inlet 150C, outlet 90C
+# Cold fluid (water): inlet 20C, outlet 70C
+
+T_h_in = 150  # C
+T_h_out = 90  # C
+T_c_in = 20   # C
+T_c_out = 70  # C
+
+# Temperature differences
+dT_1 = T_h_in - T_c_out  # at hot inlet
+dT_2 = T_h_out - T_c_in  # at hot outlet
+
+# LMTD
+if dT_1 != dT_2:
+    LMTD = (dT_1 - dT_2) / np.log(dT_1/dT_2)
+else:
+    LMTD = dT_1
+
+# Assume heat transfer and calculate UA
+m_dot_h = 0.5  # kg/s
+c_p_h = 2000   # J/kgK (oil)
+Q = m_dot_h * c_p_h * (T_h_in - T_h_out)
+UA = Q / LMTD
+
+# Temperature profiles along heat exchanger
+x = np.linspace(0, 1, 100)
+
+# Counter-flow
+T_h_counter = T_h_in - (T_h_in - T_h_out) * x
+T_c_counter = T_c_out - (T_c_out - T_c_in) * x
+
+# Parallel flow (for comparison)
+# Need to recalculate outlet temps for same UA
+dT_1_parallel = T_h_in - T_c_in
+C_h = m_dot_h * c_p_h
+m_dot_c = Q / (4186 * (T_c_out - T_c_in))
+C_c = m_dot_c * 4186
+C_min = min(C_h, C_c)
+NTU = UA / C_min
+C_r = C_min / max(C_h, C_c)
+eps_counter = (1 - np.exp(-NTU * (1 - C_r))) / (1 - C_r * np.exp(-NTU * (1 - C_r)))
+eps_parallel = (1 - np.exp(-NTU * (1 + C_r))) / (1 + C_r)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Counter-flow temperature profiles
+ax1.plot(x*100, T_h_counter, 'r-', linewidth=2, label='Hot fluid')
+ax1.plot(x*100, T_c_counter, 'b-', linewidth=2, label='Cold fluid')
+ax1.fill_between(x*100, T_h_counter, T_c_counter, alpha=0.2, color='green')
+ax1.set_xlabel('Position (\\% of length)')
+ax1.set_ylabel('Temperature ($^\\circ$C)')
+ax1.set_title(f'Counter-Flow HX (LMTD = {LMTD:.1f}$^\\circ$C)')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Effectiveness-NTU curves
+NTU_range = np.linspace(0.1, 5, 100)
+C_r_values = [0, 0.25, 0.5, 0.75, 1.0]
+
+for C_r in C_r_values:
+    if C_r == 1:
+        eps = NTU_range / (1 + NTU_range)
+    else:
+        eps = (1 - np.exp(-NTU_range * (1 - C_r))) / (1 - C_r * np.exp(-NTU_range * (1 - C_r)))
+    ax2.plot(NTU_range, eps, linewidth=1.5, label=f'$C_r$ = {C_r}')
+
+ax2.set_xlabel('NTU')
+ax2.set_ylabel('Effectiveness $\\varepsilon$')
+ax2.set_title('Counter-Flow HX Effectiveness')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('heat_exchanger.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{heat_exchanger.pdf}
+\caption{Heat exchanger analysis: temperature profiles and effectiveness-NTU curves.}
+\end{figure}
+
+Heat duty: $Q = \py{f"{Q/1000:.1f}"}$ kW, $UA = \py{f"{UA:.0f}"}$ W/K
+
+\section{Transient Conduction}
+
+\subsection{Lumped Capacitance Method}
+
+When $Bi = hL_c/k < 0.1$:
+\begin{equation}
+\frac{T - T_{\infty}}{T_i - T_{\infty}} = \exp\left(-\frac{hA_s}{\rho V c_p}t\right) = \exp\left(-\frac{t}{\tau}\right)
+\end{equation}
+
+\begin{pycode}
+# Transient cooling of a sphere
+D = 0.05  # m diameter
+rho = 2700  # kg/m3 (aluminum)
+c_p = 900  # J/kgK
+k = 200    # W/mK
+h = 100    # W/m2K
+
+V = (4/3) * np.pi * (D/2)**3
+A_s = 4 * np.pi * (D/2)**2
+L_c = V / A_s
+
+# Biot number
+Bi = h * L_c / k
+
+# Time constant
+tau = rho * V * c_p / (h * A_s)
+
+T_i = 200  # C initial
+T_inf = 25  # C ambient
+
+# Temperature history
+t = np.linspace(0, 600, 200)
+theta_ratio = np.exp(-t/tau)
+T = T_inf + (T_i - T_inf) * theta_ratio
+
+# Heat transfer rate
+q_t = h * A_s * (T - T_inf)
+Q_total = rho * V * c_p * (T_i - T_inf)  # total energy
+Q_transferred = Q_total * (1 - theta_ratio)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Temperature history
+axes[0, 0].plot(t, T, 'b-', linewidth=2)
+axes[0, 0].axhline(T_inf, color='r', linestyle='--', label=f'$T_\\infty$ = {T_inf}$^\\circ$C')
+axes[0, 0].axvline(tau, color='k', linestyle=':', alpha=0.5, label=f'$\\tau$ = {tau:.0f} s')
+axes[0, 0].set_xlabel('Time (s)')
+axes[0, 0].set_ylabel('Temperature ($^\\circ$C)')
+axes[0, 0].set_title('Temperature History (Lumped Capacitance)')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Temperature ratio (semi-log)
+axes[0, 1].semilogy(t, theta_ratio, 'g-', linewidth=2)
+axes[0, 1].axhline(0.368, color='k', linestyle='--', alpha=0.5, label='$e^{-1}$')
+axes[0, 1].axvline(tau, color='k', linestyle=':', alpha=0.5)
+axes[0, 1].set_xlabel('Time (s)')
+axes[0, 1].set_ylabel('$(T - T_\\infty)/(T_i - T_\\infty)$')
+axes[0, 1].set_title('Normalized Temperature')
+axes[0, 1].legend()
+axes[0, 1].grid(True, which='both', alpha=0.3)
+
+# Instantaneous heat transfer rate
+axes[1, 0].plot(t, q_t, 'r-', linewidth=2)
+axes[1, 0].set_xlabel('Time (s)')
+axes[1, 0].set_ylabel('Heat Transfer Rate (W)')
+axes[1, 0].set_title('Instantaneous Heat Transfer')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Cumulative energy transferred
+axes[1, 1].plot(t, Q_transferred/1000, 'm-', linewidth=2)
+axes[1, 1].axhline(Q_total/1000, color='k', linestyle='--', alpha=0.5, label=f'Total = {Q_total/1000:.2f} kJ')
+axes[1, 1].set_xlabel('Time (s)')
+axes[1, 1].set_ylabel('Energy Transferred (kJ)')
+axes[1, 1].set_title('Cumulative Energy Transfer')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('transient_conduction.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{transient_conduction.pdf}
+\caption{Transient conduction analysis using lumped capacitance method.}
+\end{figure}
+
+Biot number: $Bi = \py{f"{Bi:.3f}"}$ (lumped model valid since $Bi < 0.1$)
+
+\section{Radiation Heat Transfer}
+
+\begin{pycode}
+# Radiation between surfaces
+sigma = 5.67e-8  # Stefan-Boltzmann constant
+
+# Enclosure with two surfaces
+T1 = 500 + 273  # K (hot surface)
+T2 = 300 + 273  # K (cold surface)
+eps1 = 0.8
+eps2 = 0.6
+A1 = 2  # m2
+F12 = 0.5  # view factor
+
+# Net radiation heat transfer
+q_rad = sigma * A1 * F12 * (T1**4 - T2**4) / (1/eps1 + A1/(A1*F12) * (1/eps2 - 1))
+
+# Blackbody radiation
+T_range = np.linspace(300, 1500, 100)
+E_b = sigma * T_range**4
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Blackbody emissive power
+ax1.plot(T_range - 273, E_b/1000, 'r-', linewidth=2)
+ax1.set_xlabel('Temperature ($^\\circ$C)')
+ax1.set_ylabel('Emissive Power (kW/m$^2$)')
+ax1.set_title('Blackbody Emissive Power')
+ax1.grid(True, alpha=0.3)
+
+# Effect of emissivity on net radiation
+eps_range = np.linspace(0.1, 1.0, 50)
+q_eps = []
+for eps in eps_range:
+    q = sigma * A1 * F12 * (T1**4 - T2**4) * eps  # simplified
+    q_eps.append(q/1000)
+
+ax2.plot(eps_range, q_eps, 'b-', linewidth=2)
+ax2.set_xlabel('Emissivity')
+ax2.set_ylabel('Heat Transfer (kW)')
+ax2.set_title('Effect of Emissivity on Radiation')
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('radiation.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{radiation.pdf}
+\caption{Radiation heat transfer: blackbody emission and emissivity effects.}
+\end{figure}
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of heat transfer:
+\begin{enumerate}
+    \item Composite walls require thermal resistance network analysis
+    \item Convection correlations depend on flow geometry and regime
+    \item Fin efficiency decreases with length but total heat transfer increases
+    \item Heat exchanger design uses LMTD or effectiveness-NTU methods
+    \item Lumped capacitance applies when $Bi < 0.1$
+    \item Radiation becomes dominant at high temperatures
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,252 @@
+% Neutron Star Physics
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Neutron Star Physics\\Equation of State and Structure}
+\author{Nuclear Astrophysics Group}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of neutron star structure including mass-radius relations, equation of state, and magnetic field properties.
+\end{abstract}
+
+\section{Introduction}
+
+Neutron stars are ultra-dense remnants of massive stars.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+G = 6.674e-11
+c = 2.998e8
+M_sun = 1.989e30
+hbar = 1.055e-34
+m_n = 1.675e-27
+\end{pycode}
+
+\section{Equation of State}
+
+\begin{pycode}
+# Polytropic EOS
+K = 1e11  # Polytropic constant
+Gamma = 2.0  # Adiabatic index
+
+rho = np.logspace(14, 16, 100)  # kg/m^3
+P = K * rho**Gamma
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(rho, P, 'b-', linewidth=2)
+ax.set_xlabel('Density (kg/m$^3$)')
+ax.set_ylabel('Pressure (Pa)')
+ax.set_title('Polytropic Equation of State')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('eos.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{eos.pdf}
+\caption{Polytropic equation of state.}
+\end{figure}
+
+\section{TOV Equation}
+
+\begin{pycode}
+def tov(y, r, K, Gamma):
+    P, m = y
+    if P <= 0:
+        return [0, 0]
+    rho = (P / K)**(1/Gamma)
+    eps = rho * c**2 + P / (Gamma - 1)
+    dPdr = -G * (eps + P) * (m + 4*np.pi*r**3*P/c**2) / (r**2 * (1 - 2*G*m/(r*c**2)))
+    dmdr = 4 * np.pi * r**2 * eps / c**2
+    return [dPdr, dmdr]
+
+# Solve for different central densities
+rho_c_range = np.logspace(14.5, 15.5, 20)
+masses = []
+radii = []
+
+for rho_c in rho_c_range:
+    P_c = K * rho_c**Gamma
+    r = np.linspace(1, 20000, 10000)
+    y0 = [P_c, 0]
+    sol = odeint(tov, y0, r, args=(K, Gamma))
+    P_sol = sol[:, 0]
+    m_sol = sol[:, 1]
+
+    idx = np.where(P_sol > 0)[0]
+    if len(idx) > 0:
+        R = r[idx[-1]]
+        M = m_sol[idx[-1]]
+        masses.append(M / M_sun)
+        radii.append(R / 1000)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(radii, masses, 'b-o', linewidth=1.5, markersize=4)
+ax.set_xlabel('Radius (km)')
+ax.set_ylabel('Mass ($M_\\odot$)')
+ax.set_title('Mass-Radius Relation')
+ax.grid(True, alpha=0.3)
+ax.set_xlim([8, 16])
+ax.set_ylim([0, 3])
+plt.tight_layout()
+plt.savefig('mass_radius.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{mass_radius.pdf}
+\caption{Neutron star mass-radius relation.}
+\end{figure}
+
+\section{Density Profile}
+
+\begin{pycode}
+rho_c = 1e15
+P_c = K * rho_c**Gamma
+r = np.linspace(1, 12000, 5000)
+sol = odeint(tov, [P_c, 0], r, args=(K, Gamma))
+P_profile = sol[:, 0]
+rho_profile = np.where(P_profile > 0, (P_profile / K)**(1/Gamma), 0)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(r / 1000, rho_profile / 1e15, 'b-', linewidth=2)
+ax.set_xlabel('Radius (km)')
+ax.set_ylabel('Density ($10^{15}$ kg/m$^3$)')
+ax.set_title('Neutron Star Density Profile')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('density_profile.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{density_profile.pdf}
+\caption{Internal density profile.}
+\end{figure}
+
+\section{Magnetic Field}
+
+\begin{pycode}
+# Pulsar spindown
+P = np.logspace(-3, 1, 100)  # Period in seconds
+P_dot = np.logspace(-20, -10, 100)  # Period derivative
+
+PP, PP_dot = np.meshgrid(P, P_dot)
+B_surf = 3.2e19 * np.sqrt(PP * PP_dot)  # Surface magnetic field in Gauss
+
+fig, ax = plt.subplots(figsize=(10, 8))
+levels = [1e8, 1e10, 1e12, 1e14, 1e16]
+cs = ax.contour(np.log10(PP), np.log10(PP_dot), np.log10(B_surf), levels=np.log10(levels))
+ax.clabel(cs, fmt='$10^{%.0f}$ G')
+ax.set_xlabel('log$_{10}$ Period (s)')
+ax.set_ylabel('log$_{10}$ $\\dot{P}$ (s/s)')
+ax.set_title('Pulsar Magnetic Field')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('magnetic_field.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{magnetic_field.pdf}
+\caption{P-$\dot{P}$ diagram with magnetic field lines.}
+\end{figure}
+
+\section{Spin-down Age}
+
+\begin{pycode}
+P_values = np.array([0.001, 0.01, 0.1, 1.0])  # Periods
+P_dot_values = np.array([1e-15, 1e-14, 1e-13, 1e-12])  # Period derivatives
+
+tau_c = P_values / (2 * P_dot_values)  # Characteristic age
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(P_values, tau_c / (365.25 * 24 * 3600), 'b-o', linewidth=1.5, markersize=8)
+ax.set_xlabel('Period (s)')
+ax.set_ylabel('Characteristic Age (years)')
+ax.set_title('Pulsar Spin-down Age')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('spindown_age.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{spindown_age.pdf}
+\caption{Characteristic age vs period.}
+\end{figure}
+
+\section{Compactness}
+
+\begin{pycode}
+compactness = np.array(masses) * M_sun * G / (np.array(radii) * 1000 * c**2)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(masses, compactness, 'b-o', linewidth=1.5, markersize=4)
+ax.axhline(y=0.5, color='r', linestyle='--', label='Black hole limit')
+ax.set_xlabel('Mass ($M_\\odot$)')
+ax.set_ylabel('Compactness $GM/Rc^2$')
+ax.set_title('Neutron Star Compactness')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('compactness.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{compactness.pdf}
+\caption{Compactness parameter.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+M_max = max(masses)
+R_at_max = radii[masses.index(M_max)]
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Neutron Star Properties}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Property & Value \\')
+print(r'\midrule')
+print(f'Maximum mass & {M_max:.2f} $M_\\odot$ \\\\')
+print(f'Radius at max mass & {R_at_max:.1f} km \\\\')
+print(f'Central density & $10^{{15}}$ kg/m$^3$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Neutron star structure depends critically on the equation of state of ultra-dense matter.
+
+\end{document}

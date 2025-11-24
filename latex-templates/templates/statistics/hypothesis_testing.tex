@@ -1,0 +1,747 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Statistical Hypothesis Testing: Theory and Applications}
+\author{Computational Statistics}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Hypothesis testing is a fundamental statistical method for making inferences about population
+parameters based on sample data. This document explores various hypothesis tests including
+one-sample and two-sample t-tests, paired t-tests, Analysis of Variance (ANOVA), chi-square
+tests for independence and goodness-of-fit, and non-parametric alternatives. We implement
+power analysis and effect size calculations to assess the practical significance of results
+and determine appropriate sample sizes for experimental design.
+
+\section{Mathematical Framework}
+
+\subsection{General Hypothesis Testing}
+Test statistic and p-value relationship:
+\begin{equation}
+p = P(T \geq t_{obs} | H_0)
+\end{equation}
+
+Decision rule at significance level $\alpha$:
+\begin{equation}
+\text{Reject } H_0 \text{ if } p < \alpha
+\end{equation}
+
+\subsection{t-Test Statistics}
+One-sample t-test:
+\begin{equation}
+t = \frac{\bar{x} - \mu_0}{s / \sqrt{n}}
+\end{equation}
+
+Two-sample t-test (Welch):
+\begin{equation}
+t = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}
+\end{equation}
+
+\subsection{Effect Sizes}
+Cohen's d:
+\begin{equation}
+d = \frac{\bar{x}_1 - \bar{x}_2}{s_p}
+\end{equation}
+
+where $s_p = \sqrt{\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1+n_2-2}}$.
+
+\subsection{ANOVA F-statistic}
+\begin{equation}
+F = \frac{MS_{between}}{MS_{within}} = \frac{SS_B / (k-1)}{SS_W / (N-k)}
+\end{equation}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+from scipy.stats import t as t_dist, f as f_dist, chi2
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+
+def cohens_d(group1, group2):
+    n1, n2 = len(group1), len(group2)
+    var1, var2 = np.var(group1, ddof=1), np.var(group2, ddof=1)
+    pooled_std = np.sqrt(((n1-1)*var1 + (n2-1)*var2) / (n1+n2-2))
+    return (np.mean(group1) - np.mean(group2)) / pooled_std
+\end{pycode}
+
+\section{One-Sample t-Test}
+\begin{pycode}
+# Test: Is the mean different from hypothesized value?
+np.random.seed(42)
+
+# Sample data: Test scores (hypothesized population mean = 100)
+sample = np.random.normal(105, 15, 30)
+mu_0 = 100
+
+# Perform t-test
+t_stat, p_value = stats.ttest_1samp(sample, mu_0)
+df = len(sample) - 1
+
+# Effect size (Cohen's d for one-sample)
+d_one = (np.mean(sample) - mu_0) / np.std(sample, ddof=1)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Sample distribution
+axes[0, 0].hist(sample, bins=15, alpha=0.7, edgecolor='black', density=True)
+axes[0, 0].axvline(np.mean(sample), color='r', linestyle='-', linewidth=2, label=f'Sample mean: {np.mean(sample):.1f}')
+axes[0, 0].axvline(mu_0, color='g', linestyle='--', linewidth=2, label=f'$H_0$: $\mu={mu_0}$')
+axes[0, 0].set_xlabel('Test Score')
+axes[0, 0].set_ylabel('Density')
+axes[0, 0].set_title('Sample Distribution')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# t-distribution with critical regions
+x = np.linspace(-4, 4, 200)
+y = t_dist.pdf(x, df)
+axes[0, 1].plot(x, y, 'b-', linewidth=2)
+axes[0, 1].axvline(t_stat, color='r', linestyle='-', linewidth=2, label=f't = {t_stat:.2f}')
+axes[0, 1].axvline(-t_stat, color='r', linestyle='-', linewidth=2)
+
+# Shade critical regions
+t_crit = t_dist.ppf(0.975, df)
+axes[0, 1].fill_between(x[x >= t_crit], y[x >= t_crit], alpha=0.3, color='red')
+axes[0, 1].fill_between(x[x <= -t_crit], y[x <= -t_crit], alpha=0.3, color='red')
+axes[0, 1].set_xlabel('t-statistic')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].set_title(f't-Distribution (df={df})')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Confidence interval
+ci = stats.t.interval(0.95, df, loc=np.mean(sample), scale=stats.sem(sample))
+ci_range = np.linspace(ci[0], ci[1], 100)
+axes[1, 0].axhline(0.5, color='blue', linewidth=3)
+axes[1, 0].axvline(ci[0], color='blue', linestyle='--', linewidth=2)
+axes[1, 0].axvline(ci[1], color='blue', linestyle='--', linewidth=2)
+axes[1, 0].plot(np.mean(sample), 0.5, 'ro', markersize=10)
+axes[1, 0].axvline(mu_0, color='g', linestyle=':', linewidth=2, label=f'$H_0$: $\mu={mu_0}$')
+axes[1, 0].set_xlim([90, 120])
+axes[1, 0].set_ylim([0, 1])
+axes[1, 0].set_xlabel('Mean')
+axes[1, 0].set_title(f'95\% Confidence Interval: [{ci[0]:.1f}, {ci[1]:.1f}]')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Effect size interpretation
+effect_sizes = ['Negligible', 'Small', 'Medium', 'Large']
+thresholds = [0.2, 0.5, 0.8]
+colors = ['green', 'yellow', 'orange', 'red']
+
+bar_positions = [0, 0.35, 0.65, 1.0]
+for i, (es, col) in enumerate(zip(effect_sizes, colors)):
+    if i < 3:
+        width = bar_positions[i+1] - bar_positions[i]
+    else:
+        width = 0.4
+    axes[1, 1].barh(0, width, left=bar_positions[i], color=col, alpha=0.6, height=0.3)
+
+axes[1, 1].axvline(abs(d_one), color='black', linestyle='-', linewidth=3, label=f'd = {abs(d_one):.2f}')
+axes[1, 1].set_xlim([0, 1.4])
+axes[1, 1].set_yticks([])
+axes[1, 1].set_xlabel("Cohen's d")
+axes[1, 1].set_title('Effect Size Interpretation')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('one_sample_ttest.pdf',
+          'One-sample t-test analysis with effect size interpretation.')
+
+one_sample_results = {
+    't_stat': t_stat,
+    'p_value': p_value,
+    'cohens_d': d_one,
+    'ci': ci
+}
+\end{pycode}
+
+\section{Two-Sample t-Test}
+\begin{pycode}
+# Compare two independent groups
+np.random.seed(42)
+
+# Treatment and control groups
+control = np.random.normal(100, 15, 35)
+treatment = np.random.normal(110, 18, 40)
+
+# Welch's t-test (unequal variances)
+t_stat_2, p_value_2 = stats.ttest_ind(control, treatment, equal_var=False)
+
+# Effect size
+d_two = cohens_d(treatment, control)
+
+# Levene's test for equality of variances
+levene_stat, levene_p = stats.levene(control, treatment)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Box plots
+bp = axes[0, 0].boxplot([control, treatment], labels=['Control', 'Treatment'], patch_artist=True)
+bp['boxes'][0].set_facecolor('lightblue')
+bp['boxes'][1].set_facecolor('lightcoral')
+axes[0, 0].set_ylabel('Score')
+axes[0, 0].set_title('Group Comparison')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Overlapping histograms
+axes[0, 1].hist(control, bins=15, alpha=0.5, label='Control', edgecolor='black')
+axes[0, 1].hist(treatment, bins=15, alpha=0.5, label='Treatment', edgecolor='black')
+axes[0, 1].axvline(np.mean(control), color='blue', linestyle='--', linewidth=2)
+axes[0, 1].axvline(np.mean(treatment), color='red', linestyle='--', linewidth=2)
+axes[0, 1].set_xlabel('Score')
+axes[0, 1].set_ylabel('Frequency')
+axes[0, 1].set_title('Distribution Comparison')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Means with error bars
+means = [np.mean(control), np.mean(treatment)]
+sems = [stats.sem(control), stats.sem(treatment)]
+x_pos = [0, 1]
+axes[1, 0].bar(x_pos, means, yerr=[1.96*s for s in sems], capsize=5,
+               color=['lightblue', 'lightcoral'], edgecolor='black')
+axes[1, 0].set_xticks(x_pos)
+axes[1, 0].set_xticklabels(['Control', 'Treatment'])
+axes[1, 0].set_ylabel('Mean Score')
+axes[1, 0].set_title('Means with 95\% CI')
+axes[1, 0].grid(True, alpha=0.3)
+
+# P-value visualization
+alpha_levels = [0.1, 0.05, 0.01, 0.001]
+alpha_labels = ['0.10', '0.05', '0.01', '0.001']
+colors = ['red' if p_value_2 < a else 'green' for a in alpha_levels]
+
+bars = axes[1, 1].barh(range(len(alpha_levels)), alpha_levels, color=colors, alpha=0.6)
+axes[1, 1].axvline(p_value_2, color='black', linestyle='-', linewidth=3, label=f'p = {p_value_2:.4f}')
+axes[1, 1].set_yticks(range(len(alpha_levels)))
+axes[1, 1].set_yticklabels(alpha_labels)
+axes[1, 1].set_xlabel('Significance Level')
+axes[1, 1].set_ylabel('Alpha')
+axes[1, 1].set_title('Significance Testing')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('two_sample_ttest.pdf',
+          'Two-sample t-test comparing treatment and control groups.')
+
+two_sample_results = {
+    't_stat': t_stat_2,
+    'p_value': p_value_2,
+    'cohens_d': d_two,
+    'levene_p': levene_p
+}
+\end{pycode}
+
+\section{Paired t-Test}
+\begin{pycode}
+# Before and after treatment comparison
+np.random.seed(42)
+n = 25
+
+before = np.random.normal(80, 10, n)
+improvement = np.random.normal(8, 5, n)  # True improvement
+after = before + improvement
+
+# Paired t-test
+t_stat_paired, p_value_paired = stats.ttest_rel(after, before)
+differences = after - before
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Before-after plot
+for i in range(n):
+    axes[0, 0].plot([0, 1], [before[i], after[i]], 'b-', alpha=0.3)
+axes[0, 0].plot([0, 1], [np.mean(before), np.mean(after)], 'r-', linewidth=3, label='Mean')
+axes[0, 0].set_xticks([0, 1])
+axes[0, 0].set_xticklabels(['Before', 'After'])
+axes[0, 0].set_ylabel('Score')
+axes[0, 0].set_title('Individual Changes')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Difference distribution
+axes[0, 1].hist(differences, bins=12, alpha=0.7, edgecolor='black', density=True)
+axes[0, 1].axvline(np.mean(differences), color='r', linestyle='-', linewidth=2,
+                   label=f'Mean diff: {np.mean(differences):.2f}')
+axes[0, 1].axvline(0, color='g', linestyle='--', linewidth=2, label='No change')
+axes[0, 1].set_xlabel('Difference (After - Before)')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].set_title('Distribution of Differences')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Q-Q plot for normality
+stats.probplot(differences, dist="norm", plot=axes[1, 0])
+axes[1, 0].set_title('Q-Q Plot of Differences')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Confidence interval for mean difference
+ci_diff = stats.t.interval(0.95, len(differences)-1, loc=np.mean(differences),
+                           scale=stats.sem(differences))
+axes[1, 1].errorbar(0, np.mean(differences), yerr=[[np.mean(differences)-ci_diff[0]],
+                    [ci_diff[1]-np.mean(differences)]], fmt='ro', capsize=10, markersize=10)
+axes[1, 1].axhline(0, color='g', linestyle='--', linewidth=2)
+axes[1, 1].set_xlim([-0.5, 0.5])
+axes[1, 1].set_ylabel('Mean Difference')
+axes[1, 1].set_title(f'95\% CI for Mean Difference: [{ci_diff[0]:.2f}, {ci_diff[1]:.2f}]')
+axes[1, 1].set_xticks([])
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('paired_ttest.pdf',
+          'Paired t-test for before-after treatment comparison.')
+
+paired_results = {
+    't_stat': t_stat_paired,
+    'p_value': p_value_paired,
+    'mean_diff': np.mean(differences),
+    'ci': ci_diff
+}
+\end{pycode}
+
+\section{One-Way ANOVA}
+\begin{pycode}
+# Compare three or more groups
+np.random.seed(42)
+
+group_a = np.random.normal(70, 8, 30)
+group_b = np.random.normal(75, 10, 30)
+group_c = np.random.normal(82, 9, 30)
+
+# One-way ANOVA
+f_stat, p_anova = stats.f_oneway(group_a, group_b, group_c)
+
+# Calculate effect size (eta-squared)
+all_data = np.concatenate([group_a, group_b, group_c])
+groups = np.concatenate([[0]*30, [1]*30, [2]*30])
+
+grand_mean = np.mean(all_data)
+ss_between = sum([len(g) * (np.mean(g) - grand_mean)**2 for g in [group_a, group_b, group_c]])
+ss_total = np.sum((all_data - grand_mean)**2)
+eta_squared = ss_between / ss_total
+
+# Post-hoc: Tukey's HSD
+from scipy.stats import tukey_hsd
+tukey = tukey_hsd(group_a, group_b, group_c)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Box plots
+bp = axes[0, 0].boxplot([group_a, group_b, group_c],
+                        labels=['Group A', 'Group B', 'Group C'], patch_artist=True)
+colors = ['lightblue', 'lightgreen', 'lightcoral']
+for patch, color in zip(bp['boxes'], colors):
+    patch.set_facecolor(color)
+axes[0, 0].set_ylabel('Score')
+axes[0, 0].set_title('Group Comparison')
+axes[0, 0].grid(True, alpha=0.3)
+
+# F-distribution
+df1, df2 = 2, 87
+x = np.linspace(0, 8, 200)
+y = f_dist.pdf(x, df1, df2)
+axes[0, 1].plot(x, y, 'b-', linewidth=2)
+axes[0, 1].axvline(f_stat, color='r', linestyle='-', linewidth=2, label=f'F = {f_stat:.2f}')
+f_crit = f_dist.ppf(0.95, df1, df2)
+axes[0, 1].fill_between(x[x >= f_crit], y[x >= f_crit], alpha=0.3, color='red')
+axes[0, 1].set_xlabel('F-statistic')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].set_title(f'F-Distribution (df1={df1}, df2={df2})')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Means plot
+means = [np.mean(group_a), np.mean(group_b), np.mean(group_c)]
+sems = [stats.sem(group_a), stats.sem(group_b), stats.sem(group_c)]
+x_pos = [0, 1, 2]
+axes[1, 0].errorbar(x_pos, means, yerr=[1.96*s for s in sems], fmt='o',
+                    capsize=5, markersize=8, color='black')
+axes[1, 0].plot(x_pos, means, 'b-', alpha=0.5)
+axes[1, 0].set_xticks(x_pos)
+axes[1, 0].set_xticklabels(['Group A', 'Group B', 'Group C'])
+axes[1, 0].set_ylabel('Mean Score')
+axes[1, 0].set_title('Group Means with 95\% CI')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Post-hoc comparisons
+comparisons = ['A vs B', 'A vs C', 'B vs C']
+p_values_posthoc = [tukey.pvalue[0, 1], tukey.pvalue[0, 2], tukey.pvalue[1, 2]]
+colors = ['red' if p < 0.05 else 'green' for p in p_values_posthoc]
+
+bars = axes[1, 1].bar(comparisons, p_values_posthoc, color=colors, alpha=0.7, edgecolor='black')
+axes[1, 1].axhline(0.05, color='black', linestyle='--', linewidth=2, label='$\\alpha = 0.05$')
+axes[1, 1].set_ylabel('p-value')
+axes[1, 1].set_title("Tukey's HSD Post-hoc Comparisons")
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('anova_analysis.pdf',
+          "One-way ANOVA with Tukey's HSD post-hoc tests.")
+
+anova_results = {
+    'f_stat': f_stat,
+    'p_value': p_anova,
+    'eta_squared': eta_squared,
+    'posthoc_p': p_values_posthoc
+}
+\end{pycode}
+
+\section{Chi-Square Test of Independence}
+\begin{pycode}
+# Test association between two categorical variables
+np.random.seed(42)
+
+# Observed frequencies (gender vs preference)
+observed = np.array([[30, 45, 25],   # Male
+                     [40, 35, 25]])   # Female
+
+row_labels = ['Male', 'Female']
+col_labels = ['Product A', 'Product B', 'Product C']
+
+# Chi-square test
+chi2_stat, p_chi2, dof, expected = stats.chi2_contingency(observed)
+
+# Cramér's V (effect size)
+n = observed.sum()
+min_dim = min(observed.shape) - 1
+cramers_v = np.sqrt(chi2_stat / (n * min_dim))
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Observed frequencies heatmap
+im = axes[0, 0].imshow(observed, cmap='Blues', aspect='auto')
+axes[0, 0].set_xticks(range(len(col_labels)))
+axes[0, 0].set_xticklabels(col_labels)
+axes[0, 0].set_yticks(range(len(row_labels)))
+axes[0, 0].set_yticklabels(row_labels)
+for i in range(observed.shape[0]):
+    for j in range(observed.shape[1]):
+        axes[0, 0].text(j, i, observed[i, j], ha='center', va='center', fontsize=12)
+axes[0, 0].set_title('Observed Frequencies')
+plt.colorbar(im, ax=axes[0, 0])
+
+# Expected frequencies
+im = axes[0, 1].imshow(expected, cmap='Greens', aspect='auto')
+axes[0, 1].set_xticks(range(len(col_labels)))
+axes[0, 1].set_xticklabels(col_labels)
+axes[0, 1].set_yticks(range(len(row_labels)))
+axes[0, 1].set_yticklabels(row_labels)
+for i in range(expected.shape[0]):
+    for j in range(expected.shape[1]):
+        axes[0, 1].text(j, i, f'{expected[i, j]:.1f}', ha='center', va='center', fontsize=12)
+axes[0, 1].set_title('Expected Frequencies')
+plt.colorbar(im, ax=axes[0, 1])
+
+# Chi-square distribution
+x = np.linspace(0, 15, 200)
+y = chi2.pdf(x, dof)
+axes[1, 0].plot(x, y, 'b-', linewidth=2)
+axes[1, 0].axvline(chi2_stat, color='r', linestyle='-', linewidth=2, label=f'$\\chi^2$ = {chi2_stat:.2f}')
+chi2_crit = chi2.ppf(0.95, dof)
+axes[1, 0].fill_between(x[x >= chi2_crit], y[x >= chi2_crit], alpha=0.3, color='red')
+axes[1, 0].set_xlabel('$\\chi^2$ statistic')
+axes[1, 0].set_ylabel('Density')
+axes[1, 0].set_title(f'Chi-Square Distribution (df={dof})')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Residuals (standardized)
+residuals = (observed - expected) / np.sqrt(expected)
+im = axes[1, 1].imshow(residuals, cmap='RdBu', aspect='auto', vmin=-3, vmax=3)
+axes[1, 1].set_xticks(range(len(col_labels)))
+axes[1, 1].set_xticklabels(col_labels)
+axes[1, 1].set_yticks(range(len(row_labels)))
+axes[1, 1].set_yticklabels(row_labels)
+for i in range(residuals.shape[0]):
+    for j in range(residuals.shape[1]):
+        axes[1, 1].text(j, i, f'{residuals[i, j]:.2f}', ha='center', va='center', fontsize=12)
+axes[1, 1].set_title('Standardized Residuals')
+plt.colorbar(im, ax=axes[1, 1])
+
+plt.tight_layout()
+save_plot('chi_square_test.pdf',
+          'Chi-square test of independence for categorical variables.')
+
+chi2_results = {
+    'chi2_stat': chi2_stat,
+    'p_value': p_chi2,
+    'cramers_v': cramers_v,
+    'dof': dof
+}
+\end{pycode}
+
+\section{Power Analysis}
+\begin{pycode}
+from scipy.stats import norm
+
+def power_analysis(effect_size, n, alpha=0.05):
+    """Calculate power for two-sample t-test."""
+    se = np.sqrt(2 / n)
+    z_alpha = norm.ppf(1 - alpha/2)
+    z_effect = effect_size / se
+    power = 1 - norm.cdf(z_alpha - z_effect) + norm.cdf(-z_alpha - z_effect)
+    return power
+
+def sample_size_for_power(effect_size, power=0.8, alpha=0.05):
+    """Calculate required sample size per group."""
+    z_alpha = norm.ppf(1 - alpha/2)
+    z_beta = norm.ppf(power)
+    n = 2 * ((z_alpha + z_beta) / effect_size) ** 2
+    return int(np.ceil(n))
+
+# Power curves for different effect sizes
+effect_sizes_power = [0.2, 0.5, 0.8]
+sample_sizes = np.arange(10, 201, 5)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for d in effect_sizes_power:
+    powers = [power_analysis(d, n) for n in sample_sizes]
+    label = f"d = {d} ({'small' if d == 0.2 else 'medium' if d == 0.5 else 'large'})"
+    axes[0, 0].plot(sample_sizes, powers, label=label, linewidth=2)
+
+axes[0, 0].axhline(0.8, color='r', linestyle='--', label='Power = 0.80')
+axes[0, 0].set_xlabel('Sample Size per Group')
+axes[0, 0].set_ylabel('Statistical Power')
+axes[0, 0].set_title('Power Curves')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].set_ylim([0, 1])
+
+# Required sample sizes
+effect_range = np.linspace(0.1, 1.5, 50)
+required_n = [sample_size_for_power(d) for d in effect_range]
+
+axes[0, 1].plot(effect_range, required_n, 'b-', linewidth=2)
+axes[0, 1].axhline(30, color='r', linestyle='--', alpha=0.5, label='n = 30')
+axes[0, 1].set_xlabel("Effect Size (Cohen's d)")
+axes[0, 1].set_ylabel('Required n per Group')
+axes[0, 1].set_title('Sample Size for 80\% Power')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].set_ylim([0, 500])
+
+# Power vs Alpha trade-off
+alphas = [0.01, 0.05, 0.10]
+for alpha in alphas:
+    powers = [power_analysis(0.5, n, alpha) for n in sample_sizes]
+    axes[1, 0].plot(sample_sizes, powers, label=f'$\\alpha$ = {alpha}', linewidth=2)
+
+axes[1, 0].axhline(0.8, color='r', linestyle='--')
+axes[1, 0].set_xlabel('Sample Size per Group')
+axes[1, 0].set_ylabel('Statistical Power')
+axes[1, 0].set_title('Power vs Alpha (d = 0.5)')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Type I and Type II error trade-off
+alpha_range = np.linspace(0.001, 0.20, 100)
+beta_range = [1 - power_analysis(0.5, 50, a) for a in alpha_range]
+
+axes[1, 1].plot(alpha_range, beta_range, 'b-', linewidth=2)
+axes[1, 1].axvline(0.05, color='r', linestyle='--', alpha=0.5, label='$\\alpha$ = 0.05')
+axes[1, 1].set_xlabel('Type I Error ($\\alpha$)')
+axes[1, 1].set_ylabel('Type II Error ($\\beta$)')
+axes[1, 1].set_title('Error Trade-off (d = 0.5, n = 50)')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('power_analysis.pdf',
+          'Power analysis showing sample size requirements and error trade-offs.')
+
+# Calculate specific values
+power_n30_d05 = power_analysis(0.5, 30)
+required_n_d05 = sample_size_for_power(0.5)
+required_n_d08 = sample_size_for_power(0.8)
+\end{pycode}
+
+\section{Non-Parametric Alternatives}
+\begin{pycode}
+# Compare parametric and non-parametric tests
+np.random.seed(42)
+
+# Skewed data (non-normal)
+group1 = np.random.exponential(10, 30)
+group2 = np.random.exponential(15, 30)
+
+# Parametric: t-test
+t_stat_np, p_ttest = stats.ttest_ind(group1, group2)
+
+# Non-parametric: Mann-Whitney U
+u_stat, p_mann = stats.mannwhitneyu(group1, group2, alternative='two-sided')
+
+# Wilcoxon signed-rank (for paired data)
+paired1 = np.random.exponential(10, 25)
+paired2 = paired1 + np.random.exponential(3, 25)
+wilcox_stat, p_wilcox = stats.wilcoxon(paired2 - paired1)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Distribution comparison
+axes[0, 0].hist(group1, bins=15, alpha=0.5, label='Group 1', edgecolor='black')
+axes[0, 0].hist(group2, bins=15, alpha=0.5, label='Group 2', edgecolor='black')
+axes[0, 0].set_xlabel('Value')
+axes[0, 0].set_ylabel('Frequency')
+axes[0, 0].set_title('Skewed Distributions')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Q-Q plots
+axes[0, 1].set_title('Q-Q Plots')
+# Combined Q-Q check
+for i, (data, label) in enumerate([(group1, 'Group 1'), (group2, 'Group 2')]):
+    theoretical = np.sort(stats.norm.ppf(np.linspace(0.01, 0.99, len(data))))
+    sample_sorted = np.sort(data)
+    axes[0, 1].scatter(theoretical[:len(sample_sorted)], sample_sorted, alpha=0.5, label=label, s=20)
+axes[0, 1].plot([-3, 3], [0, 50], 'r--', alpha=0.5)
+axes[0, 1].set_xlabel('Theoretical Quantiles')
+axes[0, 1].set_ylabel('Sample Quantiles')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Test comparison
+tests = ['t-test', 'Mann-Whitney U']
+p_values_np = [p_ttest, p_mann]
+colors = ['blue', 'orange']
+
+axes[1, 0].bar(tests, p_values_np, color=colors, alpha=0.7, edgecolor='black')
+axes[1, 0].axhline(0.05, color='r', linestyle='--', linewidth=2, label='$\\alpha$ = 0.05')
+axes[1, 0].set_ylabel('p-value')
+axes[1, 0].set_title('Parametric vs Non-Parametric')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Kruskal-Wallis (non-parametric ANOVA)
+kw_data = [np.random.exponential(s, 20) for s in [8, 10, 15]]
+kw_stat, p_kruskal = stats.kruskal(*kw_data)
+
+# Visualization
+box_data = kw_data
+bp = axes[1, 1].boxplot(box_data, labels=['A', 'B', 'C'], patch_artist=True)
+for patch, color in zip(bp['boxes'], ['lightblue', 'lightgreen', 'lightcoral']):
+    patch.set_facecolor(color)
+axes[1, 1].set_ylabel('Value')
+axes[1, 1].set_title(f'Kruskal-Wallis Test (H = {kw_stat:.2f}, p = {p_kruskal:.4f})')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('nonparametric_tests.pdf',
+          'Non-parametric tests for skewed and non-normal distributions.')
+
+nonparam_results = {
+    't_test_p': p_ttest,
+    'mann_whitney_p': p_mann,
+    'kruskal_p': p_kruskal
+}
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{t-Test Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of t-Test Results}')
+print(r'\begin{tabular}{lcccl}')
+print(r'\toprule')
+print(r'Test Type & t-statistic & p-value & Effect Size & Decision \\')
+print(r'\midrule')
+
+# One-sample
+decision = 'Reject $H_0$' if one_sample_results['p_value'] < 0.05 else 'Fail to reject'
+print(f"One-sample & {one_sample_results['t_stat']:.2f} & {one_sample_results['p_value']:.4f} & d = {one_sample_results['cohens_d']:.2f} & {decision} \\\\")
+
+# Two-sample
+decision = 'Reject $H_0$' if two_sample_results['p_value'] < 0.05 else 'Fail to reject'
+print(f"Two-sample & {two_sample_results['t_stat']:.2f} & {two_sample_results['p_value']:.4f} & d = {two_sample_results['cohens_d']:.2f} & {decision} \\\\")
+
+# Paired
+decision = 'Reject $H_0$' if paired_results['p_value'] < 0.05 else 'Fail to reject'
+print(f"Paired & {paired_results['t_stat']:.2f} & {paired_results['p_value']:.4f} & --- & {decision} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{ANOVA and Chi-Square Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{ANOVA and Chi-Square Test Results}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Test & Statistic & df & p-value & Effect Size \\')
+print(r'\midrule')
+print(f"One-way ANOVA & F = {anova_results['f_stat']:.2f} & (2, 87) & {anova_results['p_value']:.4f} & $\\eta^2$ = {anova_results['eta_squared']:.3f} \\\\")
+print(f"Chi-square & $\\chi^2$ = {chi2_results['chi2_stat']:.2f} & {chi2_results['dof']} & {chi2_results['p_value']:.4f} & V = {chi2_results['cramers_v']:.3f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Power Analysis Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Power Analysis Summary}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Power (n=30, d=0.5) & {power_n30_d05:.3f} \\\\')
+print(f'Required n for d=0.5 (power=0.80) & {required_n_d05} per group \\\\')
+print(f'Required n for d=0.8 (power=0.80) & {required_n_d08} per group \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+Key hypothesis testing findings:
+\begin{itemize}
+    \item One-sample t-test: p = \py{f"{one_sample_results['p_value']:.4f}"}, d = \py{f"{one_sample_results['cohens_d']:.2f}"}
+    \item Two-sample t-test: p = \py{f"{two_sample_results['p_value']:.4f}"}, d = \py{f"{two_sample_results['cohens_d']:.2f}"}
+    \item ANOVA: F = \py{f"{anova_results['f_stat']:.2f}"}, $\eta^2$ = \py{f"{anova_results['eta_squared']:.3f}"}
+    \item Chi-square: $\chi^2$ = \py{f"{chi2_results['chi2_stat']:.2f}"}, Cramer's V = \py{f"{chi2_results['cramers_v']:.3f}"}
+    \item Required sample size (d=0.5, power=0.80): \py{f"{required_n_d05}"} per group
+\end{itemize}
+
+\section{Conclusion}
+This computational analysis demonstrates a comprehensive framework for statistical hypothesis
+testing. Effect sizes provide practical significance beyond p-values, with Cohen's d and eta-squared
+quantifying the magnitude of differences. Power analysis reveals that detecting small effects
+requires substantially larger samples than medium or large effects. Non-parametric alternatives
+offer robust options when distributional assumptions are violated. The combination of statistical
+significance, effect size, and confidence intervals provides a complete picture for scientific
+inference and decision-making.
+
+\end{document}

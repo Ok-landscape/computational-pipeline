@@ -1,0 +1,339 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{nash}{RGB}{46, 204, 113}
+\definecolor{player1}{RGB}{52, 152, 219}
+\definecolor{player2}{RGB}{231, 76, 60}
+
+\title{Game Theory:\\
+Nash Equilibrium, Mixed Strategies, and Payoff Analysis}
+\author{Department of Economics\\Technical Report EC-2024-001}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a computational analysis of game theory concepts. We implement Nash equilibrium finding for 2-player games, analyze mixed strategies in zero-sum and non-zero-sum games, visualize payoff matrices, and explore classic games including Prisoner's Dilemma, Battle of the Sexes, and Matching Pennies.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Game theory studies strategic interactions where outcomes depend on choices of multiple decision-makers (players).
+
+\section{Key Concepts}
+\begin{itemize}
+    \item \textbf{Nash Equilibrium}: No player can improve by unilaterally changing strategy
+    \item \textbf{Dominant Strategy}: Optimal regardless of opponent's choice
+    \item \textbf{Mixed Strategy}: Randomizing over pure strategies
+\end{itemize}
+
+\chapter{Two-Player Normal Form Games}
+
+\section{Payoff Matrix Representation}
+For players 1 and 2 with strategies $S_1 = \{s_1^1, ..., s_1^m\}$ and $S_2 = \{s_2^1, ..., s_2^n\}$:
+\begin{equation}
+\text{Payoffs: } (u_1(s_1^i, s_2^j), u_2(s_1^i, s_2^j))
+\end{equation}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import linprog
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def find_pure_nash(payoff1, payoff2):
+    m, n = payoff1.shape
+    nash = []
+    for i in range(m):
+        for j in range(n):
+            best_resp_1 = np.argmax(payoff1[:, j]) == i
+            best_resp_2 = np.argmax(payoff2[i, :]) == j
+            if best_resp_1 and best_resp_2:
+                nash.append((i, j))
+    return nash
+
+def find_mixed_nash_2x2(payoff1, payoff2):
+    # For 2x2 games
+    # Player 2's mix makes Player 1 indifferent
+    a, b = payoff1[0, 0], payoff1[0, 1]
+    c, d = payoff1[1, 0], payoff1[1, 1]
+    if (a - b - c + d) != 0:
+        q = (d - b) / (a - b - c + d)
+    else:
+        q = 0.5
+
+    # Player 1's mix makes Player 2 indifferent
+    a, b = payoff2[0, 0], payoff2[1, 0]
+    c, d = payoff2[0, 1], payoff2[1, 1]
+    if (a - b - c + d) != 0:
+        p = (d - c) / (a - b - c + d)
+    else:
+        p = 0.5
+
+    p = np.clip(p, 0, 1)
+    q = np.clip(q, 0, 1)
+    return p, q
+
+def expected_payoff(p, q, payoff):
+    return p * q * payoff[0, 0] + p * (1-q) * payoff[0, 1] + \
+           (1-p) * q * payoff[1, 0] + (1-p) * (1-q) * payoff[1, 1]
+
+# Classic games
+games = {
+    "Prisoner's Dilemma": {
+        'payoff1': np.array([[-1, -3], [0, -2]]),
+        'payoff2': np.array([[-1, 0], [-3, -2]]),
+        'strategies': ['Cooperate', 'Defect']
+    },
+    'Battle of Sexes': {
+        'payoff1': np.array([[3, 0], [0, 2]]),
+        'payoff2': np.array([[2, 0], [0, 3]]),
+        'strategies': ['Opera', 'Football']
+    },
+    'Matching Pennies': {
+        'payoff1': np.array([[1, -1], [-1, 1]]),
+        'payoff2': np.array([[-1, 1], [1, -1]]),
+        'strategies': ['Heads', 'Tails']
+    }
+}
+\end{pycode}
+
+\chapter{Classic Games Analysis}
+
+\section{Prisoner's Dilemma}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+for idx, (name, game) in enumerate(games.items()):
+    ax = axes[0, idx]
+    payoff1 = game['payoff1']
+    payoff2 = game['payoff2']
+
+    # Plot payoff matrix
+    im = ax.imshow(payoff1, cmap='RdYlGn', aspect='auto')
+
+    # Annotate cells
+    for i in range(2):
+        for j in range(2):
+            text = f'({payoff1[i,j]}, {payoff2[i,j]})'
+            ax.text(j, i, text, ha='center', va='center', fontsize=10)
+
+    ax.set_xticks([0, 1])
+    ax.set_yticks([0, 1])
+    ax.set_xticklabels(game['strategies'])
+    ax.set_yticklabels(game['strategies'])
+    ax.set_xlabel('Player 2')
+    ax.set_ylabel('Player 1')
+    ax.set_title(name)
+
+    # Find equilibria
+    pure_nash = find_pure_nash(payoff1, payoff2)
+    for eq in pure_nash:
+        rect = plt.Rectangle((eq[1]-0.5, eq[0]-0.5), 1, 1,
+                              fill=False, edgecolor='green', linewidth=3)
+        ax.add_patch(rect)
+
+# Best response analysis for Prisoner's Dilemma
+pd_payoff1 = games["Prisoner's Dilemma"]['payoff1']
+pd_payoff2 = games["Prisoner's Dilemma"]['payoff2']
+
+ax = axes[1, 0]
+p_range = np.linspace(0, 1, 100)
+# Player 1's expected payoff vs strategy
+for j, s2 in enumerate(['Cooperate', 'Defect']):
+    eu = p_range * pd_payoff1[0, j] + (1 - p_range) * pd_payoff1[1, j]
+    ax.plot(p_range, eu, label=f'P2 plays {s2}')
+ax.set_xlabel('P1 probability of Cooperate')
+ax.set_ylabel('P1 Expected Payoff')
+ax.set_title("Prisoner's Dilemma: P1 Payoffs")
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Battle of Sexes mixed equilibrium
+bos_payoff1 = games['Battle of Sexes']['payoff1']
+bos_payoff2 = games['Battle of Sexes']['payoff2']
+p_mix, q_mix = find_mixed_nash_2x2(bos_payoff1, bos_payoff2)
+
+ax = axes[1, 1]
+p_range = np.linspace(0, 1, 100)
+q_range = np.linspace(0, 1, 100)
+P, Q = np.meshgrid(p_range, q_range)
+EU1 = expected_payoff(P, Q, bos_payoff1)
+cs = ax.contourf(P, Q, EU1, levels=20, cmap='viridis')
+ax.plot(p_mix, q_mix, 'ro', markersize=10, label='Mixed NE')
+ax.scatter([1, 0], [1, 0], color='green', s=100, marker='s', label='Pure NE')
+ax.set_xlabel('P1: prob(Opera)')
+ax.set_ylabel('P2: prob(Opera)')
+ax.set_title('Battle of Sexes: P1 Payoff')
+ax.legend()
+plt.colorbar(cs, ax=ax)
+
+# Matching Pennies
+mp_payoff1 = games['Matching Pennies']['payoff1']
+mp_payoff2 = games['Matching Pennies']['payoff2']
+p_mp, q_mp = find_mixed_nash_2x2(mp_payoff1, mp_payoff2)
+
+ax = axes[1, 2]
+EU1 = expected_payoff(P, Q, mp_payoff1)
+cs = ax.contourf(P, Q, EU1, levels=20, cmap='RdBu')
+ax.plot(p_mp, q_mp, 'ko', markersize=10, label=f'Mixed NE ({p_mp:.1f}, {q_mp:.1f})')
+ax.set_xlabel('P1: prob(Heads)')
+ax.set_ylabel('P2: prob(Heads)')
+ax.set_title('Matching Pennies: P1 Payoff')
+ax.legend()
+plt.colorbar(cs, ax=ax)
+
+plt.tight_layout()
+plt.savefig('game_theory_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{game_theory_analysis.pdf}
+\caption{Game theory analysis: payoff matrices (top), equilibrium analysis (bottom).}
+\end{figure}
+
+\chapter{Mixed Strategy Equilibria}
+
+\section{Computing Mixed Nash Equilibrium}
+For a 2x2 game, player 1 mixes to make player 2 indifferent:
+\begin{equation}
+p \cdot u_2(s_1^1, s_2^1) + (1-p) \cdot u_2(s_1^2, s_2^1) = p \cdot u_2(s_1^1, s_2^2) + (1-p) \cdot u_2(s_1^2, s_2^2)
+\end{equation}
+
+\begin{pycode}
+# Compute all equilibria
+results = []
+for name, game in games.items():
+    pure = find_pure_nash(game['payoff1'], game['payoff2'])
+    p, q = find_mixed_nash_2x2(game['payoff1'], game['payoff2'])
+
+    # Expected payoffs at mixed equilibrium
+    eu1 = expected_payoff(p, q, game['payoff1'])
+    eu2 = expected_payoff(p, q, game['payoff2'])
+
+    results.append({
+        'name': name,
+        'pure': pure,
+        'mixed_p': p,
+        'mixed_q': q,
+        'eu1': eu1,
+        'eu2': eu2
+    })
+
+# Visualize dynamics
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+# Replicator dynamics for Matching Pennies
+ax = axes[0]
+dt = 0.01
+T = 100
+p_hist = [0.6]
+q_hist = [0.4]
+
+for _ in range(int(T/dt)):
+    p, q = p_hist[-1], q_hist[-1]
+
+    # Fitness calculations
+    f1_H = q * mp_payoff1[0, 0] + (1-q) * mp_payoff1[0, 1]
+    f1_T = q * mp_payoff1[1, 0] + (1-q) * mp_payoff1[1, 1]
+    f1_avg = p * f1_H + (1-p) * f1_T
+
+    f2_H = p * mp_payoff2[0, 0] + (1-p) * mp_payoff2[1, 0]
+    f2_T = p * mp_payoff2[0, 1] + (1-p) * mp_payoff2[1, 1]
+    f2_avg = q * f2_H + (1-q) * f2_T
+
+    dp = p * (f1_H - f1_avg) * dt
+    dq = q * (f2_H - f2_avg) * dt
+
+    p_new = np.clip(p + dp, 0.01, 0.99)
+    q_new = np.clip(q + dq, 0.01, 0.99)
+
+    p_hist.append(p_new)
+    q_hist.append(q_new)
+
+ax.plot(p_hist, q_hist, 'b-', alpha=0.7)
+ax.plot(p_hist[0], q_hist[0], 'go', markersize=10, label='Start')
+ax.plot(0.5, 0.5, 'ro', markersize=10, label='NE')
+ax.set_xlabel('P1: prob(Heads)')
+ax.set_ylabel('P2: prob(Heads)')
+ax.set_title('Replicator Dynamics: Matching Pennies')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Iterated elimination
+ax = axes[1]
+# Show Cournot duopoly convergence
+q1_hist = [10]
+q2_hist = [10]
+a, b, c = 100, 1, 10  # Demand: P = a - b*Q, cost = c
+
+for _ in range(20):
+    # Best response functions
+    q1_br = (a - c - b * q2_hist[-1]) / (2 * b)
+    q2_br = (a - c - b * q1_hist[-1]) / (2 * b)
+    q1_hist.append(max(0, q1_br))
+    q2_hist.append(max(0, q2_br))
+
+ax.plot(q1_hist, 'b-o', label='Firm 1')
+ax.plot(q2_hist, 'r-s', label='Firm 2')
+ax.axhline((a - c) / (3 * b), color='green', linestyle='--', label='NE')
+ax.set_xlabel('Iteration')
+ax.set_ylabel('Quantity')
+ax.set_title('Cournot Duopoly Convergence')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('game_dynamics.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{game_dynamics.pdf}
+\caption{Game dynamics: replicator dynamics cycling (left), Cournot convergence (right).}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{table}[htbp]
+\centering
+\caption{Nash equilibria for classic games}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Game & Pure NE & Mixed $(p, q)$ & Expected Payoffs \\
+\midrule
+\py{results[0]['name']} & \py{str(results[0]['pure'])} & (\py{f"{results[0]['mixed_p']:.2f}"}, \py{f"{results[0]['mixed_q']:.2f}"}) & (\py{f"{results[0]['eu1']:.2f}"}, \py{f"{results[0]['eu2']:.2f}"}) \\
+\py{results[1]['name']} & \py{str(results[1]['pure'])} & (\py{f"{results[1]['mixed_p']:.2f}"}, \py{f"{results[1]['mixed_q']:.2f}"}) & (\py{f"{results[1]['eu1']:.2f}"}, \py{f"{results[1]['eu2']:.2f}"}) \\
+\py{results[2]['name']} & \py{str(results[2]['pure'])} & (\py{f"{results[2]['mixed_p']:.2f}"}, \py{f"{results[2]['mixed_q']:.2f}"}) & (\py{f"{results[2]['eu1']:.2f}"}, \py{f"{results[2]['eu2']:.2f}"}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Prisoner's Dilemma: Dominant strategy leads to Pareto-inferior outcome
+    \item Battle of Sexes: Multiple equilibria require coordination
+    \item Matching Pennies: Only mixed strategy equilibrium exists
+    \item Replicator dynamics may cycle rather than converge
+    \item Nash equilibrium provides predictions for strategic behavior
+\end{enumerate}
+
+\end{document}

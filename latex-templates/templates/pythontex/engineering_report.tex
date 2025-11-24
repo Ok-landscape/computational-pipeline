@@ -1,0 +1,112 @@
+\documentclass[a4paper, 12pt]{article}
+
+% Encoding and Fonts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}  % Fixed: Added T1 encoding option
+\usepackage{lmodern}
+
+% Mathematics and Units
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{siunitx} % Essential for engineering units
+
+% Graphics
+\usepackage{graphicx}
+
+% PythonTeX Setup
+% 'makestderr' allows Python error messages to appear in the build log
+% Removed 'pyfuture=all' - Python 2 is EOL
+\usepackage[makestderr]{pythontex}
+
+% Custom Command for SI Unit Integration
+% Usage: \pySI{variable_name}{unit}
+% This command passes the variable to Python, converts it to string,
+% and wraps it in the LaTeX \SI macro.
+% Fixed: Changed from [1] to [2] to accept both arguments
+\newcommand{\pySI}[2]{%
+  \py{'\\SI{' + str(#1) + '}{' + '#2' + '}'}%
+}
+
+\title{Automated Signal Analysis Report}
+\author{Department of Electrical Engineering}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Computational Environment Initialization}
+
+To ensure consistency across all figures and calculations, we initialize the Python environment globally. This block imports necessary libraries and configures the plotting backend.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+import sys
+
+# Configure Matplotlib to use TeX for text rendering
+# This ensures the font in the plots matches the document body
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+# Global precision settings for output
+np.set_printoptions(precision=4)
+
+def save_plot(filename):
+    """
+    Helper function to save plots and generate the LaTeX inclusion code.
+    """
+    plt.savefig(filename, bbox_inches='tight')
+    print(r'\begin{center}')
+    print(r'\includegraphics[width=0.8\textwidth]{' + filename + '}')
+    print(r'\end{center}')
+    plt.close()
+\end{pycode}
+
+\section{System Step Response Analysis}
+
+We analyze a second-order system defined by the transfer function:
+\begin{equation}
+H(s) = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}
+\end{equation}
+
+\begin{pycode}
+# System Parameters
+omega_n = 5.0  # Natural frequency (rad/s)
+zeta = 0.4     # Damping ratio
+time = np.linspace(0, 5, 500)
+
+# Transfer Function definition using SciPy
+tf_sys = signal.TransferFunction([omega_n**2], [1, 2*zeta*omega_n, omega_n**2])
+t, y = signal.step(tf_sys, T=time)
+
+# Peak detection
+peak_idx = np.argmax(y)
+peak_time = t[peak_idx]
+peak_val = y[peak_idx]
+overshoot = (peak_val - 1.0) * 100
+
+# Plotting
+plt.figure(figsize=(6, 4))
+plt.plot(t, y, label='Response $y(t)$', linewidth=1.5)
+plt.axhline(1.0, color='r', linestyle='--', label='Steady State')
+plt.plot(peak_time, peak_val, 'ro') # Mark the peak
+plt.annotate(f'Peak: {peak_val:.2f}',
+             xy=(peak_time, peak_val),
+             xytext=(peak_time+0.5, peak_val+0.1),
+             arrowprops=dict(facecolor='black', shrink=0.05))
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.title(rf'Step Response ($\zeta={zeta}, \omega_n={omega_n}$)')
+plt.legend()
+plt.grid(True, which='both', linestyle=':', alpha=0.6)
+
+# Save the figure
+save_plot('step_response.pdf')
+\end{pycode}
+
+The simulation results indicate a peak amplitude of \py{round(peak_val, 4)} occurring at $t = \pySI{round(peak_time, 3)}{\second}$. The calculated percentage overshoot is \py{round(overshoot, 2)}\%.
+
+This dynamic reporting ensures that if the damping ratio $\zeta$ is modified in the source code (e.g., increased to 0.8), the overshoot value in the text and the plot will update synchronously upon recompilation.
+
+\end{document}

@@ -1,0 +1,753 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage[makestderr]{pythontex}
+
+\title{Robotics: A* and RRT Path Planning Algorithms}
+\author{Computational Robotics Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive analysis of path planning algorithms for mobile robots and manipulators. We implement and compare A* search for grid-based planning, Rapidly-exploring Random Trees (RRT) for sampling-based planning, and potential field methods for reactive navigation. The analysis includes performance metrics, path quality assessment, and computational efficiency comparisons across different obstacle configurations.
+\end{abstract}
+
+\section{Introduction}
+Path planning is a fundamental problem in robotics that involves finding a collision-free path from a start configuration to a goal configuration. Different algorithms offer trade-offs between optimality, computational efficiency, and applicability to different problem domains. Grid-based methods like A* guarantee optimal paths but scale poorly with dimension, while sampling-based methods like RRT handle high-dimensional spaces efficiently but produce suboptimal paths.
+
+\section{Mathematical Framework}
+
+\subsection{A* Algorithm}
+A* finds the shortest path by minimizing the cost function:
+\begin{equation}
+f(n) = g(n) + h(n)
+\end{equation}
+where $g(n)$ is the cost from start to node $n$, and $h(n)$ is a heuristic estimate of cost from $n$ to goal. For admissibility, $h(n) \leq h^*(n)$ where $h^*$ is the true cost.
+
+Common heuristics include Euclidean distance:
+\begin{equation}
+h(n) = \sqrt{(x_n - x_g)^2 + (y_n - y_g)^2}
+\end{equation}
+
+and Manhattan distance:
+\begin{equation}
+h(n) = |x_n - x_g| + |y_n - y_g|
+\end{equation}
+
+\subsection{Rapidly-exploring Random Tree (RRT)}
+RRT incrementally builds a tree by sampling random configurations:
+\begin{equation}
+x_{\text{new}} = x_{\text{near}} + \epsilon \frac{x_{\text{rand}} - x_{\text{near}}}{\|x_{\text{rand}} - x_{\text{near}}\|}
+\end{equation}
+
+where $\epsilon$ is the step size and $x_{\text{near}}$ is the nearest node in the tree.
+
+\subsection{Artificial Potential Field}
+The robot moves under attractive and repulsive forces:
+\begin{equation}
+U_{\text{att}}(q) = \frac{1}{2} k_a \|q - q_g\|^2
+\end{equation}
+\begin{equation}
+U_{\text{rep}}(q) = \begin{cases}
+\frac{1}{2} k_r \left(\frac{1}{\rho(q)} - \frac{1}{\rho_0}\right)^2 & \text{if } \rho(q) \leq \rho_0 \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where $\rho(q)$ is the distance to the nearest obstacle.
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import defaultdict
+import heapq
+import time
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Store results
+results = {}
+
+# Environment setup
+class Environment:
+    def __init__(self, width=100, height=100):
+        self.width = width
+        self.height = height
+        self.obstacles = []
+
+    def add_rectangular_obstacle(self, x, y, w, h):
+        self.obstacles.append(('rect', x, y, w, h))
+
+    def add_circular_obstacle(self, cx, cy, r):
+        self.obstacles.append(('circle', cx, cy, r))
+
+    def is_collision(self, x, y, margin=1):
+        for obs in self.obstacles:
+            if obs[0] == 'rect':
+                _, ox, oy, ow, oh = obs
+                if ox - margin <= x <= ox + ow + margin and oy - margin <= y <= oy + oh + margin:
+                    return True
+            elif obs[0] == 'circle':
+                _, cx, cy, r = obs
+                if (x - cx)**2 + (y - cy)**2 <= (r + margin)**2:
+                    return True
+        return False
+
+    def is_line_collision(self, x1, y1, x2, y2, steps=20):
+        for i in range(steps + 1):
+            t = i / steps
+            x = x1 + t * (x2 - x1)
+            y = y1 + t * (y2 - y1)
+            if self.is_collision(x, y):
+                return True
+        return False
+
+# Create test environment
+env = Environment(100, 100)
+env.add_rectangular_obstacle(20, 20, 15, 40)
+env.add_rectangular_obstacle(50, 10, 10, 35)
+env.add_rectangular_obstacle(40, 60, 25, 10)
+env.add_circular_obstacle(75, 50, 12)
+env.add_circular_obstacle(30, 75, 8)
+
+start = (5, 5)
+goal = (95, 95)
+\end{pycode}
+
+\subsection{A* Path Planning Implementation}
+
+\begin{pycode}
+# A* implementation
+def astar(env, start, goal, grid_size=1):
+    def heuristic(a, b):
+        return np.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+    # 8-connected grid
+    neighbors = [(0, 1), (1, 0), (0, -1), (-1, 0),
+                 (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    move_costs = [1, 1, 1, 1, np.sqrt(2), np.sqrt(2), np.sqrt(2), np.sqrt(2)]
+
+    open_set = []
+    heapq.heappush(open_set, (0, start))
+    came_from = {}
+    g_score = defaultdict(lambda: float('inf'))
+    g_score[start] = 0
+    f_score = defaultdict(lambda: float('inf'))
+    f_score[start] = heuristic(start, goal)
+
+    nodes_explored = 0
+
+    while open_set:
+        current = heapq.heappop(open_set)[1]
+        nodes_explored += 1
+
+        if current == goal:
+            # Reconstruct path
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.append(current)
+            return path[::-1], nodes_explored, g_score[goal]
+
+        for i, (dx, dy) in enumerate(neighbors):
+            neighbor = (current[0] + dx * grid_size, current[1] + dy * grid_size)
+
+            # Check bounds
+            if not (0 <= neighbor[0] < env.width and 0 <= neighbor[1] < env.height):
+                continue
+
+            # Check collision
+            if env.is_collision(neighbor[0], neighbor[1]):
+                continue
+
+            tentative_g = g_score[current] + move_costs[i] * grid_size
+
+            if tentative_g < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score[neighbor] = tentative_g + heuristic(neighbor, goal)
+                heapq.heappush(open_set, (f_score[neighbor], neighbor))
+
+    return None, nodes_explored, float('inf')
+
+# Run A*
+t_start = time.time()
+astar_path, astar_nodes, astar_cost = astar(env, start, goal)
+astar_time = time.time() - t_start
+
+results['astar_nodes'] = astar_nodes
+results['astar_cost'] = astar_cost
+results['astar_time'] = astar_time * 1000
+results['astar_length'] = len(astar_path) if astar_path else 0
+\end{pycode}
+
+\subsection{RRT Path Planning Implementation}
+
+\begin{pycode}
+# RRT implementation
+class RRTNode:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.parent = None
+
+def rrt(env, start, goal, max_iter=5000, step_size=5, goal_bias=0.1):
+    nodes = [RRTNode(start[0], start[1])]
+
+    for i in range(max_iter):
+        # Sample with goal bias
+        if np.random.random() < goal_bias:
+            rand_x, rand_y = goal
+        else:
+            rand_x = np.random.uniform(0, env.width)
+            rand_y = np.random.uniform(0, env.height)
+
+        # Find nearest node
+        nearest = min(nodes, key=lambda n: (n.x - rand_x)**2 + (n.y - rand_y)**2)
+
+        # Steer towards random point
+        dist = np.sqrt((rand_x - nearest.x)**2 + (rand_y - nearest.y)**2)
+        if dist > step_size:
+            theta = np.arctan2(rand_y - nearest.y, rand_x - nearest.x)
+            new_x = nearest.x + step_size * np.cos(theta)
+            new_y = nearest.y + step_size * np.sin(theta)
+        else:
+            new_x, new_y = rand_x, rand_y
+
+        # Check collision
+        if not env.is_line_collision(nearest.x, nearest.y, new_x, new_y):
+            new_node = RRTNode(new_x, new_y)
+            new_node.parent = nearest
+            nodes.append(new_node)
+
+            # Check if goal reached
+            if np.sqrt((new_x - goal[0])**2 + (new_y - goal[1])**2) < step_size:
+                goal_node = RRTNode(goal[0], goal[1])
+                goal_node.parent = new_node
+                nodes.append(goal_node)
+
+                # Extract path
+                path = []
+                current = goal_node
+                while current:
+                    path.append((current.x, current.y))
+                    current = current.parent
+                return path[::-1], nodes, i + 1
+
+    return None, nodes, max_iter
+
+# Run RRT
+t_start = time.time()
+rrt_path, rrt_tree, rrt_iterations = rrt(env, start, goal)
+rrt_time = time.time() - t_start
+
+if rrt_path:
+    rrt_cost = sum(np.sqrt((rrt_path[i+1][0] - rrt_path[i][0])**2 +
+                           (rrt_path[i+1][1] - rrt_path[i][1])**2)
+                   for i in range(len(rrt_path) - 1))
+else:
+    rrt_cost = float('inf')
+
+results['rrt_nodes'] = len(rrt_tree)
+results['rrt_cost'] = rrt_cost
+results['rrt_time'] = rrt_time * 1000
+results['rrt_iterations'] = rrt_iterations
+\end{pycode}
+
+\subsection{Potential Field Method}
+
+\begin{pycode}
+# Potential field navigation
+def potential_field(env, start, goal, k_att=1.0, k_rep=100.0, rho_0=15, max_iter=2000, step=0.5):
+    path = [start]
+    pos = np.array(start, dtype=float)
+
+    for _ in range(max_iter):
+        # Attractive force
+        f_att = k_att * (np.array(goal) - pos)
+
+        # Repulsive force
+        f_rep = np.array([0.0, 0.0])
+        for obs in env.obstacles:
+            if obs[0] == 'rect':
+                _, ox, oy, ow, oh = obs
+                # Find closest point on rectangle
+                cx = max(ox, min(pos[0], ox + ow))
+                cy = max(oy, min(pos[1], oy + oh))
+            else:  # circle
+                _, cx, cy, r = obs
+                d = np.sqrt((pos[0] - cx)**2 + (pos[1] - cy)**2)
+                if d > 0:
+                    cx = cx + r * (pos[0] - cx) / d
+                    cy = cy + r * (pos[1] - cy) / d
+
+            rho = np.sqrt((pos[0] - cx)**2 + (pos[1] - cy)**2)
+            if rho < rho_0 and rho > 0.1:
+                direction = (pos - np.array([cx, cy])) / rho
+                f_rep += k_rep * (1/rho - 1/rho_0) * (1/rho**2) * direction
+
+        # Total force
+        f_total = f_att + f_rep
+        f_mag = np.linalg.norm(f_total)
+        if f_mag > 0:
+            pos = pos + step * f_total / f_mag
+
+        path.append(tuple(pos))
+
+        # Check goal reached
+        if np.linalg.norm(pos - np.array(goal)) < 2:
+            break
+
+    return path
+
+# Run potential field
+t_start = time.time()
+pf_path = potential_field(env, start, goal)
+pf_time = time.time() - t_start
+
+pf_cost = sum(np.sqrt((pf_path[i+1][0] - pf_path[i][0])**2 +
+                       (pf_path[i+1][1] - pf_path[i][1])**2)
+               for i in range(len(pf_path) - 1))
+
+results['pf_steps'] = len(pf_path)
+results['pf_cost'] = pf_cost
+results['pf_time'] = pf_time * 1000
+\end{pycode}
+
+\subsection{Visualization of Path Planning Results}
+
+\begin{pycode}
+# Plot all three methods
+fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+
+def plot_environment(ax, env, title):
+    ax.set_xlim(0, env.width)
+    ax.set_ylim(0, env.height)
+    for obs in env.obstacles:
+        if obs[0] == 'rect':
+            _, x, y, w, h = obs
+            rect = plt.Rectangle((x, y), w, h, color='gray', alpha=0.7)
+            ax.add_patch(rect)
+        else:
+            _, cx, cy, r = obs
+            circle = plt.Circle((cx, cy), r, color='gray', alpha=0.7)
+            ax.add_patch(circle)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title(title)
+    ax.set_aspect('equal')
+    ax.grid(True, alpha=0.3)
+
+# A* result
+ax1 = axes[0, 0]
+plot_environment(ax1, env, f'A* Path Planning (Cost: {astar_cost:.1f})')
+if astar_path:
+    path_x = [p[0] for p in astar_path]
+    path_y = [p[1] for p in astar_path]
+    ax1.plot(path_x, path_y, 'b-', linewidth=2, label='A* Path')
+ax1.scatter(*start, s=100, c='green', marker='o', zorder=5, label='Start')
+ax1.scatter(*goal, s=100, c='red', marker='*', zorder=5, label='Goal')
+ax1.legend()
+
+# RRT result
+ax2 = axes[0, 1]
+plot_environment(ax2, env, f'RRT Path Planning (Cost: {rrt_cost:.1f})')
+# Draw tree
+for node in rrt_tree:
+    if node.parent:
+        ax2.plot([node.x, node.parent.x], [node.y, node.parent.y],
+                 'c-', linewidth=0.3, alpha=0.5)
+if rrt_path:
+    path_x = [p[0] for p in rrt_path]
+    path_y = [p[1] for p in rrt_path]
+    ax2.plot(path_x, path_y, 'b-', linewidth=2, label='RRT Path')
+ax2.scatter(*start, s=100, c='green', marker='o', zorder=5, label='Start')
+ax2.scatter(*goal, s=100, c='red', marker='*', zorder=5, label='Goal')
+ax2.legend()
+
+# Potential field result
+ax3 = axes[1, 0]
+plot_environment(ax3, env, f'Potential Field (Cost: {pf_cost:.1f})')
+path_x = [p[0] for p in pf_path]
+path_y = [p[1] for p in pf_path]
+ax3.plot(path_x, path_y, 'b-', linewidth=2, label='PF Path')
+ax3.scatter(*start, s=100, c='green', marker='o', zorder=5, label='Start')
+ax3.scatter(*goal, s=100, c='red', marker='*', zorder=5, label='Goal')
+ax3.legend()
+
+# All paths comparison
+ax4 = axes[1, 1]
+plot_environment(ax4, env, 'Path Comparison')
+if astar_path:
+    ax4.plot([p[0] for p in astar_path], [p[1] for p in astar_path],
+             'b-', linewidth=2, label=f'A* ({astar_cost:.1f})')
+if rrt_path:
+    ax4.plot([p[0] for p in rrt_path], [p[1] for p in rrt_path],
+             'r-', linewidth=2, label=f'RRT ({rrt_cost:.1f})')
+ax4.plot([p[0] for p in pf_path], [p[1] for p in pf_path],
+         'g-', linewidth=2, label=f'PF ({pf_cost:.1f})')
+ax4.scatter(*start, s=100, c='green', marker='o', zorder=5)
+ax4.scatter(*goal, s=100, c='red', marker='*', zorder=5)
+ax4.legend()
+
+plt.tight_layout()
+plt.savefig('path_planning_comparison.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{path_planning_comparison.pdf}')
+print(r'\caption{Comparison of path planning algorithms: A*, RRT, and potential field methods.}')
+print(r'\label{fig:comparison}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Performance Analysis}
+
+\begin{pycode}
+# Performance comparison across different scenarios
+n_trials = 10
+astar_costs = []
+rrt_costs = []
+astar_times = []
+rrt_times = []
+
+for trial in range(n_trials):
+    # Random start and goal
+    while True:
+        s = (np.random.randint(5, 20), np.random.randint(5, 20))
+        g = (np.random.randint(80, 95), np.random.randint(80, 95))
+        if not env.is_collision(*s) and not env.is_collision(*g):
+            break
+
+    # A*
+    t0 = time.time()
+    path, _, cost = astar(env, s, g)
+    astar_times.append((time.time() - t0) * 1000)
+    astar_costs.append(cost if path else float('nan'))
+
+    # RRT
+    t0 = time.time()
+    path, _, _ = rrt(env, s, g, max_iter=3000)
+    rrt_times.append((time.time() - t0) * 1000)
+    if path:
+        cost = sum(np.sqrt((path[i+1][0] - path[i][0])**2 +
+                           (path[i+1][1] - path[i][1])**2)
+                   for i in range(len(path) - 1))
+        rrt_costs.append(cost)
+    else:
+        rrt_costs.append(float('nan'))
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Path cost comparison
+ax1 = axes[0]
+valid_astar = [c for c in astar_costs if not np.isnan(c)]
+valid_rrt = [c for c in rrt_costs if not np.isnan(c)]
+bp = ax1.boxplot([valid_astar, valid_rrt], labels=['A*', 'RRT'])
+ax1.set_ylabel('Path Cost')
+ax1.set_title('Path Cost Distribution')
+ax1.grid(True, alpha=0.3)
+
+results['astar_mean_cost'] = np.mean(valid_astar)
+results['rrt_mean_cost'] = np.mean(valid_rrt)
+
+# Computation time comparison
+ax2 = axes[1]
+ax2.boxplot([astar_times, rrt_times], labels=['A*', 'RRT'])
+ax2.set_ylabel('Computation Time (ms)')
+ax2.set_title('Computation Time Distribution')
+ax2.grid(True, alpha=0.3)
+
+results['astar_mean_time'] = np.mean(astar_times)
+results['rrt_mean_time'] = np.mean(rrt_times)
+
+plt.tight_layout()
+plt.savefig('path_planning_performance.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{path_planning_performance.pdf}')
+print(r'\caption{Performance comparison showing path cost and computation time distributions.}')
+print(r'\label{fig:performance}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{RRT* Improvement}
+
+\begin{pycode}
+# RRT* with rewiring
+def rrt_star(env, start, goal, max_iter=3000, step_size=5, goal_bias=0.1, rewire_radius=15):
+    nodes = [RRTNode(start[0], start[1])]
+    costs = {0: 0}
+
+    for i in range(max_iter):
+        # Sample with goal bias
+        if np.random.random() < goal_bias:
+            rand_x, rand_y = goal
+        else:
+            rand_x = np.random.uniform(0, env.width)
+            rand_y = np.random.uniform(0, env.height)
+
+        # Find nearest node
+        nearest_idx = min(range(len(nodes)),
+                         key=lambda j: (nodes[j].x - rand_x)**2 + (nodes[j].y - rand_y)**2)
+        nearest = nodes[nearest_idx]
+
+        # Steer
+        dist = np.sqrt((rand_x - nearest.x)**2 + (rand_y - nearest.y)**2)
+        if dist > step_size:
+            theta = np.arctan2(rand_y - nearest.y, rand_x - nearest.x)
+            new_x = nearest.x + step_size * np.cos(theta)
+            new_y = nearest.y + step_size * np.sin(theta)
+        else:
+            new_x, new_y = rand_x, rand_y
+
+        if env.is_line_collision(nearest.x, nearest.y, new_x, new_y):
+            continue
+
+        # Find nearby nodes for rewiring
+        nearby = []
+        for j, node in enumerate(nodes):
+            d = np.sqrt((node.x - new_x)**2 + (node.y - new_y)**2)
+            if d < rewire_radius:
+                nearby.append(j)
+
+        # Choose best parent
+        new_node = RRTNode(new_x, new_y)
+        best_parent = nearest_idx
+        best_cost = costs[nearest_idx] + np.sqrt((new_x - nearest.x)**2 + (new_y - nearest.y)**2)
+
+        for j in nearby:
+            node = nodes[j]
+            cost = costs[j] + np.sqrt((new_x - node.x)**2 + (new_y - node.y)**2)
+            if cost < best_cost and not env.is_line_collision(node.x, node.y, new_x, new_y):
+                best_parent = j
+                best_cost = cost
+
+        new_node.parent = nodes[best_parent]
+        new_idx = len(nodes)
+        nodes.append(new_node)
+        costs[new_idx] = best_cost
+
+        # Rewire nearby nodes
+        for j in nearby:
+            node = nodes[j]
+            new_cost = best_cost + np.sqrt((new_x - node.x)**2 + (new_y - node.y)**2)
+            if new_cost < costs[j] and not env.is_line_collision(new_x, new_y, node.x, node.y):
+                node.parent = new_node
+                costs[j] = new_cost
+
+        # Check goal
+        if np.sqrt((new_x - goal[0])**2 + (new_y - goal[1])**2) < step_size:
+            goal_node = RRTNode(goal[0], goal[1])
+            goal_node.parent = new_node
+            nodes.append(goal_node)
+            costs[len(nodes) - 1] = best_cost + np.sqrt((goal[0] - new_x)**2 + (goal[1] - new_y)**2)
+
+            path = []
+            current = goal_node
+            while current:
+                path.append((current.x, current.y))
+                current = current.parent
+            return path[::-1], nodes, costs[len(nodes) - 1]
+
+    return None, nodes, float('inf')
+
+# Compare RRT and RRT*
+t_start = time.time()
+rrt_star_path, rrt_star_tree, rrt_star_cost = rrt_star(env, start, goal)
+rrt_star_time = time.time() - t_start
+
+results['rrt_star_cost'] = rrt_star_cost
+results['rrt_star_time'] = rrt_star_time * 1000
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# RRT
+ax1 = axes[0]
+plot_environment(ax1, env, f'RRT (Cost: {rrt_cost:.1f})')
+for node in rrt_tree:
+    if node.parent:
+        ax1.plot([node.x, node.parent.x], [node.y, node.parent.y], 'c-', linewidth=0.3, alpha=0.5)
+if rrt_path:
+    ax1.plot([p[0] for p in rrt_path], [p[1] for p in rrt_path], 'b-', linewidth=2)
+ax1.scatter(*start, s=100, c='green', marker='o', zorder=5)
+ax1.scatter(*goal, s=100, c='red', marker='*', zorder=5)
+
+# RRT*
+ax2 = axes[1]
+plot_environment(ax2, env, f'RRT* (Cost: {rrt_star_cost:.1f})')
+for node in rrt_star_tree:
+    if node.parent:
+        ax2.plot([node.x, node.parent.x], [node.y, node.parent.y], 'm-', linewidth=0.3, alpha=0.5)
+if rrt_star_path:
+    ax2.plot([p[0] for p in rrt_star_path], [p[1] for p in rrt_star_path], 'b-', linewidth=2)
+ax2.scatter(*start, s=100, c='green', marker='o', zorder=5)
+ax2.scatter(*goal, s=100, c='red', marker='*', zorder=5)
+
+plt.tight_layout()
+plt.savefig('path_planning_rrt_star.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{path_planning_rrt_star.pdf}')
+print(r'\caption{Comparison of RRT and RRT* algorithms showing improved path quality with rewiring.}')
+print(r'\label{fig:rrt_star}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Potential Field Visualization}
+
+\begin{pycode}
+# Visualize potential field
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Create grid for potential field
+x = np.linspace(0, 100, 100)
+y = np.linspace(0, 100, 100)
+X, Y = np.meshgrid(x, y)
+
+# Calculate potential at each point
+k_att = 0.5
+k_rep = 500
+rho_0 = 20
+
+U = np.zeros_like(X)
+Fx = np.zeros_like(X)
+Fy = np.zeros_like(X)
+
+for i in range(X.shape[0]):
+    for j in range(X.shape[1]):
+        pos = np.array([X[i, j], Y[i, j]])
+
+        # Attractive potential
+        u_att = 0.5 * k_att * np.linalg.norm(pos - np.array(goal))**2
+        f_att = k_att * (np.array(goal) - pos)
+
+        # Repulsive potential
+        u_rep = 0
+        f_rep = np.array([0.0, 0.0])
+        for obs in env.obstacles:
+            if obs[0] == 'circle':
+                _, cx, cy, r = obs
+                d = np.sqrt((pos[0] - cx)**2 + (pos[1] - cy)**2)
+                rho = max(d - r, 0.1)
+                if rho < rho_0:
+                    u_rep += 0.5 * k_rep * (1/rho - 1/rho_0)**2
+                    direction = (pos - np.array([cx, cy])) / d
+                    f_rep += k_rep * (1/rho - 1/rho_0) * (1/rho**2) * direction
+
+        U[i, j] = min(u_att + u_rep, 1000)  # Cap for visualization
+        f_total = f_att + f_rep
+        Fx[i, j] = f_total[0]
+        Fy[i, j] = f_total[1]
+
+# Potential field contour
+ax1 = axes[0]
+contour = ax1.contourf(X, Y, U, levels=50, cmap='viridis')
+plt.colorbar(contour, ax=ax1, label='Potential')
+for obs in env.obstacles:
+    if obs[0] == 'rect':
+        _, ox, oy, ow, oh = obs
+        rect = plt.Rectangle((ox, oy), ow, oh, color='white', alpha=0.8)
+        ax1.add_patch(rect)
+    else:
+        _, cx, cy, r = obs
+        circle = plt.Circle((cx, cy), r, color='white', alpha=0.8)
+        ax1.add_patch(circle)
+ax1.scatter(*start, s=100, c='green', marker='o', zorder=5)
+ax1.scatter(*goal, s=100, c='red', marker='*', zorder=5)
+ax1.set_xlabel('X')
+ax1.set_ylabel('Y')
+ax1.set_title('Potential Field')
+ax1.set_aspect('equal')
+
+# Vector field
+ax2 = axes[1]
+skip = 5
+ax2.quiver(X[::skip, ::skip], Y[::skip, ::skip],
+           Fx[::skip, ::skip], Fy[::skip, ::skip], alpha=0.7)
+for obs in env.obstacles:
+    if obs[0] == 'rect':
+        _, ox, oy, ow, oh = obs
+        rect = plt.Rectangle((ox, oy), ow, oh, color='gray', alpha=0.7)
+        ax2.add_patch(rect)
+    else:
+        _, cx, cy, r = obs
+        circle = plt.Circle((cx, cy), r, color='gray', alpha=0.7)
+        ax2.add_patch(circle)
+ax2.plot([p[0] for p in pf_path], [p[1] for p in pf_path], 'r-', linewidth=2)
+ax2.scatter(*start, s=100, c='green', marker='o', zorder=5)
+ax2.scatter(*goal, s=100, c='red', marker='*', zorder=5)
+ax2.set_xlabel('X')
+ax2.set_ylabel('Y')
+ax2.set_title('Force Vector Field with Path')
+ax2.set_xlim(0, 100)
+ax2.set_ylim(0, 100)
+ax2.set_aspect('equal')
+
+plt.tight_layout()
+plt.savefig('path_planning_potential.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{path_planning_potential.pdf}')
+print(r'\caption{Potential field method: (a) potential landscape, (b) force vector field with resulting path.}')
+print(r'\label{fig:potential}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\section{Results and Discussion}
+
+\subsection{Algorithm Comparison}
+
+\begin{table}[H]
+\centering
+\caption{Path Planning Algorithm Comparison}
+\label{tab:comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Algorithm} & \textbf{Path Cost} & \textbf{Time (ms)} & \textbf{Nodes/Steps} & \textbf{Optimal} \\
+\midrule
+A* & \py{f"{results['astar_cost']:.2f}"} & \py{f"{results['astar_time']:.2f}"} & \py{f"{results['astar_nodes']}"} & Yes \\
+RRT & \py{f"{results['rrt_cost']:.2f}"} & \py{f"{results['rrt_time']:.2f}"} & \py{f"{results['rrt_nodes']}"} & No \\
+RRT* & \py{f"{results['rrt_star_cost']:.2f}"} & \py{f"{results['rrt_star_time']:.2f}"} & \py{f"{len(rrt_star_tree)}"} & Asymptotic \\
+Potential Field & \py{f"{results['pf_cost']:.2f}"} & \py{f"{results['pf_time']:.2f}"} & \py{f"{results['pf_steps']}"} & No \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Statistical Analysis}
+
+From multiple trials, the mean performance metrics are:
+\begin{itemize}
+    \item A* mean path cost: \py{f"{results['astar_mean_cost']:.2f}"}
+    \item RRT mean path cost: \py{f"{results['rrt_mean_cost']:.2f}"}
+    \item A* mean computation time: \py{f"{results['astar_mean_time']:.2f}"} ms
+    \item RRT mean computation time: \py{f"{results['rrt_mean_time']:.2f}"} ms
+\end{itemize}
+
+\subsection{Key Findings}
+
+\begin{enumerate}
+    \item \textbf{A*} provides optimal paths but requires discretization and scales poorly with dimensionality. Best for low-dimensional grid worlds.
+    \item \textbf{RRT} is probabilistically complete and handles high-dimensional spaces well but produces suboptimal paths.
+    \item \textbf{RRT*} improves on RRT by asymptotically approaching the optimal path through rewiring, at the cost of increased computation.
+    \item \textbf{Potential Field} is simple and reactive but can get trapped in local minima and produces non-optimal paths.
+\end{enumerate}
+
+\section{Conclusion}
+This analysis demonstrated the implementation and comparison of fundamental path planning algorithms. A* remains the gold standard for optimal grid-based planning, while RRT and its variants excel in high-dimensional configuration spaces. The potential field method offers a simple reactive approach but requires careful tuning. The choice of algorithm depends on the specific application requirements regarding optimality, computational resources, and problem dimensionality.
+
+\end{document}

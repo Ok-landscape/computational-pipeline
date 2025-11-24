@@ -1,0 +1,810 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Digital Filter Design: FIR and IIR Filters}
+\author{Computational Signal Processing}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Digital filters are fundamental components in signal processing systems. This document explores
+the design and analysis of both Finite Impulse Response (FIR) and Infinite Impulse Response (IIR)
+filters. We implement various design methods including windowing techniques, frequency sampling,
+Parks-McClellan algorithm for FIR filters, and Butterworth, Chebyshev, and elliptic designs for
+IIR filters. The analysis includes frequency response characteristics, phase response, group delay,
+and filter stability assessment.
+
+\section{Mathematical Framework}
+
+\subsection{FIR Filter Design}
+An FIR filter of order $N$ has transfer function:
+\begin{equation}
+H(z) = \sum_{k=0}^{N} b_k z^{-k}
+\end{equation}
+
+The ideal lowpass filter impulse response is:
+\begin{equation}
+h_d[n] = \frac{\sin(\omega_c n)}{\pi n}
+\end{equation}
+
+Window-based design multiplies this by a window function $w[n]$:
+\begin{equation}
+h[n] = h_d[n] \cdot w[n]
+\end{equation}
+
+\subsection{IIR Filter Design}
+An IIR filter transfer function:
+\begin{equation}
+H(z) = \frac{\sum_{k=0}^{M} b_k z^{-k}}{1 + \sum_{k=1}^{N} a_k z^{-k}}
+\end{equation}
+
+Butterworth magnitude response:
+\begin{equation}
+|H(j\omega)|^2 = \frac{1}{1 + \left(\frac{\omega}{\omega_c}\right)^{2N}}
+\end{equation}
+
+Chebyshev Type I response with ripple $\epsilon$:
+\begin{equation}
+|H(j\omega)|^2 = \frac{1}{1 + \epsilon^2 T_N^2\left(\frac{\omega}{\omega_c}\right)}
+\end{equation}
+
+where $T_N$ is the Chebyshev polynomial of order $N$.
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.fft import fft, fftfreq
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{FIR Filter Design: Window Method}
+\begin{pycode}
+# Design specifications
+fs = 1000  # Sampling frequency
+fc = 100   # Cutoff frequency
+N_taps = 51  # Filter order
+
+# Normalized cutoff
+wc = fc / (fs/2)
+
+# Design FIR filters with different windows
+windows = {
+    'Rectangular': np.ones(N_taps),
+    'Hamming': np.hamming(N_taps),
+    'Hanning': np.hanning(N_taps),
+    'Blackman': np.blackman(N_taps),
+    'Kaiser ($\\beta=8$)': np.kaiser(N_taps, 8)
+}
+
+# Ideal lowpass impulse response
+n = np.arange(N_taps)
+n_center = (N_taps - 1) / 2
+h_ideal = np.sinc(2 * wc * (n - n_center)) * 2 * wc
+
+# Store filter coefficients and responses
+fir_filters = {}
+for name, window in windows.items():
+    h = h_ideal * window
+    fir_filters[name] = h
+
+# Plot impulse responses
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+axes = axes.flatten()
+
+for idx, (name, h) in enumerate(fir_filters.items()):
+    axes[idx].stem(n, h, linefmt='b-', markerfmt='bo', basefmt='k-')
+    axes[idx].set_xlabel('Sample')
+    axes[idx].set_ylabel('Amplitude')
+    axes[idx].set_title(f'{name} Window')
+    axes[idx].grid(True, alpha=0.3)
+
+# Remove extra subplot
+axes[5].axis('off')
+plt.tight_layout()
+save_plot('fir_impulse_responses.pdf',
+          'FIR lowpass filter impulse responses with different window functions.')
+\end{pycode}
+
+\section{FIR Frequency Response Analysis}
+\begin{pycode}
+# Compute frequency responses
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Magnitude responses
+for name, h in fir_filters.items():
+    w, H = signal.freqz(h, worN=1024)
+    freq = w * fs / (2 * np.pi)
+    mag_db = 20 * np.log10(np.abs(H) + 1e-10)
+    axes[0, 0].plot(freq, mag_db, label=name, linewidth=1)
+
+axes[0, 0].axvline(fc, color='r', linestyle='--', alpha=0.5, label='Cutoff')
+axes[0, 0].set_xlabel('Frequency [Hz]')
+axes[0, 0].set_ylabel('Magnitude [dB]')
+axes[0, 0].set_title('FIR Lowpass Filter Magnitude Response')
+axes[0, 0].set_xlim([0, fs/2])
+axes[0, 0].set_ylim([-100, 5])
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Stopband detail
+for name, h in fir_filters.items():
+    w, H = signal.freqz(h, worN=1024)
+    freq = w * fs / (2 * np.pi)
+    mag_db = 20 * np.log10(np.abs(H) + 1e-10)
+    axes[0, 1].plot(freq, mag_db, label=name, linewidth=1)
+
+axes[0, 1].set_xlabel('Frequency [Hz]')
+axes[0, 1].set_ylabel('Magnitude [dB]')
+axes[0, 1].set_title('Stopband Attenuation Detail')
+axes[0, 1].set_xlim([150, fs/2])
+axes[0, 1].set_ylim([-100, -20])
+axes[0, 1].grid(True, alpha=0.3)
+
+# Phase response
+for name, h in fir_filters.items():
+    w, H = signal.freqz(h, worN=1024)
+    freq = w * fs / (2 * np.pi)
+    phase = np.unwrap(np.angle(H))
+    axes[1, 0].plot(freq, phase * 180 / np.pi, label=name, linewidth=1)
+
+axes[1, 0].set_xlabel('Frequency [Hz]')
+axes[1, 0].set_ylabel('Phase [degrees]')
+axes[1, 0].set_title('Phase Response')
+axes[1, 0].set_xlim([0, fs/2])
+axes[1, 0].grid(True, alpha=0.3)
+
+# Group delay
+for name, h in fir_filters.items():
+    w, gd = signal.group_delay((h, 1), w=1024)
+    freq = w * fs / (2 * np.pi)
+    axes[1, 1].plot(freq, gd, label=name, linewidth=1)
+
+axes[1, 1].set_xlabel('Frequency [Hz]')
+axes[1, 1].set_ylabel('Group Delay [samples]')
+axes[1, 1].set_title('Group Delay')
+axes[1, 1].set_xlim([0, fs/2])
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('fir_frequency_analysis.pdf',
+          'FIR filter frequency domain characteristics: magnitude, phase, and group delay.')
+
+# Calculate stopband attenuation for each filter
+stopband_atten = {}
+for name, h in fir_filters.items():
+    w, H = signal.freqz(h, worN=1024)
+    freq = w * fs / (2 * np.pi)
+    stopband_mask = freq > 150
+    stopband_atten[name] = -np.max(20 * np.log10(np.abs(H[stopband_mask]) + 1e-10))
+\end{pycode}
+
+\section{Parks-McClellan Optimal FIR Design}
+\begin{pycode}
+# Optimal equiripple filter design
+N_pm = 50
+bands = [0, 80, 120, fs/2]  # Frequency bands
+desired = [1, 0]  # Desired response
+weights = [1, 1]  # Band weights
+
+# Design filter using Parks-McClellan
+h_pm = signal.remez(N_pm + 1, bands, desired, Hz=fs)
+
+# Compare with windowed design
+h_kaiser = signal.firwin(N_pm + 1, 100, fs=fs, window=('kaiser', 8))
+
+# Frequency responses
+w_pm, H_pm = signal.freqz(h_pm, worN=2048)
+w_ka, H_ka = signal.freqz(h_kaiser, worN=2048)
+freq = w_pm * fs / (2 * np.pi)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Magnitude comparison
+axes[0, 0].plot(freq, 20*np.log10(np.abs(H_pm)+1e-10), 'b-',
+                label='Parks-McClellan', linewidth=1)
+axes[0, 0].plot(freq, 20*np.log10(np.abs(H_ka)+1e-10), 'r--',
+                label='Kaiser Window', linewidth=1)
+axes[0, 0].axvline(80, color='g', linestyle=':', alpha=0.5)
+axes[0, 0].axvline(120, color='g', linestyle=':', alpha=0.5)
+axes[0, 0].set_xlabel('Frequency [Hz]')
+axes[0, 0].set_ylabel('Magnitude [dB]')
+axes[0, 0].set_title('Parks-McClellan vs Kaiser Window Design')
+axes[0, 0].set_xlim([0, fs/2])
+axes[0, 0].set_ylim([-80, 5])
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Passband ripple detail
+axes[0, 1].plot(freq, 20*np.log10(np.abs(H_pm)+1e-10), 'b-',
+                label='Parks-McClellan', linewidth=1)
+axes[0, 1].plot(freq, 20*np.log10(np.abs(H_ka)+1e-10), 'r--',
+                label='Kaiser Window', linewidth=1)
+axes[0, 1].set_xlabel('Frequency [Hz]')
+axes[0, 1].set_ylabel('Magnitude [dB]')
+axes[0, 1].set_title('Passband Ripple Detail')
+axes[0, 1].set_xlim([0, 100])
+axes[0, 1].set_ylim([-1, 1])
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Impulse responses
+n_pm = np.arange(len(h_pm))
+axes[1, 0].stem(n_pm, h_pm, linefmt='b-', markerfmt='bo', basefmt='k-')
+axes[1, 0].set_xlabel('Sample')
+axes[1, 0].set_ylabel('Amplitude')
+axes[1, 0].set_title('Parks-McClellan Impulse Response')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Pole-zero plot (FIR has only zeros)
+zeros_pm = np.roots(h_pm)
+theta = np.linspace(0, 2*np.pi, 100)
+axes[1, 1].plot(np.cos(theta), np.sin(theta), 'k-', alpha=0.3)
+axes[1, 1].scatter(np.real(zeros_pm), np.imag(zeros_pm), marker='o',
+                   facecolors='none', edgecolors='b', s=30)
+axes[1, 1].set_xlabel('Real')
+axes[1, 1].set_ylabel('Imaginary')
+axes[1, 1].set_title('Zero Locations (Pole-Zero Plot)')
+axes[1, 1].set_aspect('equal')
+axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].set_xlim([-2, 2])
+axes[1, 1].set_ylim([-1.5, 1.5])
+
+plt.tight_layout()
+save_plot('parks_mcclellan.pdf',
+          'Parks-McClellan optimal equiripple FIR filter design and analysis.')
+
+# Calculate metrics
+pm_passband_ripple = np.max(np.abs(20*np.log10(np.abs(H_pm[freq < 80])+1e-10)))
+pm_stopband_atten = -np.max(20*np.log10(np.abs(H_pm[freq > 120])+1e-10))
+\end{pycode}
+
+\section{IIR Filter Design: Butterworth}
+\begin{pycode}
+# Butterworth filter design for various orders
+orders = [2, 4, 6, 8]
+fc_iir = 100
+wn = fc_iir / (fs/2)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for N in orders:
+    b, a = signal.butter(N, wn, btype='low')
+    w, H = signal.freqz(b, a, worN=2048)
+    freq = w * fs / (2 * np.pi)
+
+    # Magnitude
+    axes[0, 0].plot(freq, 20*np.log10(np.abs(H)+1e-10),
+                    label=f'N={N}', linewidth=1)
+
+    # Phase
+    phase = np.unwrap(np.angle(H))
+    axes[0, 1].plot(freq, phase * 180/np.pi, label=f'N={N}', linewidth=1)
+
+    # Group delay
+    w_gd, gd = signal.group_delay((b, a), w=2048)
+    axes[1, 0].plot(freq, gd, label=f'N={N}', linewidth=1)
+
+axes[0, 0].axvline(fc_iir, color='r', linestyle='--', alpha=0.5)
+axes[0, 0].axhline(-3, color='g', linestyle=':', alpha=0.5)
+axes[0, 0].set_xlabel('Frequency [Hz]')
+axes[0, 0].set_ylabel('Magnitude [dB]')
+axes[0, 0].set_title('Butterworth Lowpass Magnitude Response')
+axes[0, 0].set_xlim([0, fs/2])
+axes[0, 0].set_ylim([-60, 5])
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+axes[0, 1].set_xlabel('Frequency [Hz]')
+axes[0, 1].set_ylabel('Phase [degrees]')
+axes[0, 1].set_title('Phase Response')
+axes[0, 1].set_xlim([0, fs/2])
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+axes[1, 0].set_xlabel('Frequency [Hz]')
+axes[1, 0].set_ylabel('Group Delay [samples]')
+axes[1, 0].set_title('Group Delay')
+axes[1, 0].set_xlim([0, 200])
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Pole-zero plot for 4th order
+b4, a4 = signal.butter(4, wn, btype='low')
+z4, p4, k4 = signal.tf2zpk(b4, a4)
+
+theta = np.linspace(0, 2*np.pi, 100)
+axes[1, 1].plot(np.cos(theta), np.sin(theta), 'k-', alpha=0.3)
+axes[1, 1].scatter(np.real(z4), np.imag(z4), marker='o',
+                   facecolors='none', edgecolors='b', s=50, label='Zeros')
+axes[1, 1].scatter(np.real(p4), np.imag(p4), marker='x',
+                   c='r', s=50, label='Poles')
+axes[1, 1].set_xlabel('Real')
+axes[1, 1].set_ylabel('Imaginary')
+axes[1, 1].set_title('Pole-Zero Plot (N=4)')
+axes[1, 1].set_aspect('equal')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('butterworth_design.pdf',
+          'Butterworth IIR lowpass filter design with different orders.')
+
+# Store Butterworth metrics
+butter_rolloff = {}
+for N in orders:
+    b, a = signal.butter(N, wn, btype='low')
+    w, H = signal.freqz(b, a, worN=2048)
+    freq = w * fs / (2 * np.pi)
+    # Attenuation at 2*fc
+    idx_2fc = np.argmin(np.abs(freq - 2*fc_iir))
+    butter_rolloff[N] = -20*np.log10(np.abs(H[idx_2fc])+1e-10)
+\end{pycode}
+
+\section{IIR Filter Comparison: Butterworth, Chebyshev, Elliptic}
+\begin{pycode}
+# Compare different IIR filter types
+N_comp = 5
+fc_comp = 100
+wn_comp = fc_comp / (fs/2)
+
+# Design filters
+b_butter, a_butter = signal.butter(N_comp, wn_comp)
+b_cheby1, a_cheby1 = signal.cheby1(N_comp, 0.5, wn_comp)  # 0.5 dB ripple
+b_cheby2, a_cheby2 = signal.cheby2(N_comp, 40, wn_comp)   # 40 dB stopband
+b_ellip, a_ellip = signal.ellip(N_comp, 0.5, 40, wn_comp) # 0.5 dB ripple, 40 dB stopband
+
+filters_iir = {
+    'Butterworth': (b_butter, a_butter),
+    'Chebyshev I': (b_cheby1, a_cheby1),
+    'Chebyshev II': (b_cheby2, a_cheby2),
+    'Elliptic': (b_ellip, a_ellip)
+}
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Full magnitude response
+for name, (b, a) in filters_iir.items():
+    w, H = signal.freqz(b, a, worN=2048)
+    freq = w * fs / (2 * np.pi)
+    axes[0, 0].plot(freq, 20*np.log10(np.abs(H)+1e-10), label=name, linewidth=1)
+
+axes[0, 0].axvline(fc_comp, color='k', linestyle='--', alpha=0.5)
+axes[0, 0].set_xlabel('Frequency [Hz]')
+axes[0, 0].set_ylabel('Magnitude [dB]')
+axes[0, 0].set_title('IIR Filter Comparison (N=5)')
+axes[0, 0].set_xlim([0, fs/2])
+axes[0, 0].set_ylim([-80, 5])
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Passband detail
+for name, (b, a) in filters_iir.items():
+    w, H = signal.freqz(b, a, worN=2048)
+    freq = w * fs / (2 * np.pi)
+    axes[0, 1].plot(freq, 20*np.log10(np.abs(H)+1e-10), label=name, linewidth=1)
+
+axes[0, 1].set_xlabel('Frequency [Hz]')
+axes[0, 1].set_ylabel('Magnitude [dB]')
+axes[0, 1].set_title('Passband Detail')
+axes[0, 1].set_xlim([0, 120])
+axes[0, 1].set_ylim([-3, 1])
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Transition band sharpness
+for name, (b, a) in filters_iir.items():
+    w, H = signal.freqz(b, a, worN=2048)
+    freq = w * fs / (2 * np.pi)
+    axes[1, 0].plot(freq, 20*np.log10(np.abs(H)+1e-10), label=name, linewidth=1)
+
+axes[1, 0].set_xlabel('Frequency [Hz]')
+axes[1, 0].set_ylabel('Magnitude [dB]')
+axes[1, 0].set_title('Transition Band Detail')
+axes[1, 0].set_xlim([80, 150])
+axes[1, 0].set_ylim([-60, 5])
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Step response comparison
+t = np.arange(100) / fs
+step_input = np.ones(100)
+
+for name, (b, a) in filters_iir.items():
+    _, y = signal.lfilter(b, a, step_input, zi=signal.lfilter_zi(b, a)*0)
+    axes[1, 1].plot(t * 1000, y, label=name, linewidth=1)
+
+axes[1, 1].set_xlabel('Time [ms]')
+axes[1, 1].set_ylabel('Amplitude')
+axes[1, 1].set_title('Step Response')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('iir_comparison.pdf',
+          'Comparison of IIR filter types: Butterworth, Chebyshev I/II, and Elliptic.')
+
+# Calculate transition bandwidth for each filter
+transition_bw = {}
+for name, (b, a) in filters_iir.items():
+    w, H = signal.freqz(b, a, worN=4096)
+    freq = w * fs / (2 * np.pi)
+    mag_db = 20*np.log10(np.abs(H)+1e-10)
+
+    # Find -3dB and -40dB points
+    idx_3db = np.where(mag_db <= -3)[0][0] if np.any(mag_db <= -3) else len(mag_db)-1
+    idx_40db = np.where(mag_db <= -40)[0][0] if np.any(mag_db <= -40) else len(mag_db)-1
+    transition_bw[name] = freq[idx_40db] - freq[idx_3db]
+\end{pycode}
+
+\section{Bandpass and Bandstop Filter Design}
+\begin{pycode}
+# Bandpass and bandstop filter design
+f_low = 100
+f_high = 200
+wn_bp = [f_low/(fs/2), f_high/(fs/2)]
+
+# Design bandpass filters
+b_bp_butter, a_bp_butter = signal.butter(4, wn_bp, btype='band')
+b_bp_cheby, a_bp_cheby = signal.cheby1(4, 0.5, wn_bp, btype='band')
+
+# Design bandstop (notch) filter
+b_bs_butter, a_bs_butter = signal.butter(4, wn_bp, btype='bandstop')
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Bandpass responses
+w, H_bp_butter = signal.freqz(b_bp_butter, a_bp_butter, worN=2048)
+w, H_bp_cheby = signal.freqz(b_bp_cheby, a_bp_cheby, worN=2048)
+freq = w * fs / (2 * np.pi)
+
+axes[0, 0].plot(freq, 20*np.log10(np.abs(H_bp_butter)+1e-10),
+                'b-', label='Butterworth', linewidth=1)
+axes[0, 0].plot(freq, 20*np.log10(np.abs(H_bp_cheby)+1e-10),
+                'r--', label='Chebyshev I', linewidth=1)
+axes[0, 0].axvline(f_low, color='g', linestyle=':', alpha=0.5)
+axes[0, 0].axvline(f_high, color='g', linestyle=':', alpha=0.5)
+axes[0, 0].set_xlabel('Frequency [Hz]')
+axes[0, 0].set_ylabel('Magnitude [dB]')
+axes[0, 0].set_title('Bandpass Filter (100-200 Hz)')
+axes[0, 0].set_xlim([0, fs/2])
+axes[0, 0].set_ylim([-80, 5])
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Bandstop response
+w, H_bs = signal.freqz(b_bs_butter, a_bs_butter, worN=2048)
+axes[0, 1].plot(freq, 20*np.log10(np.abs(H_bs)+1e-10), 'b-', linewidth=1)
+axes[0, 1].axvline(f_low, color='g', linestyle=':', alpha=0.5)
+axes[0, 1].axvline(f_high, color='g', linestyle=':', alpha=0.5)
+axes[0, 1].set_xlabel('Frequency [Hz]')
+axes[0, 1].set_ylabel('Magnitude [dB]')
+axes[0, 1].set_title('Bandstop Filter (100-200 Hz)')
+axes[0, 1].set_xlim([0, fs/2])
+axes[0, 1].set_ylim([-80, 5])
+axes[0, 1].grid(True, alpha=0.3)
+
+# Pole-zero plot for bandpass
+z_bp, p_bp, k_bp = signal.tf2zpk(b_bp_butter, a_bp_butter)
+theta = np.linspace(0, 2*np.pi, 100)
+axes[1, 0].plot(np.cos(theta), np.sin(theta), 'k-', alpha=0.3)
+axes[1, 0].scatter(np.real(z_bp), np.imag(z_bp), marker='o',
+                   facecolors='none', edgecolors='b', s=50, label='Zeros')
+axes[1, 0].scatter(np.real(p_bp), np.imag(p_bp), marker='x',
+                   c='r', s=50, label='Poles')
+axes[1, 0].set_xlabel('Real')
+axes[1, 0].set_ylabel('Imaginary')
+axes[1, 0].set_title('Bandpass Pole-Zero Plot')
+axes[1, 0].set_aspect('equal')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Test signal filtering
+t_test = np.arange(500) / fs
+# Signal: 50 Hz + 150 Hz + 300 Hz
+test_signal = (np.sin(2*np.pi*50*t_test) +
+               np.sin(2*np.pi*150*t_test) +
+               np.sin(2*np.pi*300*t_test))
+
+filtered_bp = signal.lfilter(b_bp_butter, a_bp_butter, test_signal)
+axes[1, 1].plot(t_test*1000, test_signal, 'b-', alpha=0.5, label='Input', linewidth=0.5)
+axes[1, 1].plot(t_test*1000, filtered_bp, 'r-', label='Filtered', linewidth=1)
+axes[1, 1].set_xlabel('Time [ms]')
+axes[1, 1].set_ylabel('Amplitude')
+axes[1, 1].set_title('Bandpass Filtering Example')
+axes[1, 1].set_xlim([0, 100])
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('bandpass_bandstop.pdf',
+          'Bandpass and bandstop filter designs with pole-zero analysis.')
+\end{pycode}
+
+\section{Filter Stability Analysis}
+\begin{pycode}
+# Analyze stability of IIR filters
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Create filters with varying stability margins
+filters_stability = {}
+
+# Stable Butterworth
+b1, a1 = signal.butter(6, 0.3)
+filters_stability['Stable (Butterworth)'] = (b1, a1)
+
+# Near-unstable (poles close to unit circle)
+# Design high-order narrow bandpass
+b2, a2 = signal.cheby1(8, 0.1, [0.19, 0.21], btype='band')
+filters_stability['Near-marginal (narrow BP)'] = (b2, a2)
+
+# Plot pole-zero for each
+theta = np.linspace(0, 2*np.pi, 100)
+
+for idx, (name, (b, a)) in enumerate(filters_stability.items()):
+    z, p, k = signal.tf2zpk(b, a)
+
+    row = idx // 2
+    col = idx % 2
+    axes[row, col].plot(np.cos(theta), np.sin(theta), 'k-', alpha=0.3)
+    axes[row, col].scatter(np.real(z), np.imag(z), marker='o',
+                           facecolors='none', edgecolors='b', s=50, label='Zeros')
+    axes[row, col].scatter(np.real(p), np.imag(p), marker='x',
+                           c='r', s=50, label='Poles')
+
+    # Calculate stability margin
+    max_pole_mag = np.max(np.abs(p))
+    stability_margin = 1 - max_pole_mag
+
+    axes[row, col].set_xlabel('Real')
+    axes[row, col].set_ylabel('Imaginary')
+    axes[row, col].set_title(f'{name}\nStability margin: {stability_margin:.4f}')
+    axes[row, col].set_aspect('equal')
+    axes[row, col].legend(fontsize=8)
+    axes[row, col].grid(True, alpha=0.3)
+    axes[row, col].set_xlim([-1.5, 1.5])
+    axes[row, col].set_ylim([-1.5, 1.5])
+
+# Impulse response for stability analysis
+t_imp = np.arange(200)
+impulse = np.zeros(200)
+impulse[0] = 1
+
+_, y1 = signal.lfilter(b1, a1, impulse, zi=signal.lfilter_zi(b1, a1)*0)
+_, y2 = signal.lfilter(b2, a2, impulse, zi=signal.lfilter_zi(b2, a2)*0)
+
+axes[1, 0].plot(t_imp, y1, 'b-', linewidth=1)
+axes[1, 0].set_xlabel('Sample')
+axes[1, 0].set_ylabel('Amplitude')
+axes[1, 0].set_title('Impulse Response: Stable Filter')
+axes[1, 0].grid(True, alpha=0.3)
+
+axes[1, 1].plot(t_imp, y2, 'r-', linewidth=1)
+axes[1, 1].set_xlabel('Sample')
+axes[1, 1].set_ylabel('Amplitude')
+axes[1, 1].set_title('Impulse Response: Near-Marginal Filter')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('filter_stability.pdf',
+          'Filter stability analysis showing pole locations and impulse responses.')
+
+# Calculate stability metrics
+stability_metrics = {}
+for name, (b, a) in filters_stability.items():
+    z, p, k = signal.tf2zpk(b, a)
+    stability_metrics[name] = {
+        'max_pole_mag': np.max(np.abs(p)),
+        'stability_margin': 1 - np.max(np.abs(p)),
+        'num_poles': len(p),
+        'num_zeros': len(z)
+    }
+\end{pycode}
+
+\section{Real-Time Filtering Application}
+\begin{pycode}
+# Simulate real-time filtering of a noisy signal
+np.random.seed(42)
+
+# Generate test signal: sum of sinusoids with noise
+t = np.arange(2000) / fs
+signal_clean = (np.sin(2*np.pi*30*t) +
+                0.5*np.sin(2*np.pi*60*t))
+noise = 0.3 * np.random.randn(len(t))
+noise_hf = 0.2 * np.sin(2*np.pi*400*t)  # High frequency interference
+signal_noisy = signal_clean + noise + noise_hf
+
+# Design lowpass filter to remove HF noise
+b_lp, a_lp = signal.butter(6, 100/(fs/2))
+signal_filtered = signal.lfilter(b_lp, a_lp, signal_noisy)
+
+# Zero-phase filtering
+signal_filtfilt = signal.filtfilt(b_lp, a_lp, signal_noisy)
+
+fig, axes = plt.subplots(3, 2, figsize=(12, 12))
+
+# Time domain signals
+axes[0, 0].plot(t*1000, signal_noisy, 'b-', alpha=0.5, linewidth=0.5, label='Noisy')
+axes[0, 0].plot(t*1000, signal_clean, 'g-', linewidth=1, label='Clean')
+axes[0, 0].set_xlabel('Time [ms]')
+axes[0, 0].set_ylabel('Amplitude')
+axes[0, 0].set_title('Original Signals')
+axes[0, 0].set_xlim([0, 200])
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+axes[0, 1].plot(t*1000, signal_filtered, 'r-', linewidth=1, label='lfilter')
+axes[0, 1].plot(t*1000, signal_filtfilt, 'b--', linewidth=1, label='filtfilt')
+axes[0, 1].plot(t*1000, signal_clean, 'g-', alpha=0.5, linewidth=1, label='Clean')
+axes[0, 1].set_xlabel('Time [ms]')
+axes[0, 1].set_ylabel('Amplitude')
+axes[0, 1].set_title('Filtered Signals')
+axes[0, 1].set_xlim([0, 200])
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Spectrum analysis
+n_fft = len(t)
+freq_fft = fftfreq(n_fft, 1/fs)[:n_fft//2]
+
+spec_noisy = np.abs(fft(signal_noisy))[:n_fft//2]
+spec_filtered = np.abs(fft(signal_filtered))[:n_fft//2]
+spec_clean = np.abs(fft(signal_clean))[:n_fft//2]
+
+axes[1, 0].plot(freq_fft, 20*np.log10(spec_noisy+1e-10), 'b-',
+                alpha=0.5, linewidth=0.5, label='Noisy')
+axes[1, 0].set_xlabel('Frequency [Hz]')
+axes[1, 0].set_ylabel('Magnitude [dB]')
+axes[1, 0].set_title('Spectrum: Noisy Signal')
+axes[1, 0].set_xlim([0, fs/2])
+axes[1, 0].grid(True, alpha=0.3)
+
+axes[1, 1].plot(freq_fft, 20*np.log10(spec_filtered+1e-10), 'r-',
+                linewidth=1, label='Filtered')
+axes[1, 1].plot(freq_fft, 20*np.log10(spec_clean+1e-10), 'g--',
+                linewidth=1, label='Clean')
+axes[1, 1].set_xlabel('Frequency [Hz]')
+axes[1, 1].set_ylabel('Magnitude [dB]')
+axes[1, 1].set_title('Spectrum: Filtered Signal')
+axes[1, 1].set_xlim([0, fs/2])
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+# Error analysis
+error_lfilter = signal_filtered - signal_clean
+error_filtfilt = signal_filtfilt - signal_clean
+
+axes[2, 0].plot(t*1000, error_lfilter, 'r-', linewidth=0.5)
+axes[2, 0].set_xlabel('Time [ms]')
+axes[2, 0].set_ylabel('Error')
+axes[2, 0].set_title(f'lfilter Error (RMS: {np.sqrt(np.mean(error_lfilter**2)):.4f})')
+axes[2, 0].set_xlim([0, 500])
+axes[2, 0].grid(True, alpha=0.3)
+
+axes[2, 1].plot(t*1000, error_filtfilt, 'b-', linewidth=0.5)
+axes[2, 1].set_xlabel('Time [ms]')
+axes[2, 1].set_ylabel('Error')
+axes[2, 1].set_title(f'filtfilt Error (RMS: {np.sqrt(np.mean(error_filtfilt**2)):.4f})')
+axes[2, 1].set_xlim([0, 500])
+axes[2, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('realtime_filtering.pdf',
+          'Real-time filtering application with spectrum analysis and error comparison.')
+
+# Performance metrics
+rms_error_lfilter = np.sqrt(np.mean(error_lfilter**2))
+rms_error_filtfilt = np.sqrt(np.mean(error_filtfilt**2))
+snr_improvement = 10*np.log10(np.var(signal_noisy)/np.var(error_filtfilt))
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{FIR Window Method Performance}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{FIR Filter Window Method Performance}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Window Type & Stopband Attenuation [dB] & Main Lobe Width \\')
+print(r'\midrule')
+
+main_lobe = {'Rectangular': 'Narrow', 'Hamming': 'Medium',
+             'Hanning': 'Medium', 'Blackman': 'Wide', 'Kaiser ($\\beta=8$)': 'Adjustable'}
+
+for name in stopband_atten:
+    print(f'{name} & {stopband_atten[name]:.1f} & {main_lobe.get(name, "N/A")} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{IIR Filter Comparison}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{IIR Filter Type Comparison (Order 5)}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Filter Type & Transition BW [Hz] & Passband & Stopband \\')
+print(r'\midrule')
+
+characteristics = {
+    'Butterworth': ('Flat', 'Smooth'),
+    'Chebyshev I': ('Ripple', 'Smooth'),
+    'Chebyshev II': ('Flat', 'Ripple'),
+    'Elliptic': ('Ripple', 'Ripple')
+}
+
+for name in transition_bw:
+    pb, sb = characteristics[name]
+    print(f'{name} & {transition_bw[name]:.1f} & {pb} & {sb} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Butterworth Order Analysis}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Butterworth Filter Attenuation at $2f_c$}')
+print(r'\begin{tabular}{cc}')
+print(r'\toprule')
+print(r'Order $N$ & Attenuation at $2f_c$ [dB] \\')
+print(r'\midrule')
+
+for N in orders:
+    print(f'{N} & {butter_rolloff[N]:.1f} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+Key filter design metrics:
+\begin{itemize}
+    \item FIR filter length: \py{f"{N_taps}"} taps
+    \item Parks-McClellan passband ripple: \py{f"{pm_passband_ripple:.3f}"} dB
+    \item Parks-McClellan stopband attenuation: \py{f"{pm_stopband_atten:.1f}"} dB
+    \item RMS error (lfilter): \py{f"{rms_error_lfilter:.4f}"}
+    \item RMS error (filtfilt): \py{f"{rms_error_filtfilt:.4f}"}
+    \item SNR improvement: \py{f"{snr_improvement:.1f}"} dB
+\end{itemize}
+
+\section{Conclusion}
+This computational analysis demonstrates comprehensive digital filter design techniques for both
+FIR and IIR filters. FIR filters designed with window methods provide linear phase response but
+require higher orders for sharp transitions. Parks-McClellan optimal design achieves equiripple
+behavior with minimal order. IIR filters (Butterworth, Chebyshev, Elliptic) offer sharper
+transitions with lower orders but introduce phase distortion. The choice of filter type depends
+on the specific application requirements for phase linearity, transition sharpness, and
+computational efficiency.
+
+\end{document}

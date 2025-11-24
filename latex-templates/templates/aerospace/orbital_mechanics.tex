@@ -1,0 +1,483 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{algorithm2e}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments for textbook style
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Orbital Mechanics: Hohmann Transfers, Orbital Elements, and Ground Tracks\\
+\large A Comprehensive Analysis of Spacecraft Trajectory Design}
+\author{Astrodynamics Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This textbook-style analysis presents the fundamentals of orbital mechanics for spacecraft mission design. We examine Hohmann transfer orbits between circular orbits, compute orbital elements from state vectors, and generate ground tracks for various orbit types. The analysis covers delta-v budgets for LEO-to-GEO transfers, interplanetary trajectory concepts, and the effects of orbital inclination on ground coverage patterns.
+\end{abstract}
+
+\section{Introduction}
+Orbital mechanics provides the mathematical foundation for spacecraft trajectory design. Understanding orbital transfers, perturbations, and ground coverage is essential for mission planning, satellite constellation design, and interplanetary exploration.
+
+\begin{definition}[Keplerian Elements]
+The six classical orbital elements are:
+\begin{enumerate}
+    \item $a$ - Semi-major axis (orbit size)
+    \item $e$ - Eccentricity (orbit shape)
+    \item $i$ - Inclination (orbital plane tilt)
+    \item $\Omega$ - Right ascension of ascending node (RAAN)
+    \item $\omega$ - Argument of periapsis
+    \item $\nu$ - True anomaly (position in orbit)
+\end{enumerate}
+\end{definition}
+
+\section{Mathematical Framework}
+
+\subsection{Vis-Viva Equation}
+The fundamental relation between orbital velocity and position:
+\begin{equation}
+v = \sqrt{\mu \left(\frac{2}{r} - \frac{1}{a}\right)}
+\end{equation}
+where $\mu = GM$ is the standard gravitational parameter.
+
+\subsection{Hohmann Transfer}
+\begin{theorem}[Hohmann Transfer Delta-V]
+The minimum delta-v for transfer between two coplanar circular orbits:
+\begin{align}
+\Delta v_1 &= \sqrt{\frac{\mu}{r_1}}\left(\sqrt{\frac{2r_2}{r_1 + r_2}} - 1\right) \\
+\Delta v_2 &= \sqrt{\frac{\mu}{r_2}}\left(1 - \sqrt{\frac{2r_1}{r_1 + r_2}}\right)
+\end{align}
+\end{theorem}
+
+\subsection{Transfer Time}
+The time of flight for a Hohmann transfer is half the period of the transfer ellipse:
+\begin{equation}
+t_{transfer} = \pi\sqrt{\frac{a_t^3}{\mu}} = \pi\sqrt{\frac{(r_1 + r_2)^3}{8\mu}}
+\end{equation}
+
+\subsection{Orbital Elements from State Vectors}
+Given position $\mathbf{r}$ and velocity $\mathbf{v}$:
+\begin{align}
+\mathbf{h} &= \mathbf{r} \times \mathbf{v} \quad \text{(angular momentum)} \\
+\mathbf{e} &= \frac{\mathbf{v} \times \mathbf{h}}{\mu} - \frac{\mathbf{r}}{r} \quad \text{(eccentricity vector)}
+\end{align}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Physical constants
+mu_earth = 3.986004418e14  # Earth's gravitational parameter (m^3/s^2)
+R_earth = 6.371e6  # Earth's radius (m)
+omega_earth = 7.2921159e-5  # Earth's rotation rate (rad/s)
+
+# Orbital radii
+orbits = {
+    'LEO': R_earth + 400e3,
+    'MEO': R_earth + 20200e3,
+    'GEO': 42164e3,
+    'Lunar': 384400e3
+}
+
+# Function to compute circular orbital velocity
+def circular_velocity(r):
+    return np.sqrt(mu_earth / r)
+
+# Function to compute Hohmann transfer parameters
+def hohmann_transfer(r1, r2):
+    a_transfer = (r1 + r2) / 2
+
+    # Velocities
+    v1_circular = circular_velocity(r1)
+    v2_circular = circular_velocity(r2)
+    v1_transfer = np.sqrt(mu_earth * (2/r1 - 1/a_transfer))
+    v2_transfer = np.sqrt(mu_earth * (2/r2 - 1/a_transfer))
+
+    # Delta-v
+    dv1 = abs(v1_transfer - v1_circular)
+    dv2 = abs(v2_circular - v2_transfer)
+    dv_total = dv1 + dv2
+
+    # Transfer time
+    t_transfer = np.pi * np.sqrt(a_transfer**3 / mu_earth)
+
+    return {
+        'dv1': dv1, 'dv2': dv2, 'dv_total': dv_total,
+        't_transfer': t_transfer, 'a_transfer': a_transfer
+    }
+
+# Compute transfers from LEO to various orbits
+transfers = {}
+r_leo = orbits['LEO']
+for name, r_target in orbits.items():
+    if name != 'LEO':
+        transfers[name] = hohmann_transfer(r_leo, r_target)
+
+# Ground track computation
+def compute_ground_track(a, e, i, omega, Omega, n_orbits=3, n_points=1000):
+    """Compute ground track for an orbit."""
+    T = 2 * np.pi * np.sqrt(a**3 / mu_earth)  # Orbital period
+    t = np.linspace(0, n_orbits * T, n_points)
+
+    # Mean motion and mean anomaly
+    n = np.sqrt(mu_earth / a**3)
+    M = n * t
+
+    # Solve Kepler's equation (simplified for small e)
+    E = M + e * np.sin(M)  # First-order approximation
+    nu = 2 * np.arctan2(np.sqrt(1+e) * np.sin(E/2), np.sqrt(1-e) * np.cos(E/2))
+
+    # Orbital radius
+    r = a * (1 - e * np.cos(E))
+
+    # Position in orbital plane
+    x_orb = r * np.cos(nu)
+    y_orb = r * np.sin(nu)
+
+    # Rotation matrices
+    cos_O, sin_O = np.cos(Omega), np.sin(Omega)
+    cos_i, sin_i = np.cos(i), np.sin(i)
+    cos_w, sin_w = np.cos(omega), np.sin(omega)
+
+    # Transform to ECI coordinates
+    x_eci = (cos_O*cos_w - sin_O*sin_w*cos_i)*x_orb + (-cos_O*sin_w - sin_O*cos_w*cos_i)*y_orb
+    y_eci = (sin_O*cos_w + cos_O*sin_w*cos_i)*x_orb + (-sin_O*sin_w + cos_O*cos_w*cos_i)*y_orb
+    z_eci = (sin_w*sin_i)*x_orb + (cos_w*sin_i)*y_orb
+
+    # Convert to latitude/longitude (accounting for Earth rotation)
+    lat = np.arcsin(z_eci / r)
+    lon = np.arctan2(y_eci, x_eci) - omega_earth * t
+
+    # Wrap longitude to [-180, 180]
+    lon = np.rad2deg(lon)
+    lon = ((lon + 180) % 360) - 180
+    lat = np.rad2deg(lat)
+
+    return lon, lat, T
+
+# Define orbit types for ground track comparison
+orbit_configs = {
+    'ISS (LEO)': {'a': R_earth + 420e3, 'e': 0.0001, 'i': np.deg2rad(51.6)},
+    'Sun-Sync': {'a': R_earth + 700e3, 'e': 0.001, 'i': np.deg2rad(98.2)},
+    'GEO': {'a': 42164e3, 'e': 0.0001, 'i': np.deg2rad(0.1)},
+    'Molniya': {'a': 26600e3, 'e': 0.74, 'i': np.deg2rad(63.4)}
+}
+
+ground_tracks = {}
+for name, config in orbit_configs.items():
+    lon, lat, T = compute_ground_track(
+        config['a'], config['e'], config['i'],
+        omega=0, Omega=0, n_orbits=2 if name != 'GEO' else 1
+    )
+    ground_tracks[name] = {'lon': lon, 'lat': lat, 'T': T}
+
+# Bi-elliptic transfer comparison
+def bielliptic_transfer(r1, r2, r_intermediate):
+    """Compute bi-elliptic transfer delta-v."""
+    a1 = (r1 + r_intermediate) / 2
+    a2 = (r_intermediate + r2) / 2
+
+    v1 = circular_velocity(r1)
+    v1_t = np.sqrt(mu_earth * (2/r1 - 1/a1))
+    dv1 = abs(v1_t - v1)
+
+    v_int_1 = np.sqrt(mu_earth * (2/r_intermediate - 1/a1))
+    v_int_2 = np.sqrt(mu_earth * (2/r_intermediate - 1/a2))
+    dv2 = abs(v_int_2 - v_int_1)
+
+    v2_t = np.sqrt(mu_earth * (2/r2 - 1/a2))
+    v2 = circular_velocity(r2)
+    dv3 = abs(v2 - v2_t)
+
+    return dv1 + dv2 + dv3
+
+# Compare Hohmann vs bi-elliptic for different intermediate radii
+r_ratios = np.linspace(1.1, 20, 50)
+hohmann_dv = transfers['GEO']['dv_total']
+bielliptic_dvs = []
+for ratio in r_ratios:
+    r_int = orbits['GEO'] * ratio
+    dv = bielliptic_transfer(orbits['LEO'], orbits['GEO'], r_int)
+    bielliptic_dvs.append(dv)
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Hohmann transfer orbits
+ax1 = fig.add_subplot(2, 3, 1)
+theta = np.linspace(0, 2*np.pi, 200)
+
+# Earth
+earth = plt.Circle((0, 0), R_earth/1e6, color='blue', alpha=0.6)
+ax1.add_patch(earth)
+
+# LEO
+ax1.plot(orbits['LEO']/1e6 * np.cos(theta), orbits['LEO']/1e6 * np.sin(theta),
+         'g-', linewidth=2, label='LEO')
+
+# GEO
+ax1.plot(orbits['GEO']/1e6 * np.cos(theta), orbits['GEO']/1e6 * np.sin(theta),
+         'r-', linewidth=2, label='GEO')
+
+# Transfer ellipse
+a_t = transfers['GEO']['a_transfer']
+e_t = (orbits['GEO'] - orbits['LEO']) / (orbits['GEO'] + orbits['LEO'])
+r_t = a_t * (1 - e_t**2) / (1 + e_t * np.cos(theta))
+theta_half = theta[theta <= np.pi]
+r_t_half = a_t * (1 - e_t**2) / (1 + e_t * np.cos(theta_half))
+ax1.plot(r_t_half/1e6 * np.cos(theta_half), r_t_half/1e6 * np.sin(theta_half),
+         'orange', linestyle='--', linewidth=2, label='Transfer')
+
+ax1.set_xlim(-50, 50)
+ax1.set_ylim(-50, 50)
+ax1.set_xlabel('x (Mm)')
+ax1.set_ylabel('y (Mm)')
+ax1.set_title('Hohmann Transfer: LEO to GEO')
+ax1.legend(fontsize=8)
+ax1.set_aspect('equal')
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Delta-v comparison
+ax2 = fig.add_subplot(2, 3, 2)
+targets = list(transfers.keys())
+dv1s = [transfers[t]['dv1'] for t in targets]
+dv2s = [transfers[t]['dv2'] for t in targets]
+
+x = np.arange(len(targets))
+width = 0.35
+ax2.bar(x - width/2, np.array(dv1s)/1000, width, label=r'$\Delta v_1$', color='steelblue')
+ax2.bar(x + width/2, np.array(dv2s)/1000, width, label=r'$\Delta v_2$', color='coral')
+ax2.set_xlabel('Target Orbit')
+ax2.set_ylabel(r'$\Delta v$ (km/s)')
+ax2.set_title('Delta-v Requirements from LEO')
+ax2.set_xticks(x)
+ax2.set_xticklabels(targets)
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3, axis='y')
+
+# Plot 3: Transfer times
+ax3 = fig.add_subplot(2, 3, 3)
+times = [transfers[t]['t_transfer']/3600 for t in targets]
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(targets)))
+bars = ax3.bar(targets, times, color=colors)
+ax3.set_xlabel('Target Orbit')
+ax3.set_ylabel('Transfer Time (hours)')
+ax3.set_title('Hohmann Transfer Duration')
+for bar, t in zip(bars, times):
+    if t > 100:
+        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height(),
+                f'{t/24:.1f}d', ha='center', va='bottom', fontsize=8)
+    else:
+        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height(),
+                f'{t:.1f}h', ha='center', va='bottom', fontsize=8)
+ax3.grid(True, alpha=0.3, axis='y')
+
+# Plot 4: Ground tracks
+ax4 = fig.add_subplot(2, 3, 4)
+track_colors = plt.cm.Set1(np.linspace(0, 0.8, len(ground_tracks)))
+for (name, track), color in zip(ground_tracks.items(), track_colors):
+    # Split track at discontinuities
+    lon = track['lon']
+    lat = track['lat']
+    # Simple discontinuity detection
+    split_idx = np.where(np.abs(np.diff(lon)) > 180)[0] + 1
+    segments = np.split(np.arange(len(lon)), split_idx)
+    for j, seg in enumerate(segments):
+        if len(seg) > 1:
+            label = name if j == 0 else None
+            ax4.plot(lon[seg], lat[seg], color=color, linewidth=1.5,
+                    alpha=0.7, label=label)
+ax4.set_xlim(-180, 180)
+ax4.set_ylim(-90, 90)
+ax4.set_xlabel('Longitude (deg)')
+ax4.set_ylabel('Latitude (deg)')
+ax4.set_title('Ground Tracks (2 orbits)')
+ax4.legend(fontsize=7, loc='lower left')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Hohmann vs Bi-elliptic
+ax5 = fig.add_subplot(2, 3, 5)
+ax5.plot(r_ratios, np.array(bielliptic_dvs)/1000, 'b-', linewidth=2, label='Bi-elliptic')
+ax5.axhline(y=hohmann_dv/1000, color='r', linestyle='--', linewidth=2, label='Hohmann')
+ax5.set_xlabel(r'$r_{intermediate}/r_{GEO}$')
+ax5.set_ylabel(r'Total $\Delta v$ (km/s)')
+ax5.set_title('Hohmann vs Bi-elliptic Transfer')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Orbital period vs altitude
+ax6 = fig.add_subplot(2, 3, 6)
+altitudes = np.linspace(200, 40000, 100) * 1e3
+radii = R_earth + altitudes
+periods = 2 * np.pi * np.sqrt(radii**3 / mu_earth) / 3600  # hours
+ax6.plot(altitudes/1e3, periods, 'b-', linewidth=2)
+ax6.axhline(y=24, color='r', linestyle='--', alpha=0.7, label='24 hr (GEO)')
+ax6.axhline(y=12, color='g', linestyle='--', alpha=0.7, label='12 hr (Molniya)')
+ax6.set_xlabel('Altitude (km)')
+ax6.set_ylabel('Orbital Period (hours)')
+ax6.set_title('Period vs Altitude')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+ax6.set_xlim(0, 40000)
+
+plt.tight_layout()
+plt.savefig('orbital_mechanics_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{orbital_mechanics_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Key results
+geo_transfer = transfers['GEO']
+\end{pycode}
+
+\section{Algorithm: State Vector to Orbital Elements}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{Position $\mathbf{r}$, velocity $\mathbf{v}$}
+\KwOut{Classical orbital elements $(a, e, i, \Omega, \omega, \nu)$}
+$\mathbf{h} \leftarrow \mathbf{r} \times \mathbf{v}$ \tcp{Angular momentum}
+$\mathbf{n} \leftarrow \hat{k} \times \mathbf{h}$ \tcp{Node vector}
+$\mathbf{e} \leftarrow \frac{1}{\mu}[(\|\mathbf{v}\|^2 - \frac{\mu}{r})\mathbf{r} - (\mathbf{r} \cdot \mathbf{v})\mathbf{v}]$\;
+$a \leftarrow -\frac{\mu}{2\mathcal{E}}$ where $\mathcal{E} = \frac{v^2}{2} - \frac{\mu}{r}$\;
+$e \leftarrow \|\mathbf{e}\|$\;
+$i \leftarrow \arccos(h_z / \|\mathbf{h}\|)$\;
+$\Omega \leftarrow \arccos(n_x / \|\mathbf{n}\|)$\;
+$\omega \leftarrow \arccos(\mathbf{n} \cdot \mathbf{e} / (n \cdot e))$\;
+$\nu \leftarrow \arccos(\mathbf{e} \cdot \mathbf{r} / (e \cdot r))$\;
+\Return{$a, e, i, \Omega, \omega, \nu$}
+\caption{Orbital Elements from State Vector}
+\end{algorithm}
+
+\section{Results and Discussion}
+
+\subsection{Transfer Performance}
+
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Hohmann Transfer Parameters from LEO}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Target & $\Delta v_1$ & $\Delta v_2$ & Total $\Delta v$ & Transfer Time \\')
+print(r' & (km/s) & (km/s) & (km/s) & \\')
+print(r'\midrule')
+for target in ['MEO', 'GEO', 'Lunar']:
+    t = transfers[target]
+    time_str = f"{t['t_transfer']/3600:.1f} hr" if t['t_transfer'] < 86400 else f"{t['t_transfer']/86400:.1f} days"
+    print(f"{target} & {t['dv1']/1000:.3f} & {t['dv2']/1000:.3f} & {t['dv_total']/1000:.3f} & {time_str} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{example}[LEO to GEO Transfer]
+For a spacecraft in 400 km LEO transferring to GEO:
+\begin{itemize}
+    \item Initial velocity: \py{f"{circular_velocity(orbits['LEO'])/1000:.3f}"} km/s
+    \item First burn (perigee): $\Delta v_1 = $ \py{f"{geo_transfer['dv1']/1000:.3f}"} km/s
+    \item Second burn (apogee): $\Delta v_2 = $ \py{f"{geo_transfer['dv2']/1000:.3f}"} km/s
+    \item Total $\Delta v$: \py{f"{geo_transfer['dv_total']/1000:.3f}"} km/s
+    \item Transfer time: \py{f"{geo_transfer['t_transfer']/3600:.2f}"} hours
+\end{itemize}
+\end{example}
+
+\subsection{Ground Track Analysis}
+
+\begin{pycode}
+# Ground track table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Orbital Characteristics and Ground Coverage}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Orbit Type & Altitude & Period & Inclination \\')
+print(r' & (km) & (min) & (deg) \\')
+print(r'\midrule')
+for name, config in orbit_configs.items():
+    alt = (config['a'] - R_earth) / 1000
+    period = ground_tracks[name]['T'] / 60
+    inc = np.rad2deg(config['i'])
+    print(f"{name} & {alt:.0f} & {period:.1f} & {inc:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{remark}[Ground Track Patterns]
+\begin{itemize}
+    \item \textbf{LEO}: Ground track shifts westward each orbit due to Earth rotation
+    \item \textbf{Sun-synchronous}: Maintains constant local solar time at equator crossing
+    \item \textbf{GEO}: Appears stationary over a fixed longitude
+    \item \textbf{Molniya}: Figure-eight pattern with extended dwell time at high latitudes
+\end{itemize}
+\end{remark}
+
+\subsection{Bi-elliptic Transfers}
+For transfers with radius ratio $r_2/r_1 > 11.94$, the bi-elliptic transfer becomes more efficient than Hohmann. However, it requires significantly longer transfer time.
+
+\section{Applications}
+
+\subsection{Mission Design Considerations}
+\begin{itemize}
+    \item \textbf{Communications}: GEO provides continuous coverage of specific regions
+    \item \textbf{Navigation}: MEO constellations (GPS, Galileo) balance coverage and signal strength
+    \item \textbf{Earth Observation}: Sun-synchronous LEO maintains consistent lighting
+    \item \textbf{High-latitude coverage}: Molniya orbits serve polar regions
+\end{itemize}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Two-body}: Neglects perturbations (J2, drag, third-body)
+    \item \textbf{Impulsive burns}: Assumes instantaneous velocity changes
+    \item \textbf{Coplanar}: No plane change maneuvers included
+    \item \textbf{Simplified Kepler}: First-order solution for eccentric anomaly
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Include J2 perturbation for realistic orbit propagation
+    \item Combined plane change and transfer maneuvers
+    \item Low-thrust trajectory optimization
+    \item Interplanetary patched conics
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrates fundamental orbital mechanics principles:
+\begin{itemize}
+    \item Hohmann transfers provide minimum-fuel solutions for coplanar circular orbits
+    \item LEO-to-GEO requires \py{f"{geo_transfer['dv_total']/1000:.2f}"} km/s total delta-v
+    \item Ground track patterns depend strongly on orbital period and inclination
+    \item Bi-elliptic transfers can outperform Hohmann for large radius ratios
+\end{itemize}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Vallado, D. A. (2013). \textit{Fundamentals of Astrodynamics and Applications}. Microcosm Press.
+    \item Bate, R. R., Mueller, D. D., \& White, J. E. (1971). \textit{Fundamentals of Astrodynamics}. Dover.
+    \item Curtis, H. D. (2020). \textit{Orbital Mechanics for Engineering Students}. Butterworth-Heinemann.
+\end{itemize}
+
+\end{document}

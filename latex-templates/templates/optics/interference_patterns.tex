@@ -1,0 +1,617 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[makestderr]{pythontex}
+
+\title{Optics: Interference Patterns and Analysis}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Interference phenomena demonstrate the wave nature of light through the superposition of coherent waves. This analysis explores Young's double-slit experiment, multiple-beam interference, Michelson interferometry, and Fabry-P\'erot cavities, examining both intensity patterns and their applications in metrology and spectroscopy.
+
+\section{Mathematical Framework}
+
+\subsection{Two-Beam Interference}
+For two coherent beams with amplitudes $E_1$ and $E_2$ and phase difference $\delta$:
+\begin{equation}
+I = I_1 + I_2 + 2\sqrt{I_1 I_2}\cos\delta
+\end{equation}
+
+\subsection{Double-Slit with Diffraction}
+The intensity pattern for double-slit interference with single-slit diffraction:
+\begin{equation}
+I(\theta) = I_0 \left(\frac{\sin\beta}{\beta}\right)^2 \cos^2\alpha
+\end{equation}
+where $\alpha = \frac{\pi d \sin\theta}{\lambda}$ (interference) and $\beta = \frac{\pi a \sin\theta}{\lambda}$ (diffraction).
+
+\subsection{Multiple-Beam Interference}
+For N slits (grating), the intensity is:
+\begin{equation}
+I = I_0 \left(\frac{\sin\beta}{\beta}\right)^2 \left(\frac{\sin N\alpha}{\sin\alpha}\right)^2
+\end{equation}
+
+\subsection{Fabry-P\'erot Interferometer}
+Transmission of a Fabry-P\'erot cavity:
+\begin{equation}
+T = \frac{1}{1 + F\sin^2(\delta/2)}
+\end{equation}
+where $F = \frac{4R}{(1-R)^2}$ is the finesse coefficient and $\delta = \frac{4\pi n d \cos\theta}{\lambda}$.
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Young's Double-Slit Experiment}
+\begin{pycode}
+# Physical parameters
+wavelength = 632.8e-9  # He-Ne laser (m)
+d = 0.5e-3  # Slit separation (m)
+a = 0.1e-3  # Slit width (m)
+L = 2.0  # Screen distance (m)
+
+# Angular range
+theta = np.linspace(-0.01, 0.01, 1000)
+theta[theta == 0] = 1e-10  # Avoid division by zero
+
+# Phase terms
+alpha = np.pi * d * np.sin(theta) / wavelength
+beta = np.pi * a * np.sin(theta) / wavelength
+
+# Intensity patterns
+I_interference = np.cos(alpha)**2
+I_diffraction = (np.sin(beta) / beta)**2
+I_total = I_diffraction * I_interference
+
+# Screen position
+x = L * np.tan(theta) * 1000  # mm
+
+# Find fringe spacing
+fringe_spacing = wavelength * L / d * 1000  # mm
+
+# Create plots
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Full pattern
+axes[0, 0].plot(x, I_total, 'b-', linewidth=1)
+axes[0, 0].plot(x, I_diffraction, 'r--', linewidth=1.5, alpha=0.7, label='Diffraction envelope')
+axes[0, 0].set_xlabel('Position on screen (mm)')
+axes[0, 0].set_ylabel('Intensity (normalized)')
+axes[0, 0].set_title('Double-Slit Interference Pattern')
+axes[0, 0].legend()
+axes[0, 0].set_xlim([-15, 15])
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Central region zoom
+axes[0, 1].plot(x, I_total, 'b-', linewidth=1.5)
+axes[0, 1].set_xlabel('Position on screen (mm)')
+axes[0, 1].set_ylabel('Intensity (normalized)')
+axes[0, 1].set_title('Central Fringes')
+axes[0, 1].set_xlim([-5, 5])
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: 2D intensity pattern
+x_2d = np.linspace(-15, 15, 400)
+y_2d = np.linspace(-5, 5, 200)
+X, Y = np.meshgrid(x_2d, y_2d)
+
+# Convert to angle
+theta_2d = np.arctan(X / 1000 / L)
+alpha_2d = np.pi * d * np.sin(theta_2d) / wavelength
+beta_2d = np.pi * a * np.sin(theta_2d) / wavelength
+beta_2d[beta_2d == 0] = 1e-10
+
+I_2d = (np.sin(beta_2d) / beta_2d)**2 * np.cos(alpha_2d)**2
+
+axes[1, 0].imshow(I_2d, extent=[-15, 15, -5, 5], cmap='hot', aspect='auto')
+axes[1, 0].set_xlabel('Position (mm)')
+axes[1, 0].set_ylabel('Vertical position (mm)')
+axes[1, 0].set_title('2D Interference Pattern')
+
+# Plot 4: Comparison of slit widths
+slit_widths = [0.05e-3, 0.1e-3, 0.2e-3]
+colors = ['blue', 'green', 'red']
+for aw, color in zip(slit_widths, colors):
+    beta_w = np.pi * aw * np.sin(theta) / wavelength
+    I_w = (np.sin(beta_w) / beta_w)**2
+    axes[1, 1].plot(x, I_w, color=color, linewidth=1.5,
+                    label=f'$a = {aw*1e6:.0f}$ $\\mu$m')
+
+axes[1, 1].set_xlabel('Position on screen (mm)')
+axes[1, 1].set_ylabel('Intensity (normalized)')
+axes[1, 1].set_title('Diffraction Envelope vs Slit Width')
+axes[1, 1].legend()
+axes[1, 1].set_xlim([-15, 15])
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('double_slit.pdf', "Young's double-slit interference with diffraction envelope and 2D pattern.")
+
+# Calculate number of fringes in central maximum
+n_fringes = int(2 * d / a)
+\end{pycode}
+
+\section{Multiple-Slit Interference (Diffraction Grating)}
+\begin{pycode}
+# N-slit interference patterns
+N_values = [2, 5, 10, 20]
+colors_N = ['blue', 'green', 'orange', 'red']
+
+# Angular range for grating
+theta_g = np.linspace(-0.005, 0.005, 2000)
+alpha_g = np.pi * d * np.sin(theta_g) / wavelength
+x_g = L * np.tan(theta_g) * 1000
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Comparison of N-slit patterns
+for N, color in zip(N_values, colors_N):
+    # N-slit interference function
+    I_N = np.where(np.abs(np.sin(alpha_g)) < 1e-10,
+                   N**2,
+                   (np.sin(N * alpha_g) / np.sin(alpha_g))**2)
+    I_N = I_N / N**2  # Normalize
+
+    axes[0, 0].plot(x_g, I_N, color=color, linewidth=1, label=f'$N = {N}$', alpha=0.8)
+
+axes[0, 0].set_xlabel('Position on screen (mm)')
+axes[0, 0].set_ylabel('Intensity (normalized)')
+axes[0, 0].set_title('N-Slit Interference Patterns')
+axes[0, 0].legend()
+axes[0, 0].set_xlim([-3, 3])
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Principal and secondary maxima
+N = 10
+alpha_detail = np.linspace(-0.5 * np.pi, 2.5 * np.pi, 1000)
+I_detail = np.where(np.abs(np.sin(alpha_detail)) < 1e-10,
+                    N**2,
+                    (np.sin(N * alpha_detail) / np.sin(alpha_detail))**2)
+I_detail = I_detail / N**2
+
+axes[0, 1].plot(alpha_detail/np.pi, I_detail, 'b-', linewidth=1.5)
+axes[0, 1].axhline(y=1/N**2, color='red', linestyle='--', alpha=0.5, label='Secondary maxima')
+axes[0, 1].set_xlabel('$\\alpha/\\pi$')
+axes[0, 1].set_ylabel('Intensity (normalized)')
+axes[0, 1].set_title(f'Principal and Secondary Maxima ($N = {N}$)')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Resolution criterion
+# Resolving two wavelengths
+lambda1 = 589.0e-9  # Na D1
+lambda2 = 589.6e-9  # Na D2
+N_res = 100
+
+theta_res = np.linspace(-0.001, 0.001, 2000)
+alpha1 = np.pi * d * np.sin(theta_res) / lambda1
+alpha2 = np.pi * d * np.sin(theta_res) / lambda2
+x_res = L * np.tan(theta_res) * 1000
+
+I1 = np.where(np.abs(np.sin(alpha1)) < 1e-10, N_res**2,
+              (np.sin(N_res * alpha1) / np.sin(alpha1))**2)
+I2 = np.where(np.abs(np.sin(alpha2)) < 1e-10, N_res**2,
+              (np.sin(N_res * alpha2) / np.sin(alpha2))**2)
+
+axes[1, 0].plot(x_res, I1/N_res**2, 'b-', linewidth=1.5, label=f'$\\lambda_1 = {lambda1*1e9:.1f}$ nm')
+axes[1, 0].plot(x_res, I2/N_res**2, 'r-', linewidth=1.5, label=f'$\\lambda_2 = {lambda2*1e9:.1f}$ nm')
+axes[1, 0].plot(x_res, (I1 + I2)/(2*N_res**2), 'k--', linewidth=1, alpha=0.5, label='Sum')
+axes[1, 0].set_xlabel('Position on screen (mm)')
+axes[1, 0].set_ylabel('Intensity (normalized)')
+axes[1, 0].set_title(f'Sodium D-lines Resolution ($N = {N_res}$)')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Angular width of principal maximum
+N_width = np.arange(2, 101)
+angular_width = 2 * wavelength / (N_width * d) * 180 / np.pi * 3600  # arcseconds
+
+axes[1, 1].loglog(N_width, angular_width, 'g-', linewidth=2)
+axes[1, 1].set_xlabel('Number of slits $N$')
+axes[1, 1].set_ylabel('Angular width (arcsec)')
+axes[1, 1].set_title('Principal Maximum Width vs $N$')
+axes[1, 1].grid(True, alpha=0.3, which='both')
+
+plt.tight_layout()
+save_plot('multiple_slit.pdf', 'Multiple-slit interference: N-slit patterns, resolution, and angular width.')
+\end{pycode}
+
+\section{Michelson Interferometer}
+\begin{pycode}
+# Michelson interferometer simulation
+def michelson_intensity(d_mirror, wavelength, n=1):
+    """Intensity at detector for mirror displacement d."""
+    delta = 4 * np.pi * n * d_mirror / wavelength
+    return 0.5 * (1 + np.cos(delta))
+
+# Mirror displacement range
+d_mirror = np.linspace(0, 10e-6, 1000)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Fringe pattern for single wavelength
+I_single = michelson_intensity(d_mirror, wavelength)
+axes[0, 0].plot(d_mirror*1e6, I_single, 'b-', linewidth=1.5)
+axes[0, 0].set_xlabel('Mirror displacement ($\\mu$m)')
+axes[0, 0].set_ylabel('Intensity (normalized)')
+axes[0, 0].set_title('Michelson Fringes (Single Wavelength)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Coherence length effect (white light)
+# Simulate short coherence length
+coherence_lengths = [1e-6, 5e-6, 20e-6]
+colors_coh = ['red', 'green', 'blue']
+
+for L_c, color in zip(coherence_lengths, colors_coh):
+    envelope = np.exp(-np.abs(d_mirror) / L_c)
+    I_wl = 0.5 * (1 + envelope * np.cos(4 * np.pi * d_mirror / wavelength))
+    axes[0, 1].plot(d_mirror*1e6, I_wl, color=color, linewidth=1.5,
+                    label=f'$L_c = {L_c*1e6:.0f}$ $\\mu$m')
+
+axes[0, 1].set_xlabel('Mirror displacement ($\\mu$m)')
+axes[0, 1].set_ylabel('Intensity')
+axes[0, 1].set_title('Coherence Length Effect')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Two-wavelength beat pattern
+lambda3 = 600e-9
+lambda4 = 650e-9
+
+I3 = michelson_intensity(d_mirror, lambda3)
+I4 = michelson_intensity(d_mirror, lambda4)
+I_beat = I3 + I4
+
+axes[1, 0].plot(d_mirror*1e6, I_beat, 'purple', linewidth=1)
+axes[1, 0].set_xlabel('Mirror displacement ($\\mu$m)')
+axes[1, 0].set_ylabel('Total intensity')
+axes[1, 0].set_title('Two-Wavelength Beat Pattern')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: 2D fringe pattern (circular fringes)
+r = np.linspace(0, 10e-3, 200)
+theta_circ = np.linspace(0, 2*np.pi, 100)
+R, THETA = np.meshgrid(r, theta_circ)
+
+# Path difference varies with r^2 for off-axis rays
+d_offset = 1e-6  # Small mirror offset
+f = 0.1  # Focal length of observation lens
+delta_2d = 4 * np.pi * (d_offset + R**2 / (8 * f**2)) / wavelength
+
+I_2d_mich = 0.5 * (1 + np.cos(delta_2d))
+
+X_circ = R * np.cos(THETA)
+Y_circ = R * np.sin(THETA)
+
+im = axes[1, 1].pcolormesh(X_circ*1000, Y_circ*1000, I_2d_mich, cmap='gray', shading='auto')
+axes[1, 1].set_xlabel('$x$ (mm)')
+axes[1, 1].set_ylabel('$y$ (mm)')
+axes[1, 1].set_title('Circular Michelson Fringes')
+axes[1, 1].set_aspect('equal')
+
+plt.tight_layout()
+save_plot('michelson.pdf', 'Michelson interferometer: single wavelength, coherence effects, and circular fringes.')
+\end{pycode}
+
+\section{Fabry-P\'erot Interferometer}
+\begin{pycode}
+# Fabry-Perot interferometer
+def fabry_perot_transmission(wavelength_range, d, n, R, theta=0):
+    """Transmission of Fabry-Perot cavity."""
+    delta = 4 * np.pi * n * d * np.cos(theta) / wavelength_range
+    F = 4 * R / (1 - R)**2  # Finesse coefficient
+    T = 1 / (1 + F * np.sin(delta/2)**2)
+    return T
+
+# Cavity parameters
+d_fp = 10e-3  # Cavity spacing (m)
+n_fp = 1.0  # Refractive index (air)
+
+# Reflectivities
+reflectivities = [0.7, 0.9, 0.99]
+colors_R = ['blue', 'green', 'red']
+
+# Wavelength range around 632.8 nm
+wavelength_range = np.linspace(632.7e-9, 632.9e-9, 2000)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Transmission for different reflectivities
+for R, color in zip(reflectivities, colors_R):
+    T = fabry_perot_transmission(wavelength_range, d_fp, n_fp, R)
+    axes[0, 0].plot(wavelength_range*1e9, T, color=color, linewidth=1.5, label=f'$R = {R:.2f}$')
+
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Transmission')
+axes[0, 0].set_title('Fabry-P\\'erot Transmission')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Finesse and free spectral range
+R_range = np.linspace(0.5, 0.999, 100)
+finesse = np.pi * np.sqrt(R_range) / (1 - R_range)
+
+ax2 = axes[0, 1]
+ax2.semilogy(R_range * 100, finesse, 'b-', linewidth=2)
+ax2.set_xlabel('Reflectivity (\\%)')
+ax2.set_ylabel('Finesse $\\mathcal{F}$', color='b')
+ax2.tick_params(axis='y', labelcolor='b')
+ax2.grid(True, alpha=0.3)
+ax2.set_title('Cavity Finesse')
+
+# Plot 3: Ring pattern
+r_ring = np.linspace(0, 15e-3, 200)
+theta_ring = np.linspace(0, 2*np.pi, 100)
+R_mesh, THETA_mesh = np.meshgrid(r_ring, theta_ring)
+
+f_lens = 0.1  # Focal length
+theta_fp = R_mesh / f_lens  # Angle at cavity
+
+R_val = 0.9
+T_2d = fabry_perot_transmission(wavelength, d_fp, n_fp, R_val, theta_fp)
+
+X_fp = R_mesh * np.cos(THETA_mesh)
+Y_fp = R_mesh * np.sin(THETA_mesh)
+
+im3 = axes[1, 0].pcolormesh(X_fp*1000, Y_fp*1000, T_2d, cmap='hot', shading='auto')
+axes[1, 0].set_xlabel('$x$ (mm)')
+axes[1, 0].set_ylabel('$y$ (mm)')
+axes[1, 0].set_title(f'Fabry-P\\'erot Ring Pattern ($R = {R_val}$)')
+axes[1, 0].set_aspect('equal')
+
+# Plot 4: Resolution of two wavelengths
+lambda_fp1 = 632.80e-9
+lambda_fp2 = 632.82e-9  # Very close wavelengths
+wavelength_detail = np.linspace(632.78e-9, 632.84e-9, 1000)
+
+R_high = 0.98
+T1 = fabry_perot_transmission(wavelength_detail, d_fp, n_fp, R_high)
+T2_1 = fabry_perot_transmission(wavelength_detail, d_fp * (lambda_fp2/lambda_fp1), n_fp, R_high)
+
+axes[1, 1].plot(wavelength_detail*1e9, T1, 'b-', linewidth=1.5, label='$\\lambda_1$')
+axes[1, 1].plot(wavelength_detail*1e9, T2_1, 'r--', linewidth=1.5, label='$\\lambda_2$')
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Transmission')
+axes[1, 1].set_title('High-Resolution Spectroscopy')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('fabry_perot.pdf', "Fabry-P\\'erot interferometer: transmission peaks, finesse, ring pattern, and resolution.")
+
+# Calculate FSR and resolving power
+FSR = wavelength**2 / (2 * n_fp * d_fp)  # Free spectral range
+finesse_high = np.pi * np.sqrt(0.98) / (1 - 0.98)
+resolving_power = finesse_high * 2 * d_fp / wavelength
+\end{pycode}
+
+\section{Newton's Rings and Thin Film Interference}
+\begin{pycode}
+# Newton's rings (air wedge between lens and flat)
+R_lens = 1.0  # Radius of curvature of lens (m)
+n_air = 1.0
+
+# Radius of mth dark ring: r_m = sqrt(m * lambda * R)
+m_values = np.arange(0, 20)
+r_dark = np.sqrt(m_values * wavelength * R_lens)
+r_bright = np.sqrt((m_values + 0.5) * wavelength * R_lens)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Dark ring radii
+axes[0, 0].plot(m_values, r_dark*1000, 'bo-', linewidth=1.5, markersize=4, label='Dark rings')
+axes[0, 0].plot(m_values, r_bright*1000, 'rs-', linewidth=1.5, markersize=4, label='Bright rings')
+axes[0, 0].set_xlabel('Ring number $m$')
+axes[0, 0].set_ylabel('Radius (mm)')
+axes[0, 0].set_title("Newton's Rings Radii")
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: 2D Newton's ring pattern
+r_newton = np.linspace(0, 5e-3, 300)
+theta_newton = np.linspace(0, 2*np.pi, 100)
+R_n, THETA_n = np.meshgrid(r_newton, theta_newton)
+
+# Air gap thickness
+t_gap = R_n**2 / (2 * R_lens)
+
+# Phase difference (reflection from bottom adds pi)
+delta_newton = 4 * np.pi * n_air * t_gap / wavelength + np.pi
+I_newton = np.cos(delta_newton/2)**2
+
+X_n = R_n * np.cos(THETA_n)
+Y_n = R_n * np.sin(THETA_n)
+
+im4 = axes[0, 1].pcolormesh(X_n*1000, Y_n*1000, I_newton, cmap='gray', shading='auto')
+axes[0, 1].set_xlabel('$x$ (mm)')
+axes[0, 1].set_ylabel('$y$ (mm)')
+axes[0, 1].set_title("Newton's Rings Pattern")
+axes[0, 1].set_aspect('equal')
+
+# Plot 3: Visibility vs number of rings
+# Visibility decreases due to finite source size
+source_size = 1e-3  # mm
+m_vis = np.arange(1, 51)
+# Simplified visibility model
+visibility = np.exp(-m_vis * (source_size / (R_lens * 1000))**2)
+
+axes[1, 0].plot(m_vis, visibility, 'g-', linewidth=2)
+axes[1, 0].set_xlabel('Ring number $m$')
+axes[1, 0].set_ylabel('Visibility')
+axes[1, 0].set_title('Fringe Visibility vs Ring Number')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Interferometric surface testing
+# Simulated surface deviation from flat
+x_surf = np.linspace(-10, 10, 200)
+y_surf = np.linspace(-10, 10, 200)
+X_s, Y_s = np.meshgrid(x_surf, y_surf)
+
+# Add some surface errors (astigmatism + defects)
+surface_error = 0.1 * wavelength * (0.3 * X_s**2 - 0.2 * Y_s**2) / 100
+surface_error += 0.05 * wavelength * np.exp(-((X_s-3)**2 + (Y_s+2)**2) / 4)
+
+delta_surf = 4 * np.pi * surface_error / wavelength
+I_surf = np.cos(delta_surf/2)**2
+
+im5 = axes[1, 1].pcolormesh(X_s, Y_s, I_surf, cmap='gray', shading='auto')
+axes[1, 1].set_xlabel('$x$ (mm)')
+axes[1, 1].set_ylabel('$y$ (mm)')
+axes[1, 1].set_title('Surface Testing Interferogram')
+axes[1, 1].set_aspect('equal')
+
+plt.tight_layout()
+save_plot('newton_rings.pdf', "Newton's rings and interferometric surface testing.")
+\end{pycode}
+
+\section{Coherence and Visibility}
+\begin{pycode}
+# Temporal and spatial coherence analysis
+c = 3e8  # Speed of light
+
+# Temporal coherence
+def temporal_coherence_function(tau, tau_c):
+    """Complex degree of temporal coherence."""
+    return np.exp(-np.abs(tau) / tau_c)
+
+# Spatial coherence (Van Cittert-Zernike)
+def spatial_coherence_function(d, wavelength, theta_s):
+    """Complex degree of spatial coherence for circular source."""
+    from scipy.special import j1
+    x = np.pi * d * theta_s / wavelength
+    return np.where(x == 0, 1, 2 * j1(x) / x)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Temporal coherence
+tau = np.linspace(-10e-15, 10e-15, 200)
+coherence_times = [1e-15, 3e-15, 10e-15]
+colors_tc = ['blue', 'green', 'red']
+
+for tau_c, color in zip(coherence_times, colors_tc):
+    gamma_t = temporal_coherence_function(tau, tau_c)
+    axes[0, 0].plot(tau*1e15, gamma_t, color=color, linewidth=2,
+                    label=f'$\\tau_c = {tau_c*1e15:.0f}$ fs')
+
+axes[0, 0].set_xlabel('Time delay $\\tau$ (fs)')
+axes[0, 0].set_ylabel('$|\\gamma(\\tau)|$')
+axes[0, 0].set_title('Temporal Coherence Function')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Coherence length vs linewidth
+linewidths = np.logspace(-3, 1, 100)  # nm
+coherence_lengths = wavelength**2 / (linewidths * 1e-9) / 1e-6  # um
+
+axes[0, 1].loglog(linewidths, coherence_lengths, 'b-', linewidth=2)
+axes[0, 1].set_xlabel('Spectral linewidth (nm)')
+axes[0, 1].set_ylabel('Coherence length ($\\mu$m)')
+axes[0, 1].set_title('Coherence Length vs Linewidth')
+axes[0, 1].grid(True, alpha=0.3, which='both')
+
+# Plot 3: Spatial coherence
+d_sep = np.linspace(0, 10e-3, 200)
+source_angles = [0.001, 0.005, 0.01]  # rad
+colors_sc = ['blue', 'green', 'red']
+
+from scipy.special import j1
+
+for theta_s, color in zip(source_angles, colors_sc):
+    gamma_s = np.abs(spatial_coherence_function(d_sep, wavelength, theta_s))
+    axes[1, 0].plot(d_sep*1000, gamma_s, color=color, linewidth=2,
+                    label=f'$\\theta_s = {theta_s*1000:.0f}$ mrad')
+
+axes[1, 0].set_xlabel('Slit separation (mm)')
+axes[1, 0].set_ylabel('$|\\gamma_{12}|$')
+axes[1, 0].set_title('Spatial Coherence (Van Cittert-Zernike)')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Fringe visibility vs path difference
+path_diff = np.linspace(0, 100e-6, 200)
+L_c = 30e-6  # Coherence length
+
+# Visibility = |gamma| for equal intensity beams
+visibility_plot = np.exp(-path_diff / L_c)
+
+# Also show fringes with decreasing visibility
+I_fringes = 0.5 * (1 + visibility_plot * np.cos(2 * np.pi * path_diff / wavelength))
+
+axes[1, 1].plot(path_diff*1e6, visibility_plot, 'b-', linewidth=2, label='Visibility envelope')
+axes[1, 1].plot(path_diff*1e6, I_fringes, 'gray', linewidth=0.5, alpha=0.5)
+axes[1, 1].axvline(x=L_c*1e6, color='red', linestyle='--', alpha=0.7, label=f'$L_c = {L_c*1e6:.0f}$ $\\mu$m')
+axes[1, 1].set_xlabel('Path difference ($\\mu$m)')
+axes[1, 1].set_ylabel('Visibility / Intensity')
+axes[1, 1].set_title('Fringe Visibility vs Path Difference')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('coherence.pdf', 'Temporal and spatial coherence analysis and fringe visibility.')
+\end{pycode}
+
+\section{Results Summary}
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of Interference Parameters}')
+print(r'\begin{tabular}{lll}')
+print(r'\toprule')
+print(r'Parameter & Symbol & Value \\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Double-Slit}} \\')
+print(f'Wavelength & $\\lambda$ & {wavelength*1e9:.1f} nm \\\\')
+print(f'Slit separation & $d$ & {d*1e3:.1f} mm \\\\')
+print(f'Slit width & $a$ & {a*1e6:.0f} $\\mu$m \\\\')
+print(f'Fringe spacing & $\\Delta x$ & {fringe_spacing:.3f} mm \\\\')
+print(f'Fringes in central max & $N$ & {n_fringes} \\\\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Fabry-P\\'erot}} \\')
+print(f'Cavity spacing & $d$ & {d_fp*1000:.0f} mm \\\\')
+print(f'Free spectral range & FSR & {FSR*1e12:.2f} pm \\\\')
+print(f'Finesse ($R = 0.98$) & $\\mathcal{{F}}$ & {finesse_high:.0f} \\\\')
+print(f'Resolving power & $R_p$ & {resolving_power/1e6:.1f} $\\times 10^6$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+\begin{itemize}
+    \item \textbf{Wavelength}: $\lambda = $ \py{f"{wavelength*1e9:.1f}"} nm
+    \item \textbf{Slit separation}: $d = $ \py{f"{d*1e3:.1f}"} mm
+    \item \textbf{Slit width}: $a = $ \py{f"{a*1e6:.0f}"} $\mu$m
+    \item \textbf{Screen distance}: $L = $ \py{f"{L:.1f}"} m
+    \item \textbf{Fringe spacing}: \py{f"{fringe_spacing:.3f}"} mm
+    \item \textbf{Fringes in central maximum}: $\approx$ \py{f"{n_fringes}"}
+    \item \textbf{Fabry-P\'erot FSR}: \py{f"{FSR*1e12:.2f}"} pm
+    \item \textbf{Fabry-P\'erot finesse} ($R = 0.98$): \py{f"{finesse_high:.0f}"}
+    \item \textbf{Resolving power}: \py{f"{resolving_power/1e6:.1f}"} $\times 10^6$
+\end{itemize}
+
+\section{Conclusion}
+Interference patterns provide crucial evidence for the wave nature of light and enable high-precision measurements. The double-slit pattern shows interference fringes modulated by a single-slit diffraction envelope. Multiple-slit gratings provide enhanced resolution proportional to the number of slits. Michelson interferometry enables nanometer-scale displacement measurements with applications in gravitational wave detection. Fabry-P\'erot cavities achieve ultra-high spectral resolution with finesse values exceeding 1000, critical for laser spectroscopy and optical communications. Understanding coherence is essential for predicting fringe visibility and designing interferometric systems.
+
+\end{document}

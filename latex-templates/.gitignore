@@ -1,0 +1,77 @@
+# ===== LaTeX Auxiliary Files =====
+# Ignore intermediate build files, but track source .tex and compiled PDFs
+
+# Standard LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+
+# BibTeX files
+*.bib.bak
+*.bib.sav
+
+# PythonTeX files
+*.pytxcode
+pythontex-files-*/
+*.pytxmcr
+*.pytxpyg
+
+# SageTeX files
+*.sagetex.sage
+*.sagetex.py
+*.sagetex.scmd
+*.sout
+
+# Knitr files
+*.Rout
+.Rhistory
+.RData
+*-concordance.tex
+figure/
+
+# Commentary and changes
+*.cut
+*.todo
+
+# Temporary files
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# macOS
+.DS_Store
+
+# Build directories (if used)
+.build/
+build/
+
+# Logs directory contents (keep directory)
+logs/*.log
+logs/*.txt
+
+# Keep these important files
+!templates/**/*.tex
+!templates/**/*.Rnw
+!templates/**/*.bib
+!templates/**/*.cls
+!templates/**/*.sty
+!output/*.pdf
+!README.md
+!CLAUDE.md
+!Makefile
+!scripts/*.sh
+!scripts/*.py
+!config/*

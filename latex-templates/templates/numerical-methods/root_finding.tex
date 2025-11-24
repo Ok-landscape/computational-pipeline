@@ -1,0 +1,468 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{bisect}{RGB}{231, 76, 60}
+\definecolor{newton}{RGB}{46, 204, 113}
+\definecolor{secant}{RGB}{52, 152, 219}
+\definecolor{brent}{RGB}{155, 89, 182}
+
+\title{Root Finding Algorithms:\\
+Convergence Analysis and Comparison}
+\author{Department of Computational Mathematics\\Technical Report NM-2024-003}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of root-finding algorithms for nonlinear equations. We implement and compare bisection, Newton-Raphson, secant, and Brent's methods. Convergence rates are analyzed theoretically and verified computationally. The importance of initial guesses and potential pitfalls of each method are demonstrated through examples.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Root finding seeks solutions to $f(x) = 0$. We classify methods by their convergence rate:
+\begin{itemize}
+    \item \textbf{Linear}: $|e_{n+1}| \leq C|e_n|$, where $C < 1$
+    \item \textbf{Superlinear}: $|e_{n+1}| \leq C|e_n|^p$, $1 < p < 2$
+    \item \textbf{Quadratic}: $|e_{n+1}| \leq C|e_n|^2$
+\end{itemize}
+
+\chapter{Bisection Method}
+
+\section{Algorithm}
+Given $f(a) \cdot f(b) < 0$:
+\begin{enumerate}
+    \item Compute midpoint: $c = \frac{a + b}{2}$
+    \item If $f(a) \cdot f(c) < 0$, set $b = c$; else set $a = c$
+    \item Repeat until $|b - a| < \epsilon$
+\end{enumerate}
+
+Convergence: Linear, $|e_{n+1}| = \frac{1}{2}|e_n|$
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def bisection(f, a, b, tol=1e-10, max_iter=100):
+    history = []
+    fa, fb = f(a), f(b)
+
+    if fa * fb > 0:
+        return None, []
+
+    for i in range(max_iter):
+        c = (a + b) / 2
+        fc = f(c)
+        history.append(c)
+
+        if abs(fc) < tol or (b - a) / 2 < tol:
+            return c, history
+
+        if fa * fc < 0:
+            b, fb = c, fc
+        else:
+            a, fa = c, fc
+
+    return c, history
+
+def newton(f, df, x0, tol=1e-10, max_iter=100):
+    history = [x0]
+    x = x0
+
+    for i in range(max_iter):
+        fx = f(x)
+        dfx = df(x)
+
+        if abs(dfx) < 1e-14:
+            break
+
+        x_new = x - fx / dfx
+        history.append(x_new)
+
+        if abs(x_new - x) < tol:
+            return x_new, history
+
+        x = x_new
+
+    return x, history
+
+def secant(f, x0, x1, tol=1e-10, max_iter=100):
+    history = [x0, x1]
+
+    for i in range(max_iter):
+        fx0, fx1 = f(x0), f(x1)
+
+        if abs(fx1 - fx0) < 1e-14:
+            break
+
+        x2 = x1 - fx1 * (x1 - x0) / (fx1 - fx0)
+        history.append(x2)
+
+        if abs(x2 - x1) < tol:
+            return x2, history
+
+        x0, x1 = x1, x2
+
+    return x1, history
+
+def brent(f, a, b, tol=1e-10, max_iter=100):
+    fa, fb = f(a), f(b)
+    history = []
+
+    if fa * fb > 0:
+        return None, []
+
+    if abs(fa) < abs(fb):
+        a, b = b, a
+        fa, fb = fb, fa
+
+    c = a
+    fc = fa
+    mflag = True
+    d = 0
+
+    for i in range(max_iter):
+        history.append(b)
+
+        if abs(fb) < tol or abs(b - a) < tol:
+            return b, history
+
+        if fa != fc and fb != fc:
+            # Inverse quadratic interpolation
+            s = (a * fb * fc / ((fa - fb) * (fa - fc)) +
+                 b * fa * fc / ((fb - fa) * (fb - fc)) +
+                 c * fa * fb / ((fc - fa) * (fc - fb)))
+        else:
+            # Secant
+            s = b - fb * (b - a) / (fb - fa)
+
+        # Conditions to accept s
+        cond1 = (s < (3*a + b) / 4 or s > b)
+        cond2 = mflag and abs(s - b) >= abs(b - c) / 2
+        cond3 = not mflag and abs(s - b) >= abs(c - d) / 2
+        cond4 = mflag and abs(b - c) < tol
+        cond5 = not mflag and abs(c - d) < tol
+
+        if cond1 or cond2 or cond3 or cond4 or cond5:
+            s = (a + b) / 2
+            mflag = True
+        else:
+            mflag = False
+
+        fs = f(s)
+        d = c
+        c = b
+        fc = fb
+
+        if fa * fs < 0:
+            b, fb = s, fs
+        else:
+            a, fa = s, fs
+
+        if abs(fa) < abs(fb):
+            a, b = b, a
+            fa, fb = fb, fa
+
+    return b, history
+\end{pycode}
+
+\section{Comparison of Methods}
+
+\begin{pycode}
+# Test function: x^3 - x - 2
+def f1(x):
+    return x**3 - x - 2
+
+def df1(x):
+    return 3*x**2 - 1
+
+# True root
+true_root = 1.5213797068045676
+
+# Apply all methods
+root_bis, hist_bis = bisection(f1, 1, 2)
+root_new, hist_new = newton(f1, df1, 1.5)
+root_sec, hist_sec = secant(f1, 1, 2)
+root_brent, hist_brent = brent(f1, 1, 2)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Visualize bisection
+ax = axes[0, 0]
+x = np.linspace(0.5, 2.5, 200)
+ax.plot(x, f1(x), 'b-', linewidth=2, label='$f(x) = x^3 - x - 2$')
+ax.axhline(0, color='k', linestyle='-', alpha=0.3)
+for i, xi in enumerate(hist_bis[:6]):
+    ax.axvline(xi, color='red', alpha=0.3 + 0.1*i, linestyle='--')
+ax.scatter([true_root], [0], color='green', s=100, zorder=5, label=f'Root: {true_root:.6f}')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$f(x)$')
+ax.set_title('Bisection Method')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Newton iterations
+ax = axes[0, 1]
+ax.plot(x, f1(x), 'b-', linewidth=2)
+ax.axhline(0, color='k', linestyle='-', alpha=0.3)
+for i in range(min(4, len(hist_new)-1)):
+    xi = hist_new[i]
+    yi = f1(xi)
+    slope = df1(xi)
+    x_tang = np.linspace(xi - 0.5, xi + 0.5, 50)
+    y_tang = yi + slope * (x_tang - xi)
+    ax.plot(x_tang, y_tang, 'g--', alpha=0.5)
+    ax.scatter([xi], [yi], color='green', s=50)
+ax.scatter([true_root], [0], color='red', s=100, zorder=5)
+ax.set_xlabel('$x$')
+ax.set_ylabel('$f(x)$')
+ax.set_title('Newton-Raphson Method')
+ax.set_xlim(0.5, 2.5)
+ax.set_ylim(-5, 10)
+ax.grid(True, alpha=0.3)
+
+# Convergence comparison
+ax = axes[1, 0]
+errors_bis = [abs(h - true_root) for h in hist_bis]
+errors_new = [abs(h - true_root) for h in hist_new]
+errors_sec = [abs(h - true_root) for h in hist_sec]
+errors_brent = [abs(h - true_root) for h in hist_brent]
+
+ax.semilogy(range(len(errors_bis)), errors_bis, 'ro-', label='Bisection')
+ax.semilogy(range(len(errors_new)), errors_new, 'gs-', label='Newton')
+ax.semilogy(range(len(errors_sec)), errors_sec, 'b^-', label='Secant')
+ax.semilogy(range(len(errors_brent)), errors_brent, 'mp-', label='Brent')
+ax.set_xlabel('Iteration')
+ax.set_ylabel('$|x_n - x^*|$')
+ax.set_title('Convergence Comparison')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Convergence order estimation
+ax = axes[1, 1]
+# Newton convergence order
+if len(errors_new) > 3:
+    log_e = np.log(errors_new[1:-1])
+    log_e_next = np.log(errors_new[2:])
+    log_e_prev = np.log(errors_new[:-2])
+    orders = log_e_next / log_e
+    ax.plot(range(len(orders)), orders, 'gs-', label='Newton')
+
+# Secant convergence order
+if len(errors_sec) > 3:
+    log_e = np.log(errors_sec[1:-1])
+    log_e_next = np.log(errors_sec[2:])
+    orders = log_e_next / log_e
+    ax.plot(range(len(orders)), orders, 'b^-', label='Secant')
+
+ax.axhline(2, color='green', linestyle='--', alpha=0.5, label='Quadratic')
+ax.axhline(1.618, color='blue', linestyle='--', alpha=0.5, label='Golden ratio')
+ax.axhline(1, color='red', linestyle='--', alpha=0.5, label='Linear')
+ax.set_xlabel('Iteration')
+ax.set_ylabel('Estimated Order')
+ax.set_title('Convergence Order')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim(0, 3)
+
+plt.tight_layout()
+plt.savefig('root_finding_comparison.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{root_finding_comparison.pdf}
+\caption{Root finding methods: (a) bisection visualization, (b) Newton tangent lines, (c) error convergence, (d) convergence order estimation.}
+\end{figure}
+
+\chapter{Newton-Raphson Method}
+
+\section{Algorithm}
+\begin{equation}
+x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}
+\end{equation}
+
+Convergence: Quadratic near root (when $f'(x^*) \neq 0$)
+
+\section{Pitfalls}
+
+\begin{pycode}
+# Newton failures
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Bad initial guess
+ax = axes[0]
+def f_bad(x):
+    return x**3 - 2*x + 2
+
+def df_bad(x):
+    return 3*x**2 - 2
+
+x = np.linspace(-2, 2, 200)
+ax.plot(x, f_bad(x), 'b-', linewidth=2)
+ax.axhline(0, color='k', alpha=0.3)
+
+# Newton from x0=0 fails (derivative near 0)
+x0 = 0.5
+history = [x0]
+xn = x0
+for _ in range(5):
+    xn = xn - f_bad(xn) / df_bad(xn)
+    history.append(xn)
+ax.scatter(history, [f_bad(h) for h in history], c=range(len(history)), cmap='Reds', s=50)
+ax.set_xlabel('$x$')
+ax.set_ylabel('$f(x)$')
+ax.set_title('Newton Cycling')
+ax.grid(True, alpha=0.3)
+
+# Multiple roots
+ax = axes[1]
+def f_mult(x):
+    return (x - 1)**2
+
+def df_mult(x):
+    return 2*(x - 1)
+
+x = np.linspace(-1, 3, 200)
+ax.plot(x, f_mult(x), 'b-', linewidth=2)
+ax.axhline(0, color='k', alpha=0.3)
+root_mult, hist_mult = newton(f_mult, df_mult, 3.0, max_iter=20)
+errors_mult = [abs(h - 1) for h in hist_mult]
+ax.scatter(hist_mult, [f_mult(h) for h in hist_mult], c=range(len(hist_mult)), cmap='Greens', s=30)
+ax.set_xlabel('$x$')
+ax.set_ylabel('$f(x)$')
+ax.set_title('Multiple Root (Linear Convergence)')
+ax.grid(True, alpha=0.3)
+
+# Slow convergence for multiple roots
+ax = axes[2]
+ax.semilogy(range(len(errors_mult)), errors_mult, 'go-')
+ax.set_xlabel('Iteration')
+ax.set_ylabel('$|x_n - 1|$')
+ax.set_title('Slow Convergence for $(x-1)^2 = 0$')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('newton_pitfalls.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+n_iterations = {
+    'Bisection': len(hist_bis),
+    'Newton': len(hist_new),
+    'Secant': len(hist_sec),
+    'Brent': len(hist_brent)
+}
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{newton_pitfalls.pdf}
+\caption{Newton method pitfalls: cycling, slow convergence for multiple roots.}
+\end{figure}
+
+\chapter{Secant Method}
+
+\section{Algorithm}
+\begin{equation}
+x_{n+1} = x_n - f(x_n)\frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})}
+\end{equation}
+
+Convergence: Superlinear, $p = \frac{1 + \sqrt{5}}{2} \approx 1.618$ (golden ratio)
+
+Advantage: No derivative required.
+
+\chapter{Brent's Method}
+
+Combines bisection, secant, and inverse quadratic interpolation. Guaranteed convergence with superlinear speed for smooth functions.
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+results_data = [
+    ('Bisection', n_iterations['Bisection'], 'Linear (1)', 'Guaranteed'),
+    ('Newton', n_iterations['Newton'], 'Quadratic (2)', 'Requires $f\'$'),
+    ('Secant', n_iterations['Secant'], 'Superlinear (1.618)', 'No derivative'),
+    ('Brent', n_iterations['Brent'], 'Superlinear', 'Robust'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison for $f(x) = x^3 - x - 2$}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Method & Iterations & Order & Notes \\
+\midrule
+\py{results_data[0][0]} & \py{results_data[0][1]} & \py{results_data[0][2]} & \py{results_data[0][3]} \\
+\py{results_data[1][0]} & \py{results_data[1][1]} & \py{results_data[1][2]} & \py{results_data[1][3]} \\
+\py{results_data[2][0]} & \py{results_data[2][1]} & \py{results_data[2][2]} & \py{results_data[2][3]} \\
+\py{results_data[3][0]} & \py{results_data[3][1]} & \py{results_data[3][2]} & \py{results_data[3][3]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Multiple Test Functions}
+
+\begin{pycode}
+# Additional test functions
+test_funcs = [
+    (lambda x: np.cos(x) - x, lambda x: -np.sin(x) - 1, 0, 1, "\\cos(x) - x"),
+    (lambda x: np.exp(x) - 3*x, lambda x: np.exp(x) - 3, 0, 2, "e^x - 3x"),
+    (lambda x: x**2 - 2, lambda x: 2*x, 1, 2, "x^2 - 2"),
+]
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+for i, (f, df, a, b, name) in enumerate(test_funcs):
+    ax = axes[i]
+    x = np.linspace(a - 0.5, b + 0.5, 200)
+    ax.plot(x, f(x), 'b-', linewidth=2)
+    ax.axhline(0, color='k', alpha=0.3)
+
+    root_n, hist_n = newton(f, df, (a + b) / 2)
+    root_b, hist_b = bisection(f, a, b)
+
+    ax.scatter([root_n], [0], color='red', s=100, zorder=5, label=f'Root: {root_n:.6f}')
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$f(x)$')
+    ax.set_title(f'$f(x) = {name}$')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('multiple_functions.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{multiple_functions.pdf}
+\caption{Root finding for various test functions.}
+\end{figure}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Bisection: Always converges but slow (linear)
+    \item Newton: Fast (quadratic) but requires derivative and good initial guess
+    \item Secant: Superlinear without derivatives
+    \item Brent: Best general-purpose method (robust + fast)
+    \item Multiple roots reduce Newton to linear convergence
+    \item Choice depends on: derivative availability, robustness needs, speed requirements
+\end{enumerate}
+
+\end{document}

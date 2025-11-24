@@ -1,0 +1,412 @@
+% Carbon Cycle Model Template
+% Topics: Box models, carbon reservoirs, anthropogenic perturbation, feedback loops
+% Style: Technical report with policy implications
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Global Carbon Cycle Modeling: Reservoirs, Fluxes, and Anthropogenic Perturbation}
+\author{Earth System Science Research}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents a comprehensive analysis of the global carbon cycle using
+box models to represent carbon exchange between atmosphere, ocean, and terrestrial biosphere.
+We examine natural carbon fluxes, anthropogenic emissions, and the resulting changes in
+atmospheric CO$_2$ concentration. The model explores the airborne fraction of emissions,
+ocean uptake dynamics, and climate-carbon feedbacks. Projections under different emission
+scenarios illustrate the long-term implications for atmospheric carbon levels.
+\end{abstract}
+
+\section{Introduction}
+
+The global carbon cycle plays a central role in Earth's climate system. Anthropogenic
+emissions have perturbed this cycle, leading to rising atmospheric CO$_2$ concentrations
+and associated climate change.
+
+\begin{definition}[Carbon Reservoirs]
+The major carbon reservoirs are:
+\begin{itemize}
+\item \textbf{Atmosphere}: $\sim$850 PgC (pre-industrial: 590 PgC)
+\item \textbf{Ocean}: $\sim$38,000 PgC (surface + deep)
+\item \textbf{Terrestrial biosphere}: $\sim$2,000 PgC (vegetation + soil)
+\item \textbf{Fossil fuels}: $\sim$4,000 PgC
+\end{itemize}
+(1 PgC = $10^{15}$ g carbon = 1 GtC)
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Box Model Equations}
+
+\begin{theorem}[Three-Box Carbon Cycle Model]
+The evolution of carbon in atmosphere ($C_A$), surface ocean ($C_O$), and biosphere ($C_B$) is:
+\begin{align}
+\frac{dC_A}{dt} &= -k_{AO}(C_A - C_A^{eq}) - k_{AB}(C_A - C_A^{eq}) + E(t) \\
+\frac{dC_O}{dt} &= k_{AO}(C_A - C_A^{eq}) - k_{OD}(C_O - C_O^{eq}) \\
+\frac{dC_B}{dt} &= k_{AB}(C_A - C_A^{eq}) - k_{BR}C_B
+\end{align}
+where $k$ values are exchange coefficients and $E(t)$ is anthropogenic emission.
+\end{theorem}
+
+\subsection{CO$_2$ Concentration and Carbon Mass}
+
+\begin{definition}[Conversion Factors]
+Atmospheric CO$_2$ concentration (ppm) relates to carbon mass (PgC):
+\begin{equation}
+C_A \text{ (PgC)} = \frac{\text{CO}_2 \text{ (ppm)}}{2.13}
+\end{equation}
+Thus 1 ppm CO$_2 \approx 2.13$ PgC.
+\end{definition}
+
+\subsection{Airborne Fraction}
+
+\begin{definition}[Airborne Fraction]
+The fraction of anthropogenic emissions remaining in the atmosphere:
+\begin{equation}
+f_{airborne} = \frac{\Delta C_A}{\sum E(t)}
+\end{equation}
+Currently $f_{airborne} \approx 0.44$ (the ocean and biosphere absorb $\sim$56\%).
+\end{definition}
+
+\begin{remark}[Ocean Chemistry]
+Ocean CO$_2$ uptake is limited by the Revelle factor:
+\begin{equation}
+R = \frac{\Delta[\text{CO}_2]/[\text{CO}_2]}{\Delta\text{DIC}/\text{DIC}} \approx 10
+\end{equation}
+Only 1/R of absorbed CO$_2$ remains as dissolved CO$_2$; the rest converts to bicarbonate.
+\end{remark}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+np.random.seed(42)
+
+# Carbon cycle box model
+def carbon_cycle(y, t, params, emission_func):
+    C_A, C_O, C_B = y
+    k_AO, k_AB, k_OD, k_BR, C_A_eq, C_O_eq = params
+
+    E = emission_func(t)
+
+    dC_A = -k_AO * (C_A - C_A_eq) - k_AB * (C_A - C_A_eq) + E
+    dC_O = k_AO * (C_A - C_A_eq) - k_OD * (C_O - C_O_eq)
+    dC_B = k_AB * (C_A - C_A_eq) - k_BR * C_B
+
+    return [dC_A, dC_O, dC_B]
+
+# Parameters (based on simplified IPCC values)
+k_AO = 0.1   # Atmosphere-ocean exchange (1/yr)
+k_AB = 0.05  # Atmosphere-biosphere exchange (1/yr)
+k_OD = 0.01  # Surface-deep ocean exchange (1/yr)
+k_BR = 0.02  # Biosphere respiration (1/yr)
+C_A_eq = 590  # Pre-industrial atmospheric C (PgC)
+C_O_eq = 1000  # Surface ocean equilibrium (PgC)
+params = (k_AO, k_AB, k_OD, k_BR, C_A_eq, C_O_eq)
+
+# Initial conditions (year 1850)
+C_A_0 = 590  # PgC
+C_O_0 = 1000  # PgC
+C_B_0 = 550  # PgC
+y0 = [C_A_0, C_O_0, C_B_0]
+
+# Emission scenarios
+def emissions_historical(t):
+    # Simplified historical emissions (PgC/yr)
+    if t < 1900:
+        return 0.5 * np.exp(0.02 * (t - 1850))
+    elif t < 2000:
+        return 1.0 * np.exp(0.025 * (t - 1900))
+    else:
+        return 10.0
+
+def emissions_rcp26(t):
+    # RCP 2.6 - aggressive mitigation
+    if t < 2020:
+        return emissions_historical(t)
+    elif t < 2050:
+        return 10.0 * (1 - 0.8 * (t - 2020) / 30)
+    else:
+        return 2.0 * np.exp(-0.05 * (t - 2050))
+
+def emissions_rcp45(t):
+    # RCP 4.5 - moderate mitigation
+    if t < 2040:
+        return emissions_historical(t) if t < 2020 else 10.0 + 0.05 * (t - 2020)
+    elif t < 2080:
+        return 11.0 - 0.2 * (t - 2040)
+    else:
+        return 3.0
+
+def emissions_rcp85(t):
+    # RCP 8.5 - business as usual
+    if t < 2020:
+        return emissions_historical(t)
+    else:
+        return 10.0 * np.exp(0.01 * (t - 2020))
+
+# Time arrays
+t_hist = np.linspace(1850, 2020, 171)
+t_proj = np.linspace(2020, 2100, 81)
+t_full = np.linspace(1850, 2100, 251)
+
+# Solve for historical period
+sol_hist = odeint(carbon_cycle, y0, t_hist, args=(params, emissions_historical))
+
+# Solve for different scenarios
+y0_2020 = sol_hist[-1]
+sol_rcp26 = odeint(carbon_cycle, y0_2020, t_proj, args=(params, emissions_rcp26))
+sol_rcp45 = odeint(carbon_cycle, y0_2020, t_proj, args=(params, emissions_rcp45))
+sol_rcp85 = odeint(carbon_cycle, y0_2020, t_proj, args=(params, emissions_rcp85))
+
+# Convert to CO2 concentration (ppm)
+ppm_conversion = 2.13
+CO2_hist = sol_hist[:, 0] / ppm_conversion
+CO2_rcp26 = sol_rcp26[:, 0] / ppm_conversion
+CO2_rcp45 = sol_rcp45[:, 0] / ppm_conversion
+CO2_rcp85 = sol_rcp85[:, 0] / ppm_conversion
+
+# Calculate cumulative emissions
+cumulative_hist = np.cumsum([emissions_historical(t) for t in t_hist]) * (t_hist[1] - t_hist[0])
+
+# Calculate airborne fraction
+delta_C_A = sol_hist[-1, 0] - C_A_0
+airborne_fraction = delta_C_A / cumulative_hist[-1]
+
+# Ocean and land uptake
+ocean_uptake = sol_hist[:, 1] - C_O_0
+land_uptake = sol_hist[:, 2] - C_B_0
+
+# Create annual emissions array
+emissions_array_hist = np.array([emissions_historical(t) for t in t_hist])
+emissions_rcp26_arr = np.array([emissions_rcp26(t) for t in t_proj])
+emissions_rcp45_arr = np.array([emissions_rcp45(t) for t in t_proj])
+emissions_rcp85_arr = np.array([emissions_rcp85(t) for t in t_proj])
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Historical CO2 concentration
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t_hist, CO2_hist, 'b-', linewidth=2)
+ax1.axhline(y=280, color='gray', linestyle='--', alpha=0.7, label='Pre-industrial')
+ax1.set_xlabel('Year')
+ax1.set_ylabel('CO$_2$ (ppm)')
+ax1.set_title('Historical Atmospheric CO$_2$')
+ax1.legend(fontsize=8)
+
+# Plot 2: Emission scenarios
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.plot(t_hist, emissions_array_hist, 'k-', linewidth=2, label='Historical')
+ax2.plot(t_proj, emissions_rcp26_arr, 'g-', linewidth=2, label='RCP 2.6')
+ax2.plot(t_proj, emissions_rcp45_arr, 'b-', linewidth=2, label='RCP 4.5')
+ax2.plot(t_proj, emissions_rcp85_arr, 'r-', linewidth=2, label='RCP 8.5')
+ax2.set_xlabel('Year')
+ax2.set_ylabel('Emissions (PgC/yr)')
+ax2.set_title('CO$_2$ Emission Scenarios')
+ax2.legend(fontsize=8)
+
+# Plot 3: Projected CO2 concentrations
+ax3 = fig.add_subplot(3, 3, 3)
+ax3.plot(t_hist, CO2_hist, 'k-', linewidth=2, label='Historical')
+ax3.plot(t_proj, CO2_rcp26, 'g-', linewidth=2, label='RCP 2.6')
+ax3.plot(t_proj, CO2_rcp45, 'b-', linewidth=2, label='RCP 4.5')
+ax3.plot(t_proj, CO2_rcp85, 'r-', linewidth=2, label='RCP 8.5')
+ax3.axhline(y=450, color='orange', linestyle=':', alpha=0.7)
+ax3.set_xlabel('Year')
+ax3.set_ylabel('CO$_2$ (ppm)')
+ax3.set_title('Projected CO$_2$ Concentrations')
+ax3.legend(fontsize=8)
+
+# Plot 4: Carbon reservoir changes
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.plot(t_hist, sol_hist[:, 0] - C_A_0, 'r-', linewidth=2, label='Atmosphere')
+ax4.plot(t_hist, ocean_uptake, 'b-', linewidth=2, label='Ocean')
+ax4.plot(t_hist, land_uptake, 'g-', linewidth=2, label='Land')
+ax4.set_xlabel('Year')
+ax4.set_ylabel('$\\Delta$C (PgC)')
+ax4.set_title('Carbon Reservoir Changes')
+ax4.legend(fontsize=8)
+
+# Plot 5: Cumulative emissions and uptake
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.fill_between(t_hist, 0, cumulative_hist, alpha=0.3, label='Total emissions')
+ax5.plot(t_hist, sol_hist[:, 0] - C_A_0, 'r-', linewidth=2, label='Atmosphere')
+ax5.set_xlabel('Year')
+ax5.set_ylabel('Cumulative C (PgC)')
+ax5.set_title(f'Airborne Fraction = {airborne_fraction:.2f}')
+ax5.legend(fontsize=8)
+
+# Plot 6: Sink efficiency over time
+ax6 = fig.add_subplot(3, 3, 6)
+cumsum = np.cumsum(emissions_array_hist)
+atm_increase = sol_hist[:, 0] - C_A_0
+cumsum[cumsum == 0] = 1  # Avoid division by zero
+airborne_time = atm_increase / cumsum
+ax6.plot(t_hist[10:], airborne_time[10:], 'purple', linewidth=2)
+ax6.axhline(y=0.5, color='gray', linestyle='--', alpha=0.7)
+ax6.set_xlabel('Year')
+ax6.set_ylabel('Airborne fraction')
+ax6.set_title('Sink Efficiency Over Time')
+ax6.set_ylim([0.3, 0.7])
+
+# Plot 7: CO2 growth rate
+ax7 = fig.add_subplot(3, 3, 7)
+growth_rate = np.diff(CO2_hist) / np.diff(t_hist)
+ax7.plot(t_hist[1:], growth_rate, 'b-', linewidth=1.5)
+ax7.set_xlabel('Year')
+ax7.set_ylabel('CO$_2$ growth (ppm/yr)')
+ax7.set_title('Atmospheric CO$_2$ Growth Rate')
+
+# Plot 8: Temperature proxy (simplified)
+ax8 = fig.add_subplot(3, 3, 8)
+# Climate sensitivity ~3 K per doubling
+ECS = 3.0  # K
+dT_hist = ECS * np.log(CO2_hist / 280) / np.log(2)
+dT_rcp26 = ECS * np.log(CO2_rcp26 / 280) / np.log(2)
+dT_rcp45 = ECS * np.log(CO2_rcp45 / 280) / np.log(2)
+dT_rcp85 = ECS * np.log(CO2_rcp85 / 280) / np.log(2)
+ax8.plot(t_hist, dT_hist, 'k-', linewidth=2, label='Historical')
+ax8.plot(t_proj, dT_rcp26, 'g-', linewidth=2, label='RCP 2.6')
+ax8.plot(t_proj, dT_rcp45, 'b-', linewidth=2, label='RCP 4.5')
+ax8.plot(t_proj, dT_rcp85, 'r-', linewidth=2, label='RCP 8.5')
+ax8.axhline(y=1.5, color='orange', linestyle=':', label='1.5 K target')
+ax8.axhline(y=2.0, color='red', linestyle=':', label='2.0 K limit')
+ax8.set_xlabel('Year')
+ax8.set_ylabel('$\\Delta T$ (K)')
+ax8.set_title('Implied Temperature Change')
+ax8.legend(fontsize=7)
+
+# Plot 9: Carbon budget
+ax9 = fig.add_subplot(3, 3, 9)
+budget_15 = 420  # PgC remaining for 1.5 K
+budget_20 = 1170  # PgC remaining for 2.0 K
+emissions_cum_proj = np.cumsum(emissions_rcp45_arr) * (t_proj[1] - t_proj[0])
+ax9.bar(['1.5 K', '2.0 K'], [budget_15, budget_20], color=['orange', 'red'], alpha=0.7)
+ax9.axhline(y=emissions_cum_proj[-1], color='blue', linestyle='--',
+            label=f'RCP 4.5 emissions: {emissions_cum_proj[-1]:.0f} PgC')
+ax9.set_ylabel('Carbon budget (PgC)')
+ax9.set_title('Remaining Carbon Budget')
+ax9.legend(fontsize=8)
+
+plt.tight_layout()
+plt.savefig('carbon_cycle_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Final values
+CO2_2020 = CO2_hist[-1]
+CO2_2100_rcp26 = CO2_rcp26[-1]
+CO2_2100_rcp85 = CO2_rcp85[-1]
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{carbon_cycle_analysis.pdf}
+\caption{Global carbon cycle analysis: (a) Historical CO$_2$ rise; (b) Emission scenarios;
+(c) Projected CO$_2$ concentrations; (d) Carbon reservoir changes; (e) Cumulative emissions
+and airborne fraction; (f) Sink efficiency evolution; (g) CO$_2$ growth rate; (h) Implied
+temperature change; (i) Remaining carbon budget for climate targets.}
+\label{fig:carbon}
+\end{figure}
+
+\section{Results}
+
+\subsection{Model Parameters}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Carbon Cycle Model Parameters}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Value & Units \\")
+print(r"\midrule")
+print(f"Atmosphere-ocean exchange & {k_AO} & yr$^{{-1}}$ \\\\")
+print(f"Atmosphere-biosphere exchange & {k_AB} & yr$^{{-1}}$ \\\\")
+print(f"Surface-deep ocean exchange & {k_OD} & yr$^{{-1}}$ \\\\")
+print(f"Biosphere respiration & {k_BR} & yr$^{{-1}}$ \\\\")
+print(f"Pre-industrial CO$_2$ & {C_A_eq/ppm_conversion:.0f} & ppm \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:parameters}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Scenario Projections}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Projected CO$_2$ Concentrations in 2100}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Scenario & CO$_2$ (ppm) & $\Delta T$ (K) \\")
+print(r"\midrule")
+print(f"RCP 2.6 & {CO2_2100_rcp26:.0f} & {ECS * np.log(CO2_2100_rcp26/280)/np.log(2):.1f} \\\\")
+print(f"RCP 4.5 & {CO2_rcp45[-1]:.0f} & {ECS * np.log(CO2_rcp45[-1]/280)/np.log(2):.1f} \\\\")
+print(f"RCP 8.5 & {CO2_2100_rcp85:.0f} & {ECS * np.log(CO2_2100_rcp85/280)/np.log(2):.1f} \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:projections}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Airborne Fraction]
+The airborne fraction of $\py{f"{airborne_fraction:.2f}"}$ means that about \py{f"{(1-airborne_fraction)*100:.0f}"}\%
+of emitted carbon is absorbed by natural sinks. The ocean absorbs $\sim$25\% and the
+land biosphere $\sim$30\%.
+\end{example}
+
+\begin{remark}[Climate-Carbon Feedbacks]
+This simple model neglects important feedbacks:
+\begin{itemize}
+\item \textbf{Ocean warming}: Reduces CO$_2$ solubility
+\item \textbf{Permafrost thaw}: Releases stored carbon
+\item \textbf{Forest dieback}: Amazon could become a source
+\item \textbf{Ocean acidification}: Reduces carbonate buffering
+\end{itemize}
+These feedbacks would increase the airborne fraction.
+\end{remark}
+
+\section{Conclusions}
+
+This carbon cycle analysis demonstrates:
+\begin{enumerate}
+\item Current CO$_2$ concentration is $\sim$\py{f"{CO2_2020:.0f}"} ppm (2020)
+\item Airborne fraction is $\py{f"{airborne_fraction:.2f}"}$
+\item RCP 8.5 leads to $\sim$\py{f"{CO2_2100_rcp85:.0f}"} ppm by 2100
+\item Only RCP 2.6 scenario keeps warming below 2 K
+\item Carbon budget for 1.5 K target is rapidly depleting
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item IPCC. \textit{Climate Change 2021: The Physical Science Basis}. Cambridge, 2021.
+\item Archer, D. \textit{The Global Carbon Cycle}. Princeton University Press, 2010.
+\item Sarmiento, J.L. \& Gruber, N. \textit{Ocean Biogeochemical Dynamics}. Princeton, 2006.
+\end{itemize}
+
+\end{document}

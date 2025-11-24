@@ -1,0 +1,488 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Nuclear Binding Energy: Semi-Empirical Mass Formula and Nuclear Stability}
+\author{Nuclear Physics Computation Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of nuclear binding energies using the semi-empirical mass formula (SEMF). We implement the Bethe-Weizs\"acker model with volume, surface, Coulomb, asymmetry, and pairing terms to predict nuclear masses and stability. The analysis includes the valley of stability, Q-values for nuclear reactions, and separation energies. Applications span nuclear structure, stellar nucleosynthesis, and nuclear energy production.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Nuclear Binding Energy]
+The binding energy $B(A,Z)$ is the energy required to disassemble a nucleus into free nucleons:
+\begin{equation}
+B(A,Z) = [Zm_p + Nm_n - M(A,Z)]c^2
+\end{equation}
+where $A = Z + N$ is the mass number, $Z$ is the proton number, and $N$ is the neutron number.
+\end{definition}
+
+\begin{theorem}[Semi-Empirical Mass Formula]
+The nuclear binding energy can be approximated as:
+\begin{equation}
+B(A,Z) = a_V A - a_S A^{2/3} - a_C \frac{Z(Z-1)}{A^{1/3}} - a_A \frac{(A-2Z)^2}{A} + \delta(A,Z)
+\end{equation}
+where the terms represent volume, surface, Coulomb, asymmetry, and pairing contributions.
+\end{theorem}
+
+\subsection{Physical Interpretation of Terms}
+
+\begin{itemize}
+    \item \textbf{Volume}: $a_V A$ --- saturated nuclear force, proportional to nucleon number
+    \item \textbf{Surface}: $-a_S A^{2/3}$ --- surface nucleons have fewer neighbors
+    \item \textbf{Coulomb}: $-a_C Z(Z-1)/A^{1/3}$ --- electrostatic repulsion of protons
+    \item \textbf{Asymmetry}: $-a_A (N-Z)^2/A$ --- Pauli exclusion principle effect
+    \item \textbf{Pairing}: $\delta(A,Z)$ --- spin-pairing effects
+\end{itemize}
+
+\begin{example}[Pairing Term]
+The pairing term depends on nucleon parity:
+\begin{equation}
+\delta(A,Z) = \begin{cases}
++a_P A^{-1/2} & \text{even-even (Z, N both even)} \\
+0 & \text{odd A} \\
+-a_P A^{-1/2} & \text{odd-odd (Z, N both odd)}
+\end{cases}
+\end{equation}
+\end{example}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import minimize_scalar
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# SEMF parameters (MeV) - standard values
+a_V = 15.75   # Volume coefficient
+a_S = 17.8    # Surface coefficient
+a_C = 0.711   # Coulomb coefficient
+a_A = 23.7    # Asymmetry coefficient
+a_P = 11.18   # Pairing coefficient
+
+# Physical constants
+m_p = 938.272  # Proton mass (MeV/c^2)
+m_n = 939.565  # Neutron mass (MeV/c^2)
+m_e = 0.511    # Electron mass (MeV/c^2)
+
+def pairing_term(A, Z):
+    """Calculate pairing term."""
+    N = A - Z
+    if A == 0:
+        return 0
+    if Z % 2 == 0 and N % 2 == 0:
+        return a_P / np.sqrt(A)
+    elif Z % 2 == 1 and N % 2 == 1:
+        return -a_P / np.sqrt(A)
+    else:
+        return 0
+
+def binding_energy(A, Z):
+    """Calculate total binding energy using SEMF (MeV)."""
+    if A <= 0 or Z <= 0 or Z > A:
+        return 0
+
+    B = (a_V * A
+         - a_S * A**(2/3)
+         - a_C * Z * (Z - 1) / A**(1/3)
+         - a_A * (A - 2*Z)**2 / A
+         + pairing_term(A, Z))
+    return max(0, B)
+
+def binding_per_nucleon(A, Z):
+    """Binding energy per nucleon (MeV)."""
+    if A <= 0:
+        return 0
+    return binding_energy(A, Z) / A
+
+def nuclear_mass(A, Z):
+    """Nuclear mass in MeV/c^2."""
+    return Z * m_p + (A - Z) * m_n - binding_energy(A, Z)
+
+def atomic_mass(A, Z):
+    """Atomic mass in MeV/c^2."""
+    return nuclear_mass(A, Z) + Z * m_e
+
+def most_stable_Z(A):
+    """Find most stable Z for given A using SEMF."""
+    if A <= 0:
+        return 0
+    # Analytical formula from SEMF
+    Z_opt = A / (2 + a_C * A**(2/3) / (2 * a_A))
+    return int(round(Z_opt))
+
+def separation_energy_n(A, Z):
+    """Neutron separation energy S_n."""
+    return binding_energy(A, Z) - binding_energy(A-1, Z)
+
+def separation_energy_p(A, Z):
+    """Proton separation energy S_p."""
+    return binding_energy(A, Z) - binding_energy(A-1, Z-1)
+
+def separation_energy_alpha(A, Z):
+    """Alpha separation energy S_alpha."""
+    return binding_energy(A, Z) - binding_energy(A-4, Z-2) - binding_energy(4, 2)
+
+# Q-value calculations
+def Q_alpha(A, Z):
+    """Q-value for alpha decay."""
+    parent_mass = nuclear_mass(A, Z)
+    daughter_mass = nuclear_mass(A-4, Z-2)
+    alpha_mass = nuclear_mass(4, 2)
+    return parent_mass - daughter_mass - alpha_mass
+
+def Q_beta_minus(A, Z):
+    """Q-value for beta-minus decay."""
+    parent_mass = atomic_mass(A, Z)
+    daughter_mass = atomic_mass(A, Z+1)
+    return parent_mass - daughter_mass
+
+def Q_beta_plus(A, Z):
+    """Q-value for beta-plus decay."""
+    parent_mass = atomic_mass(A, Z)
+    daughter_mass = atomic_mass(A, Z-1)
+    return parent_mass - daughter_mass - 2*m_e
+
+# Calculate binding energies for chart of nuclides
+A_range = np.arange(1, 261)
+Z_stable = np.array([most_stable_Z(A) for A in A_range])
+B_per_A = np.array([binding_per_nucleon(A, Z) for A, Z in zip(A_range, Z_stable)])
+
+# Find maximum B/A
+max_idx = np.argmax(B_per_A)
+A_max = A_range[max_idx]
+Z_max = Z_stable[max_idx]
+B_max = B_per_A[max_idx]
+
+# Specific nuclei for analysis
+key_nuclei = [
+    ('H-2', 2, 1),
+    ('He-4', 4, 2),
+    ('Li-7', 7, 3),
+    ('C-12', 12, 6),
+    ('O-16', 16, 8),
+    ('Fe-56', 56, 26),
+    ('Ni-62', 62, 28),
+    ('U-235', 235, 92),
+    ('U-238', 238, 92)
+]
+
+# SEMF term contributions
+A_terms = np.linspace(10, 250, 200)
+Z_terms = A_terms / 2.2
+
+volume = a_V * np.ones_like(A_terms)
+surface = -a_S / A_terms**(1/3)
+coulomb = -a_C * Z_terms * (Z_terms - 1) / A_terms**(4/3)
+asymmetry = -a_A * (A_terms - 2*Z_terms)**2 / A_terms**2
+
+# Magic numbers analysis
+magic_numbers = [2, 8, 20, 28, 50, 82, 126]
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: B/A vs A
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(A_range, B_per_A, 'b-', lw=1.5)
+ax1.axvline(x=A_max, color='r', ls='--', alpha=0.5)
+ax1.annotate(f'Max: A={A_max}', xy=(A_max, B_max),
+             xytext=(A_max+30, B_max-0.5),
+             arrowprops=dict(arrowstyle='->', color='red'),
+             fontsize=8)
+ax1.set_xlabel('Mass Number $A$')
+ax1.set_ylabel('$B/A$ (MeV)')
+ax1.set_title('Binding Energy per Nucleon')
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: SEMF term contributions
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(A_terms, volume, 'b-', lw=1.5, label='Volume')
+ax2.plot(A_terms, surface, 'g-', lw=1.5, label='Surface')
+ax2.plot(A_terms, coulomb, 'r-', lw=1.5, label='Coulomb')
+ax2.plot(A_terms, asymmetry, 'm-', lw=1.5, label='Asymmetry')
+ax2.axhline(y=0, color='gray', ls='--', alpha=0.5)
+ax2.set_xlabel('Mass Number $A$')
+ax2.set_ylabel('Contribution to $B/A$ (MeV)')
+ax2.set_title('SEMF Term Contributions')
+ax2.legend(fontsize=7)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Valley of stability
+ax3 = fig.add_subplot(gs[0, 2])
+A_grid = np.arange(1, 201)
+Z_grid = np.arange(1, 101)
+B_grid = np.zeros((len(Z_grid), len(A_grid)))
+
+for i, Z in enumerate(Z_grid):
+    for j, A in enumerate(A_grid):
+        if Z <= A:
+            B_grid[i, j] = binding_per_nucleon(A, Z)
+
+c = ax3.contourf(A_grid, Z_grid, B_grid, levels=20, cmap='viridis')
+plt.colorbar(c, ax=ax3, label='$B/A$ (MeV)')
+
+# Plot valley of stability
+A_valley = np.arange(1, 201)
+Z_valley = np.array([most_stable_Z(A) for A in A_valley])
+ax3.plot(A_valley, Z_valley, 'r-', lw=2, label='Valley')
+ax3.plot(A_valley, A_valley/2, 'w--', alpha=0.5, label='N=Z')
+ax3.set_xlabel('Mass Number $A$')
+ax3.set_ylabel('Proton Number $Z$')
+ax3.set_title('Nuclear Stability Chart')
+ax3.legend(fontsize=7, loc='lower right')
+
+# Plot 4: Key nuclei B/A
+ax4 = fig.add_subplot(gs[1, 0])
+names = [n[0] for n in key_nuclei]
+B_values = [binding_per_nucleon(n[1], n[2]) for n in key_nuclei]
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(key_nuclei)))
+bars = ax4.bar(range(len(names)), B_values, color=colors)
+ax4.set_xticks(range(len(names)))
+ax4.set_xticklabels(names, rotation=45, fontsize=7)
+ax4.set_ylabel('$B/A$ (MeV)')
+ax4.set_title('Binding Energies of Key Nuclei')
+ax4.grid(True, alpha=0.3, axis='y')
+
+# Plot 5: Separation energies
+ax5 = fig.add_subplot(gs[1, 1])
+A_sep = np.arange(10, 121)
+Z_sep = np.array([most_stable_Z(A) for A in A_sep])
+
+S_n = np.array([separation_energy_n(A, Z) for A, Z in zip(A_sep, Z_sep)])
+S_p = np.array([separation_energy_p(A, Z) for A, Z in zip(A_sep, Z_sep)])
+
+ax5.plot(A_sep, S_n, 'b-', lw=1.5, label='$S_n$')
+ax5.plot(A_sep, S_p, 'r--', lw=1.5, label='$S_p$')
+
+# Mark magic numbers
+for N_magic in [20, 28, 50, 82]:
+    ax5.axvline(x=2*N_magic, color='gray', ls=':', alpha=0.5)
+
+ax5.set_xlabel('Mass Number $A$')
+ax5.set_ylabel('Separation Energy (MeV)')
+ax5.set_title('Nucleon Separation Energies')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+ax5.set_ylim([0, 15])
+
+# Plot 6: Q-values for alpha decay
+ax6 = fig.add_subplot(gs[1, 2])
+A_alpha = np.arange(150, 261)
+Z_alpha = np.array([most_stable_Z(A) for A in A_alpha])
+
+Q_a = np.array([Q_alpha(A, Z) for A, Z in zip(A_alpha, Z_alpha)])
+
+ax6.plot(A_alpha, Q_a, 'g-', lw=1.5)
+ax6.axhline(y=0, color='r', ls='--', alpha=0.5)
+ax6.fill_between(A_alpha, Q_a, 0, where=(Q_a > 0), alpha=0.3, color='green',
+                  label='$\\alpha$-unstable')
+ax6.set_xlabel('Mass Number $A$')
+ax6.set_ylabel('$Q_\\alpha$ (MeV)')
+ax6.set_title('Alpha Decay Q-Values')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Pairing effect
+ax7 = fig.add_subplot(gs[2, 0])
+A_pair = np.arange(20, 101)
+B_even_even = np.array([binding_per_nucleon(A, A//2) for A in A_pair if A % 2 == 0])
+B_odd_odd = np.array([binding_per_nucleon(A, A//2) for A in A_pair if A % 2 == 0])
+B_odd = np.array([binding_per_nucleon(A, (A-1)//2) for A in A_pair if A % 2 == 1])
+
+A_even = A_pair[::2]
+A_odd = A_pair[1::2]
+
+ax7.plot(A_even, B_even_even, 'bo-', ms=4, label='Even-Even')
+ax7.plot(A_odd, B_odd, 'r^-', ms=4, label='Odd A')
+ax7.set_xlabel('Mass Number $A$')
+ax7.set_ylabel('$B/A$ (MeV)')
+ax7.set_title('Pairing Effect')
+ax7.legend(fontsize=8)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Mass excess
+ax8 = fig.add_subplot(gs[2, 1])
+A_me = np.arange(1, 101)
+Z_me = np.array([most_stable_Z(A) for A in A_me])
+
+# Mass excess = M - A*u (in MeV)
+u_MeV = 931.494  # atomic mass unit in MeV
+mass_excess = np.array([atomic_mass(A, Z) - A * u_MeV for A, Z in zip(A_me, Z_me)])
+
+ax8.plot(A_me, mass_excess, 'purple', lw=1.5)
+ax8.axhline(y=0, color='gray', ls='--', alpha=0.5)
+ax8.set_xlabel('Mass Number $A$')
+ax8.set_ylabel('Mass Excess (MeV)')
+ax8.set_title('Nuclear Mass Excess')
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Fission vs fusion
+ax9 = fig.add_subplot(gs[2, 2])
+
+# Energy release per nucleon
+E_fission = (B_per_A[233] - B_per_A[116]) * 0.85  # Approximate fission products
+E_fusion_DT = binding_per_nucleon(4, 2) - (binding_per_nucleon(2, 1) + binding_per_nucleon(3, 1))/2
+
+reactions = ['D-T Fusion', 'U-235 Fission', 'He-4 Formation']
+energies = [17.6/4, 200/235, 28.3/4]  # MeV per nucleon
+
+ax9.bar(reactions, energies, color=['red', 'blue', 'green'], alpha=0.7)
+ax9.set_ylabel('Energy per Nucleon (MeV)')
+ax9.set_title('Nuclear Energy Release')
+ax9.grid(True, alpha=0.3, axis='y')
+
+plt.savefig('binding_energy_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{binding_energy_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Summary calculations
+B_Fe56 = binding_per_nucleon(56, 26)
+B_Ni62 = binding_per_nucleon(62, 28)
+B_He4 = binding_per_nucleon(4, 2)
+Q_U235_alpha = Q_alpha(235, 92)
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Binding Energy per Nucleon}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Binding Energies of Key Nuclei}')
+print(r'\begin{tabular}{lccccc}')
+print(r'\toprule')
+print(r'Nucleus & A & Z & B (MeV) & B/A (MeV) & Type \\')
+print(r'\midrule')
+
+for name, A, Z in key_nuclei:
+    B = binding_energy(A, Z)
+    BpA = binding_per_nucleon(A, Z)
+    N = A - Z
+    if Z % 2 == 0 and N % 2 == 0:
+        ptype = 'e-e'
+    elif Z % 2 == 1 and N % 2 == 1:
+        ptype = 'o-o'
+    else:
+        ptype = 'odd'
+    print(f'{name} & {A} & {Z} & {B:.1f} & {BpA:.3f} & {ptype} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Maximum Stability}
+
+The binding energy curve reaches its maximum near the iron-nickel region:
+\begin{itemize}
+    \item Maximum $B/A$ at $A = \py{A_max}$: \py{f"{B_max:.3f}"} MeV
+    \item Fe-56: \py{f"{B_Fe56:.3f}"} MeV/nucleon
+    \item Ni-62: \py{f"{B_Ni62:.3f}"} MeV/nucleon (highest known $B/A$)
+    \item He-4: \py{f"{B_He4:.3f}"} MeV/nucleon (exceptionally stable)
+\end{itemize}
+
+\begin{remark}
+While Fe-56 is often cited as the most stable nucleus, Ni-62 actually has the highest binding energy per nucleon. Fe-56 is the most abundant end product of stellar nucleosynthesis due to the peak in the Fe-56 production cross section.
+\end{remark}
+
+\subsection{SEMF Coefficients}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Semi-Empirical Mass Formula Parameters}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Term & Coefficient & Physical Origin \\')
+print(r'\midrule')
+print(f'Volume & $a_V = {a_V}$ MeV & Strong force saturation \\\\')
+print(f'Surface & $a_S = {a_S}$ MeV & Surface tension \\\\')
+print(f'Coulomb & $a_C = {a_C}$ MeV & Electrostatic repulsion \\\\')
+print(f'Asymmetry & $a_A = {a_A}$ MeV & Fermi gas model \\\\')
+print(f'Pairing & $a_P = {a_P}$ MeV & Spin coupling \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Nuclear Reactions}
+
+\begin{example}[Nuclear Fusion]
+The fusion of deuterium and tritium releases:
+\begin{equation}
+\text{D} + \text{T} \to \alpha + n + 17.6 \text{ MeV}
+\end{equation}
+This represents $\sim$3.5 MeV per nucleon, the highest energy density achievable.
+\end{example}
+
+\begin{example}[Nuclear Fission]
+The fission of U-235 releases approximately 200 MeV per event:
+\begin{equation}
+^{235}\text{U} + n \to \text{fission products} + 2.5n + 200 \text{ MeV}
+\end{equation}
+This is $\sim$0.85 MeV per nucleon, less than fusion but easier to achieve.
+\end{example}
+
+\begin{theorem}[Energy Release Criterion]
+Energy is released in nuclear reactions when the products have higher $B/A$ than reactants:
+\begin{itemize}
+    \item Fusion is energetically favorable for $A < 56$
+    \item Fission is energetically favorable for $A > 100$
+\end{itemize}
+\end{theorem}
+
+\section{Discussion}
+
+The SEMF successfully reproduces nuclear binding energies with an RMS error of $\sim$2-3 MeV for nuclei away from closed shells. Key insights include:
+
+\begin{enumerate}
+    \item \textbf{Liquid drop model}: The first three terms describe the nucleus as a charged liquid drop with surface tension.
+    \item \textbf{Fermi gas}: The asymmetry term arises from the Pauli exclusion principle in a degenerate Fermi gas.
+    \item \textbf{Shell effects}: Magic numbers cause deviations from SEMF predictions, requiring shell corrections.
+    \item \textbf{Stability valley}: The competition between Coulomb and asymmetry terms determines the valley of stability.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis demonstrates:
+\begin{itemize}
+    \item Maximum binding energy per nucleon: \py{f"{B_max:.3f}"} MeV at $A = \py{A_max}$
+    \item Volume term dominates: $a_V = \py{a_V}$ MeV
+    \item Alpha decay Q-value for U-235: \py{f"{Q_U235_alpha:.2f}"} MeV
+    \item Energy release in fusion exceeds fission by factor of $\sim$4 per nucleon
+\end{itemize}
+
+The SEMF provides a quantitative foundation for understanding nuclear stability, decay modes, and energy production in nuclear reactions.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Krane, K.S., \textit{Introductory Nuclear Physics}, Wiley, 1987
+    \item Heyde, K., \textit{Basic Ideas and Concepts in Nuclear Physics}, 3rd Edition, IOP Publishing, 2004
+    \item Wong, S.S.M., \textit{Introductory Nuclear Physics}, 2nd Edition, Wiley-VCH, 2004
+\end{itemize}
+
+\end{document}

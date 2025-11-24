@@ -1,0 +1,240 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Air Pollution Dispersion\\Gaussian Plume Modeling}
+\author{Environmental Engineering Department}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Computational analysis of air pollution dispersion using Gaussian plume models and deposition calculations.
+\end{abstract}
+
+
+\section{Introduction}
+
+Air pollution dispersion models predict pollutant concentrations downwind of emission sources.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+\end{pycode}
+
+\section{Gaussian Plume Model}
+
+$C(x,y,z) = \frac{Q}{2\pi u \sigma_y \sigma_z} \exp\left(-\frac{y^2}{2\sigma_y^2}\right) \left[\exp\left(-\frac{(z-H)^2}{2\sigma_z^2}\right) + \exp\left(-\frac{(z+H)^2}{2\sigma_z^2}\right)\right]$
+
+\begin{pycode}
+def gaussian_plume(x, y, z, Q, u, H, stability='D'):
+    # Pasquill-Gifford dispersion parameters
+    if stability == 'A':
+        a_y, b_y, a_z, b_z = 0.22, 0.894, 0.20, 1.0
+    elif stability == 'D':
+        a_y, b_y, a_z, b_z = 0.08, 0.894, 0.06, 0.911
+    elif stability == 'F':
+        a_y, b_y, a_z, b_z = 0.04, 0.894, 0.016, 0.75
+
+    sigma_y = a_y * x**b_y
+    sigma_z = a_z * x**b_z
+
+    C = Q / (2 * np.pi * u * sigma_y * sigma_z) * \
+        np.exp(-y**2 / (2 * sigma_y**2)) * \
+        (np.exp(-(z - H)**2 / (2 * sigma_z**2)) + np.exp(-(z + H)**2 / (2 * sigma_z**2)))
+    return C
+
+# Parameters
+Q = 100  # g/s emission rate
+u = 5    # m/s wind speed
+H = 50   # m stack height
+
+x = np.linspace(100, 5000, 200)
+C_ground = gaussian_plume(x, 0, 0, Q, u, H)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.semilogy(x/1000, C_ground * 1e6, 'b-', linewidth=2)
+ax.set_xlabel('Downwind Distance (km)')
+ax.set_ylabel('Concentration ($\\mu$g/m$^3$)')
+ax.set_title('Ground-Level Concentration')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('plume_centerline.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{plume_centerline.pdf}
+\caption{Ground-level pollutant concentration along plume centerline.}
+\end{figure}
+
+\section{Stability Class Effects}
+
+\begin{pycode}
+fig, ax = plt.subplots(figsize=(10, 6))
+for stab in ['A', 'D', 'F']:
+    C = gaussian_plume(x, 0, 0, Q, u, H, stability=stab)
+    ax.semilogy(x/1000, C * 1e6, linewidth=1.5, label=f'Class {stab}')
+ax.set_xlabel('Downwind Distance (km)')
+ax.set_ylabel('Concentration ($\\mu$g/m$^3$)')
+ax.set_title('Effect of Atmospheric Stability')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('stability_effects.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{stability_effects.pdf}
+\caption{Concentration for different stability classes.}
+\end{figure}
+
+\section{2D Concentration Field}
+
+\begin{pycode}
+x_2d = np.linspace(100, 3000, 100)
+y_2d = np.linspace(-500, 500, 100)
+X, Y = np.meshgrid(x_2d, y_2d)
+C_2d = gaussian_plume(X, Y, 0, Q, u, H)
+
+fig, ax = plt.subplots(figsize=(12, 6))
+cs = ax.contourf(X/1000, Y, C_2d * 1e6, levels=20, cmap='YlOrRd')
+plt.colorbar(cs, label='Concentration ($\\mu$g/m$^3$)')
+ax.set_xlabel('Downwind Distance (km)')
+ax.set_ylabel('Crosswind Distance (m)')
+ax.set_title('Ground-Level Concentration Field')
+plt.tight_layout()
+plt.savefig('concentration_field.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{concentration_field.pdf}
+\caption{2D ground-level concentration contours.}
+\end{figure}
+
+\section{Stack Height Effects}
+
+\begin{pycode}
+heights = [30, 50, 100, 150]
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for H_s in heights:
+    C = gaussian_plume(x, 0, 0, Q, u, H_s)
+    ax.semilogy(x/1000, C * 1e6, linewidth=1.5, label=f'H = {H_s} m')
+ax.set_xlabel('Downwind Distance (km)')
+ax.set_ylabel('Concentration ($\\mu$g/m$^3$)')
+ax.set_title('Effect of Stack Height')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('stack_height_effects.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{stack_height_effects.pdf}
+\caption{Ground concentration for different stack heights.}
+\end{figure}
+
+\section{Maximum Concentration}
+
+\begin{pycode}
+x_max = H * np.sqrt(2)  # Approximate location of max
+C_max = gaussian_plume(x, 0, 0, Q, u, H)
+idx_max = np.argmax(C_max)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(x/1000, C_max * 1e6, 'b-', linewidth=2)
+ax.plot(x[idx_max]/1000, C_max[idx_max] * 1e6, 'ro', markersize=10)
+ax.annotate(f'Max: {C_max[idx_max]*1e6:.1f} $\\mu$g/m$^3$\nat {x[idx_max]/1000:.1f} km',
+            xy=(x[idx_max]/1000, C_max[idx_max]*1e6), xytext=(x[idx_max]/1000 + 1, C_max[idx_max]*1e6 * 1.5),
+            arrowprops=dict(arrowstyle='->'))
+ax.set_xlabel('Downwind Distance (km)')
+ax.set_ylabel('Concentration ($\\mu$g/m$^3$)')
+ax.set_title('Maximum Ground-Level Concentration')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('maximum_concentration.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{maximum_concentration.pdf}
+\caption{Location and magnitude of maximum concentration.}
+\end{figure}
+
+\section{Vertical Profile}
+
+\begin{pycode}
+z_profile = np.linspace(0, 200, 100)
+x_loc = 1000  # m
+
+C_vertical = gaussian_plume(x_loc, 0, z_profile, Q, u, H)
+
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.plot(C_vertical * 1e6, z_profile, 'b-', linewidth=2)
+ax.axhline(y=H, color='r', linestyle='--', label=f'Stack height = {H} m')
+ax.set_xlabel('Concentration ($\\mu$g/m$^3$)')
+ax.set_ylabel('Height (m)')
+ax.set_title(f'Vertical Profile at x = {x_loc} m')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('vertical_profile.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{vertical_profile.pdf}
+\caption{Vertical concentration profile.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+x_max_dist = x[idx_max]
+C_max_val = C_max[idx_max] * 1e6
+
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Dispersion Model Results}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Emission rate & {Q} g/s \\\\')
+print(f'Wind speed & {u} m/s \\\\')
+print(f'Stack height & {H} m \\\\')
+print(f'Max concentration & {C_max_val:.1f} $\\mu$g/m$^3$ \\\\')
+print(f'Distance to max & {x_max_dist:.0f} m \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Gaussian plume models provide practical estimates of pollutant dispersion for regulatory applications.
+
+
+\end{document}

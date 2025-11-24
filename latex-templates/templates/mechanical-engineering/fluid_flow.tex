@@ -1,0 +1,581 @@
+\documentclass[11pt,a4paper]{article}
+
+% Document Setup
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+
+% PythonTeX Setup
+\usepackage[makestderr]{pythontex}
+
+\title{Pipe Flow Analysis: Darcy-Weisbach and Friction Factors}
+\author{Mechanical Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents computational analysis of pipe flow using the Darcy-Weisbach equation. We examine Reynolds number regimes, friction factor correlations including the Colebrook-White equation, the Moody diagram, minor losses, and pipe network analysis. Python-based computations provide quantitative analysis with dynamic visualization.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction to Pipe Flow}
+
+Internal flow through pipes is fundamental to hydraulic system design. Key applications include:
+\begin{itemize}
+    \item Water distribution networks
+    \item Oil and gas pipelines
+    \item HVAC systems
+    \item Process piping in chemical plants
+\end{itemize}
+
+% Initialize Python environment
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+
+plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 10
+plt.rcParams['text.usetex'] = True
+
+def save_fig(filename):
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+\end{pycode}
+
+\section{Fundamental Equations}
+
+\subsection{Reynolds Number}
+
+The Reynolds number characterizes flow regime:
+\begin{equation}
+Re = \frac{\rho V D}{\mu} = \frac{V D}{\nu}
+\end{equation}
+where $\rho$ is density, $V$ is velocity, $D$ is diameter, and $\mu$ is dynamic viscosity.
+
+\begin{pycode}
+# Flow regime visualization
+Re_range = np.logspace(2, 6, 500)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+# Laminar regime
+ax.axvspan(100, 2300, alpha=0.3, color='blue', label='Laminar')
+# Transition regime
+ax.axvspan(2300, 4000, alpha=0.3, color='yellow', label='Transition')
+# Turbulent regime
+ax.axvspan(4000, 1e6, alpha=0.3, color='red', label='Turbulent')
+
+ax.axvline(2300, color='black', linestyle='--', linewidth=2)
+ax.axvline(4000, color='black', linestyle='--', linewidth=2)
+
+ax.set_xscale('log')
+ax.set_xlabel('Reynolds Number')
+ax.set_ylabel('Flow Characteristic')
+ax.set_title('Flow Regime Classification')
+ax.legend(loc='upper left')
+ax.set_xlim(100, 1e6)
+ax.set_yticks([])
+
+# Add annotations
+ax.text(500, 0.5, 'Laminar\\n$Re < 2300$', ha='center', fontsize=12, transform=ax.get_xaxis_transform())
+ax.text(3100, 0.5, 'Trans.', ha='center', fontsize=10, transform=ax.get_xaxis_transform())
+ax.text(50000, 0.5, 'Turbulent\\n$Re > 4000$', ha='center', fontsize=12, transform=ax.get_xaxis_transform())
+
+save_fig('flow_regimes.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{flow_regimes.pdf}
+\caption{Flow regime classification based on Reynolds number.}
+\end{figure}
+
+\subsection{Darcy-Weisbach Equation}
+
+Head loss in pipe flow:
+\begin{equation}
+h_f = f \frac{L}{D} \frac{V^2}{2g}
+\end{equation}
+or in terms of pressure drop:
+\begin{equation}
+\Delta P = f \frac{L}{D} \frac{\rho V^2}{2}
+\end{equation}
+
+\section{Friction Factor Correlations}
+
+\subsection{Laminar Flow}
+
+For laminar flow ($Re < 2300$):
+\begin{equation}
+f = \frac{64}{Re}
+\end{equation}
+
+\subsection{Turbulent Flow - Colebrook-White Equation}
+
+For turbulent flow:
+\begin{equation}
+\frac{1}{\sqrt{f}} = -2\log_{10}\left(\frac{\epsilon/D}{3.7} + \frac{2.51}{Re\sqrt{f}}\right)
+\end{equation}
+
+\begin{pycode}
+# Friction factor calculation functions
+def f_laminar(Re):
+    return 64 / Re
+
+def f_turbulent(Re, eps_D):
+    """Solve Colebrook-White equation iteratively"""
+    if Re < 2300:
+        return 64 / Re
+
+    # Swamee-Jain initial guess
+    f0 = 0.25 / (np.log10(eps_D/3.7 + 5.74/Re**0.9))**2
+
+    # Newton-Raphson iteration
+    for _ in range(50):
+        sqrt_f = np.sqrt(f0)
+        LHS = 1/sqrt_f
+        RHS = -2 * np.log10(eps_D/3.7 + 2.51/(Re*sqrt_f))
+        f_new = 1/(RHS)**2
+        if abs(f_new - f0) < 1e-10:
+            break
+        f0 = f_new
+
+    return f0
+
+# Calculate friction factors for various Reynolds numbers and roughness
+Re_range = np.logspace(3, 8, 200)
+eps_D_values = [0, 1e-6, 1e-5, 1e-4, 1e-3, 0.01, 0.05]
+
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Laminar line
+Re_lam = np.linspace(600, 2300, 100)
+f_lam = [f_laminar(Re) for Re in Re_lam]
+ax.loglog(Re_lam, f_lam, 'b-', linewidth=2, label='Laminar')
+
+# Turbulent lines
+colors = plt.cm.viridis(np.linspace(0, 1, len(eps_D_values)))
+for eps_D, color in zip(eps_D_values, colors):
+    Re_turb = Re_range[Re_range > 2300]
+    f_turb = [f_turbulent(Re, eps_D) for Re in Re_turb]
+    if eps_D == 0:
+        label = 'Smooth'
+    else:
+        label = f'$\\epsilon/D$ = {eps_D}'
+    ax.loglog(Re_turb, f_turb, color=color, linewidth=1.5, label=label)
+
+ax.axvline(2300, color='gray', linestyle='--', alpha=0.5)
+ax.set_xlabel('Reynolds Number, Re')
+ax.set_ylabel('Friction Factor, f')
+ax.set_title('Moody Diagram')
+ax.legend(loc='upper right', fontsize=8)
+ax.grid(True, which='both', alpha=0.3)
+ax.set_xlim(600, 1e8)
+ax.set_ylim(0.008, 0.1)
+
+save_fig('moody_diagram.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{moody_diagram.pdf}
+\caption{Moody diagram showing friction factor vs Reynolds number for various relative roughness values.}
+\end{figure}
+
+\section{Pipe Flow Analysis}
+
+\begin{pycode}
+# Design problem: water flow in commercial steel pipe
+# Properties
+rho = 998  # kg/m^3 (water)
+mu = 0.001  # Pa*s
+nu = mu / rho
+
+# Pipe parameters
+D = 0.1  # m (100 mm diameter)
+L = 100  # m
+epsilon = 0.045e-3  # m (commercial steel)
+eps_D = epsilon / D
+
+# Flow rates
+Q_range = np.linspace(0.001, 0.05, 50)  # m^3/s
+V_range = Q_range / (np.pi * D**2 / 4)
+Re_range = V_range * D / nu
+
+# Calculate friction factors and pressure drops
+f_range = [f_turbulent(Re, eps_D) for Re in Re_range]
+dP_range = np.array(f_range) * L/D * rho * V_range**2 / 2  # Pa
+h_f_range = dP_range / (rho * 9.81)  # m
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Velocity vs flow rate
+axes[0, 0].plot(Q_range*1000, V_range, 'b-', linewidth=2)
+axes[0, 0].set_xlabel('Flow Rate (L/s)')
+axes[0, 0].set_ylabel('Velocity (m/s)')
+axes[0, 0].set_title('Flow Velocity')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Reynolds number
+axes[0, 1].plot(Q_range*1000, Re_range/1000, 'r-', linewidth=2)
+axes[0, 1].axhline(2.3, color='k', linestyle='--', alpha=0.5, label='Re = 2300')
+axes[0, 1].set_xlabel('Flow Rate (L/s)')
+axes[0, 1].set_ylabel('Reynolds Number ($\\times 10^3$)')
+axes[0, 1].set_title('Reynolds Number')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Pressure drop
+axes[1, 0].plot(Q_range*1000, dP_range/1000, 'g-', linewidth=2)
+axes[1, 0].set_xlabel('Flow Rate (L/s)')
+axes[1, 0].set_ylabel('Pressure Drop (kPa)')
+axes[1, 0].set_title('Pressure Drop')
+axes[1, 0].grid(True, alpha=0.3)
+
+# System curve (head loss vs flow rate)
+axes[1, 1].plot(Q_range*1000, h_f_range, 'm-', linewidth=2, label='System curve')
+axes[1, 1].set_xlabel('Flow Rate (L/s)')
+axes[1, 1].set_ylabel('Head Loss (m)')
+axes[1, 1].set_title('System Curve')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('pipe_flow_analysis.pdf')
+
+# Design point calculations
+Q_design = 0.02  # m^3/s (20 L/s)
+V_design = Q_design / (np.pi * D**2 / 4)
+Re_design = V_design * D / nu
+f_design = f_turbulent(Re_design, eps_D)
+dP_design = f_design * L/D * rho * V_design**2 / 2
+h_f_design = dP_design / (rho * 9.81)
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{pipe_flow_analysis.pdf}
+\caption{Pipe flow analysis showing velocity, Reynolds number, pressure drop, and system curve.}
+\end{figure}
+
+\subsection{Design Point Results}
+
+For a design flow rate of $Q = 20$ L/s:
+
+\begin{table}[H]
+\centering
+\caption{Pipe Flow Design Calculations}
+\begin{tabular}{lcc}
+\toprule
+Parameter & Value & Units \\
+\midrule
+Velocity & \py{f"{V_design:.2f}"} & m/s \\
+Reynolds number & \py{f"{Re_design:.0f}"} & -- \\
+Friction factor & \py{f"{f_design:.4f}"} & -- \\
+Pressure drop & \py{f"{dP_design/1000:.2f}"} & kPa \\
+Head loss & \py{f"{h_f_design:.2f}"} & m \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Minor Losses}
+
+Minor (local) losses from fittings and valves:
+\begin{equation}
+h_m = K \frac{V^2}{2g}
+\end{equation}
+
+\begin{pycode}
+# Minor loss coefficients
+fittings = {
+    '90 elbow (regular)': 0.9,
+    '90 elbow (long radius)': 0.6,
+    '45 elbow': 0.4,
+    'Tee (branch)': 1.8,
+    'Gate valve (full open)': 0.2,
+    'Globe valve (full open)': 10.0,
+    'Check valve': 2.5,
+    'Entrance (sharp)': 0.5,
+    'Exit': 1.0
+}
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+# Bar chart of K values
+names = list(fittings.keys())
+K_vals = list(fittings.values())
+y_pos = np.arange(len(names))
+
+ax1.barh(y_pos, K_vals, color='steelblue', alpha=0.7)
+ax1.set_yticks(y_pos)
+ax1.set_yticklabels(names)
+ax1.set_xlabel('Loss Coefficient K')
+ax1.set_title('Minor Loss Coefficients')
+ax1.grid(True, alpha=0.3, axis='x')
+
+# Total system losses with fittings
+# Example system: entrance + 4 elbows + gate valve + exit
+system_fittings = [
+    ('Entrance', 0.5),
+    ('4x 90 elbows', 4*0.9),
+    ('Gate valve', 0.2),
+    ('Exit', 1.0)
+]
+
+V = V_design
+g = 9.81
+minor_losses = []
+labels = []
+for name, K in system_fittings:
+    h_m = K * V**2 / (2*g)
+    minor_losses.append(h_m)
+    labels.append(name)
+
+# Add major loss
+major_loss = h_f_design
+labels.append('Major loss')
+minor_losses.append(major_loss)
+
+colors = ['lightblue']*4 + ['salmon']
+ax2.bar(labels, minor_losses, color=colors, alpha=0.7)
+ax2.set_ylabel('Head Loss (m)')
+ax2.set_title('System Head Loss Breakdown')
+ax2.grid(True, alpha=0.3, axis='y')
+
+total_loss = sum(minor_losses)
+ax2.axhline(total_loss/len(minor_losses), color='red', linestyle='--',
+            label=f'Total = {total_loss:.2f} m')
+ax2.legend()
+
+plt.tight_layout()
+save_fig('minor_losses.pdf')
+
+K_total_minor = sum([k for _, k in system_fittings])
+h_minor_total = K_total_minor * V_design**2 / (2*g)
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{minor_losses.pdf}
+\caption{Minor loss coefficients and system head loss breakdown.}
+\end{figure}
+
+Total minor losses: $h_m = \py{f"{h_minor_total:.2f}"}$ m
+
+\section{Pipe Diameter Effect}
+
+\begin{pycode}
+# Effect of pipe diameter on pressure drop
+diameters = np.linspace(0.05, 0.3, 100)  # m
+Q_fixed = 0.02  # m^3/s
+
+dP_diam = []
+V_diam = []
+
+for D in diameters:
+    A = np.pi * D**2 / 4
+    V = Q_fixed / A
+    Re = V * D / nu
+    eps_D = epsilon / D
+    f = f_turbulent(Re, eps_D)
+    dP = f * L/D * rho * V**2 / 2
+    dP_diam.append(dP)
+    V_diam.append(V)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.semilogy(diameters*1000, np.array(dP_diam)/1000, 'b-', linewidth=2)
+ax1.axvline(100, color='r', linestyle='--', label='D = 100 mm')
+ax1.set_xlabel('Pipe Diameter (mm)')
+ax1.set_ylabel('Pressure Drop (kPa)')
+ax1.set_title('Pressure Drop vs Diameter (Q = 20 L/s)')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+ax2.plot(diameters*1000, V_diam, 'g-', linewidth=2)
+ax2.axhline(3, color='r', linestyle='--', alpha=0.5, label='Typical max V')
+ax2.set_xlabel('Pipe Diameter (mm)')
+ax2.set_ylabel('Flow Velocity (m/s)')
+ax2.set_title('Velocity vs Diameter')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('diameter_effect.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{diameter_effect.pdf}
+\caption{Effect of pipe diameter on pressure drop and velocity for constant flow rate.}
+\end{figure}
+
+\section{Pipe Network Analysis}
+
+\subsection{Pipes in Series}
+
+For pipes in series, flow rate is constant and head losses add:
+\begin{equation}
+h_{f,total} = \sum_{i=1}^{n} h_{f,i}
+\end{equation}
+
+\subsection{Pipes in Parallel}
+
+For pipes in parallel, head loss is equal and flow rates add:
+\begin{equation}
+Q_{total} = \sum_{i=1}^{n} Q_i \quad \text{with} \quad h_{f,1} = h_{f,2} = \cdots
+\end{equation}
+
+\begin{pycode}
+# Parallel pipe analysis
+# Two pipes with different diameters
+D1 = 0.1  # m
+D2 = 0.08  # m
+L_both = 100  # m
+
+# Find flow distribution for given total head loss
+h_f_target = 5  # m target head loss
+
+def flow_rate_from_head(h_f, D, L, eps):
+    """Calculate flow rate given head loss using iteration"""
+    eps_D = eps / D
+    A = np.pi * D**2 / 4
+
+    # Initial guess using Hazen-Williams approximation
+    V = np.sqrt(2 * 9.81 * h_f * D / (0.02 * L))
+
+    for _ in range(50):
+        Re = V * D / nu
+        f = f_turbulent(Re, eps_D)
+        V_new = np.sqrt(2 * 9.81 * h_f * D / (f * L))
+        if abs(V_new - V) < 1e-6:
+            break
+        V = V_new
+
+    return V * A
+
+h_range = np.linspace(1, 10, 50)
+Q1_range = [flow_rate_from_head(h, D1, L_both, epsilon) for h in h_range]
+Q2_range = [flow_rate_from_head(h, D2, L_both, epsilon) for h in h_range]
+Q_total = [q1 + q2 for q1, q2 in zip(Q1_range, Q2_range)]
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.plot(np.array(Q1_range)*1000, h_range, 'b-', linewidth=2, label=f'Pipe 1 (D={D1*1000:.0f}mm)')
+ax1.plot(np.array(Q2_range)*1000, h_range, 'r-', linewidth=2, label=f'Pipe 2 (D={D2*1000:.0f}mm)')
+ax1.plot(np.array(Q_total)*1000, h_range, 'k--', linewidth=2, label='Total')
+ax1.set_xlabel('Flow Rate (L/s)')
+ax1.set_ylabel('Head Loss (m)')
+ax1.set_title('Parallel Pipe System Curves')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Flow distribution at target head loss
+Q1_target = flow_rate_from_head(h_f_target, D1, L_both, epsilon)
+Q2_target = flow_rate_from_head(h_f_target, D2, L_both, epsilon)
+Q_total_target = Q1_target + Q2_target
+
+fractions = [Q1_target/Q_total_target * 100, Q2_target/Q_total_target * 100]
+labels = [f'Pipe 1\\n{Q1_target*1000:.1f} L/s', f'Pipe 2\\n{Q2_target*1000:.1f} L/s']
+ax2.pie(fractions, labels=labels, autopct='%1.1f%%', colors=['lightblue', 'salmon'])
+ax2.set_title(f'Flow Distribution at $h_f$ = {h_f_target} m')
+
+plt.tight_layout()
+save_fig('parallel_pipes.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{parallel_pipes.pdf}
+\caption{Parallel pipe analysis showing system curves and flow distribution.}
+\end{figure}
+
+\section{Pump Selection}
+
+\begin{pycode}
+# Pump operating point determination
+# System curve: h_sys = h_static + K*Q^2
+h_static = 10  # m (elevation difference)
+K_sys = 50000  # system constant (s^2/m^5)
+
+Q_sys = np.linspace(0, 0.04, 100)
+h_sys = h_static + K_sys * Q_sys**2
+
+# Pump curve (typical centrifugal)
+h_shutoff = 25  # m
+Q_max = 0.05  # m^3/s
+h_pump = h_shutoff * (1 - (Q_sys/Q_max)**2)
+
+# Find operating point
+idx_op = np.argmin(np.abs(h_pump - h_sys))
+Q_op = Q_sys[idx_op]
+h_op = h_pump[idx_op]
+
+# NPSH requirements
+NPSH_r = 2 + 5 * (Q_sys/Q_max)**2  # typical requirement curve
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.plot(Q_sys*1000, h_sys, 'b-', linewidth=2, label='System curve')
+ax1.plot(Q_sys*1000, h_pump, 'r-', linewidth=2, label='Pump curve')
+ax1.plot(Q_op*1000, h_op, 'go', markersize=10, label=f'Operating point\\n({Q_op*1000:.1f} L/s, {h_op:.1f} m)')
+ax1.set_xlabel('Flow Rate (L/s)')
+ax1.set_ylabel('Head (m)')
+ax1.set_title('Pump Operating Point')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Efficiency curve
+eta = 0.85 * (1 - ((Q_sys - 0.025)/0.025)**2)
+eta = np.maximum(eta, 0)
+ax2.plot(Q_sys*1000, eta*100, 'g-', linewidth=2, label='Efficiency')
+ax2.plot(Q_sys*1000, NPSH_r, 'm--', linewidth=2, label='NPSH$_r$')
+ax2.axvline(Q_op*1000, color='k', linestyle='--', alpha=0.5)
+ax2.set_xlabel('Flow Rate (L/s)')
+ax2.set_ylabel('Efficiency (\\%) / NPSH (m)')
+ax2.set_title('Pump Performance')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('pump_selection.pdf')
+
+# Calculate pump power
+eta_op = 0.85 * (1 - ((Q_op - 0.025)/0.025)**2)
+P_hydraulic = rho * 9.81 * Q_op * h_op
+P_shaft = P_hydraulic / eta_op
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{pump_selection.pdf}
+\caption{Pump selection showing operating point and performance characteristics.}
+\end{figure}
+
+Pump power required: $P = \py{f"{P_shaft/1000:.2f}"}$ kW (at $\eta = \py{f"{eta_op*100:.1f}"}$\%)
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of pipe flow:
+\begin{enumerate}
+    \item The Darcy-Weisbach equation provides accurate head loss predictions
+    \item Friction factors depend on both Reynolds number and relative roughness
+    \item The Moody diagram visualizes friction factor correlations
+    \item Minor losses from fittings can be significant in short pipe runs
+    \item Pipe diameter has a strong effect on pressure drop (varies as $D^{-5}$ for constant Q)
+    \item Parallel pipe analysis requires iterative solution for flow distribution
+    \item Pump operating point is determined by intersection of system and pump curves
+\end{enumerate}
+
+\end{document}

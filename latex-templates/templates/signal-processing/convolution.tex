@@ -1,0 +1,541 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Convolution and Linear Time-Invariant Systems}
+\author{Signal Processing Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Convolution is the fundamental operation for analyzing linear time-invariant (LTI) systems. This template covers continuous and discrete convolution, impulse response characterization, and deconvolution techniques.
+
+\section{Mathematical Framework}
+
+\subsection{Continuous Convolution}
+The convolution of two continuous signals:
+\begin{equation}
+(f * g)(t) = \int_{-\infty}^{\infty} f(\tau) g(t - \tau) \, d\tau
+\end{equation}
+
+\subsection{Discrete Convolution}
+For discrete signals:
+\begin{equation}
+(x * h)[n] = \sum_{k=-\infty}^{\infty} x[k] h[n - k]
+\end{equation}
+
+\subsection{LTI System Response}
+Output of an LTI system with impulse response $h[n]$:
+\begin{equation}
+y[n] = x[n] * h[n] = \sum_{k=0}^{M-1} h[k] x[n-k]
+\end{equation}
+
+\subsection{Convolution Theorem}
+Convolution in time domain equals multiplication in frequency domain:
+\begin{equation}
+\mathcal{F}\{f * g\} = \mathcal{F}\{f\} \cdot \mathcal{F}\{g\}
+\end{equation}
+
+\subsection{Deconvolution}
+Recovering input from output using inverse filtering:
+\begin{equation}
+X(\omega) = \frac{Y(\omega)}{H(\omega)}
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.fft import fft, ifft, fftfreq
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Discrete Convolution Implementation}
+
+\begin{pycode}
+def discrete_convolution(x, h):
+    """Implement discrete convolution manually"""
+    M = len(x)
+    N = len(h)
+    L = M + N - 1
+    y = np.zeros(L)
+
+    for n in range(L):
+        for k in range(N):
+            if 0 <= n - k < M:
+                y[n] += h[k] * x[n - k]
+    return y
+
+# Example signals
+n = np.arange(50)
+x = np.zeros(50)
+x[10:20] = 1  # Rectangular pulse
+
+# Various impulse responses
+h_ma = np.ones(5) / 5  # Moving average
+h_diff = np.array([1, -1])  # Differentiator
+h_exp = 0.8 ** np.arange(10)  # Exponential decay
+h_sinc = np.sinc(np.linspace(-2, 2, 15))  # Sinc function
+
+# Compute convolutions
+y_ma = discrete_convolution(x, h_ma)
+y_diff = discrete_convolution(x, h_diff)
+y_exp = discrete_convolution(x, h_exp)
+y_sinc = discrete_convolution(x, h_sinc)
+
+# Verify with numpy
+y_ma_np = np.convolve(x, h_ma)
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Input signal
+axes[0, 0].stem(n, x, basefmt='k-', linefmt='b-', markerfmt='bo', use_line_collection=True)
+axes[0, 0].set_xlabel('n')
+axes[0, 0].set_ylabel('x[n]')
+axes[0, 0].set_title('Input Signal (Rectangular Pulse)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Moving average impulse response and output
+axes[0, 1].stem(np.arange(len(h_ma)), h_ma, basefmt='k-', linefmt='r-', markerfmt='ro', use_line_collection=True)
+axes[0, 1].set_xlabel('n')
+axes[0, 1].set_ylabel('h[n]')
+axes[0, 1].set_title('Moving Average Filter')
+axes[0, 1].grid(True, alpha=0.3)
+
+axes[0, 2].plot(y_ma, 'g-', linewidth=1.5, label='Manual')
+axes[0, 2].plot(y_ma_np, 'r--', linewidth=1, label='NumPy')
+axes[0, 2].set_xlabel('n')
+axes[0, 2].set_ylabel('y[n]')
+axes[0, 2].set_title('MA Filter Output')
+axes[0, 2].legend()
+axes[0, 2].grid(True, alpha=0.3)
+
+# Differentiator
+axes[1, 0].stem(np.arange(len(h_diff)), h_diff, basefmt='k-', linefmt='r-', markerfmt='ro', use_line_collection=True)
+axes[1, 0].set_xlabel('n')
+axes[1, 0].set_ylabel('h[n]')
+axes[1, 0].set_title('Differentiator')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Exponential decay output
+axes[1, 1].plot(y_exp, 'b-', linewidth=1.5)
+axes[1, 1].set_xlabel('n')
+axes[1, 1].set_ylabel('y[n]')
+axes[1, 1].set_title('Exponential Decay Output')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Sinc filter output
+axes[1, 2].plot(y_sinc, 'm-', linewidth=1.5)
+axes[1, 2].set_xlabel('n')
+axes[1, 2].set_ylabel('y[n]')
+axes[1, 2].set_title('Sinc Filter Output')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('convolution_basic.pdf', 'Discrete convolution with various impulse responses')
+\end{pycode}
+
+\section{LTI System Analysis}
+
+\begin{pycode}
+# Create a more complex LTI system
+fs = 1000  # Sampling frequency
+t = np.arange(0, 1, 1/fs)
+
+# Input: sum of sinusoids
+f1, f2, f3 = 5, 50, 200  # Hz
+x_complex = np.sin(2*np.pi*f1*t) + 0.5*np.sin(2*np.pi*f2*t) + 0.3*np.sin(2*np.pi*f3*t)
+
+# Add noise
+x_noisy = x_complex + 0.2*np.random.randn(len(t))
+
+# Design low-pass filter (impulse response)
+fc = 30  # Cutoff frequency
+b = signal.firwin(101, fc/(fs/2))
+
+# Apply filter via convolution
+y_filtered = np.convolve(x_noisy, b, mode='same')
+
+# Frequency response
+w, H = signal.freqz(b, worN=2048)
+freq = w * fs / (2 * np.pi)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Time domain signals
+axes[0, 0].plot(t[:200], x_noisy[:200], 'b-', alpha=0.5, label='Noisy input')
+axes[0, 0].plot(t[:200], y_filtered[:200], 'r-', linewidth=2, label='Filtered output')
+axes[0, 0].plot(t[:200], x_complex[:200], 'g--', alpha=0.7, label='Original')
+axes[0, 0].set_xlabel('Time (s)')
+axes[0, 0].set_ylabel('Amplitude')
+axes[0, 0].set_title('LTI System Response')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Impulse response
+axes[0, 1].plot(b, 'b-', linewidth=1.5)
+axes[0, 1].set_xlabel('Sample')
+axes[0, 1].set_ylabel('h[n]')
+axes[0, 1].set_title(f'Filter Impulse Response (fc={fc} Hz)')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Frequency response magnitude
+axes[1, 0].plot(freq, 20*np.log10(np.abs(H) + 1e-10), 'b-', linewidth=1.5)
+axes[1, 0].axvline(x=fc, color='r', linestyle='--', label=f'fc = {fc} Hz')
+axes[1, 0].set_xlabel('Frequency (Hz)')
+axes[1, 0].set_ylabel('Magnitude (dB)')
+axes[1, 0].set_title('Filter Frequency Response')
+axes[1, 0].set_xlim(0, 100)
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Spectrum comparison
+X_noisy = np.abs(fft(x_noisy))[:len(t)//2]
+Y_filtered = np.abs(fft(y_filtered))[:len(t)//2]
+freqs = fftfreq(len(t), 1/fs)[:len(t)//2]
+
+axes[1, 1].plot(freqs[:100], X_noisy[:100], 'b-', alpha=0.5, label='Input spectrum')
+axes[1, 1].plot(freqs[:100], Y_filtered[:100], 'r-', linewidth=2, label='Output spectrum')
+axes[1, 1].axvline(x=fc, color='g', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Frequency (Hz)')
+axes[1, 1].set_ylabel('Magnitude')
+axes[1, 1].set_title('Spectrum Comparison')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('lti_system.pdf', 'LTI system filtering via convolution')
+\end{pycode}
+
+\section{Convolution Theorem Demonstration}
+
+\begin{pycode}
+# Demonstrate convolution theorem: conv in time = mult in freq
+N = 256
+n = np.arange(N)
+
+# Two signals
+x1 = np.exp(-n/50) * np.sin(2*np.pi*0.1*n)
+x1[N//2:] = 0
+x2 = np.zeros(N)
+x2[N//4:N//4+20] = 1
+
+# Time domain convolution (circular for FFT)
+y_time = np.real(ifft(fft(x1) * fft(x2)))
+
+# Direct circular convolution
+y_direct = np.zeros(N)
+for k in range(N):
+    for m in range(N):
+        y_direct[k] += x1[m] * x2[(k - m) % N]
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Signal 1
+axes[0, 0].plot(n, x1, 'b-', linewidth=1.5)
+axes[0, 0].set_xlabel('n')
+axes[0, 0].set_ylabel('x1[n]')
+axes[0, 0].set_title('Signal 1')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Signal 2
+axes[0, 1].plot(n, x2, 'r-', linewidth=1.5)
+axes[0, 1].set_xlabel('n')
+axes[0, 1].set_ylabel('x2[n]')
+axes[0, 1].set_title('Signal 2')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Time domain result
+axes[0, 2].plot(n, y_time, 'g-', linewidth=1.5, label='FFT method')
+axes[0, 2].plot(n, y_direct, 'r--', alpha=0.7, label='Direct')
+axes[0, 2].set_xlabel('n')
+axes[0, 2].set_ylabel('y[n]')
+axes[0, 2].set_title('Circular Convolution')
+axes[0, 2].legend()
+axes[0, 2].grid(True, alpha=0.3)
+
+# Frequency domain
+X1 = fft(x1)
+X2 = fft(x2)
+Y = X1 * X2
+
+freqs = fftfreq(N)
+
+axes[1, 0].plot(freqs[:N//2], np.abs(X1[:N//2]), 'b-', linewidth=1.5)
+axes[1, 0].set_xlabel('Normalized Frequency')
+axes[1, 0].set_ylabel('|X1|')
+axes[1, 0].set_title('Spectrum of Signal 1')
+axes[1, 0].grid(True, alpha=0.3)
+
+axes[1, 1].plot(freqs[:N//2], np.abs(X2[:N//2]), 'r-', linewidth=1.5)
+axes[1, 1].set_xlabel('Normalized Frequency')
+axes[1, 1].set_ylabel('|X2|')
+axes[1, 1].set_title('Spectrum of Signal 2')
+axes[1, 1].grid(True, alpha=0.3)
+
+axes[1, 2].plot(freqs[:N//2], np.abs(Y[:N//2]), 'g-', linewidth=1.5)
+axes[1, 2].set_xlabel('Normalized Frequency')
+axes[1, 2].set_ylabel('|Y|')
+axes[1, 2].set_title('Product Spectrum')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('convolution_theorem.pdf', 'Convolution theorem: time domain convolution equals frequency domain multiplication')
+
+conv_error = np.max(np.abs(y_time - y_direct))
+\end{pycode}
+
+\section{Deconvolution}
+
+\begin{pycode}
+# Deconvolution example
+N = 512
+t = np.linspace(0, 1, N)
+
+# Original signal
+x_original = np.zeros(N)
+x_original[100] = 1
+x_original[200] = 0.5
+x_original[300] = -0.7
+x_original[400] = 0.3
+
+# System impulse response (blur)
+sigma = 5
+h_blur = np.exp(-np.arange(-30, 31)**2 / (2*sigma**2))
+h_blur = h_blur / h_blur.sum()
+
+# Convolve to get blurred signal
+y_blurred = np.convolve(x_original, h_blur, mode='same')
+
+# Add noise
+noise_level = 0.01
+y_noisy = y_blurred + noise_level * np.random.randn(N)
+
+# Deconvolution via Wiener filter
+H = fft(h_blur, N)
+Y = fft(y_noisy)
+
+# Wiener deconvolution
+snr = 100  # Signal-to-noise ratio estimate
+H_wiener = np.conj(H) / (np.abs(H)**2 + 1/snr)
+X_recovered = ifft(Y * H_wiener)
+
+# Direct inverse (naive - unstable)
+epsilon = 0.01
+H_inv = 1 / (H + epsilon)
+X_naive = ifft(Y * H_inv)
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Original signal
+axes[0, 0].stem(np.arange(N), x_original, basefmt='k-', linefmt='b-', markerfmt='bo', use_line_collection=True)
+axes[0, 0].set_xlabel('Sample')
+axes[0, 0].set_ylabel('Amplitude')
+axes[0, 0].set_title('Original Signal')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Impulse response
+axes[0, 1].plot(h_blur, 'r-', linewidth=1.5)
+axes[0, 1].set_xlabel('Sample')
+axes[0, 1].set_ylabel('h[n]')
+axes[0, 1].set_title(f'Blur Kernel ($\\sigma$={sigma})')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Blurred + noisy
+axes[0, 2].plot(y_noisy, 'g-', linewidth=1)
+axes[0, 2].set_xlabel('Sample')
+axes[0, 2].set_ylabel('Amplitude')
+axes[0, 2].set_title('Observed (Blurred + Noise)')
+axes[0, 2].grid(True, alpha=0.3)
+
+# Wiener deconvolution
+axes[1, 0].stem(np.arange(N), np.real(X_recovered), basefmt='k-', linefmt='m-', markerfmt='mo', use_line_collection=True)
+axes[1, 0].set_xlabel('Sample')
+axes[1, 0].set_ylabel('Amplitude')
+axes[1, 0].set_title('Wiener Deconvolution')
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_ylim(-1, 1.5)
+
+# Frequency domain filters
+axes[1, 1].plot(np.abs(H[:N//2]), 'b-', label='|H|', linewidth=1.5)
+axes[1, 1].plot(np.abs(H_wiener[:N//2]), 'r-', label='Wiener', linewidth=1.5)
+axes[1, 1].set_xlabel('Frequency bin')
+axes[1, 1].set_ylabel('Magnitude')
+axes[1, 1].set_title('Filter Comparison')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+# Error comparison
+error_wiener = np.mean((np.real(X_recovered) - x_original)**2)
+error_naive = np.mean((np.real(X_naive) - x_original)**2)
+axes[1, 2].bar(['Wiener', 'Naive Inverse'], [error_wiener, min(error_naive, 1)], color=['green', 'red'], alpha=0.7)
+axes[1, 2].set_ylabel('MSE')
+axes[1, 2].set_title('Deconvolution Error')
+axes[1, 2].set_yscale('log')
+
+plt.tight_layout()
+save_plot('deconvolution.pdf', 'Deconvolution using Wiener filtering')
+\end{pycode}
+
+\section{System Identification}
+
+\begin{pycode}
+# Estimate impulse response from input-output data
+N = 1024
+fs = 1000
+
+# Unknown system (second-order IIR)
+b_true = [0.1, 0.2, 0.1]
+a_true = [1, -0.5, 0.2]
+
+# Generate test input (white noise)
+x_test = np.random.randn(N)
+
+# System output
+y_test = signal.lfilter(b_true, a_true, x_test)
+
+# Estimate impulse response via cross-correlation
+h_length = 50
+h_estimated = np.zeros(h_length)
+
+# Least squares estimation
+X_matrix = np.zeros((N - h_length, h_length))
+for i in range(N - h_length):
+    X_matrix[i, :] = x_test[i:i+h_length][::-1]
+
+y_vec = y_test[h_length:]
+h_estimated = np.linalg.lstsq(X_matrix, y_vec, rcond=None)[0]
+
+# True impulse response
+h_true = signal.lfilter(b_true, a_true, np.concatenate([[1], np.zeros(h_length-1)]))
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Input-output
+axes[0, 0].plot(x_test[:200], 'b-', alpha=0.5, label='Input')
+axes[0, 0].plot(y_test[:200], 'r-', linewidth=1.5, label='Output')
+axes[0, 0].set_xlabel('Sample')
+axes[0, 0].set_ylabel('Amplitude')
+axes[0, 0].set_title('System Input-Output')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Estimated vs true impulse response
+axes[0, 1].plot(h_true, 'b-', linewidth=2, label='True')
+axes[0, 1].plot(h_estimated, 'r--', linewidth=1.5, label='Estimated')
+axes[0, 1].set_xlabel('Sample')
+axes[0, 1].set_ylabel('h[n]')
+axes[0, 1].set_title('Impulse Response Identification')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Frequency response comparison
+w, H_true_freq = signal.freqz(b_true, a_true, worN=512)
+H_est_freq = fft(h_estimated, 512)
+
+axes[1, 0].plot(w/np.pi, 20*np.log10(np.abs(H_true_freq)), 'b-', linewidth=2, label='True')
+axes[1, 0].plot(w/np.pi, 20*np.log10(np.abs(H_est_freq[:512])), 'r--', linewidth=1.5, label='Estimated')
+axes[1, 0].set_xlabel('Normalized Frequency ($\\times \\pi$ rad/sample)')
+axes[1, 0].set_ylabel('Magnitude (dB)')
+axes[1, 0].set_title('Frequency Response')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Estimation error
+ir_error = np.linalg.norm(h_true - h_estimated) / np.linalg.norm(h_true) * 100
+axes[1, 1].bar(['IR Error'], [ir_error], color='green', alpha=0.7)
+axes[1, 1].set_ylabel('Relative Error (\\%)')
+axes[1, 1].set_title(f'Identification Error: {ir_error:.2f}\\%')
+
+plt.tight_layout()
+save_plot('system_identification.pdf', 'System identification via least squares')
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Convolution Properties}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Convolution operation results}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Property & Value \\')
+print(r'\midrule')
+print(f"Input length & {len(x)} \\\\")
+print(f"MA filter length & {len(h_ma)} \\\\")
+print(f"Output length & {len(y_ma)} \\\\")
+print(f"Convolution theorem error & {conv_error:.2e} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{LTI System Parameters}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{LTI filter characteristics}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f"Sampling frequency & {fs} Hz \\\\")
+print(f"Cutoff frequency & {fc} Hz \\\\")
+print(f"Filter order & {len(b)-1} \\\\")
+print(f"Input frequencies & {f1}, {f2}, {f3} Hz \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Deconvolution Performance}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Deconvolution results}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Method & MSE \\')
+print(r'\midrule')
+print(f"Wiener filter & {error_wiener:.4f} \\\\")
+print(f"Naive inverse & {min(error_naive, 1):.4f} \\\\")
+print(f"Noise level & {noise_level} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Statistical Summary}
+\begin{itemize}
+    \item Convolution theorem numerical error: \py{f"{conv_error:.2e}"}
+    \item Wiener deconvolution MSE: \py{f"{error_wiener:.4f}"}
+    \item System identification error: \py{f"{ir_error:.2f}"}\\%
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates convolution operations fundamental to signal processing. The convolution theorem enables efficient computation via FFT, while deconvolution recovers signals from observed data. Wiener filtering provides robust deconvolution in the presence of noise, significantly outperforming naive inverse filtering. System identification via least squares achieves \py{f"{ir_error:.2f}"}\\% relative error in recovering the true impulse response.
+
+\end{document}

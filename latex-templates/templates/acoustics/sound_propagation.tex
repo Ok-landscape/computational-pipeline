@@ -1,0 +1,291 @@
+% Sound Propagation Analysis
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Sound Propagation Analysis\\Wave Equations and Transmission Loss}
+\author{Acoustic Engineering Department}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of sound wave propagation through various media, including acoustic impedance, transmission coefficients, and transmission loss calculations.
+\end{abstract}
+
+\section{Introduction}
+
+Sound propagation is governed by the acoustic wave equation and boundary conditions at material interfaces.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+c_air, rho_air = 343, 1.21
+Z_air = rho_air * c_air
+
+media = {
+    'Air': {'c': 343, 'rho': 1.21},
+    'Water': {'c': 1480, 'rho': 1000},
+    'Steel': {'c': 5960, 'rho': 7850},
+    'Concrete': {'c': 3400, 'rho': 2400},
+    'Glass': {'c': 5200, 'rho': 2500},
+}
+for props in media.values():
+    props['Z'] = props['rho'] * props['c']
+\end{pycode}
+
+\section{Acoustic Impedance}
+
+$Z = \rho c$
+
+\begin{pycode}
+fig, ax = plt.subplots(figsize=(10, 5))
+names = list(media.keys())
+impedances = [media[n]['Z'] for n in names]
+ax.bar(names, impedances, color=plt.cm.viridis(np.linspace(0, 0.8, len(names))))
+ax.set_ylabel('Acoustic Impedance (Pa$\\cdot$s/m)')
+ax.set_title('Characteristic Acoustic Impedance')
+ax.set_yscale('log')
+ax.grid(True, alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig('impedance_comparison.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{impedance_comparison.pdf}
+\caption{Acoustic impedance comparison.}
+\end{figure}
+
+\section{Reflection and Transmission}
+
+$R = \frac{Z_2 - Z_1}{Z_2 + Z_1}$
+
+\begin{pycode}
+materials = ['Water', 'Steel', 'Concrete', 'Glass']
+Z1 = media['Air']['Z']
+R_coeffs = [(media[m]['Z'] - Z1) / (media[m]['Z'] + Z1) for m in materials]
+T_intensity = [1 - r**2 for r in R_coeffs]
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+ax1.bar(materials, R_coeffs, color='steelblue')
+ax1.set_ylabel('Reflection Coefficient $R$')
+ax1.set_title('Reflection at Air-Material Interface')
+ax1.grid(True, alpha=0.3, axis='y')
+
+ax2.bar(materials, T_intensity, color='coral')
+ax2.set_ylabel('Intensity Transmission $T_I$')
+ax2.set_title('Transmission')
+ax2.grid(True, alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig('reflection_transmission.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{reflection_transmission.pdf}
+\caption{Reflection and transmission coefficients.}
+\end{figure}
+
+\section{Mass Law Transmission Loss}
+
+$TL = 20 \log_{10}(\pi f m / \rho c)$
+
+\begin{pycode}
+freq = np.logspace(1, 4, 200)
+surface_masses = {'Gypsum (12mm)': 10, 'Concrete (100mm)': 240, 'Steel (3mm)': 24, 'Glass (6mm)': 15}
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for name, m in surface_masses.items():
+    TL = 20 * np.log10(np.pi * freq * m / (rho_air * c_air))
+    ax.semilogx(freq, TL, linewidth=1.5, label=f'{name}')
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Transmission Loss (dB)')
+ax.set_title('Mass Law Transmission Loss')
+ax.legend(loc='lower right')
+ax.grid(True, alpha=0.3, which='both')
+ax.set_xlim([10, 10000])
+plt.tight_layout()
+plt.savefig('mass_law_tl.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{mass_law_tl.pdf}
+\caption{Mass law transmission loss predictions.}
+\end{figure}
+
+\section{Coincidence Effect}
+
+\begin{pycode}
+panels = {
+    'Steel (3mm)': {'E': 200e9, 'rho': 7850, 'nu': 0.3, 'h': 0.003},
+    'Aluminum (2mm)': {'E': 70e9, 'rho': 2700, 'nu': 0.33, 'h': 0.002},
+    'Glass (6mm)': {'E': 70e9, 'rho': 2500, 'nu': 0.22, 'h': 0.006},
+}
+
+f_coincidence = {}
+for name, p in panels.items():
+    fc = (c_air**2 / (2 * np.pi)) * np.sqrt(12 * p['rho'] * (1 - p['nu']**2) / (p['E'] * p['h']**2))
+    f_coincidence[name] = fc
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for name, p in panels.items():
+    m = p['rho'] * p['h']
+    fc = f_coincidence[name]
+    TL_mass = 20 * np.log10(np.pi * freq * m / (rho_air * c_air))
+    dip = 15 * np.exp(-(freq - fc)**2 / (2 * (fc * 0.5)**2))
+    TL = np.maximum(TL_mass - dip, 0)
+    ax.semilogx(freq, TL, linewidth=1.5, label=name)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Transmission Loss (dB)')
+ax.set_title('TL with Coincidence Effect')
+ax.legend(loc='lower right')
+ax.grid(True, alpha=0.3, which='both')
+ax.set_xlim([100, 10000])
+plt.tight_layout()
+plt.savefig('coincidence_tl.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{coincidence_tl.pdf}
+\caption{Transmission loss with coincidence dips.}
+\end{figure}
+
+\section{Double Wall TL}
+
+\begin{pycode}
+m1, m2 = 12, 12
+air_gaps = [50, 100, 200]
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for gap in air_gaps:
+    ell = gap / 1000
+    f0 = (1 / (2 * np.pi)) * np.sqrt((rho_air * c_air**2 / ell) * (1/m1 + 1/m2))
+    TL_double = np.zeros_like(freq)
+    for i, f in enumerate(freq):
+        if f < f0:
+            TL_double[i] = 20 * np.log10(np.pi * f * (m1 + m2) / (rho_air * c_air))
+        else:
+            TL_single = 20 * np.log10(np.pi * f * m1 / (rho_air * c_air))
+            TL_double[i] = 2 * TL_single + 20 * np.log10(f / f0)
+    ax.semilogx(freq, np.maximum(TL_double, 0), linewidth=1.5, label=f'Gap = {gap} mm')
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Transmission Loss (dB)')
+ax.set_title('Double Wall Transmission Loss')
+ax.legend(loc='lower right')
+ax.grid(True, alpha=0.3, which='both')
+ax.set_xlim([50, 5000])
+plt.tight_layout()
+plt.savefig('double_wall_tl.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{double_wall_tl.pdf}
+\caption{Double wall transmission loss.}
+\end{figure}
+
+\section{Atmospheric Absorption}
+
+\begin{pycode}
+def atm_absorption(f, T=20, h=50, p=101.325):
+    T_K = T + 273.15
+    C = -6.8346 * (273.16/T_K)**1.261 + 4.6151
+    h_mol = h * (101.325/p) * 10**C
+    f_rO = (p/101.325) * (24 + 4.04e4 * h_mol * (0.02 + h_mol)/(0.391 + h_mol))
+    f_rN = (p/101.325) * (T_K/293.15)**(-0.5) * (9 + 280 * h_mol * np.exp(-4.170 * ((T_K/293.15)**(-1/3) - 1)))
+    alpha = 8.686 * f**2 * ((1.84e-11 * (101.325/p) * (T_K/293.15)**0.5) +
+            (T_K/293.15)**(-2.5) * (0.01275 * np.exp(-2239.1/T_K) / (f_rO + f**2/f_rO) +
+            0.1068 * np.exp(-3352.0/T_K) / (f_rN + f**2/f_rN)))
+    return alpha
+
+freq_atm = np.logspace(2, 4.5, 100)
+fig, ax = plt.subplots(figsize=(10, 6))
+for T, h, label in [(20, 50, '20C, 50\\% RH'), (20, 20, '20C, 20\\% RH'), (0, 50, '0C, 50\\% RH')]:
+    ax.loglog(freq_atm, atm_absorption(freq_atm, T, h) * 1000, linewidth=1.5, label=label)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Absorption (dB/km)')
+ax.set_title('Atmospheric Absorption')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('atmospheric_absorption.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{atmospheric_absorption.pdf}
+\caption{Atmospheric sound absorption.}
+\end{figure}
+
+\section{Spreading Loss}
+
+\begin{pycode}
+L_W = 100
+distances = np.linspace(1, 100, 100)
+freq_cases = [500, 2000, 8000]
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for f in freq_cases:
+    alpha = atm_absorption(f)
+    L_p = L_W - 20 * np.log10(distances) - 11 - alpha * distances
+    ax.plot(distances, L_p, linewidth=1.5, label=f'{f} Hz')
+ax.set_xlabel('Distance (m)')
+ax.set_ylabel('SPL (dB)')
+ax.set_title('Sound Level vs Distance')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('spreading_loss.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{spreading_loss.pdf}
+\caption{Sound level decay with distance.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Acoustic Properties}')
+print(r'\begin{tabular}{@{}lccc@{}}')
+print(r'\toprule')
+print(r'Material & $c$ (m/s) & $\rho$ (kg/m$^3$) & $Z$ (Pa$\cdot$s/m) \\')
+print(r'\midrule')
+for name, props in media.items():
+    print(f"{name} & {props['c']} & {props['rho']} & {props['Z']:.0f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+This analysis demonstrates key principles of sound propagation and transmission loss including mass law, coincidence effects, and atmospheric absorption.
+
+\end{document}

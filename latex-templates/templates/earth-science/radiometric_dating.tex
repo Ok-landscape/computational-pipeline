@@ -1,0 +1,468 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{parent}{RGB}{231, 76, 60}
+\definecolor{daughter}{RGB}{46, 204, 113}
+\definecolor{isochron}{RGB}{52, 152, 219}
+
+\title{Radiometric Dating:\\
+Isotope Geochronology and Age Determination}
+\author{Department of Earth Science\\Technical Report ES-2024-001}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of radiometric dating methods. We examine radioactive decay kinetics, implement isochron dating for Rb-Sr and U-Pb systems, analyze concordia-discordia relationships, calculate closure temperatures, and demonstrate carbon-14 dating for recent samples. All computations use PythonTeX for reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Radiometric dating determines absolute ages of geological materials using radioactive decay:
+\begin{equation}
+N(t) = N_0 e^{-\lambda t}
+\end{equation}
+where $N_0$ is the initial number of parent atoms, $\lambda$ is the decay constant, and $t$ is time.
+
+\section{Decay Constant and Half-Life}
+The relationship between decay constant and half-life:
+\begin{equation}
+\lambda = \frac{\ln 2}{t_{1/2}}
+\end{equation}
+
+\section{Age Equation}
+From the parent-daughter relationship:
+\begin{equation}
+D = D_0 + N(e^{\lambda t} - 1)
+\end{equation}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from scipy.stats import linregress
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Isotope systems database
+isotope_systems = {
+    'U-238/Pb-206': {'half_life': 4.468e9, 'lambda': np.log(2)/4.468e9},
+    'U-235/Pb-207': {'half_life': 7.038e8, 'lambda': np.log(2)/7.038e8},
+    'Rb-87/Sr-87': {'half_life': 4.88e10, 'lambda': np.log(2)/4.88e10},
+    'K-40/Ar-40': {'half_life': 1.248e9, 'lambda': np.log(2)/1.248e9},
+    'Sm-147/Nd-143': {'half_life': 1.06e11, 'lambda': np.log(2)/1.06e11},
+    'C-14/N-14': {'half_life': 5730, 'lambda': np.log(2)/5730}
+}
+
+def decay_curve(t, half_life):
+    return np.exp(-np.log(2) * t / half_life)
+
+def daughter_growth(t, half_life):
+    return 1 - np.exp(-np.log(2) * t / half_life)
+
+def calculate_age(D_star, N, lambda_val):
+    return np.log(1 + D_star/N) / lambda_val
+
+def isochron_age(slope, lambda_val):
+    return np.log(slope + 1) / lambda_val
+\end{pycode}
+
+\chapter{Radioactive Decay Kinetics}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Decay curves for different systems
+ax = axes[0, 0]
+systems = ['U-238/Pb-206', 'U-235/Pb-207', 'Rb-87/Sr-87', 'K-40/Ar-40']
+colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12']
+for system, color in zip(systems, colors):
+    t_max = 5 * isotope_systems[system]['half_life']
+    t = np.linspace(0, t_max, 1000)
+    N_N0 = decay_curve(t, isotope_systems[system]['half_life'])
+    ax.plot(t/1e9, N_N0, label=system.split('/')[0], color=color, linewidth=2)
+
+ax.set_xlabel('Time (Ga)')
+ax.set_ylabel('$N/N_0$')
+ax.set_title('Parent Isotope Decay')
+ax.legend(fontsize=8)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 20)
+
+# Daughter growth
+ax = axes[0, 1]
+for system, color in zip(systems, colors):
+    t_max = 5 * isotope_systems[system]['half_life']
+    t = np.linspace(0, t_max, 1000)
+    D_D_inf = daughter_growth(t, isotope_systems[system]['half_life'])
+    ax.plot(t/1e9, D_D_inf, label=system.split('/')[1], color=color, linewidth=2)
+
+ax.set_xlabel('Time (Ga)')
+ax.set_ylabel('$D^*/D^*_\\infty$')
+ax.set_title('Daughter Isotope Growth')
+ax.legend(fontsize=8)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 20)
+
+# Half-life comparison
+ax = axes[0, 2]
+systems_all = list(isotope_systems.keys())
+half_lives = [isotope_systems[s]['half_life'] for s in systems_all]
+colors_all = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c']
+bars = ax.barh(range(len(systems_all)), np.log10(half_lives), color=colors_all, alpha=0.7)
+ax.set_yticks(range(len(systems_all)))
+ax.set_yticklabels([s.split('/')[0] for s in systems_all])
+ax.set_xlabel('$\\log_{10}(t_{1/2}$ in years)')
+ax.set_title('Half-life Comparison')
+ax.grid(True, alpha=0.3, axis='x')
+
+# Rb-Sr isochron
+ax = axes[1, 0]
+true_age_RbSr = 3.8e9
+lambda_Rb = isotope_systems['Rb-87/Sr-87']['lambda']
+Rb87_Sr86 = np.array([0.3, 0.8, 1.5, 2.5, 4.0, 6.0])
+Sr87_Sr86_initial = 0.7045
+Sr87_Sr86 = Sr87_Sr86_initial + Rb87_Sr86 * (np.exp(lambda_Rb * true_age_RbSr) - 1)
+Sr87_Sr86_err = np.random.normal(0, 0.001, len(Sr87_Sr86))
+Sr87_Sr86_meas = Sr87_Sr86 + Sr87_Sr86_err
+
+slope_Rb, intercept_Rb, r_Rb, p_Rb, se_Rb = linregress(Rb87_Sr86, Sr87_Sr86_meas)
+age_RbSr = isochron_age(slope_Rb, lambda_Rb)
+
+ax.errorbar(Rb87_Sr86, Sr87_Sr86_meas, yerr=0.002, fmt='o', color='#2ecc71',
+            markersize=8, capsize=3, label='Samples')
+fit_x = np.linspace(0, 7, 100)
+ax.plot(fit_x, slope_Rb * fit_x + intercept_Rb, 'r-', linewidth=2, label='Isochron')
+ax.set_xlabel('$^{87}$Rb/$^{86}$Sr')
+ax.set_ylabel('$^{87}$Sr/$^{86}$Sr')
+ax.set_title(f'Rb-Sr Isochron: {age_RbSr/1e9:.2f} Ga')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# K-Ar age spectrum
+ax = axes[1, 1]
+steps = np.arange(1, 11)
+cumulative_Ar = np.cumsum(np.random.exponential(10, 10))
+cumulative_Ar = cumulative_Ar / cumulative_Ar[-1] * 100
+plateau_age = 2.5e9
+ages = plateau_age + np.random.normal(0, 0.1e9, 10)
+ages[0:2] *= 0.8  # Low-T steps often younger
+ages[8:10] *= 1.1  # High-T steps may be older
+
+ax.step(cumulative_Ar, ages/1e9, where='mid', linewidth=2, color='#f39c12')
+ax.axhline(y=plateau_age/1e9, color='r', linestyle='--', alpha=0.7, label='Plateau')
+ax.fill_between([20, 80], [plateau_age/1e9-0.1]*2, [plateau_age/1e9+0.1]*2,
+                alpha=0.2, color='red')
+ax.set_xlabel('Cumulative $^{39}$Ar Released (\\%)')
+ax.set_ylabel('Apparent Age (Ga)')
+ax.set_title('Ar-Ar Age Spectrum')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 100)
+
+# C-14 calibration curve
+ax = axes[1, 2]
+C14_age = np.linspace(0, 50000, 500)
+cal_age = C14_age * (1 + 0.05 * np.sin(C14_age/5000))  # Simplified calibration
+cal_age += np.random.normal(0, 200, len(C14_age))
+
+ax.plot(cal_age, C14_age, 'b-', linewidth=1.5, alpha=0.7)
+ax.plot([0, 50000], [0, 50000], 'r--', alpha=0.5, label='1:1 line')
+ax.set_xlabel('Calendar Age (years BP)')
+ax.set_ylabel('$^{14}$C Age (years BP)')
+ax.set_title('Radiocarbon Calibration')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('decay_kinetics.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{decay_kinetics.pdf}
+\caption{Radioactive decay: (a) parent decay curves, (b) daughter growth, (c) half-life comparison, (d) Rb-Sr isochron, (e) Ar-Ar spectrum, (f) C-14 calibration.}
+\end{figure}
+
+\chapter{U-Pb Concordia Dating}
+
+\section{Concordia Equation}
+The U-Pb concordia curve represents concordant ages:
+\begin{align}
+\frac{^{206}\text{Pb}^*}{^{238}\text{U}} &= e^{\lambda_{238} t} - 1 \\
+\frac{^{207}\text{Pb}^*}{^{235}\text{U}} &= e^{\lambda_{235} t} - 1
+\end{align}
+
+\begin{pycode}
+# U-Pb Concordia analysis
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+lambda_238 = isotope_systems['U-238/Pb-206']['lambda']
+lambda_235 = isotope_systems['U-235/Pb-207']['lambda']
+
+# Concordia curve
+t_conc = np.linspace(0, 4.5e9, 1000)
+Pb206_U238 = np.exp(lambda_238 * t_conc) - 1
+Pb207_U235 = np.exp(lambda_235 * t_conc) - 1
+
+ax = axes[0, 0]
+ax.plot(Pb207_U235, Pb206_U238, 'k-', linewidth=2, label='Concordia')
+
+# Age markers
+ages_mark = [0.5e9, 1e9, 2e9, 3e9, 4e9]
+for age in ages_mark:
+    x = np.exp(lambda_235 * age) - 1
+    y = np.exp(lambda_238 * age) - 1
+    ax.plot(x, y, 'ko', markersize=8)
+    ax.annotate(f'{age/1e9:.1f} Ga', xy=(x, y), xytext=(x+2, y+0.05),
+                fontsize=8)
+
+# Discordant samples
+upper_intercept = 3.5e9
+lower_intercept = 0.5e9
+n_samples = 6
+fractions = np.linspace(0.1, 0.9, n_samples)
+sample_ages = lower_intercept + fractions * (upper_intercept - lower_intercept)
+sample_x = np.exp(lambda_235 * sample_ages) - 1 + np.random.normal(0, 0.5, n_samples)
+sample_y = np.exp(lambda_238 * sample_ages) - 1 + np.random.normal(0, 0.02, n_samples)
+
+ax.scatter(sample_x, sample_y, c='red', s=60, zorder=5, label='Zircons')
+
+# Discordia line
+slope_disc, intercept_disc = np.polyfit(sample_x, sample_y, 1)
+disc_x = np.linspace(0, 80, 100)
+ax.plot(disc_x, slope_disc * disc_x + intercept_disc, 'r--', linewidth=1.5,
+        alpha=0.7, label='Discordia')
+
+ax.set_xlabel('$^{207}$Pb*/$^{235}$U')
+ax.set_ylabel('$^{206}$Pb*/$^{238}$U')
+ax.set_title('Concordia-Discordia Diagram')
+ax.legend(loc='lower right')
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 80)
+ax.set_ylim(0, 1.2)
+
+# Wetherill concordia (zoomed)
+ax = axes[0, 1]
+t_zoom = np.linspace(3e9, 4e9, 500)
+Pb206_zoom = np.exp(lambda_238 * t_zoom) - 1
+Pb207_zoom = np.exp(lambda_235 * t_zoom) - 1
+
+ax.plot(Pb207_zoom, Pb206_zoom, 'k-', linewidth=2, label='Concordia')
+
+# Concordant zircons
+concordant_ages = np.array([3.2e9, 3.4e9, 3.5e9, 3.6e9, 3.8e9])
+conc_x = np.exp(lambda_235 * concordant_ages) - 1 + np.random.normal(0, 0.2, 5)
+conc_y = np.exp(lambda_238 * concordant_ages) - 1 + np.random.normal(0, 0.005, 5)
+ax.scatter(conc_x, conc_y, c='green', s=60, zorder=5, label='Concordant')
+
+# Error ellipses (simplified)
+for x, y in zip(conc_x, conc_y):
+    ellipse = plt.Circle((x, y), 0.3, fill=False, color='green', alpha=0.5)
+    ax.add_patch(ellipse)
+
+ax.set_xlabel('$^{207}$Pb*/$^{235}$U')
+ax.set_ylabel('$^{206}$Pb*/$^{238}$U')
+ax.set_title('Concordant Zircons (3-4 Ga)')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Tera-Wasserburg diagram
+ax = axes[1, 0]
+U238_Pb206 = 1 / Pb206_U238[1:]  # Avoid division by zero
+Pb207_Pb206 = Pb207_U235[1:] / Pb206_U238[1:] * (1/137.88)  # Using U isotope ratio
+
+ax.plot(U238_Pb206, Pb207_Pb206, 'k-', linewidth=2)
+for age in ages_mark:
+    if age > 0:
+        x = 1 / (np.exp(lambda_238 * age) - 1)
+        y = (np.exp(lambda_235 * age) - 1) / (np.exp(lambda_238 * age) - 1) / 137.88
+        ax.plot(x, y, 'ko', markersize=6)
+
+ax.set_xlabel('$^{238}$U/$^{206}$Pb*')
+ax.set_ylabel('$^{207}$Pb*/$^{206}$Pb*')
+ax.set_title('Tera-Wasserburg Diagram')
+ax.set_xlim(0, 20)
+ax.grid(True, alpha=0.3)
+
+# Pb-Pb isochron
+ax = axes[1, 1]
+mu_values = np.array([8, 9, 10, 11, 12])  # Different U/Pb sources
+t_earth = 4.55e9
+Pb204_initial = 1.0
+
+Pb206_Pb204 = 9.307 + mu_values * (np.exp(lambda_238 * t_earth) - 1)
+Pb207_Pb204 = 10.294 + mu_values/137.88 * (np.exp(lambda_235 * t_earth) - 1)
+Pb206_Pb204 += np.random.normal(0, 0.1, len(mu_values))
+Pb207_Pb204 += np.random.normal(0, 0.02, len(mu_values))
+
+ax.scatter(Pb206_Pb204, Pb207_Pb204, c='#9b59b6', s=60)
+slope_Pb, intercept_Pb = np.polyfit(Pb206_Pb204, Pb207_Pb204, 1)
+fit_x = np.linspace(14, 22, 100)
+ax.plot(fit_x, slope_Pb * fit_x + intercept_Pb, 'r-', linewidth=2)
+
+# Calculate model age
+Pb_age = (1/lambda_235) * np.log(1 + slope_Pb * 137.88 *
+         (np.exp(lambda_235 * t_earth) - 1) / (np.exp(lambda_238 * t_earth) - 1))
+
+ax.set_xlabel('$^{206}$Pb/$^{204}$Pb')
+ax.set_ylabel('$^{207}$Pb/$^{204}$Pb')
+ax.set_title('Pb-Pb Isochron')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('UPb_concordia.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Store results
+upper_age = upper_intercept
+lower_age = lower_intercept
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{UPb_concordia.pdf}
+\caption{U-Pb dating: (a) concordia-discordia, (b) concordant zircons, (c) Tera-Wasserburg, (d) Pb-Pb isochron.}
+\end{figure}
+
+\chapter{Closure Temperature}
+
+\section{Dodson Equation}
+The closure temperature $T_c$ depends on diffusion parameters:
+\begin{equation}
+T_c = \frac{E_a/R}{\ln\left(\frac{A R T_c^2 D_0/a^2}{E_a \cdot dT/dt}\right)}
+\end{equation}
+
+\begin{pycode}
+# Closure temperature analysis
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Mineral closure temperatures
+minerals = ['Zircon (U-Pb)', 'Monazite', 'Titanite', 'Hornblende',
+            'Muscovite', 'Biotite', 'K-feldspar', 'Apatite']
+Tc = [900, 750, 650, 550, 400, 350, 200, 70]
+colors_min = plt.cm.RdYlBu(np.linspace(0.9, 0.1, len(minerals)))
+
+ax = axes[0]
+bars = ax.barh(range(len(minerals)), Tc, color=colors_min, alpha=0.8)
+ax.set_yticks(range(len(minerals)))
+ax.set_yticklabels(minerals)
+ax.set_xlabel('Closure Temperature ($^\\circ$C)')
+ax.set_title('Mineral Closure Temperatures')
+ax.grid(True, alpha=0.3, axis='x')
+
+# Cooling path
+ax = axes[1]
+time = np.linspace(0, 100, 100)  # Ma
+T_path = 900 * np.exp(-time/30)  # Exponential cooling
+
+ax.plot(time, T_path, 'b-', linewidth=2)
+for mineral, tc in zip(['Zircon', 'Hornblende', 'Biotite', 'Apatite'],
+                       [900, 550, 350, 70]):
+    t_closure = -30 * np.log(tc/900)
+    if t_closure > 0:
+        ax.plot(t_closure, tc, 'ro', markersize=8)
+        ax.annotate(mineral, xy=(t_closure, tc), xytext=(t_closure+5, tc+30),
+                    fontsize=8, arrowprops=dict(arrowstyle='->', alpha=0.5))
+
+ax.set_xlabel('Time (Ma after crystallization)')
+ax.set_ylabel('Temperature ($^\\circ$C)')
+ax.set_title('Cooling Path and Closure Events')
+ax.grid(True, alpha=0.3)
+
+# Multi-chronometer cooling history
+ax = axes[2]
+systems_cool = ['U-Pb Zrn', 'Ar-Ar Hbl', 'Rb-Sr Ms', 'K-Ar Bt', 'FT Ap']
+ages_cool = [100, 85, 60, 45, 20]  # Ma
+Tc_cool = [900, 550, 400, 350, 70]
+
+ax.scatter(ages_cool, Tc_cool, s=100, c='#e74c3c', zorder=5)
+for sys, age, tc in zip(systems_cool, ages_cool, Tc_cool):
+    ax.annotate(sys, xy=(age, tc), xytext=(age-10, tc+50),
+                fontsize=8, arrowprops=dict(arrowstyle='->', alpha=0.5))
+
+# Fit cooling curve
+from scipy.optimize import curve_fit
+def cooling(t, T0, tau, T_amb):
+    return T_amb + (T0 - T_amb) * np.exp(-(100-t)/tau)
+
+popt, _ = curve_fit(cooling, ages_cool, Tc_cool, p0=[1000, 30, 0], maxfev=5000)
+t_fit = np.linspace(0, 100, 100)
+ax.plot(t_fit, cooling(t_fit, *popt), 'b-', linewidth=2, alpha=0.7)
+
+ax.set_xlabel('Age (Ma)')
+ax.set_ylabel('Temperature ($^\\circ$C)')
+ax.set_title('Thermochronology')
+ax.grid(True, alpha=0.3)
+ax.invert_xaxis()
+
+plt.tight_layout()
+plt.savefig('closure_temperature.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Cooling rate
+cooling_rate = (Tc_cool[0] - Tc_cool[-1]) / (ages_cool[0] - ages_cool[-1])
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{closure_temperature.pdf}
+\caption{Closure temperature: (a) mineral comparison, (b) cooling path, (c) multi-system thermochronology.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+# Compile results
+results_table = [
+    ('Rb-Sr isochron age', f'{age_RbSr/1e9:.3f}', 'Ga'),
+    ('Initial $^{87}$Sr/$^{86}$Sr', f'{intercept_Rb:.4f}', ''),
+    ('Isochron R$^2$', f'{r_Rb**2:.4f}', ''),
+    ('U-Pb upper intercept', f'{upper_age/1e9:.2f}', 'Ga'),
+    ('U-Pb lower intercept', f'{lower_age/1e9:.2f}', 'Ga'),
+    ('Average cooling rate', f'{abs(cooling_rate):.1f}', '$^\\circ$C/Ma'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Radiometric dating results}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parameter & Value & Units \\
+\midrule
+\py{results_table[0][0]} & \py{results_table[0][1]} & \py{results_table[0][2]} \\
+\py{results_table[1][0]} & \py{results_table[1][1]} & \py{results_table[1][2]} \\
+\py{results_table[2][0]} & \py{results_table[2][1]} & \py{results_table[2][2]} \\
+\py{results_table[3][0]} & \py{results_table[3][1]} & \py{results_table[3][2]} \\
+\py{results_table[4][0]} & \py{results_table[4][1]} & \py{results_table[4][2]} \\
+\py{results_table[5][0]} & \py{results_table[5][1]} & \py{results_table[5][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Isochron dating provides both age and initial ratios
+    \item U-Pb concordia reveals open-system behavior
+    \item Multiple isotope systems enable cross-validation
+    \item Closure temperature controls age interpretation
+    \item Thermochronology constrains cooling histories
+    \item Radiocarbon requires calibration for calendar ages
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,463 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{algorithm2e}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments for research paper style
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{remark}{Remark}
+
+\title{Atmospheric Reentry Analysis: Heat Flux, Trajectory, and Ablation Modeling\\
+\large A Comprehensive Study of Ballistic and Lifting Reentry Profiles}
+\author{Aerospace Systems Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This research paper presents a comprehensive analysis of atmospheric reentry dynamics for spacecraft vehicles. We develop and compare ballistic and lifting reentry trajectories, computing time histories of altitude, velocity, deceleration, and stagnation-point heat flux. The analysis includes an exponential atmospheric model, Sutton-Graves heat flux correlation, and a simplified ablation model for thermal protection system sizing. Multiple entry angles and ballistic coefficients are evaluated to determine optimal reentry profiles for human-rated and cargo vehicles.
+\end{abstract}
+
+\section{Introduction}
+Atmospheric reentry is one of the most challenging phases of space flight, subjecting vehicles to extreme thermal and mechanical loads. The kinetic energy of an orbiting spacecraft must be dissipated through aerodynamic drag and converted to heat, much of which is transferred to the vehicle surface. Understanding the physics of reentry is essential for thermal protection system (TPS) design and crew safety.
+
+\begin{definition}[Ballistic Coefficient]
+The ballistic coefficient characterizes a vehicle's resistance to atmospheric drag:
+\begin{equation}
+\beta = \frac{m}{C_D A}
+\end{equation}
+where $m$ is vehicle mass, $C_D$ is drag coefficient, and $A$ is reference area. Higher $\beta$ results in faster descent and higher heating rates.
+\end{definition}
+
+\section{Mathematical Framework}
+
+\subsection{Equations of Motion}
+For planar reentry, the equations of motion in a rotating frame are:
+\begin{align}
+\frac{dV}{dt} &= -\frac{\rho V^2}{2\beta} - g\sin\gamma \label{eq:velocity}\\
+\frac{d\gamma}{dt} &= \frac{1}{V}\left[\left(\frac{V^2}{r} - g\right)\cos\gamma + \frac{L}{m}\right] \label{eq:flight_path}\\
+\frac{dh}{dt} &= V\sin\gamma \label{eq:altitude}\\
+\frac{dr_d}{dt} &= \frac{V\cos\gamma \cdot R_E}{R_E + h} \label{eq:range}
+\end{align}
+where $V$ is velocity, $\gamma$ is flight path angle (negative for descent), $h$ is altitude, and $r_d$ is downrange distance.
+
+\subsection{Atmospheric Model}
+We employ an exponential atmosphere:
+\begin{equation}
+\rho(h) = \rho_0 \exp\left(-\frac{h}{H}\right)
+\end{equation}
+with scale height $H \approx 8.5$ km for Earth's lower atmosphere.
+
+\subsection{Heating Relations}
+
+\begin{theorem}[Sutton-Graves Correlation]
+The convective heat flux at the stagnation point of a blunt body is:
+\begin{equation}
+\dot{q}_s = C \sqrt{\frac{\rho}{r_n}} V^3
+\end{equation}
+where $C = 1.83 \times 10^{-4}$ W$\cdot$m$^{-1.5}$/(kg$^{0.5}$m$^{-3}$s$^{-3}$) and $r_n$ is the nose radius.
+\end{theorem}
+
+The total heat load is the integral over the trajectory:
+\begin{equation}
+Q = \int_0^{t_f} \dot{q}_s \, dt
+\end{equation}
+
+\subsection{Ablation Model}
+For ablative TPS, the surface recession rate is:
+\begin{equation}
+\dot{s} = \frac{\dot{q}_s - \sigma T_w^4}{H_{eff}}
+\end{equation}
+where $H_{eff}$ is the effective heat of ablation and $T_w$ is the wall temperature.
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.integrate import odeint, cumtrapz
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Physical constants
+g0 = 9.81  # Sea-level gravity (m/s^2)
+R_earth = 6.371e6  # Earth radius (m)
+rho_0 = 1.225  # Sea level density (kg/m^3)
+H = 8500  # Scale height (m)
+sigma = 5.67e-8  # Stefan-Boltzmann constant
+
+# Atmospheric density model
+def density(h):
+    return rho_0 * np.exp(-np.maximum(0, h) / H)
+
+# Gravity model
+def gravity(h):
+    return g0 * (R_earth / (R_earth + h))**2
+
+# Equations of motion for ballistic reentry
+def reentry_dynamics(state, t, beta, L_D_ratio=0):
+    V, gamma, h, r_d = state
+    if h < 0 or V < 100:
+        return [0, 0, 0, 0]
+
+    rho = density(h)
+    g = gravity(h)
+    r = R_earth + h
+
+    # Aerodynamic forces
+    q_bar = 0.5 * rho * V**2  # Dynamic pressure
+    D_m = q_bar / beta  # Drag acceleration
+    L_m = D_m * L_D_ratio  # Lift acceleration
+
+    # Derivatives
+    dVdt = -D_m - g * np.sin(gamma)
+    dgammadt = (1/V) * ((V**2/r - g) * np.cos(gamma) + L_m)
+    dhdt = V * np.sin(gamma)
+    dr_d_dt = V * np.cos(gamma) * R_earth / r
+
+    return [dVdt, dgammadt, dhdt, dr_d_dt]
+
+# Heat flux calculation (Sutton-Graves)
+def compute_heat_flux(rho, V, r_n):
+    C = 1.83e-4
+    return C * np.sqrt(rho / r_n) * V**3 / 1e6  # MW/m^2
+
+# Vehicle configurations
+vehicles = {
+    'Capsule': {'m': 5000, 'Cd': 1.3, 'A': 12.0, 'r_n': 2.5, 'L_D': 0.3},
+    'Shuttle': {'m': 80000, 'Cd': 0.9, 'A': 250.0, 'r_n': 1.5, 'L_D': 1.2},
+    'Lifting Body': {'m': 8000, 'Cd': 0.4, 'A': 20.0, 'r_n': 0.5, 'L_D': 2.0}
+}
+
+# Entry angles to study
+entry_angles = [-1.0, -2.0, -3.0, -5.0]  # degrees
+
+# Initial conditions
+V0 = 7800  # m/s (orbital velocity)
+h0 = 120000  # m (entry interface)
+
+# Time span
+t = np.linspace(0, 800, 2000)
+
+# Store results
+all_results = {}
+
+# Simulate for all vehicles (with nominal entry angle)
+nominal_angle = -2.0
+for name, params in vehicles.items():
+    beta = params['m'] / (params['Cd'] * params['A'])
+    gamma0 = np.deg2rad(nominal_angle)
+    state0 = [V0, gamma0, h0, 0]
+
+    sol = odeint(reentry_dynamics, state0, t, args=(beta, params['L_D']))
+    V, gamma, h, r_d = sol.T
+
+    # Compute derived quantities
+    rho = density(h)
+    decel = rho * V**2 / (2 * beta * g0)  # in g's
+    q_dot = compute_heat_flux(rho, V, params['r_n'])
+
+    # Total heat load
+    Q_total = np.trapz(q_dot * 1e6, t)  # J/m^2
+
+    # Find peaks
+    valid = h > 0
+    if np.any(valid):
+        peak_decel_idx = np.argmax(decel)
+        peak_heat_idx = np.argmax(q_dot)
+    else:
+        peak_decel_idx = peak_heat_idx = 0
+
+    all_results[name] = {
+        'V': V, 'gamma': gamma, 'h': h, 'r_d': r_d,
+        'decel': decel, 'q_dot': q_dot, 'beta': beta,
+        'peak_decel': decel[peak_decel_idx],
+        'peak_decel_time': t[peak_decel_idx],
+        'peak_decel_alt': h[peak_decel_idx],
+        'peak_heat': q_dot[peak_heat_idx],
+        'peak_heat_time': t[peak_heat_idx],
+        'Q_total': Q_total / 1e6  # MJ/m^2
+    }
+
+# Entry angle comparison for capsule
+capsule_params = vehicles['Capsule']
+beta_capsule = capsule_params['m'] / (capsule_params['Cd'] * capsule_params['A'])
+angle_results = {}
+
+for angle in entry_angles:
+    gamma0 = np.deg2rad(angle)
+    state0 = [V0, gamma0, h0, 0]
+    sol = odeint(reentry_dynamics, state0, t, args=(beta_capsule, capsule_params['L_D']))
+    V, gamma, h, r_d = sol.T
+
+    rho = density(h)
+    decel = rho * V**2 / (2 * beta_capsule * g0)
+    q_dot = compute_heat_flux(rho, V, capsule_params['r_n'])
+
+    angle_results[angle] = {
+        'h': h, 'decel': decel, 'q_dot': q_dot,
+        'peak_decel': np.max(decel),
+        'peak_heat': np.max(q_dot)
+    }
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Altitude profiles for different vehicles
+ax1 = fig.add_subplot(2, 3, 1)
+colors = plt.cm.Set1(np.linspace(0, 0.6, len(vehicles)))
+for (name, res), color in zip(all_results.items(), colors):
+    valid = res['h'] > 0
+    ax1.plot(t[valid], res['h'][valid]/1000, linewidth=2, color=color, label=name)
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Altitude (km)')
+ax1.set_title('Altitude Profiles')
+ax1.legend(fontsize=8)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Velocity profiles
+ax2 = fig.add_subplot(2, 3, 2)
+for (name, res), color in zip(all_results.items(), colors):
+    valid = res['h'] > 0
+    ax2.plot(t[valid], res['V'][valid]/1000, linewidth=2, color=color, label=name)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Velocity (km/s)')
+ax2.set_title('Velocity Profiles')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Deceleration profiles
+ax3 = fig.add_subplot(2, 3, 3)
+for (name, res), color in zip(all_results.items(), colors):
+    valid = res['h'] > 0
+    ax3.plot(t[valid], res['decel'][valid], linewidth=2, color=color, label=name)
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('Deceleration (g)')
+ax3.set_title('Deceleration Loads')
+ax3.legend(fontsize=8)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Heat flux comparison
+ax4 = fig.add_subplot(2, 3, 4)
+for (name, res), color in zip(all_results.items(), colors):
+    valid = res['h'] > 0
+    ax4.plot(t[valid], res['q_dot'][valid], linewidth=2, color=color, label=name)
+    ax4.fill_between(t[valid], 0, res['q_dot'][valid], alpha=0.2, color=color)
+ax4.set_xlabel('Time (s)')
+ax4.set_ylabel(r'Heat Flux (MW/m$^2$)')
+ax4.set_title('Stagnation Point Heating')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Entry angle effects
+ax5 = fig.add_subplot(2, 3, 5)
+angle_colors = plt.cm.plasma(np.linspace(0.2, 0.8, len(entry_angles)))
+for angle, color in zip(entry_angles, angle_colors):
+    res = angle_results[angle]
+    valid = res['h'] > 0
+    ax5.plot(t[valid], res['q_dot'][valid], linewidth=2, color=color,
+             label=f'$\\gamma_0 = {angle}^\\circ$')
+ax5.set_xlabel('Time (s)')
+ax5.set_ylabel(r'Heat Flux (MW/m$^2$)')
+ax5.set_title('Entry Angle Effects (Capsule)')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Performance summary
+ax6 = fig.add_subplot(2, 3, 6)
+names = list(all_results.keys())
+peak_decels = [all_results[n]['peak_decel'] for n in names]
+peak_heats = [all_results[n]['peak_heat'] for n in names]
+
+x = np.arange(len(names))
+width = 0.35
+
+bars1 = ax6.bar(x - width/2, peak_decels, width, label='Peak Decel (g)',
+                color='steelblue', alpha=0.8)
+ax6_twin = ax6.twinx()
+bars2 = ax6_twin.bar(x + width/2, peak_heats, width,
+                     label=r'Peak $\dot{q}$ (MW/m$^2$)', color='coral', alpha=0.8)
+
+ax6.set_xlabel('Vehicle Type')
+ax6.set_ylabel('Peak Deceleration (g)', color='steelblue')
+ax6_twin.set_ylabel(r'Peak Heat Flux (MW/m$^2$)', color='coral')
+ax6.set_xticks(x)
+ax6.set_xticklabels(names, rotation=15)
+ax6.set_title('Peak Values Comparison')
+ax6.legend(loc='upper left', fontsize=8)
+ax6_twin.legend(loc='upper right', fontsize=8)
+
+plt.tight_layout()
+plt.savefig('atmospheric_reentry_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{atmospheric_reentry_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Best vehicle for human rating (lowest decel)
+human_rated = min(all_results.items(), key=lambda x: x[1]['peak_decel'])
+human_name = human_rated[0]
+human_decel = human_rated[1]['peak_decel']
+\end{pycode}
+
+\section{Computational Algorithm}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{Initial state $[V_0, \gamma_0, h_0]$, vehicle parameters $\beta, r_n, L/D$}
+\KwOut{Time histories of $V(t), h(t), \dot{q}(t)$, peak values}
+Initialize state vector\;
+\For{each time step}{
+    Compute atmospheric density $\rho(h)$\;
+    Compute gravity $g(h)$\;
+    \tcc{Aerodynamic accelerations}
+    $D/m \leftarrow \rho V^2 / (2\beta)$\;
+    $L/m \leftarrow (D/m) \cdot (L/D)$\;
+    \tcc{Equations of motion}
+    Integrate equations (\ref{eq:velocity})-(\ref{eq:range})\;
+    \tcc{Heat flux}
+    $\dot{q}_s \leftarrow C\sqrt{\rho/r_n} V^3$\;
+    Store results\;
+}
+Compute peak deceleration and heat flux\;
+Compute total heat load $Q = \int \dot{q} \, dt$\;
+\Return{Trajectory data, thermal loads}
+\caption{Atmospheric Reentry Simulation}
+\end{algorithm}
+
+\section{Results and Discussion}
+
+\subsection{Vehicle Comparison}
+
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Reentry Performance Comparison}')
+print(r'\begin{tabular}{lccccc}')
+print(r'\toprule')
+print(r'Vehicle & $\beta$ & Peak Decel & Peak $\dot{q}$ & $t_{peak}$ & Total $Q$ \\')
+print(r' & (kg/m$^2$) & (g) & (MW/m$^2$) & (s) & (MJ/m$^2$) \\')
+print(r'\midrule')
+for name in vehicles.keys():
+    res = all_results[name]
+    print(f"{name} & {res['beta']:.0f} & {res['peak_decel']:.1f} & {res['peak_heat']:.2f} & {res['peak_heat_time']:.0f} & {res['Q_total']:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Key Observations}
+
+\begin{remark}[Vehicle Configuration Trade-offs]
+The Shuttle configuration experiences the longest reentry duration due to its high L/D ratio, which reduces peak heating but increases total heat load. The capsule configuration experiences the highest peak deceleration but shortest heating duration.
+\end{remark}
+
+The \py{human_name} configuration achieves the lowest peak deceleration of \py{f"{human_decel:.1f}"} g, making it most suitable for human-rated missions (typically requiring $<$ 10 g).
+
+\subsection{Entry Angle Sensitivity}
+
+\begin{pycode}
+# Entry angle table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Entry Angle Effects on Capsule Performance}')
+print(r'\begin{tabular}{ccc}')
+print(r'\toprule')
+print(r'Entry Angle & Peak Decel & Peak $\dot{q}$ \\')
+print(r'(degrees) & (g) & (MW/m$^2$) \\')
+print(r'\midrule')
+for angle in entry_angles:
+    res = angle_results[angle]
+    print(f"{angle} & {res['peak_decel']:.1f} & {res['peak_heat']:.2f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{remark}[Entry Corridor]
+Shallow entry angles reduce peak heating but extend the heating duration and increase total heat load. Steep entry angles cause excessive deceleration. The entry corridor is bounded by skip-out (too shallow) and structural limits (too steep).
+\end{remark}
+
+\subsection{Thermal Protection Implications}
+
+For the capsule with $\gamma_0 = -2^\circ$:
+\begin{itemize}
+    \item Peak heat flux: \py{f"{all_results['Capsule']['peak_heat']:.2f}"} MW/m$^2$
+    \item Peak heating occurs at $t = $ \py{f"{all_results['Capsule']['peak_heat_time']:.0f}"} s
+    \item Altitude at peak heating: \py{f"{all_results['Capsule']['peak_decel_alt']/1000:.1f}"} km
+    \item Total heat load: \py{f"{all_results['Capsule']['Q_total']:.1f}"} MJ/m$^2$
+\end{itemize}
+
+\section{Ablation Analysis}
+
+For an ablative heat shield with $H_{eff} = 30$ MJ/kg and density $\rho_{TPS} = 1500$ kg/m$^3$:
+\begin{equation}
+\text{Minimum TPS thickness} = \frac{Q}{\rho_{TPS} \cdot H_{eff}}
+\end{equation}
+
+\begin{pycode}
+# TPS sizing
+H_eff = 30e6  # J/kg
+rho_TPS = 1500  # kg/m^3
+Q_total = all_results['Capsule']['Q_total'] * 1e6  # J/m^2
+thickness_min = Q_total / (rho_TPS * H_eff) * 1000  # mm
+safety_factor = 2.0
+thickness_design = thickness_min * safety_factor
+\end{pycode}
+
+For the capsule configuration:
+\begin{itemize}
+    \item Minimum ablator thickness: \py{f"{thickness_min:.1f}"} mm
+    \item Design thickness (SF = 2.0): \py{f"{thickness_design:.1f}"} mm
+\end{itemize}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{2D trajectory}: Neglects out-of-plane maneuvers and Earth rotation
+    \item \textbf{Exponential atmosphere}: Does not capture density variations with latitude/season
+    \item \textbf{Constant aerodynamics}: $C_D$ and $L/D$ vary with Mach and Reynolds numbers
+    \item \textbf{Simplified heating}: Neglects radiative heating and real-gas effects
+    \item \textbf{No ablation coupling}: Surface recession not coupled back to aerodynamics
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item 6-DOF simulation with attitude dynamics
+    \item Knudsen number effects in rarefied upper atmosphere
+    \item Real-gas thermochemistry for shock layer
+    \item Coupled ablation-aerothermal analysis
+    \item Monte Carlo trajectory dispersion analysis
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrates the critical trade-offs in atmospheric reentry vehicle design:
+\begin{itemize}
+    \item Higher L/D ratios reduce peak g-loads but extend heating duration
+    \item Larger nose radii reduce peak heat flux (spreading over larger area)
+    \item Entry angle selection is constrained by the entry corridor
+    \item The \py{human_name} configuration with peak deceleration of \py{f"{human_decel:.1f}"} g is most suitable for crew return
+\end{itemize}
+
+The computational methods provide a foundation for preliminary TPS sizing and mission design.
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Anderson, J. D. (2006). \textit{Hypersonic and High-Temperature Gas Dynamics}. AIAA.
+    \item Sutton, K., \& Graves, R. A. (1971). A general stagnation-point convective-heating equation for arbitrary gas mixtures. NASA TR R-376.
+    \item Tauber, M. E., \& Sutton, K. (1991). Stagnation-point radiative heating relations for Earth and Mars entries. Journal of Spacecraft and Rockets.
+\end{itemize}
+
+\end{document}

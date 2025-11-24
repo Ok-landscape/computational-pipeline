@@ -1,0 +1,696 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Stochastic Differential Equations: Modeling Random Processes}
+\author{Computational Mathematics}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Stochastic differential equations (SDEs) model systems influenced by random fluctuations and
+are fundamental in finance, physics, biology, and engineering. This document explores numerical
+methods for solving SDEs, including the Euler-Maruyama and Milstein schemes. We implement
+simulations of standard Brownian motion, geometric Brownian motion for stock prices, the
+Ornstein-Uhlenbeck process for mean-reverting systems, and multi-dimensional stochastic processes.
+Statistical analysis of path distributions and convergence properties validates the implementations.
+
+\section{Mathematical Framework}
+
+\subsection{General SDE Form}
+The It\^{o} stochastic differential equation:
+\begin{equation}
+dX_t = \mu(X_t, t)\,dt + \sigma(X_t, t)\,dW_t
+\end{equation}
+where $W_t$ is a Wiener process (Brownian motion).
+
+\subsection{Brownian Motion}
+Standard Brownian motion properties:
+\begin{align}
+W_0 &= 0 \\
+E[W_t] &= 0 \\
+\text{Var}(W_t) &= t \\
+W_t - W_s &\sim N(0, t-s)
+\end{align}
+
+\subsection{Euler-Maruyama Method}
+Discretization for numerical solution:
+\begin{equation}
+X_{n+1} = X_n + \mu(X_n, t_n)\Delta t + \sigma(X_n, t_n)\Delta W_n
+\end{equation}
+where $\Delta W_n \sim N(0, \Delta t)$.
+
+\subsection{Milstein Scheme}
+Higher-order correction:
+\begin{equation}
+X_{n+1} = X_n + \mu\Delta t + \sigma\Delta W_n + \frac{1}{2}\sigma\sigma'[(\Delta W_n)^2 - \Delta t]
+\end{equation}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Standard Brownian Motion}
+\begin{pycode}
+def brownian_motion(T, N, n_paths=1):
+    """Generate Brownian motion paths."""
+    dt = T / N
+    dW = np.sqrt(dt) * np.random.randn(n_paths, N)
+    W = np.zeros((n_paths, N + 1))
+    W[:, 1:] = np.cumsum(dW, axis=1)
+    t = np.linspace(0, T, N + 1)
+    return t, W
+
+# Parameters
+T = 1.0  # Total time
+N = 1000  # Number of steps
+n_paths = 50
+
+# Generate paths
+t, W = brownian_motion(T, N, n_paths)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Sample paths
+for i in range(min(20, n_paths)):
+    axes[0, 0].plot(t, W[i, :], alpha=0.5, linewidth=0.5)
+axes[0, 0].set_xlabel('Time $t$')
+axes[0, 0].set_ylabel('$W_t$')
+axes[0, 0].set_title('Brownian Motion Sample Paths')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Distribution at T
+final_values = W[:, -1]
+x_range = np.linspace(-3, 3, 100)
+theoretical_pdf = stats.norm.pdf(x_range, 0, np.sqrt(T))
+
+axes[0, 1].hist(final_values, bins=30, density=True, alpha=0.7, label='Simulated')
+axes[0, 1].plot(x_range, theoretical_pdf, 'r-', linewidth=2, label='Theoretical')
+axes[0, 1].set_xlabel('$W_T$')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].set_title(f'Distribution at $T={T}$')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Mean and variance over time
+W_many = brownian_motion(T, N, 1000)[1]
+mean_W = np.mean(W_many, axis=0)
+var_W = np.var(W_many, axis=0)
+
+axes[1, 0].plot(t, mean_W, 'b-', linewidth=1.5, label='Simulated Mean')
+axes[1, 0].axhline(0, color='r', linestyle='--', label='Theoretical')
+axes[1, 0].fill_between(t, mean_W - 2*np.sqrt(var_W), mean_W + 2*np.sqrt(var_W),
+                        alpha=0.3, label='$\pm 2\sigma$')
+axes[1, 0].set_xlabel('Time $t$')
+axes[1, 0].set_ylabel('$E[W_t]$')
+axes[1, 0].set_title('Mean of Brownian Motion')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+axes[1, 1].plot(t, var_W, 'b-', linewidth=1.5, label='Simulated')
+axes[1, 1].plot(t, t, 'r--', linewidth=1.5, label='Theoretical ($=t$)')
+axes[1, 1].set_xlabel('Time $t$')
+axes[1, 1].set_ylabel('$Var(W_t)$')
+axes[1, 1].set_title('Variance of Brownian Motion')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('brownian_motion.pdf',
+          'Standard Brownian motion: sample paths and statistical properties.')
+
+bm_mean_error = np.abs(np.mean(final_values))
+bm_var_error = np.abs(np.var(final_values) - T)
+\end{pycode}
+
+\section{Geometric Brownian Motion}
+\begin{pycode}
+def geometric_brownian_motion(S0, mu, sigma, T, N, n_paths=1):
+    """
+    Geometric Brownian Motion: dS = mu*S*dt + sigma*S*dW
+    Exact solution: S_t = S_0 * exp((mu - sigma^2/2)*t + sigma*W_t)
+    """
+    dt = T / N
+    t = np.linspace(0, T, N + 1)
+
+    # Generate Brownian increments
+    dW = np.sqrt(dt) * np.random.randn(n_paths, N)
+    W = np.zeros((n_paths, N + 1))
+    W[:, 1:] = np.cumsum(dW, axis=1)
+
+    # Exact solution
+    S_exact = S0 * np.exp((mu - 0.5*sigma**2)*t + sigma*W)
+
+    # Euler-Maruyama approximation
+    S_em = np.zeros((n_paths, N + 1))
+    S_em[:, 0] = S0
+
+    for i in range(N):
+        S_em[:, i+1] = S_em[:, i] + mu*S_em[:, i]*dt + sigma*S_em[:, i]*dW[:, i]
+
+    return t, S_exact, S_em, W
+
+# Parameters
+S0 = 100     # Initial price
+mu = 0.1     # Drift
+sigma = 0.2  # Volatility
+T = 1.0
+N = 252      # Trading days
+
+t, S_exact, S_em, W_gbm = geometric_brownian_motion(S0, mu, sigma, T, N, n_paths=100)
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Sample paths
+for i in range(20):
+    axes[0, 0].plot(t, S_exact[i, :], alpha=0.5, linewidth=0.5)
+axes[0, 0].set_xlabel('Time (years)')
+axes[0, 0].set_ylabel('Price')
+axes[0, 0].set_title('GBM Sample Paths')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Final price distribution
+final_prices = S_exact[:, -1]
+log_prices = np.log(final_prices)
+
+# Theoretical log-normal parameters
+theoretical_mean = np.log(S0) + (mu - 0.5*sigma**2)*T
+theoretical_std = sigma * np.sqrt(T)
+
+x_log = np.linspace(log_prices.min(), log_prices.max(), 100)
+theoretical_pdf = stats.norm.pdf(x_log, theoretical_mean, theoretical_std)
+
+axes[0, 1].hist(log_prices, bins=30, density=True, alpha=0.7, label='Simulated')
+axes[0, 1].plot(x_log, theoretical_pdf, 'r-', linewidth=2, label='Theoretical')
+axes[0, 1].set_xlabel('$\ln(S_T)$')
+axes[0, 1].set_ylabel('Density')
+axes[0, 1].set_title('Log-Price Distribution')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Compare exact vs Euler-Maruyama
+axes[0, 2].plot(t, S_exact[0, :], 'b-', linewidth=1.5, label='Exact')
+axes[0, 2].plot(t, S_em[0, :], 'r--', linewidth=1, label='Euler-Maruyama')
+axes[0, 2].set_xlabel('Time (years)')
+axes[0, 2].set_ylabel('Price')
+axes[0, 2].set_title('Exact vs Euler-Maruyama')
+axes[0, 2].legend()
+axes[0, 2].grid(True, alpha=0.3)
+
+# Expected value over time
+E_St = S0 * np.exp(mu * t)
+simulated_mean = np.mean(S_exact, axis=0)
+
+axes[1, 0].plot(t, simulated_mean, 'b-', linewidth=1.5, label='Simulated')
+axes[1, 0].plot(t, E_St, 'r--', linewidth=1.5, label='Theoretical')
+axes[1, 0].set_xlabel('Time (years)')
+axes[1, 0].set_ylabel('$E[S_t]$')
+axes[1, 0].set_title('Expected Value Over Time')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Convergence analysis: error vs step size
+step_sizes = [10, 50, 100, 252, 500, 1000]
+errors = []
+
+for steps in step_sizes:
+    _, S_ex, S_euler, _ = geometric_brownian_motion(S0, mu, sigma, T, steps, n_paths=100)
+    mean_error = np.mean(np.abs(S_ex[:, -1] - S_euler[:, -1]))
+    errors.append(mean_error)
+
+axes[1, 1].loglog([T/n for n in step_sizes], errors, 'bo-', linewidth=1.5)
+axes[1, 1].set_xlabel('Step Size $\Delta t$')
+axes[1, 1].set_ylabel('Mean Absolute Error')
+axes[1, 1].set_title('Euler-Maruyama Convergence')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Volatility effect
+volatilities = [0.1, 0.2, 0.3, 0.4]
+for vol in volatilities:
+    _, S_vol, _, _ = geometric_brownian_motion(S0, mu, vol, T, N, n_paths=1)
+    axes[1, 2].plot(t, S_vol[0, :], label=f'$\sigma={vol}$')
+
+axes[1, 2].set_xlabel('Time (years)')
+axes[1, 2].set_ylabel('Price')
+axes[1, 2].set_title('Effect of Volatility')
+axes[1, 2].legend()
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('geometric_brownian.pdf',
+          'Geometric Brownian motion for stock price modeling.')
+
+gbm_final_mean = np.mean(final_prices)
+gbm_theoretical_mean = S0 * np.exp(mu * T)
+gbm_final_std = np.std(final_prices)
+\end{pycode}
+
+\section{Ornstein-Uhlenbeck Process}
+\begin{pycode}
+def ornstein_uhlenbeck(X0, theta, mu, sigma, T, N, n_paths=1):
+    """
+    Ornstein-Uhlenbeck: dX = theta*(mu - X)*dt + sigma*dW
+    Mean-reverting process
+    """
+    dt = T / N
+    t = np.linspace(0, T, N + 1)
+
+    # Euler-Maruyama
+    X = np.zeros((n_paths, N + 1))
+    X[:, 0] = X0
+
+    for i in range(N):
+        dW = np.sqrt(dt) * np.random.randn(n_paths)
+        X[:, i+1] = X[:, i] + theta*(mu - X[:, i])*dt + sigma*dW
+
+    # Exact simulation (for comparison)
+    X_exact = np.zeros((n_paths, N + 1))
+    X_exact[:, 0] = X0
+
+    for i in range(N):
+        dW = np.sqrt(dt) * np.random.randn(n_paths)
+        exp_theta = np.exp(-theta * dt)
+        mean = X_exact[:, i] * exp_theta + mu * (1 - exp_theta)
+        std = sigma * np.sqrt((1 - np.exp(-2*theta*dt)) / (2*theta))
+        X_exact[:, i+1] = mean + std * np.random.randn(n_paths)
+
+    return t, X, X_exact
+
+# Parameters
+X0 = 1.0     # Initial value
+theta = 5.0  # Mean reversion rate
+mu = 0.0     # Long-term mean
+sigma = 0.5  # Volatility
+T = 2.0
+N = 500
+
+t, X_ou, X_ou_exact = ornstein_uhlenbeck(X0, theta, mu, sigma, T, N, n_paths=100)
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Sample paths
+for i in range(20):
+    axes[0, 0].plot(t, X_ou[i, :], alpha=0.5, linewidth=0.5)
+axes[0, 0].axhline(mu, color='r', linestyle='--', label=f'$\mu={mu}$')
+axes[0, 0].set_xlabel('Time')
+axes[0, 0].set_ylabel('$X_t$')
+axes[0, 0].set_title('Ornstein-Uhlenbeck Sample Paths')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Mean reversion demonstration
+X0_values = [-1, 0, 1, 2]
+for x0 in X0_values:
+    _, X_demo, _ = ornstein_uhlenbeck(x0, theta, mu, sigma, T, N, n_paths=1)
+    axes[0, 1].plot(t, X_demo[0, :], label=f'$X_0={x0}$')
+axes[0, 1].axhline(mu, color='k', linestyle='--', alpha=0.5)
+axes[0, 1].set_xlabel('Time')
+axes[0, 1].set_ylabel('$X_t$')
+axes[0, 1].set_title('Mean Reversion from Different Initial Values')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Stationary distribution
+final_ou = X_ou[:, -1]
+stationary_var = sigma**2 / (2*theta)
+x_range = np.linspace(-1, 1, 100)
+stationary_pdf = stats.norm.pdf(x_range, mu, np.sqrt(stationary_var))
+
+axes[0, 2].hist(final_ou, bins=30, density=True, alpha=0.7, label='Simulated')
+axes[0, 2].plot(x_range, stationary_pdf, 'r-', linewidth=2, label='Stationary')
+axes[0, 2].set_xlabel('$X_T$')
+axes[0, 2].set_ylabel('Density')
+axes[0, 2].set_title('Distribution at $T=2$')
+axes[0, 2].legend()
+axes[0, 2].grid(True, alpha=0.3)
+
+# Mean over time
+theoretical_mean = X0 * np.exp(-theta * t) + mu * (1 - np.exp(-theta * t))
+simulated_mean = np.mean(X_ou, axis=0)
+
+axes[1, 0].plot(t, simulated_mean, 'b-', linewidth=1.5, label='Simulated')
+axes[1, 0].plot(t, theoretical_mean, 'r--', linewidth=1.5, label='Theoretical')
+axes[1, 0].set_xlabel('Time')
+axes[1, 0].set_ylabel('$E[X_t]$')
+axes[1, 0].set_title('Mean Over Time')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Variance over time
+theoretical_var = (sigma**2 / (2*theta)) * (1 - np.exp(-2*theta*t))
+simulated_var = np.var(X_ou, axis=0)
+
+axes[1, 1].plot(t, simulated_var, 'b-', linewidth=1.5, label='Simulated')
+axes[1, 1].plot(t, theoretical_var, 'r--', linewidth=1.5, label='Theoretical')
+axes[1, 1].axhline(stationary_var, color='g', linestyle=':', label='Stationary')
+axes[1, 1].set_xlabel('Time')
+axes[1, 1].set_ylabel('$Var(X_t)$')
+axes[1, 1].set_title('Variance Over Time')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+# Effect of theta
+theta_values = [1, 2, 5, 10]
+for th in theta_values:
+    _, X_th, _ = ornstein_uhlenbeck(1.0, th, 0, sigma, T, N, n_paths=1)
+    axes[1, 2].plot(t, X_th[0, :], label=f'$\\theta={th}$')
+axes[1, 2].axhline(0, color='k', linestyle='--', alpha=0.5)
+axes[1, 2].set_xlabel('Time')
+axes[1, 2].set_ylabel('$X_t$')
+axes[1, 2].set_title('Effect of Mean Reversion Rate')
+axes[1, 2].legend()
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('ornstein_uhlenbeck.pdf',
+          'Ornstein-Uhlenbeck process demonstrating mean reversion.')
+
+ou_final_mean = np.mean(final_ou)
+ou_final_var = np.var(final_ou)
+ou_stationary_var = stationary_var
+\end{pycode}
+
+\section{Milstein Scheme Implementation}
+\begin{pycode}
+def compare_euler_milstein(X0, mu_func, sigma_func, sigma_prime_func, T, N, n_paths=100):
+    """
+    Compare Euler-Maruyama and Milstein schemes.
+    Test case: dX = X*dt + X*dW (GBM form)
+    """
+    dt = T / N
+    t = np.linspace(0, T, N + 1)
+
+    # Generate common Brownian increments
+    dW = np.sqrt(dt) * np.random.randn(n_paths, N)
+
+    # Euler-Maruyama
+    X_em = np.zeros((n_paths, N + 1))
+    X_em[:, 0] = X0
+
+    # Milstein
+    X_mil = np.zeros((n_paths, N + 1))
+    X_mil[:, 0] = X0
+
+    for i in range(N):
+        X_em[:, i+1] = (X_em[:, i] + mu_func(X_em[:, i])*dt +
+                        sigma_func(X_em[:, i])*dW[:, i])
+
+        X_mil[:, i+1] = (X_mil[:, i] + mu_func(X_mil[:, i])*dt +
+                         sigma_func(X_mil[:, i])*dW[:, i] +
+                         0.5*sigma_func(X_mil[:, i])*sigma_prime_func(X_mil[:, i])*
+                         (dW[:, i]**2 - dt))
+
+    # Exact solution for GBM
+    W = np.zeros((n_paths, N + 1))
+    W[:, 1:] = np.cumsum(dW, axis=1)
+    mu_coef = 1.0
+    sigma_coef = 1.0
+    X_exact = X0 * np.exp((mu_coef - 0.5*sigma_coef**2)*t + sigma_coef*W)
+
+    return t, X_em, X_mil, X_exact
+
+# Define SDE: dX = X*dt + X*dW (GBM with mu=1, sigma=1)
+mu_func = lambda x: x
+sigma_func = lambda x: x
+sigma_prime = lambda x: 1.0
+
+X0 = 1.0
+T = 1.0
+N = 100
+
+t, X_em, X_mil, X_exact = compare_euler_milstein(X0, mu_func, sigma_func, sigma_prime, T, N)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Single path comparison
+axes[0, 0].plot(t, X_exact[0, :], 'g-', linewidth=1.5, label='Exact')
+axes[0, 0].plot(t, X_em[0, :], 'b--', linewidth=1, label='Euler-Maruyama')
+axes[0, 0].plot(t, X_mil[0, :], 'r:', linewidth=1, label='Milstein')
+axes[0, 0].set_xlabel('Time')
+axes[0, 0].set_ylabel('$X_t$')
+axes[0, 0].set_title('Single Path Comparison')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Error at final time
+error_em = X_em[:, -1] - X_exact[:, -1]
+error_mil = X_mil[:, -1] - X_exact[:, -1]
+
+axes[0, 1].hist(error_em, bins=30, alpha=0.6, label='Euler-Maruyama')
+axes[0, 1].hist(error_mil, bins=30, alpha=0.6, label='Milstein')
+axes[0, 1].set_xlabel('Error at $T$')
+axes[0, 1].set_ylabel('Frequency')
+axes[0, 1].set_title('Error Distribution')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Convergence comparison
+step_counts = [10, 20, 50, 100, 200, 500]
+em_errors = []
+mil_errors = []
+
+for steps in step_counts:
+    _, X_e, X_m, X_ex = compare_euler_milstein(X0, mu_func, sigma_func, sigma_prime, T, steps, n_paths=500)
+    em_errors.append(np.mean(np.abs(X_e[:, -1] - X_ex[:, -1])))
+    mil_errors.append(np.mean(np.abs(X_m[:, -1] - X_ex[:, -1])))
+
+dt_values = [T/n for n in step_counts]
+axes[1, 0].loglog(dt_values, em_errors, 'bo-', linewidth=1.5, label='Euler-Maruyama')
+axes[1, 0].loglog(dt_values, mil_errors, 'rs-', linewidth=1.5, label='Milstein')
+# Reference lines
+axes[1, 0].loglog(dt_values, [0.5*dt**0.5 for dt in dt_values], 'b--', alpha=0.5, label='$O(\sqrt{\Delta t})$')
+axes[1, 0].loglog(dt_values, [0.5*dt for dt in dt_values], 'r--', alpha=0.5, label='$O(\Delta t)$')
+axes[1, 0].set_xlabel('Step Size $\Delta t$')
+axes[1, 0].set_ylabel('Mean Absolute Error')
+axes[1, 0].set_title('Convergence Order Comparison')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Error statistics
+axes[1, 1].bar([0, 1], [np.mean(np.abs(error_em)), np.mean(np.abs(error_mil))],
+               color=['blue', 'red'], alpha=0.7)
+axes[1, 1].set_xticks([0, 1])
+axes[1, 1].set_xticklabels(['Euler-Maruyama', 'Milstein'])
+axes[1, 1].set_ylabel('Mean Absolute Error')
+axes[1, 1].set_title(f'Error Comparison ($N={N}$)')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('milstein_comparison.pdf',
+          'Comparison of Euler-Maruyama and Milstein numerical schemes.')
+
+em_mae = np.mean(np.abs(error_em))
+mil_mae = np.mean(np.abs(error_mil))
+\end{pycode}
+
+\section{Multi-Dimensional SDE: Correlated Processes}
+\begin{pycode}
+def correlated_gbm(S0_1, S0_2, mu1, mu2, sigma1, sigma2, rho, T, N, n_paths=100):
+    """
+    Two correlated geometric Brownian motions.
+    """
+    dt = T / N
+    t = np.linspace(0, T, N + 1)
+
+    # Generate correlated Brownian increments
+    dW1 = np.sqrt(dt) * np.random.randn(n_paths, N)
+    dZ = np.random.randn(n_paths, N)
+    dW2 = rho * dW1 + np.sqrt(1 - rho**2) * np.sqrt(dt) * dZ
+
+    # Simulate paths
+    S1 = np.zeros((n_paths, N + 1))
+    S2 = np.zeros((n_paths, N + 1))
+    S1[:, 0] = S0_1
+    S2[:, 0] = S0_2
+
+    for i in range(N):
+        S1[:, i+1] = S1[:, i] * np.exp((mu1 - 0.5*sigma1**2)*dt + sigma1*dW1[:, i])
+        S2[:, i+1] = S2[:, i] * np.exp((mu2 - 0.5*sigma2**2)*dt + sigma2*dW2[:, i])
+
+    return t, S1, S2
+
+# Parameters
+S0_1, S0_2 = 100, 100
+mu1, mu2 = 0.08, 0.12
+sigma1, sigma2 = 0.2, 0.3
+rho = 0.6
+T = 1.0
+N = 252
+
+t, S1, S2 = correlated_gbm(S0_1, S0_2, mu1, mu2, sigma1, sigma2, rho, T, N, n_paths=1000)
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Sample paths
+for i in range(10):
+    axes[0, 0].plot(t, S1[i, :], 'b-', alpha=0.5, linewidth=0.5)
+    axes[0, 0].plot(t, S2[i, :], 'r-', alpha=0.5, linewidth=0.5)
+axes[0, 0].set_xlabel('Time')
+axes[0, 0].set_ylabel('Price')
+axes[0, 0].set_title(f'Correlated GBM ($\\rho={rho}$)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Joint distribution at T
+axes[0, 1].scatter(S1[:, -1], S2[:, -1], alpha=0.3, s=5)
+axes[0, 1].set_xlabel('$S_1(T)$')
+axes[0, 1].set_ylabel('$S_2(T)$')
+axes[0, 1].set_title('Joint Distribution at $T$')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Correlation check
+returns1 = np.diff(np.log(S1), axis=1)
+returns2 = np.diff(np.log(S2), axis=1)
+measured_rho = np.corrcoef(returns1.flatten(), returns2.flatten())[0, 1]
+
+# Different correlation values
+rho_values = [-0.8, -0.4, 0, 0.4, 0.8]
+for r in rho_values:
+    _, s1, s2 = correlated_gbm(100, 100, 0.08, 0.12, 0.2, 0.3, r, T, N, n_paths=1)
+    axes[0, 2].plot(s1[0, :], s2[0, :], label=f'$\\rho={r}$', alpha=0.7)
+axes[0, 2].set_xlabel('$S_1$')
+axes[0, 2].set_ylabel('$S_2$')
+axes[0, 2].set_title('Paths for Different Correlations')
+axes[0, 2].legend(fontsize=8)
+axes[0, 2].grid(True, alpha=0.3)
+
+# Portfolio value (equal weights)
+portfolio = 0.5 * S1 + 0.5 * S2
+portfolio_mean = np.mean(portfolio, axis=0)
+
+for i in range(10):
+    axes[1, 0].plot(t, portfolio[i, :], alpha=0.5, linewidth=0.5)
+axes[1, 0].plot(t, portfolio_mean, 'k-', linewidth=2, label='Mean')
+axes[1, 0].set_xlabel('Time')
+axes[1, 0].set_ylabel('Portfolio Value')
+axes[1, 0].set_title('Equal-Weight Portfolio')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Portfolio returns distribution
+portfolio_returns = (portfolio[:, -1] - portfolio[:, 0]) / portfolio[:, 0]
+axes[1, 1].hist(portfolio_returns, bins=40, alpha=0.7, edgecolor='black')
+axes[1, 1].axvline(np.mean(portfolio_returns), color='r', linestyle='--',
+                   label=f'Mean={np.mean(portfolio_returns):.2%}')
+axes[1, 1].set_xlabel('Return')
+axes[1, 1].set_ylabel('Frequency')
+axes[1, 1].set_title('Portfolio Return Distribution')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+# Risk comparison: single asset vs portfolio
+single_std = np.std(S1[:, -1] / S1[:, 0] - 1)
+portfolio_std = np.std(portfolio_returns)
+
+axes[1, 2].bar([0, 1, 2],
+               [np.std(S1[:, -1]/S1[:, 0]-1), np.std(S2[:, -1]/S2[:, 0]-1), portfolio_std],
+               color=['blue', 'red', 'green'], alpha=0.7)
+axes[1, 2].set_xticks([0, 1, 2])
+axes[1, 2].set_xticklabels(['Asset 1', 'Asset 2', 'Portfolio'])
+axes[1, 2].set_ylabel('Return Std Dev')
+axes[1, 2].set_title('Risk Comparison')
+axes[1, 2].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('correlated_processes.pdf',
+          'Correlated geometric Brownian motion for portfolio modeling.')
+
+portfolio_mean_return = np.mean(portfolio_returns)
+portfolio_volatility = np.std(portfolio_returns)
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Brownian Motion Statistics}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Brownian Motion Verification}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Property & Theoretical & Simulated \\')
+print(r'\midrule')
+print(f'Mean at $T$ & 0 & {np.mean(final_values):.4f} \\\\')
+print(f'Variance at $T$ & {T:.4f} & {np.var(final_values):.4f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Geometric Brownian Motion Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Geometric Brownian Motion Results}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Metric & Theoretical & Simulated \\')
+print(r'\midrule')
+print(f'$E[S_T]$ & {gbm_theoretical_mean:.2f} & {gbm_final_mean:.2f} \\\\')
+print(f'Std Dev & --- & {gbm_final_std:.2f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Numerical Scheme Comparison}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Numerical Scheme Performance}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Scheme & MAE & Convergence Order \\')
+print(r'\midrule')
+print(f'Euler-Maruyama & {em_mae:.4f} & $O(\sqrt{{\Delta t}})$ \\\\')
+print(f'Milstein & {mil_mae:.4f} & $O(\Delta t)$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+Key SDE simulation metrics:
+\begin{itemize}
+    \item Brownian motion mean error: \py{f"{bm_mean_error:.4f}"}
+    \item Brownian motion variance error: \py{f"{bm_var_error:.4f}"}
+    \item GBM mean (simulated): \py{f"{gbm_final_mean:.2f}"}
+    \item O-U stationary variance: \py{f"{ou_stationary_var:.4f}"}
+    \item Portfolio mean return: \py{f"{portfolio_mean_return*100:.2f}"}\%
+    \item Portfolio volatility: \py{f"{portfolio_volatility*100:.2f}"}\%
+    \item Measured correlation: \py{f"{measured_rho:.3f}"} (target: {rho})
+\end{itemize}
+
+\section{Conclusion}
+This computational analysis demonstrates numerical methods for solving stochastic differential
+equations. The Euler-Maruyama method provides a straightforward approach with strong convergence
+order 0.5, while the Milstein scheme achieves order 1.0 convergence by including the correction
+term. Applications include financial modeling with geometric Brownian motion, mean-reverting
+processes with Ornstein-Uhlenbeck, and portfolio simulation with correlated assets. The
+statistical properties of simulated paths closely match theoretical predictions, validating
+the implementations for practical use in quantitative analysis and risk management.
+
+\end{document}

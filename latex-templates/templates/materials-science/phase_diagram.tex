@@ -1,0 +1,519 @@
+\documentclass[11pt,a4paper]{article}
+
+% Document Setup
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+
+% PythonTeX Setup
+\usepackage[makestderr]{pythontex}
+
+\title{Binary Phase Diagrams: Computational Analysis}
+\author{Materials Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents computational analysis of binary phase diagrams in materials science. We examine isomorphous and eutectic systems, the lever rule for phase fraction calculations, cooling curve analysis, and Gibbs phase rule applications. Python-based computations provide quantitative analysis with dynamic visualization.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction to Phase Diagrams}
+
+Phase diagrams are graphical representations of the equilibrium phases present in a material system as a function of temperature, pressure, and composition. They are essential for:
+\begin{itemize}
+    \item Predicting microstructure evolution during solidification
+    \item Designing heat treatment processes
+    \item Understanding alloy behavior and properties
+    \item Optimizing casting and welding procedures
+\end{itemize}
+
+% Initialize Python environment
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+from scipy.interpolate import interp1d
+
+plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 10
+plt.rcParams['text.usetex'] = True
+
+def save_fig(filename):
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+\end{pycode}
+
+\section{Gibbs Phase Rule}
+
+The Gibbs phase rule determines the degrees of freedom in a system:
+\begin{equation}
+F = C - P + 2
+\end{equation}
+where $F$ is degrees of freedom, $C$ is number of components, and $P$ is number of phases.
+
+For a binary system ($C=2$) at constant pressure:
+\begin{equation}
+F = 3 - P
+\end{equation}
+
+\begin{pycode}
+# Gibbs phase rule visualization
+phases = [1, 2, 3]
+freedom = [3 - p for p in phases]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+
+bars = ax.bar(phases, freedom, color=['green', 'blue', 'red'], alpha=0.7)
+ax.set_xlabel('Number of Phases (P)')
+ax.set_ylabel('Degrees of Freedom (F)')
+ax.set_title('Gibbs Phase Rule for Binary System at Constant Pressure')
+ax.set_xticks(phases)
+
+for bar, f in zip(bars, freedom):
+    ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
+            f'F = {f}', ha='center', fontsize=12)
+
+ax.grid(True, alpha=0.3, axis='y')
+save_fig('gibbs_phase_rule.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{gibbs_phase_rule.pdf}
+\caption{Gibbs phase rule showing degrees of freedom for different numbers of phases.}
+\end{figure}
+
+\section{Isomorphous System}
+
+An isomorphous system exhibits complete solid solubility. The Cu-Ni system is a classic example.
+
+\begin{pycode}
+# Cu-Ni isomorphous phase diagram
+# Liquidus and solidus curves (simplified model)
+x_Ni = np.linspace(0, 100, 200)  # wt% Ni
+
+# Melting points: Cu = 1085 C, Ni = 1455 C
+T_Cu = 1085
+T_Ni = 1455
+
+# Liquidus curve (quadratic model)
+T_liquidus = T_Cu + (T_Ni - T_Cu) * (x_Ni/100) + 20 * (x_Ni/100) * (1 - x_Ni/100)
+
+# Solidus curve (offset from liquidus)
+T_solidus = T_Cu + (T_Ni - T_Cu) * (x_Ni/100) - 30 * (x_Ni/100) * (1 - x_Ni/100)
+
+fig, ax = plt.subplots(figsize=(10, 7))
+
+ax.plot(x_Ni, T_liquidus, 'b-', linewidth=2, label='Liquidus')
+ax.plot(x_Ni, T_solidus, 'r-', linewidth=2, label='Solidus')
+
+# Fill regions
+ax.fill_between(x_Ni, T_liquidus, 1500, alpha=0.3, color='yellow', label='Liquid (L)')
+ax.fill_between(x_Ni, T_solidus, 900, alpha=0.3, color='lightblue', label='Solid ($\\alpha$)')
+ax.fill_between(x_Ni, T_solidus, T_liquidus, alpha=0.3, color='lightgreen', label='L + $\\alpha$')
+
+# Tie line example
+x_0 = 40  # Overall composition
+T_tie = 1250
+idx_liq = np.argmin(np.abs(T_liquidus - T_tie))
+idx_sol = np.argmin(np.abs(T_solidus - T_tie))
+x_L = x_Ni[idx_liq]
+x_alpha = x_Ni[idx_sol]
+
+ax.plot([x_L, x_alpha], [T_tie, T_tie], 'k-', linewidth=2)
+ax.plot(x_0, T_tie, 'ko', markersize=10)
+ax.plot(x_L, T_tie, 'bo', markersize=8)
+ax.plot(x_alpha, T_tie, 'ro', markersize=8)
+
+ax.annotate(f'$C_0$ = {x_0}\\%', (x_0, T_tie), xytext=(x_0+5, T_tie+30),
+            fontsize=10, arrowprops=dict(arrowstyle='->', color='black'))
+
+ax.set_xlabel('Composition (wt\\% Ni)')
+ax.set_ylabel('Temperature ($^\\circ$C)')
+ax.set_title('Cu-Ni Isomorphous Phase Diagram')
+ax.legend(loc='upper left')
+ax.set_xlim(0, 100)
+ax.set_ylim(900, 1500)
+ax.grid(True, alpha=0.3)
+
+save_fig('isomorphous_diagram.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{isomorphous_diagram.pdf}
+\caption{Cu-Ni isomorphous phase diagram with tie line construction at $T = 1250^{\circ}$C.}
+\end{figure}
+
+\section{The Lever Rule}
+
+The lever rule calculates phase fractions in a two-phase region:
+\begin{equation}
+W_{\alpha} = \frac{C_L - C_0}{C_L - C_{\alpha}} \quad \text{and} \quad W_L = \frac{C_0 - C_{\alpha}}{C_L - C_{\alpha}}
+\end{equation}
+
+\begin{pycode}
+# Lever rule calculation
+C_0 = 40  # Overall composition
+T_analysis = np.linspace(T_solidus[int(C_0*2)], T_liquidus[int(C_0*2)], 50)
+
+# Interpolate liquidus and solidus
+f_liquidus = interp1d(T_liquidus, x_Ni)
+f_solidus = interp1d(T_solidus, x_Ni)
+
+W_liquid = []
+W_solid = []
+temps = []
+
+for T in T_analysis:
+    # Find compositions at this temperature
+    try:
+        C_L = f_liquidus(T)
+        C_alpha = f_solidus(T)
+        if C_L > C_alpha:
+            w_L = (C_0 - C_alpha) / (C_L - C_alpha)
+            w_alpha = (C_L - C_0) / (C_L - C_alpha)
+            W_liquid.append(w_L * 100)
+            W_solid.append(w_alpha * 100)
+            temps.append(T)
+    except:
+        pass
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Phase fractions vs temperature
+ax1.plot(temps, W_liquid, 'b-', linewidth=2, label='Liquid')
+ax1.plot(temps, W_solid, 'r-', linewidth=2, label='Solid ($\\alpha$)')
+ax1.set_xlabel('Temperature ($^\\circ$C)')
+ax1.set_ylabel('Phase Fraction (\\%)')
+ax1.set_title(f'Phase Fractions during Cooling ($C_0$ = {C_0}\\% Ni)')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Lever rule visualization
+T_demo = 1250
+C_L_demo = 35
+C_alpha_demo = 48
+C_0_demo = 40
+
+ax2.plot([0, 100], [0, 0], 'k-', linewidth=3)
+ax2.plot(C_L_demo, 0, 'b^', markersize=15, label=f'Liquid ({C_L_demo}\\%)')
+ax2.plot(C_alpha_demo, 0, 'rs', markersize=15, label=f'Solid ({C_alpha_demo}\\%)')
+ax2.plot(C_0_demo, 0, 'go', markersize=12, label=f'Overall ({C_0_demo}\\%)')
+
+# Lever arms
+ax2.annotate('', xy=(C_L_demo, 0.2), xytext=(C_0_demo, 0.2),
+            arrowprops=dict(arrowstyle='<->', color='blue', lw=2))
+ax2.text((C_L_demo+C_0_demo)/2, 0.3, f'{C_0_demo-C_L_demo}', ha='center', fontsize=12, color='blue')
+
+ax2.annotate('', xy=(C_0_demo, -0.2), xytext=(C_alpha_demo, -0.2),
+            arrowprops=dict(arrowstyle='<->', color='red', lw=2))
+ax2.text((C_0_demo+C_alpha_demo)/2, -0.3, f'{C_alpha_demo-C_0_demo}', ha='center', fontsize=12, color='red')
+
+W_L_calc = (C_0_demo - C_L_demo)/(C_alpha_demo - C_L_demo) * 100
+W_alpha_calc = (C_alpha_demo - C_0_demo)/(C_alpha_demo - C_L_demo) * 100
+
+ax2.set_xlim(20, 60)
+ax2.set_ylim(-0.6, 0.6)
+ax2.set_xlabel('Composition (wt\\% Ni)')
+ax2.set_title(f'Lever Rule: $W_L$ = {W_L_calc:.1f}\\%, $W_\\alpha$ = {W_alpha_calc:.1f}\\%')
+ax2.legend(loc='upper right')
+ax2.set_yticks([])
+
+save_fig('lever_rule.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{lever_rule.pdf}
+\caption{Lever rule analysis: phase fractions during cooling and graphical representation.}
+\end{figure}
+
+\section{Eutectic System}
+
+A eutectic system has limited solid solubility. The Pb-Sn system is a classic example.
+
+\begin{pycode}
+# Pb-Sn eutectic phase diagram
+x_Sn = np.linspace(0, 100, 500)
+
+# Key points
+T_Pb = 327  # Melting point of Pb
+T_Sn = 232  # Melting point of Sn
+T_E = 183   # Eutectic temperature
+x_E = 61.9  # Eutectic composition
+x_alpha_max = 19  # Max solubility in alpha
+x_beta_max = 97.5  # Max solubility in beta
+
+# Liquidus curves
+T_liq_left = T_Pb - (T_Pb - T_E) * (x_Sn / x_E)**1.2
+T_liq_right = T_Sn - (T_Sn - T_E) * ((100 - x_Sn) / (100 - x_E))**1.2
+T_liquidus = np.where(x_Sn <= x_E, T_liq_left, T_liq_right)
+
+# Solidus curves (solvus)
+T_sol_alpha = T_E + (T_Pb - T_E) * ((x_alpha_max - x_Sn) / x_alpha_max)**2
+T_sol_beta = T_E + (T_Sn - T_E) * ((x_Sn - x_beta_max) / (100 - x_beta_max))**2
+
+fig, ax = plt.subplots(figsize=(10, 8))
+
+# Liquidus
+ax.plot(x_Sn, T_liquidus, 'b-', linewidth=2.5, label='Liquidus')
+
+# Solidus (solvus) lines
+x_alpha = x_Sn[x_Sn <= x_alpha_max]
+ax.plot(x_alpha, T_sol_alpha[x_Sn <= x_alpha_max], 'r-', linewidth=2)
+x_beta = x_Sn[x_Sn >= x_beta_max]
+ax.plot(x_beta, T_sol_beta[x_Sn >= x_beta_max], 'r-', linewidth=2)
+
+# Eutectic isotherm
+ax.plot([x_alpha_max, x_beta_max], [T_E, T_E], 'k-', linewidth=2)
+
+# Labels for regions
+ax.text(10, 280, 'L', fontsize=14, fontweight='bold')
+ax.text(8, 100, '$\\alpha$', fontsize=14, fontweight='bold')
+ax.text(88, 100, '$\\beta$', fontsize=14, fontweight='bold')
+ax.text(50, 100, '$\\alpha + \\beta$', fontsize=14, fontweight='bold')
+ax.text(30, 220, 'L + $\\alpha$', fontsize=12)
+ax.text(75, 210, 'L + $\\beta$', fontsize=12)
+
+# Eutectic point
+ax.plot(x_E, T_E, 'ko', markersize=10)
+ax.annotate(f'Eutectic\\n({x_E}\\%, {T_E}$^\\circ$C)',
+            (x_E, T_E), xytext=(x_E-20, T_E-40), fontsize=10)
+
+ax.set_xlabel('Composition (wt\\% Sn)')
+ax.set_ylabel('Temperature ($^\\circ$C)')
+ax.set_title('Pb-Sn Eutectic Phase Diagram')
+ax.set_xlim(0, 100)
+ax.set_ylim(0, 350)
+ax.grid(True, alpha=0.3)
+
+save_fig('eutectic_diagram.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{eutectic_diagram.pdf}
+\caption{Pb-Sn eutectic phase diagram showing liquid, solid, and two-phase regions.}
+\end{figure}
+
+\section{Cooling Curves}
+
+Cooling curves reveal phase transformations through thermal arrests.
+
+\begin{pycode}
+# Cooling curves for different compositions
+compositions = [10, 40, 61.9, 80]  # wt% Sn
+colors = ['blue', 'green', 'red', 'purple']
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for comp, color, ax in zip(compositions, colors, axes.flat):
+    # Generate cooling curve
+    time = np.linspace(0, 600, 1000)
+
+    if comp < x_E:  # Hypoeutectic
+        T_start = 350
+        T_liq = T_Pb - (T_Pb - T_E) * (comp / x_E)**1.2
+
+        # Cooling stages
+        t1 = 100  # Start of solidification
+        t2 = 300  # End of primary solidification
+        t3 = 400  # End of eutectic solidification
+
+        T = np.piecewise(time,
+            [time < t1, (time >= t1) & (time < t2), (time >= t2) & (time < t3), time >= t3],
+            [lambda t: T_start - (T_start - T_liq) * t/t1,
+             lambda t: T_liq - (T_liq - T_E) * (t - t1)/(t2 - t1) * 0.8,
+             T_E,
+             lambda t: T_E - (t - t3) * 0.3])
+
+    elif comp > x_E:  # Hypereutectic
+        T_start = 280
+        T_liq = T_Sn - (T_Sn - T_E) * ((100 - comp) / (100 - x_E))**1.2
+
+        t1 = 80
+        t2 = 250
+        t3 = 350
+
+        T = np.piecewise(time,
+            [time < t1, (time >= t1) & (time < t2), (time >= t2) & (time < t3), time >= t3],
+            [lambda t: T_start - (T_start - T_liq) * t/t1,
+             lambda t: T_liq - (T_liq - T_E) * (t - t1)/(t2 - t1) * 0.8,
+             T_E,
+             lambda t: T_E - (t - t3) * 0.3])
+
+    else:  # Eutectic
+        T_start = 220
+        t1 = 50
+        t2 = 300
+
+        T = np.piecewise(time,
+            [time < t1, (time >= t1) & (time < t2), time >= t2],
+            [lambda t: T_start - (T_start - T_E) * t/t1,
+             T_E,
+             lambda t: T_E - (t - t2) * 0.3])
+
+    ax.plot(time, T, color=color, linewidth=2)
+    ax.axhline(T_E, color='k', linestyle='--', alpha=0.5)
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Temperature ($^\\circ$C)')
+    ax.set_title(f'{comp}\\% Sn')
+    ax.grid(True, alpha=0.3)
+
+    # Annotate thermal arrests
+    if comp == 61.9:
+        ax.annotate('Eutectic arrest', (175, T_E), xytext=(300, T_E+30),
+                   arrowprops=dict(arrowstyle='->', color='black'))
+
+plt.suptitle('Cooling Curves for Pb-Sn Alloys', fontsize=14, y=1.02)
+plt.tight_layout()
+save_fig('cooling_curves.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{cooling_curves.pdf}
+\caption{Cooling curves for hypoeutectic (10\%, 40\%), eutectic (61.9\%), and hypereutectic (80\%) Pb-Sn alloys.}
+\end{figure}
+
+\section{Microstructure Evolution}
+
+\begin{pycode}
+# Microstructure composition analysis
+# For 40 wt% Sn alloy at different stages
+
+C_0 = 40  # Overall composition
+stages = ['Just below liquidus', 'Above eutectic', 'Below eutectic']
+T_stages = [260, 190, 100]
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+for ax, stage, T in zip(axes, stages, T_stages):
+    if T > T_E:
+        # Two-phase: L + alpha
+        W_alpha = 60  # Approximate
+        W_L = 40
+        sizes = [W_alpha, W_L]
+        labels = ['$\\alpha$', 'L']
+        colors_pie = ['lightblue', 'yellow']
+    else:
+        # Three phases present (but at equilibrium: alpha + beta)
+        # Primary alpha + eutectic mixture
+        W_primary = 55
+        W_eutectic = 45
+        sizes = [W_primary, W_eutectic]
+        labels = ['Primary $\\alpha$', 'Eutectic ($\\alpha + \\beta$)']
+        colors_pie = ['lightblue', 'lightgreen']
+
+    ax.pie(sizes, labels=labels, colors=colors_pie, autopct='%1.1f%%',
+           startangle=90)
+    ax.set_title(f'{stage}\\n(T = {T}$^\\circ$C)')
+
+plt.suptitle(f'Microstructure Evolution for {C_0}\\% Sn Alloy', fontsize=12)
+plt.tight_layout()
+save_fig('microstructure_evolution.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{microstructure_evolution.pdf}
+\caption{Microstructure evolution during cooling of 40\% Sn alloy.}
+\end{figure}
+
+\section{Phase Fraction Calculations}
+
+\begin{pycode}
+# Complete phase fraction analysis at room temperature
+compositions = np.linspace(0, 100, 100)
+T_room = 25
+
+# At room temperature: alpha + beta region
+# Alpha: ~2% Sn, Beta: ~99% Sn
+C_alpha = 2
+C_beta = 99
+
+W_alpha_arr = (C_beta - compositions) / (C_beta - C_alpha) * 100
+W_beta_arr = (compositions - C_alpha) / (C_beta - C_alpha) * 100
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.plot(compositions, W_alpha_arr, 'b-', linewidth=2, label='$\\alpha$ phase')
+ax1.plot(compositions, W_beta_arr, 'r-', linewidth=2, label='$\\beta$ phase')
+ax1.axvline(x_E, color='k', linestyle='--', alpha=0.5, label='Eutectic')
+ax1.set_xlabel('Composition (wt\\% Sn)')
+ax1.set_ylabel('Phase Fraction (\\%)')
+ax1.set_title('Equilibrium Phase Fractions at Room Temperature')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Primary vs eutectic fractions
+W_primary_alpha = np.maximum(0, (x_E - compositions) / (x_E - x_alpha_max) * 100)
+W_primary_beta = np.maximum(0, (compositions - x_E) / (x_beta_max - x_E) * 100)
+W_eutectic = 100 - W_primary_alpha - W_primary_beta
+
+ax2.fill_between(compositions, 0, W_primary_alpha, alpha=0.5, label='Primary $\\alpha$')
+ax2.fill_between(compositions, W_primary_alpha, W_primary_alpha + W_eutectic,
+                 alpha=0.5, label='Eutectic')
+ax2.fill_between(compositions, W_primary_alpha + W_eutectic, 100,
+                 alpha=0.5, label='Primary $\\beta$')
+ax2.set_xlabel('Composition (wt\\% Sn)')
+ax2.set_ylabel('Microconstituent Fraction (\\%)')
+ax2.set_title('Microconstituent Fractions')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('phase_fractions.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{phase_fractions.pdf}
+\caption{Phase fractions and microconstituent analysis for Pb-Sn system.}
+\end{figure}
+
+\section{Summary Table}
+
+\begin{table}[H]
+\centering
+\caption{Key Phase Diagram Parameters for Pb-Sn System}
+\begin{tabular}{lcc}
+\toprule
+Parameter & Value & Units \\
+\midrule
+Eutectic temperature & \py{f"{T_E}"} & $^{\circ}$C \\
+Eutectic composition & \py{f"{x_E}"} & wt\% Sn \\
+Max solubility in $\alpha$ & \py{f"{x_alpha_max}"} & wt\% Sn \\
+Max solubility in $\beta$ & \py{f"{x_beta_max}"} & wt\% Sn \\
+Melting point of Pb & \py{f"{T_Pb}"} & $^{\circ}$C \\
+Melting point of Sn & \py{f"{T_Sn}"} & $^{\circ}$C \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of binary phase diagrams:
+\begin{enumerate}
+    \item The Gibbs phase rule determines degrees of freedom in multi-phase systems
+    \item Isomorphous systems show complete solid solubility with smooth liquidus/solidus curves
+    \item The lever rule enables quantitative calculation of phase fractions
+    \item Eutectic systems exhibit invariant reactions at fixed temperature and composition
+    \item Cooling curves reveal thermal arrests during phase transformations
+    \item Microstructure depends on both equilibrium phases and solidification path
+\end{enumerate}
+
+\end{document}

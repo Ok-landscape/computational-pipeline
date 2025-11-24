@@ -1,0 +1,287 @@
+% Room Acoustics Analysis with PythonTeX
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Room Acoustics Analysis\\Reverberation and Sound Field Modeling}
+\author{Acoustics Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents computational analysis of room acoustics including reverberation time calculations using Sabine and Eyring equations, sound absorption modeling, and acoustic parameter optimization.
+\end{abstract}
+
+\section{Introduction}
+
+Room acoustics determines sound perception quality in enclosed spaces. The reverberation time $T_{60}$ is the primary metric.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['font.size'] = 10
+
+# Room parameters
+room_length, room_width, room_height = 15.0, 10.0, 4.0
+room_volume = room_length * room_width * room_height
+floor_area = room_length * room_width
+ceiling_area = floor_area
+wall_area = 2 * (room_length + room_width) * room_height
+total_surface = floor_area + ceiling_area + wall_area
+c = 343  # m/s
+
+frequencies = np.array([125, 250, 500, 1000, 2000, 4000])
+materials = {
+    'Concrete': np.array([0.01, 0.01, 0.02, 0.02, 0.02, 0.03]),
+    'Carpet': np.array([0.08, 0.24, 0.57, 0.69, 0.71, 0.73]),
+    'Acoustic Tiles': np.array([0.29, 0.44, 0.60, 0.77, 0.86, 0.84]),
+    'Glass': np.array([0.35, 0.25, 0.18, 0.12, 0.07, 0.04]),
+}
+
+fig, ax = plt.subplots(figsize=(8, 5))
+for material, alpha in materials.items():
+    ax.semilogx(frequencies, alpha, 'o-', label=material, linewidth=1.5)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Absorption Coefficient $\\alpha$')
+ax.set_title('Sound Absorption Coefficients')
+ax.legend(loc='upper right', fontsize=8)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('absorption_coefficients.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{absorption_coefficients.pdf}
+\caption{Frequency-dependent absorption coefficients for common materials.}
+\end{figure}
+
+\section{Sabine Reverberation Time}
+
+The Sabine equation: $T_{60} = \frac{0.161 V}{A}$
+
+\begin{pycode}
+alpha_walls = materials['Concrete']
+alpha_floor = materials['Carpet']
+alpha_ceiling = materials['Acoustic Tiles']
+
+total_absorption = wall_area * alpha_walls + floor_area * alpha_floor + ceiling_area * alpha_ceiling
+RT60_sabine = 0.161 * room_volume / total_absorption
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.semilogx(frequencies, RT60_sabine, 'b-o', linewidth=2, label='Sabine $T_{60}$')
+ax.axhline(y=0.5, color='g', linestyle='--', label='Optimal (Speech)')
+ax.axhline(y=1.5, color='r', linestyle='--', label='Optimal (Music)')
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Reverberation Time $T_{60}$ (s)')
+ax.set_title('Sabine Reverberation Time vs Frequency')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('rt60_sabine.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{rt60_sabine.pdf}
+\caption{Sabine reverberation time across frequency bands.}
+\end{figure}
+
+\section{Eyring Reverberation Time}
+
+\begin{pycode}
+alpha_avg = total_absorption / total_surface
+RT60_eyring = 0.161 * room_volume / (-total_surface * np.log(1 - alpha_avg))
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.semilogx(frequencies, RT60_sabine, 'b-o', linewidth=2, label='Sabine')
+ax.semilogx(frequencies, RT60_eyring, 'r-s', linewidth=2, label='Eyring')
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('$T_{60}$ (s)')
+ax.set_title('Comparison of Sabine and Eyring')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('rt60_comparison.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{rt60_comparison.pdf}
+\caption{Comparison of Sabine and Eyring predictions.}
+\end{figure}
+
+\section{Sound Pressure Level Distribution}
+
+\begin{pycode}
+idx_1k = 3
+A_1k = total_absorption[idx_1k]
+alpha_avg_1k = alpha_avg[idx_1k]
+R_room = A_1k / (1 - alpha_avg_1k)
+L_W, Q = 90, 2
+r = np.linspace(0.5, 15, 100)
+
+direct_field = Q / (4 * np.pi * r**2)
+reverb_field = 4 / R_room
+L_p = L_W + 10 * np.log10(direct_field + reverb_field)
+r_c = np.sqrt(Q * R_room / (16 * np.pi))
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(r, L_p, 'b-', linewidth=2, label='Total SPL')
+ax.axvline(x=r_c, color='k', linestyle='--', label=f'$r_c$ = {r_c:.2f} m')
+ax.set_xlabel('Distance from Source (m)')
+ax.set_ylabel('Sound Pressure Level (dB)')
+ax.set_title('SPL Distribution in Room')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('spl_distribution.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{spl_distribution.pdf}
+\caption{Sound pressure level as function of distance.}
+\end{figure}
+
+\section{Room Modes}
+
+\begin{pycode}
+modes = []
+for nx in range(0, 5):
+    for ny in range(0, 5):
+        for nz in range(0, 5):
+            if nx == 0 and ny == 0 and nz == 0:
+                continue
+            f = (c/2) * np.sqrt((nx/room_length)**2 + (ny/room_width)**2 + (nz/room_height)**2)
+            if f <= 200:
+                modes.append(f)
+modes.sort()
+
+fig, ax = plt.subplots(figsize=(10, 3))
+ax.eventplot([modes], lineoffsets=0.5, linelengths=0.8, colors='blue')
+ax.set_xlabel('Frequency (Hz)')
+ax.set_title('Room Mode Distribution (0-200 Hz)')
+ax.set_xlim([0, 200])
+ax.set_ylim([0, 1])
+ax.set_yticks([])
+plt.tight_layout()
+plt.savefig('room_modes.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+f_schroeder = 2000 * np.sqrt(RT60_sabine[idx_1k] / room_volume)
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{room_modes.pdf}
+\caption{Room mode distribution in low-frequency range.}
+\end{figure}
+
+\section{Clarity Indices}
+
+\begin{pycode}
+t_ir = np.linspace(0, 2, 1000)
+decay_rate = 6.91 / RT60_sabine[idx_1k]
+impulse_response = np.exp(-decay_rate * t_ir)
+
+idx_50 = np.argmin(np.abs(t_ir - 0.050))
+energy_early = np.trapz(impulse_response[:idx_50]**2, t_ir[:idx_50])
+energy_late = np.trapz(impulse_response[idx_50:]**2, t_ir[idx_50:])
+C50 = 10 * np.log10(energy_early / energy_late)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(t_ir * 1000, 20*np.log10(impulse_response + 1e-10), 'b-', linewidth=1.5)
+ax.axvline(x=50, color='g', linestyle='--', label='50 ms')
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Level (dB)')
+ax.set_title('Room Impulse Response Energy Decay')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim([0, 500])
+plt.tight_layout()
+plt.savefig('impulse_response.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{impulse_response.pdf}
+\caption{Room impulse response energy decay curve.}
+\end{figure}
+
+\section{Optimization}
+
+\begin{pycode}
+ceiling_coverage = np.linspace(0, 1, 50)
+RT60_optimized = []
+for coverage in ceiling_coverage:
+    alpha_opt = coverage * materials['Acoustic Tiles'] + (1 - coverage) * materials['Concrete']
+    A_opt = wall_area * alpha_walls + floor_area * alpha_floor + ceiling_area * alpha_opt
+    RT60_optimized.append(0.161 * room_volume / A_opt[idx_1k])
+RT60_optimized = np.array(RT60_optimized)
+
+target_RT60 = 0.8
+optimal_idx = np.argmin(np.abs(RT60_optimized - target_RT60))
+optimal_coverage = ceiling_coverage[optimal_idx]
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(ceiling_coverage * 100, RT60_optimized, 'b-', linewidth=2)
+ax.axhline(y=target_RT60, color='r', linestyle='--', label=f'Target = {target_RT60} s')
+ax.set_xlabel('Acoustic Tile Coverage (\\%)')
+ax.set_ylabel('$T_{60}$ (s)')
+ax.set_title('$T_{60}$ Optimization')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('rt60_optimization.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{rt60_optimization.pdf}
+\caption{$T_{60}$ optimization via ceiling treatment.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Room Acoustic Parameters}')
+print(r'\begin{tabular}{@{}ccc@{}}')
+print(r'\toprule')
+print(r'Frequency (Hz) & $T_{60}$ Sabine (s) & $T_{60}$ Eyring (s) \\')
+print(r'\midrule')
+for i, f in enumerate(frequencies):
+    print(f'{f} & {RT60_sabine[i]:.2f} & {RT60_eyring[i]:.2f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+Key metrics: $r_c = \py{round(r_c, 2)}$ m, $C_{50} = \py{round(C50, 1)}$ dB, $f_s = \py{round(f_schroeder, 1)}$ Hz.
+
+\section{Conclusions}
+
+The room configuration provides acceptable reverberation for multipurpose use. Optimal ceiling coverage is \py{round(optimal_coverage * 100, 0)}\%.
+
+\end{document}

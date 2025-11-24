@@ -1,0 +1,478 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{t1}{RGB}{231, 76, 60}
+\definecolor{t2}{RGB}{46, 204, 113}
+\definecolor{pd}{RGB}{52, 152, 219}
+
+\title{Magnetic Resonance Imaging:\\
+Signal Formation, Contrast Mechanisms, and K-Space}
+\author{Department of Medical Physics\\Technical Report MP-2024-002}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of MRI signal formation and image reconstruction. We implement the Bloch equations, analyze T1 and T2 contrast mechanisms, demonstrate k-space encoding, compare pulse sequences, and evaluate image artifacts. All simulations use PythonTeX for reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+MRI signal arises from nuclear magnetic resonance. The Bloch equations describe magnetization dynamics:
+\begin{align}
+\frac{dM_x}{dt} &= \gamma(M_y B_z - M_z B_y) - \frac{M_x}{T_2} \\
+\frac{dM_y}{dt} &= \gamma(M_z B_x - M_x B_z) - \frac{M_y}{T_2} \\
+\frac{dM_z}{dt} &= \gamma(M_x B_y - M_y B_x) - \frac{M_z - M_0}{T_1}
+\end{align}
+
+\section{Relaxation Times}
+\begin{itemize}
+    \item $T_1$: Spin-lattice (longitudinal) relaxation
+    \item $T_2$: Spin-spin (transverse) relaxation
+    \item $T_2^*$: Effective transverse relaxation (includes inhomogeneity)
+\end{itemize}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fft import fft2, ifft2, fftshift
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Tissue parameters at 1.5T (T1, T2, T2* in ms, rho relative)
+tissues = {
+    'White Matter': {'T1': 780, 'T2': 90, 'T2s': 70, 'rho': 0.70},
+    'Gray Matter': {'T1': 920, 'T2': 100, 'T2s': 75, 'rho': 0.80},
+    'CSF': {'T1': 4000, 'T2': 2000, 'T2s': 1500, 'rho': 1.00},
+    'Fat': {'T1': 260, 'T2': 80, 'T2s': 60, 'rho': 0.90},
+    'Muscle': {'T1': 870, 'T2': 50, 'T2s': 35, 'rho': 0.75},
+    'Blood': {'T1': 1200, 'T2': 150, 'T2s': 100, 'rho': 0.85}
+}
+
+def T1_recovery(t, T1):
+    return 1 - np.exp(-t/T1)
+
+def T2_decay(t, T2):
+    return np.exp(-t/T2)
+
+def spin_echo_signal(TR, TE, T1, T2, rho):
+    return rho * (1 - np.exp(-TR/T1)) * np.exp(-TE/T2)
+
+def gradient_echo_signal(TR, TE, T1, T2s, rho, flip_angle):
+    alpha = np.radians(flip_angle)
+    E1 = np.exp(-TR/T1)
+    return rho * np.sin(alpha) * (1 - E1) / (1 - np.cos(alpha)*E1) * np.exp(-TE/T2s)
+
+def inversion_recovery(TI, T1, T2, rho, TR=5000, TE=10):
+    return np.abs(rho * (1 - 2*np.exp(-TI/T1) + np.exp(-TR/T1)) * np.exp(-TE/T2))
+\end{pycode}
+
+\chapter{Relaxation Mechanisms}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+t = np.linspace(0, 4000, 500)
+colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
+
+# T1 recovery curves
+ax = axes[0, 0]
+for (name, params), color in zip(tissues.items(), colors):
+    M_z = T1_recovery(t, params['T1'])
+    ax.plot(t, M_z, color=color, linewidth=1.5, label=name)
+
+ax.axhline(0.63, color='gray', linestyle='--', alpha=0.5)
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('$M_z/M_0$')
+ax.set_title('T1 Recovery')
+ax.legend(fontsize=7, loc='lower right')
+ax.grid(True, alpha=0.3)
+
+# T2 decay curves
+ax = axes[0, 1]
+t_short = np.linspace(0, 500, 500)
+for (name, params), color in zip(tissues.items(), colors):
+    M_xy = T2_decay(t_short, params['T2'])
+    ax.plot(t_short, M_xy, color=color, linewidth=1.5, label=name)
+
+ax.axhline(0.37, color='gray', linestyle='--', alpha=0.5)
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('$M_{xy}/M_0$')
+ax.set_title('T2 Decay')
+ax.legend(fontsize=7)
+ax.grid(True, alpha=0.3)
+
+# T1 vs T2 scatter
+ax = axes[0, 2]
+for (name, params), color in zip(tissues.items(), colors):
+    ax.scatter(params['T1'], params['T2'], s=100, c=color, label=name)
+ax.set_xlabel('T1 (ms)')
+ax.set_ylabel('T2 (ms)')
+ax.set_title('T1 vs T2 at 1.5T')
+ax.legend(fontsize=7)
+ax.grid(True, alpha=0.3)
+ax.set_xscale('log')
+ax.set_yscale('log')
+
+# Pulse sequence comparison
+ax = axes[1, 0]
+# T1-weighted
+TR_T1, TE_T1 = 500, 15
+signals_T1 = {name: spin_echo_signal(TR_T1, TE_T1, p['T1'], p['T2'], p['rho'])
+              for name, p in tissues.items()}
+
+# T2-weighted
+TR_T2, TE_T2 = 3000, 100
+signals_T2 = {name: spin_echo_signal(TR_T2, TE_T2, p['T1'], p['T2'], p['rho'])
+              for name, p in tissues.items()}
+
+# PD-weighted
+TR_PD, TE_PD = 3000, 15
+signals_PD = {name: spin_echo_signal(TR_PD, TE_PD, p['T1'], p['T2'], p['rho'])
+              for name, p in tissues.items()}
+
+x = np.arange(len(tissues))
+width = 0.25
+tissue_names = list(tissues.keys())
+
+bars1 = ax.bar(x - width, [signals_T1[n] for n in tissue_names], width,
+               label='T1w', color='#e74c3c', alpha=0.7)
+bars2 = ax.bar(x, [signals_T2[n] for n in tissue_names], width,
+               label='T2w', color='#2ecc71', alpha=0.7)
+bars3 = ax.bar(x + width, [signals_PD[n] for n in tissue_names], width,
+               label='PDw', color='#3498db', alpha=0.7)
+
+ax.set_xlabel('Tissue')
+ax.set_ylabel('Signal (a.u.)')
+ax.set_title('Contrast Comparison')
+ax.set_xticks(x)
+ax.set_xticklabels([n.split()[0] for n in tissue_names], fontsize=8, rotation=45)
+ax.legend()
+ax.grid(True, alpha=0.3, axis='y')
+
+# Inversion recovery for T1 nulling
+ax = axes[1, 1]
+TI = np.linspace(0, 3000, 300)
+for (name, params), color in zip(list(tissues.items())[:4], colors[:4]):
+    signal = inversion_recovery(TI, params['T1'], params['T2'], params['rho'])
+    ax.plot(TI, signal, color=color, linewidth=1.5, label=name)
+
+# Mark CSF null point
+T1_csf = tissues['CSF']['T1']
+TI_null_csf = T1_csf * np.log(2)
+ax.axvline(TI_null_csf, color='gray', linestyle='--', alpha=0.5)
+
+ax.set_xlabel('TI (ms)')
+ax.set_ylabel('Signal (a.u.)')
+ax.set_title('Inversion Recovery (FLAIR)')
+ax.legend(fontsize=7)
+ax.grid(True, alpha=0.3)
+
+# Flip angle optimization for GRE
+ax = axes[1, 2]
+flip_angles = np.linspace(1, 90, 100)
+TR_gre = 50
+TE_gre = 5
+
+for (name, params), color in zip(list(tissues.items())[:4], colors[:4]):
+    signals = [gradient_echo_signal(TR_gre, TE_gre, params['T1'], params['T2s'],
+                                    params['rho'], alpha) for alpha in flip_angles]
+    ax.plot(flip_angles, signals, color=color, linewidth=1.5, label=name)
+
+ax.set_xlabel('Flip Angle (degrees)')
+ax.set_ylabel('Signal (a.u.)')
+ax.set_title(f'GRE Signal (TR={TR_gre} ms)')
+ax.legend(fontsize=7)
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('mri_relaxation.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{mri_relaxation.pdf}
+\caption{MRI relaxation: (a) T1 recovery, (b) T2 decay, (c) T1-T2 relationship, (d) contrast comparison, (e) inversion recovery, (f) flip angle optimization.}
+\end{figure}
+
+\chapter{K-Space and Image Reconstruction}
+
+\section{Spatial Encoding}
+The MRI signal is collected in k-space:
+\begin{equation}
+S(k_x, k_y) = \iint \rho(x, y) e^{-i2\pi(k_x x + k_y y)} dx \, dy
+\end{equation}
+
+\begin{pycode}
+# Create brain phantom
+size = 128
+phantom = np.zeros((size, size))
+y, x = np.ogrid[-size//2:size//2, -size//2:size//2]
+
+# Brain outline
+mask = (x/45)**2 + (y/50)**2 <= 1
+phantom[mask] = 0.8
+
+# Ventricles
+mask = ((x+10)/8)**2 + (y/20)**2 <= 1
+phantom[mask] = 1.0
+mask = ((x-10)/8)**2 + (y/20)**2 <= 1
+phantom[mask] = 1.0
+
+# Gray matter structures
+mask = ((x+25)/10)**2 + (y/15)**2 <= 1
+phantom[mask] = 0.6
+mask = ((x-25)/10)**2 + (y/15)**2 <= 1
+phantom[mask] = 0.6
+
+# Lesion
+mask = ((x-15)/5)**2 + ((y+20)/5)**2 <= 1
+phantom[mask] = 0.9
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# K-space
+kspace = fftshift(fft2(phantom))
+kspace_mag = np.log(np.abs(kspace) + 1)
+
+ax = axes[0, 0]
+im = ax.imshow(phantom, cmap='gray')
+ax.set_title('Object (Image Space)')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+ax = axes[0, 1]
+im = ax.imshow(kspace_mag, cmap='gray')
+ax.set_title('K-Space (Log Magnitude)')
+ax.set_xlabel('$k_x$')
+ax.set_ylabel('$k_y$')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+ax = axes[0, 2]
+im = ax.imshow(np.angle(kspace), cmap='twilight')
+ax.set_title('K-Space Phase')
+ax.set_xlabel('$k_x$')
+ax.set_ylabel('$k_y$')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# Partial k-space effects
+# Low frequency only (low resolution)
+kspace_low = kspace.copy()
+mask = np.zeros((size, size), dtype=bool)
+mask[size//2-16:size//2+16, size//2-16:size//2+16] = True
+kspace_low[~mask] = 0
+recon_low = np.abs(ifft2(fftshift(kspace_low)))
+
+ax = axes[1, 0]
+im = ax.imshow(recon_low, cmap='gray')
+ax.set_title('Low Frequency Only')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# High frequency only (edges)
+kspace_high = kspace.copy()
+kspace_high[mask] = 0
+recon_high = np.abs(ifft2(fftshift(kspace_high)))
+
+ax = axes[1, 1]
+im = ax.imshow(recon_high, cmap='gray')
+ax.set_title('High Frequency Only')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# Partial Fourier (half k-space)
+kspace_partial = kspace.copy()
+kspace_partial[:size//2, :] = 0
+recon_partial = np.abs(ifft2(fftshift(kspace_partial)))
+
+ax = axes[1, 2]
+im = ax.imshow(recon_partial, cmap='gray')
+ax.set_title('Partial Fourier')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+plt.tight_layout()
+plt.savefig('mri_kspace.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{mri_kspace.pdf}
+\caption{K-space encoding: (a) image space, (b) k-space magnitude, (c) k-space phase, (d) low frequency, (e) high frequency, (f) partial Fourier.}
+\end{figure}
+
+\chapter{Image Artifacts}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Gibbs ringing (truncation artifact)
+kspace_trunc = kspace.copy()
+kspace_trunc[:20, :] = 0
+kspace_trunc[-20:, :] = 0
+kspace_trunc[:, :20] = 0
+kspace_trunc[:, -20:] = 0
+recon_gibbs = np.abs(ifft2(fftshift(kspace_trunc)))
+
+ax = axes[0, 0]
+im = ax.imshow(recon_gibbs, cmap='gray')
+ax.set_title('Gibbs Ringing')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# Motion artifact
+kspace_motion = kspace.copy()
+for i in range(0, size, 8):
+    kspace_motion[:, i] *= np.exp(1j * 0.3 * i)
+recon_motion = np.abs(ifft2(fftshift(kspace_motion)))
+
+ax = axes[0, 1]
+im = ax.imshow(recon_motion, cmap='gray')
+ax.set_title('Motion Artifact')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# Aliasing (wrap-around)
+kspace_alias = kspace[::2, ::2]  # Undersample
+recon_alias = np.abs(ifft2(fftshift(kspace_alias)))
+
+ax = axes[0, 2]
+im = ax.imshow(recon_alias, cmap='gray')
+ax.set_title('Aliasing (FOV/2)')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# Chemical shift artifact simulation
+phantom_fat = np.zeros((size, size))
+mask = ((x-30)/8)**2 + (y/15)**2 <= 1
+phantom_fat[mask] = 0.5
+
+# Fat shifted by 3 pixels
+phantom_shifted = np.roll(phantom_fat, 3, axis=1)
+combined = phantom + phantom_shifted
+
+ax = axes[1, 0]
+im = ax.imshow(combined, cmap='gray')
+ax.set_title('Chemical Shift')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# Susceptibility artifact
+susceptibility_map = np.zeros((size, size))
+mask = ((x+20)/5)**2 + ((y-20)/5)**2 <= 1
+susceptibility_map[mask] = 1
+susceptibility_blur = ndimage.gaussian_filter(susceptibility_map, 5)
+recon_suscept = phantom * (1 - 0.5*susceptibility_blur)
+
+from scipy import ndimage
+
+ax = axes[1, 1]
+im = ax.imshow(recon_suscept, cmap='gray')
+ax.set_title('Susceptibility Artifact')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+plt.colorbar(im, ax=ax, fraction=0.046)
+
+# SNR comparison
+ax = axes[1, 2]
+noise_levels = [0, 0.05, 0.1, 0.2]
+center_profile = phantom[size//2, :]
+
+for noise in noise_levels:
+    if noise == 0:
+        profile = center_profile
+        label = 'Original'
+    else:
+        noisy_kspace = kspace + noise * np.max(np.abs(kspace)) * \
+                       (np.random.randn(*kspace.shape) + 1j*np.random.randn(*kspace.shape))
+        recon_noisy = np.abs(ifft2(fftshift(noisy_kspace)))
+        profile = recon_noisy[size//2, :]
+        label = f'SNR $\\approx$ {int(1/noise)}'
+    ax.plot(profile, label=label, alpha=0.7)
+
+ax.set_xlabel('Position')
+ax.set_ylabel('Signal')
+ax.set_title('Noise Effects')
+ax.legend(fontsize=8)
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('mri_artifacts.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Calculate contrast values
+wm_gm_T1 = signals_T1['White Matter'] - signals_T1['Gray Matter']
+wm_gm_T2 = signals_T2['White Matter'] - signals_T2['Gray Matter']
+csf_gm_T2 = signals_T2['CSF'] - signals_T2['Gray Matter']
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{mri_artifacts.pdf}
+\caption{MRI artifacts: (a) Gibbs ringing, (b) motion, (c) aliasing, (d) chemical shift, (e) susceptibility, (f) noise effects.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+results_table = [
+    ('T1-weighted parameters', f'TR={TR_T1}, TE={TE_T1}', 'ms'),
+    ('T2-weighted parameters', f'TR={TR_T2}, TE={TE_T2}', 'ms'),
+    ('PD-weighted parameters', f'TR={TR_PD}, TE={TE_PD}', 'ms'),
+    ('WM-GM contrast (T1w)', f'{wm_gm_T1:.3f}', 'a.u.'),
+    ('WM-GM contrast (T2w)', f'{wm_gm_T2:.3f}', 'a.u.'),
+    ('CSF-GM contrast (T2w)', f'{csf_gm_T2:.3f}', 'a.u.'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{MRI signal parameters and contrast}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parameter & Value & Units \\
+\midrule
+\py{results_table[0][0]} & \py{results_table[0][1]} & \py{results_table[0][2]} \\
+\py{results_table[1][0]} & \py{results_table[1][1]} & \py{results_table[1][2]} \\
+\py{results_table[2][0]} & \py{results_table[2][1]} & \py{results_table[2][2]} \\
+\py{results_table[3][0]} & \py{results_table[3][1]} & \py{results_table[3][2]} \\
+\py{results_table[4][0]} & \py{results_table[4][1]} & \py{results_table[4][2]} \\
+\py{results_table[5][0]} & \py{results_table[5][1]} & \py{results_table[5][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item T1-weighted imaging provides anatomical detail
+    \item T2-weighted imaging highlights pathology
+    \item K-space center determines contrast, periphery determines resolution
+    \item Motion during acquisition causes ghosting artifacts
+    \item Chemical shift causes fat-water misregistration
+    \item Higher field strength increases SNR but also artifacts
+\end{enumerate}
+
+\end{document}

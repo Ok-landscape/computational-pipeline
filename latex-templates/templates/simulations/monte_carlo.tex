@@ -1,0 +1,555 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Monte Carlo Methods: Sampling, Integration, and MCMC}
+\author{Computational Simulation Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Monte Carlo methods use random sampling to solve deterministic problems. This template covers basic sampling techniques, numerical integration, importance sampling, and the Metropolis-Hastings algorithm for Markov Chain Monte Carlo.
+
+\section{Mathematical Framework}
+
+\subsection{Monte Carlo Integration}
+Estimate integrals using random samples:
+\begin{equation}
+I = \int_a^b f(x) \, dx \approx \frac{b-a}{N} \sum_{i=1}^{N} f(x_i)
+\end{equation}
+
+\subsection{Variance of Estimator}
+The standard error decreases as $1/\sqrt{N}$:
+\begin{equation}
+\text{SE} = \frac{\sigma_f}{\sqrt{N}}
+\end{equation}
+
+\subsection{Importance Sampling}
+Use proposal distribution $q(x)$ to reduce variance:
+\begin{equation}
+I = \int f(x) p(x) \, dx \approx \frac{1}{N} \sum_{i=1}^{N} \frac{f(x_i) p(x_i)}{q(x_i)}, \quad x_i \sim q
+\end{equation}
+
+\subsection{Metropolis-Hastings Algorithm}
+Accept proposed state $x'$ with probability:
+\begin{equation}
+\alpha = \min\left(1, \frac{p(x') q(x|x')}{p(x) q(x'|x)}\right)
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Basic Monte Carlo Integration}
+
+\begin{pycode}
+# Estimate pi using Monte Carlo
+def estimate_pi(n_samples):
+    x = np.random.uniform(-1, 1, n_samples)
+    y = np.random.uniform(-1, 1, n_samples)
+    inside = (x**2 + y**2) <= 1
+    return 4 * np.sum(inside) / n_samples
+
+# Convergence study
+sample_sizes = np.logspace(1, 6, 50).astype(int)
+pi_estimates = [estimate_pi(n) for n in sample_sizes]
+errors = np.abs(np.array(pi_estimates) - np.pi)
+
+# Multiple runs for error bars
+n_runs = 100
+final_estimates = [estimate_pi(10000) for _ in range(n_runs)]
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Visual demonstration
+n_demo = 5000
+x_demo = np.random.uniform(-1, 1, n_demo)
+y_demo = np.random.uniform(-1, 1, n_demo)
+inside_demo = (x_demo**2 + y_demo**2) <= 1
+
+axes[0, 0].scatter(x_demo[inside_demo], y_demo[inside_demo], s=1, c='blue', alpha=0.5)
+axes[0, 0].scatter(x_demo[~inside_demo], y_demo[~inside_demo], s=1, c='red', alpha=0.5)
+theta = np.linspace(0, 2*np.pi, 100)
+axes[0, 0].plot(np.cos(theta), np.sin(theta), 'k-', linewidth=2)
+axes[0, 0].set_xlim(-1.1, 1.1)
+axes[0, 0].set_ylim(-1.1, 1.1)
+axes[0, 0].set_aspect('equal')
+axes[0, 0].set_title(f'$\\pi$ Estimation: {4*np.sum(inside_demo)/n_demo:.4f}')
+axes[0, 0].set_xlabel('x')
+axes[0, 0].set_ylabel('y')
+
+# Convergence
+axes[0, 1].loglog(sample_sizes, errors, 'b-', linewidth=1.5)
+axes[0, 1].loglog(sample_sizes, 1/np.sqrt(sample_sizes), 'r--', label='$1/\\sqrt{N}$')
+axes[0, 1].set_xlabel('Number of Samples')
+axes[0, 1].set_ylabel('Absolute Error')
+axes[0, 1].set_title('Convergence Rate')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Distribution of estimates
+axes[1, 0].hist(final_estimates, bins=20, density=True, alpha=0.7, edgecolor='black')
+axes[1, 0].axvline(x=np.pi, color='r', linestyle='--', linewidth=2, label=f'True $\\pi$')
+axes[1, 0].axvline(x=np.mean(final_estimates), color='g', linestyle='-', linewidth=2, label='Mean')
+axes[1, 0].set_xlabel('$\\pi$ Estimate')
+axes[1, 0].set_ylabel('Density')
+axes[1, 0].set_title('Distribution of Estimates (N=10000)')
+axes[1, 0].legend()
+
+# Estimate evolution
+cumsum = np.cumsum(inside_demo)
+n_array = np.arange(1, n_demo+1)
+running_estimate = 4 * cumsum / n_array
+axes[1, 1].plot(n_array, running_estimate, 'b-', alpha=0.7)
+axes[1, 1].axhline(y=np.pi, color='r', linestyle='--', linewidth=2)
+axes[1, 1].fill_between(n_array, np.pi - 2/np.sqrt(n_array), np.pi + 2/np.sqrt(n_array),
+                        alpha=0.2, color='red')
+axes[1, 1].set_xlabel('Number of Samples')
+axes[1, 1].set_ylabel('Running Estimate')
+axes[1, 1].set_title('Running $\\pi$ Estimate')
+axes[1, 1].set_xlim(0, n_demo)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('mc_pi_estimation.pdf', 'Monte Carlo estimation of $\\pi$')
+
+pi_mean = np.mean(final_estimates)
+pi_std = np.std(final_estimates)
+\end{pycode}
+
+\section{Numerical Integration}
+
+\begin{pycode}
+# Integrate various functions
+def mc_integrate(f, a, b, n_samples):
+    x = np.random.uniform(a, b, n_samples)
+    return (b - a) * np.mean(f(x))
+
+# Test functions
+def f1(x): return np.exp(-x**2)  # Gaussian
+def f2(x): return np.sin(x)**2   # Trigonometric
+def f3(x): return 1 / (1 + x**2) # Rational
+
+# Integration limits and true values
+a, b = 0, 2
+true_values = {
+    'Gaussian': np.sqrt(np.pi)/2 * (stats.norm.cdf(2*np.sqrt(2)) - 0.5) * 2,
+    'Sin^2': 1 - np.sin(4)/4,
+    'Rational': np.arctan(2)
+}
+
+# Convergence analysis
+n_values = np.logspace(1, 5, 30).astype(int)
+results = {name: [] for name in ['Gaussian', 'Sin^2', 'Rational']}
+errors_int = {name: [] for name in results.keys()}
+
+for n in n_values:
+    results['Gaussian'].append(mc_integrate(f1, a, b, n))
+    results['Sin^2'].append(mc_integrate(f2, a, b, n))
+    results['Rational'].append(mc_integrate(f3, a, b, n))
+
+for name in results.keys():
+    errors_int[name] = np.abs(np.array(results[name]) - true_values[name])
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Functions
+x_plot = np.linspace(a, b, 200)
+axes[0, 0].plot(x_plot, f1(x_plot), 'b-', label='$e^{-x^2}$', linewidth=2)
+axes[0, 0].plot(x_plot, f2(x_plot), 'r-', label='$\\sin^2(x)$', linewidth=2)
+axes[0, 0].plot(x_plot, f3(x_plot), 'g-', label='$1/(1+x^2)$', linewidth=2)
+axes[0, 0].set_xlabel('x')
+axes[0, 0].set_ylabel('f(x)')
+axes[0, 0].set_title('Test Functions')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Convergence
+for name, color in zip(results.keys(), ['blue', 'red', 'green']):
+    axes[0, 1].loglog(n_values, errors_int[name], color=color, label=name)
+axes[0, 1].loglog(n_values, 1/np.sqrt(n_values), 'k--', alpha=0.5, label='$1/\\sqrt{N}$')
+axes[0, 1].set_xlabel('Number of Samples')
+axes[0, 1].set_ylabel('Absolute Error')
+axes[0, 1].set_title('Integration Convergence')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Sampling visualization for Gaussian
+n_vis = 1000
+x_samples = np.random.uniform(a, b, n_vis)
+y_samples = np.random.uniform(0, 1, n_vis)
+under_curve = y_samples < f1(x_samples)
+
+axes[1, 0].scatter(x_samples[under_curve], y_samples[under_curve], s=2, c='blue', alpha=0.5)
+axes[1, 0].scatter(x_samples[~under_curve], y_samples[~under_curve], s=2, c='red', alpha=0.3)
+axes[1, 0].plot(x_plot, f1(x_plot), 'k-', linewidth=2)
+axes[1, 0].set_xlabel('x')
+axes[1, 0].set_ylabel('y')
+axes[1, 0].set_title('Hit-or-Miss Integration')
+axes[1, 0].set_xlim(a, b)
+axes[1, 0].set_ylim(0, 1.1)
+
+# Variance reduction via stratified sampling
+n_strata = 10
+n_per_stratum = 100
+strata_bounds = np.linspace(a, b, n_strata + 1)
+stratified_estimate = 0
+simple_samples = np.random.uniform(a, b, n_strata * n_per_stratum)
+simple_estimate = (b - a) * np.mean(f1(simple_samples))
+
+for i in range(n_strata):
+    x_stratum = np.random.uniform(strata_bounds[i], strata_bounds[i+1], n_per_stratum)
+    stratified_estimate += (strata_bounds[i+1] - strata_bounds[i]) * np.mean(f1(x_stratum))
+
+axes[1, 1].bar(['Simple MC', 'Stratified'],
+               [np.abs(simple_estimate - true_values['Gaussian']),
+                np.abs(stratified_estimate - true_values['Gaussian'])],
+               color=['blue', 'green'], alpha=0.7)
+axes[1, 1].set_ylabel('Absolute Error')
+axes[1, 1].set_title('Variance Reduction: Stratified Sampling')
+
+plt.tight_layout()
+save_plot('mc_integration.pdf', 'Monte Carlo numerical integration')
+
+gaussian_integral = mc_integrate(f1, a, b, 100000)
+\end{pycode}
+
+\section{Importance Sampling}
+
+\begin{pycode}
+# Importance sampling for rare event estimation
+# Estimate P(X > 4) for X ~ N(0,1)
+
+def target_function(x):
+    return x > 4
+
+# Standard Monte Carlo
+n_samples = 100000
+x_standard = np.random.randn(n_samples)
+estimate_standard = np.mean(target_function(x_standard))
+
+# Importance sampling with shifted Gaussian
+mu_proposal = 4
+x_importance = np.random.randn(n_samples) + mu_proposal
+weights = np.exp(-0.5 * x_importance**2) / np.exp(-0.5 * (x_importance - mu_proposal)**2)
+estimate_importance = np.mean(target_function(x_importance) * weights)
+
+# True value
+true_prob = 1 - stats.norm.cdf(4)
+
+# Convergence comparison
+n_values_is = np.logspace(2, 5, 30).astype(int)
+std_estimates = []
+is_estimates = []
+std_vars = []
+is_vars = []
+
+for n in n_values_is:
+    # Multiple runs
+    std_runs = []
+    is_runs = []
+    for _ in range(50):
+        x_s = np.random.randn(n)
+        std_runs.append(np.mean(target_function(x_s)))
+
+        x_i = np.random.randn(n) + mu_proposal
+        w = np.exp(-0.5 * x_i**2) / np.exp(-0.5 * (x_i - mu_proposal)**2)
+        is_runs.append(np.mean(target_function(x_i) * w))
+
+    std_estimates.append(np.mean(std_runs))
+    is_estimates.append(np.mean(is_runs))
+    std_vars.append(np.var(std_runs))
+    is_vars.append(np.var(is_runs))
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Proposal distributions
+x_plot = np.linspace(-2, 8, 200)
+axes[0, 0].plot(x_plot, stats.norm.pdf(x_plot), 'b-', label='Target N(0,1)', linewidth=2)
+axes[0, 0].plot(x_plot, stats.norm.pdf(x_plot, mu_proposal), 'r-',
+                label=f'Proposal N({mu_proposal},1)', linewidth=2)
+axes[0, 0].axvline(x=4, color='g', linestyle='--', label='Threshold')
+axes[0, 0].fill_between(x_plot[x_plot > 4], 0, stats.norm.pdf(x_plot[x_plot > 4]), alpha=0.3)
+axes[0, 0].set_xlabel('x')
+axes[0, 0].set_ylabel('Density')
+axes[0, 0].set_title('Target and Proposal Distributions')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Variance comparison
+axes[0, 1].loglog(n_values_is, std_vars, 'b-', label='Standard MC', linewidth=2)
+axes[0, 1].loglog(n_values_is, is_vars, 'r-', label='Importance Sampling', linewidth=2)
+axes[0, 1].set_xlabel('Number of Samples')
+axes[0, 1].set_ylabel('Variance of Estimate')
+axes[0, 1].set_title('Variance Reduction')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Estimate convergence
+axes[1, 0].semilogx(n_values_is, std_estimates, 'b-', label='Standard MC', linewidth=2)
+axes[1, 0].semilogx(n_values_is, is_estimates, 'r-', label='Importance Sampling', linewidth=2)
+axes[1, 0].axhline(y=true_prob, color='g', linestyle='--', label='True value')
+axes[1, 0].set_xlabel('Number of Samples')
+axes[1, 0].set_ylabel('Estimate')
+axes[1, 0].set_title('Probability Estimate Convergence')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Weight distribution
+weights_plot = np.exp(-0.5 * x_importance**2) / np.exp(-0.5 * (x_importance - mu_proposal)**2)
+axes[1, 1].hist(weights_plot, bins=50, density=True, alpha=0.7, edgecolor='black')
+axes[1, 1].set_xlabel('Weight')
+axes[1, 1].set_ylabel('Density')
+axes[1, 1].set_title('Importance Weights Distribution')
+axes[1, 1].set_xlim(0, np.percentile(weights_plot, 99))
+
+plt.tight_layout()
+save_plot('importance_sampling.pdf', 'Importance sampling for rare event estimation')
+
+variance_reduction = std_vars[-1] / is_vars[-1]
+\end{pycode}
+
+\section{Metropolis-Hastings Algorithm}
+
+\begin{pycode}
+def metropolis_hastings(target_pdf, proposal_std, n_samples, x0=0):
+    """Metropolis-Hastings sampler with Gaussian proposal"""
+    samples = [x0]
+    x_current = x0
+    accepted = 0
+
+    for _ in range(n_samples - 1):
+        # Propose new state
+        x_proposed = x_current + np.random.randn() * proposal_std
+
+        # Acceptance probability
+        alpha = min(1, target_pdf(x_proposed) / target_pdf(x_current))
+
+        # Accept or reject
+        if np.random.rand() < alpha:
+            x_current = x_proposed
+            accepted += 1
+
+        samples.append(x_current)
+
+    return np.array(samples), accepted / (n_samples - 1)
+
+# Target: mixture of Gaussians
+def target_mixture(x):
+    return 0.3 * stats.norm.pdf(x, -2, 0.5) + 0.7 * stats.norm.pdf(x, 2, 1)
+
+# Run MCMC with different proposal widths
+n_mcmc = 10000
+proposal_stds = [0.1, 1.0, 5.0]
+samples_dict = {}
+acceptance_rates = {}
+
+for std in proposal_stds:
+    samples, acc_rate = metropolis_hastings(target_mixture, std, n_mcmc)
+    samples_dict[std] = samples
+    acceptance_rates[std] = acc_rate
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Trace plots and histograms
+for i, std in enumerate(proposal_stds):
+    samples = samples_dict[std]
+    acc = acceptance_rates[std]
+
+    # Trace plot
+    axes[0, i].plot(samples[:1000], 'b-', alpha=0.7, linewidth=0.5)
+    axes[0, i].set_xlabel('Iteration')
+    axes[0, i].set_ylabel('x')
+    axes[0, i].set_title(f'$\\sigma_q = {std}$, Accept = {acc:.2f}')
+
+    # Histogram
+    x_plot = np.linspace(-5, 6, 200)
+    axes[1, i].hist(samples[1000:], bins=50, density=True, alpha=0.7, edgecolor='black')
+    axes[1, i].plot(x_plot, target_mixture(x_plot), 'r-', linewidth=2, label='Target')
+    axes[1, i].set_xlabel('x')
+    axes[1, i].set_ylabel('Density')
+    axes[1, i].legend()
+
+plt.tight_layout()
+save_plot('metropolis_hastings.pdf', 'Metropolis-Hastings MCMC with different proposal widths')
+
+best_samples = samples_dict[1.0]
+mcmc_mean = np.mean(best_samples[1000:])
+mcmc_std = np.std(best_samples[1000:])
+\end{pycode}
+
+\section{2D Metropolis-Hastings}
+
+\begin{pycode}
+def metropolis_2d(target_pdf, proposal_cov, n_samples, x0=np.array([0, 0])):
+    """2D Metropolis-Hastings with Gaussian proposal"""
+    samples = [x0]
+    x_current = x0.copy()
+    accepted = 0
+
+    for _ in range(n_samples - 1):
+        x_proposed = x_current + np.random.multivariate_normal([0, 0], proposal_cov)
+
+        alpha = min(1, target_pdf(x_proposed) / (target_pdf(x_current) + 1e-10))
+
+        if np.random.rand() < alpha:
+            x_current = x_proposed.copy()
+            accepted += 1
+
+        samples.append(x_current.copy())
+
+    return np.array(samples), accepted / (n_samples - 1)
+
+# Target: correlated bivariate normal
+mu_target = np.array([1, 2])
+cov_target = np.array([[1, 0.8], [0.8, 1]])
+cov_inv = np.linalg.inv(cov_target)
+
+def bivariate_target(x):
+    diff = x - mu_target
+    return np.exp(-0.5 * diff @ cov_inv @ diff)
+
+# Run 2D MCMC
+proposal_cov = np.array([[0.5, 0], [0, 0.5]])
+samples_2d, acc_2d = metropolis_2d(bivariate_target, proposal_cov, 10000)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Trace plots
+axes[0, 0].plot(samples_2d[:, 0], 'b-', alpha=0.7, linewidth=0.5)
+axes[0, 0].axhline(y=mu_target[0], color='r', linestyle='--')
+axes[0, 0].set_xlabel('Iteration')
+axes[0, 0].set_ylabel('$x_1$')
+axes[0, 0].set_title('Trace Plot - $x_1$')
+
+axes[0, 1].plot(samples_2d[:, 1], 'g-', alpha=0.7, linewidth=0.5)
+axes[0, 1].axhline(y=mu_target[1], color='r', linestyle='--')
+axes[0, 1].set_xlabel('Iteration')
+axes[0, 1].set_ylabel('$x_2$')
+axes[0, 1].set_title('Trace Plot - $x_2$')
+
+# Joint distribution
+burn_in = 1000
+axes[1, 0].scatter(samples_2d[burn_in:, 0], samples_2d[burn_in:, 1], s=1, alpha=0.3)
+# True contours
+x1_grid = np.linspace(-2, 4, 100)
+x2_grid = np.linspace(-1, 5, 100)
+X1, X2 = np.meshgrid(x1_grid, x2_grid)
+Z = np.zeros_like(X1)
+for i in range(100):
+    for j in range(100):
+        Z[i, j] = bivariate_target(np.array([X1[i, j], X2[i, j]]))
+axes[1, 0].contour(X1, X2, Z, levels=5, colors='red', linewidths=1)
+axes[1, 0].set_xlabel('$x_1$')
+axes[1, 0].set_ylabel('$x_2$')
+axes[1, 0].set_title('Joint Distribution')
+
+# Autocorrelation
+max_lag = 100
+autocorr = np.correlate(samples_2d[burn_in:, 0] - np.mean(samples_2d[burn_in:, 0]),
+                        samples_2d[burn_in:, 0] - np.mean(samples_2d[burn_in:, 0]), mode='full')
+autocorr = autocorr[len(autocorr)//2:]
+autocorr = autocorr / autocorr[0]
+axes[1, 1].plot(autocorr[:max_lag], 'b-', linewidth=1.5)
+axes[1, 1].axhline(y=0, color='k', linestyle='--')
+axes[1, 1].set_xlabel('Lag')
+axes[1, 1].set_ylabel('Autocorrelation')
+axes[1, 1].set_title('Autocorrelation Function')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('mcmc_2d.pdf', '2D Metropolis-Hastings for correlated bivariate normal')
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Pi Estimation}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Monte Carlo $\\pi$ estimation results}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Statistic & Value \\')
+print(r'\midrule')
+print(f"True $\\pi$ & {np.pi:.6f} \\\\")
+print(f"Mean estimate & {pi_mean:.6f} \\\\")
+print(f"Standard deviation & {pi_std:.6f} \\\\")
+print(f"Relative error & {abs(pi_mean - np.pi)/np.pi * 100:.3f}\\% \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Importance Sampling}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Importance sampling for rare events}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Quantity & Value \\')
+print(r'\midrule')
+print(f"True P(X > 4) & {true_prob:.6f} \\\\")
+print(f"Standard MC estimate & {estimate_standard:.6f} \\\\")
+print(f"IS estimate & {estimate_importance:.6f} \\\\")
+print(f"Variance reduction & {variance_reduction:.1f}x \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{MCMC Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Metropolis-Hastings acceptance rates}')
+print(r'\begin{tabular}{cc}')
+print(r'\toprule')
+print(r'Proposal $\\sigma$ & Acceptance Rate \\')
+print(r'\midrule')
+for std in proposal_stds:
+    print(f"{std} & {acceptance_rates[std]:.3f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Statistical Summary}
+\begin{itemize}
+    \item Pi estimation error: \py{f"{abs(pi_mean - np.pi)/np.pi * 100:.3f}"}\\%
+    \item Gaussian integral estimate: \py{f"{gaussian_integral:.4f}"}
+    \item Importance sampling variance reduction: \py{f"{variance_reduction:.1f}"}x
+    \item Optimal MCMC acceptance rate: \py{f"{acceptance_rates[1.0]:.3f}"}
+    \item 2D MCMC acceptance rate: \py{f"{acc_2d:.3f}"}
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates Monte Carlo methods for numerical computation. Basic MC integration achieves $1/\sqrt{N}$ convergence, while importance sampling provides substantial variance reduction for rare events (\py{f"{variance_reduction:.1f}"}x improvement). The Metropolis-Hastings algorithm successfully samples from complex distributions, with optimal acceptance rates around 0.234 for 1D targets (achieved with $\sigma_q = 1.0$ giving \py{f"{acceptance_rates[1.0]:.3f}"}).
+
+\end{document}

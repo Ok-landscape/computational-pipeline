@@ -1,0 +1,328 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{braket}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{oracle}{RGB}{231, 76, 60}
+\definecolor{diffusion}{RGB}{46, 204, 113}
+\definecolor{amplitude}{RGB}{52, 152, 219}
+
+\title{Grover's Quantum Search Algorithm:\\
+Oracle, Diffusion, and Amplitude Amplification}
+\author{Department of Quantum Computing\\Technical Report QC-2024-001}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of Grover's quantum search algorithm. We implement the oracle and diffusion operators, demonstrate amplitude amplification, analyze the quadratic speedup over classical search, and explore the algorithm's complexity. All simulations use matrix representations with PythonTeX for reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Grover's algorithm searches an unsorted database of $N$ items in $O(\sqrt{N})$ time, providing a quadratic speedup over classical $O(N)$ search.
+
+\section{Problem Statement}
+Given a function $f: \{0, 1, ..., N-1\} \to \{0, 1\}$ with exactly one marked item $x^*$ where $f(x^*) = 1$, find $x^*$.
+
+\section{Classical vs Quantum}
+\begin{itemize}
+    \item Classical: $O(N)$ queries (linear search)
+    \item Quantum (Grover): $O(\sqrt{N})$ queries
+\end{itemize}
+
+\chapter{Algorithm Overview}
+
+\section{Quantum State Representation}
+For $n$ qubits ($N = 2^n$ states):
+\begin{equation}
+\ket{\psi} = \sum_{x=0}^{N-1} \alpha_x \ket{x}
+\end{equation}
+
+Initial superposition:
+\begin{equation}
+\ket{s} = H^{\otimes n}\ket{0}^{\otimes n} = \frac{1}{\sqrt{N}}\sum_{x=0}^{N-1}\ket{x}
+\end{equation}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def hadamard_gate():
+    return np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+def tensor_product(gates):
+    result = gates[0]
+    for gate in gates[1:]:
+        result = np.kron(result, gate)
+    return result
+
+def create_oracle(n_qubits, marked_state):
+    N = 2**n_qubits
+    oracle = np.eye(N)
+    oracle[marked_state, marked_state] = -1
+    return oracle
+
+def create_diffusion(n_qubits):
+    N = 2**n_qubits
+    s = np.ones(N) / np.sqrt(N)
+    diffusion = 2 * np.outer(s, s) - np.eye(N)
+    return diffusion
+
+def grover_iteration(state, oracle, diffusion):
+    state = oracle @ state
+    state = diffusion @ state
+    return state
+
+def run_grover(n_qubits, marked_state, num_iterations=None):
+    N = 2**n_qubits
+    if num_iterations is None:
+        num_iterations = int(np.pi/4 * np.sqrt(N))
+
+    H_n = tensor_product([hadamard_gate()] * n_qubits)
+    initial_state = np.zeros(N)
+    initial_state[0] = 1
+    state = H_n @ initial_state
+
+    oracle = create_oracle(n_qubits, marked_state)
+    diffusion = create_diffusion(n_qubits)
+
+    history = [state.copy()]
+    for _ in range(num_iterations):
+        state = grover_iteration(state, oracle, diffusion)
+        history.append(state.copy())
+
+    return np.array(history)
+\end{pycode}
+
+\chapter{The Oracle Operator}
+
+\section{Definition}
+The oracle marks the target state by flipping its phase:
+\begin{equation}
+U_f\ket{x} = (-1)^{f(x)}\ket{x} = \begin{cases}
+-\ket{x} & \text{if } x = x^* \\
+\ket{x} & \text{otherwise}
+\end{cases}
+\end{equation}
+
+Matrix form:
+\begin{equation}
+U_f = I - 2\ket{x^*}\bra{x^*}
+\end{equation}
+
+\chapter{The Diffusion Operator}
+
+\section{Definition}
+The diffusion operator performs inversion about the mean:
+\begin{equation}
+U_s = 2\ket{s}\bra{s} - I
+\end{equation}
+
+This amplifies the amplitude of the marked state.
+
+\chapter{Amplitude Amplification}
+
+\begin{pycode}
+# Visualize Grover for 3 qubits
+n_qubits = 3
+N = 2**n_qubits
+marked = 5
+
+optimal_iterations = int(np.pi/4 * np.sqrt(N))
+history = run_grover(n_qubits, marked, optimal_iterations + 2)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Amplitude evolution
+ax = axes[0, 0]
+for i in range(min(5, len(history))):
+    ax.bar(np.arange(N) + i*0.15, history[i]**2, width=0.15,
+           label=f'Iter {i}', alpha=0.7)
+ax.set_xlabel('State $|x\\rangle$')
+ax.set_ylabel('Probability $|\\alpha_x|^2$')
+ax.set_title('Probability Distribution Evolution')
+ax.axhline(1/N, color='red', linestyle='--', alpha=0.5, label='Initial')
+ax.legend(loc='upper right')
+ax.grid(True, alpha=0.3)
+
+# Marked state probability vs iterations
+ax = axes[0, 1]
+marked_probs = [h[marked]**2 for h in history]
+ax.plot(range(len(marked_probs)), marked_probs, 'b-o')
+ax.axhline(1, color='green', linestyle='--', alpha=0.5)
+ax.axvline(optimal_iterations, color='red', linestyle='--', alpha=0.5,
+           label=f'Optimal: {optimal_iterations}')
+ax.set_xlabel('Iterations')
+ax.set_ylabel(f'$P(|{marked}\\rangle)$')
+ax.set_title('Marked State Probability')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Geometric interpretation
+ax = axes[1, 0]
+theta = np.arcsin(1/np.sqrt(N))
+angles = [theta + 2*k*theta for k in range(len(history))]
+for k, angle in enumerate(angles[:5]):
+    x = np.cos(angle)
+    y = np.sin(angle)
+    ax.arrow(0, 0, x*0.9, y*0.9, head_width=0.05, head_length=0.02,
+             fc=plt.cm.viridis(k/5), ec=plt.cm.viridis(k/5))
+    ax.text(x*1.05, y*1.05, f'{k}', fontsize=10)
+
+theta_range = np.linspace(0, np.pi/2, 100)
+ax.plot(np.cos(theta_range), np.sin(theta_range), 'k--', alpha=0.3)
+ax.axhline(0, color='k', alpha=0.3)
+ax.axvline(0, color='k', alpha=0.3)
+ax.set_xlabel(r"$|s'\rangle$ (non-marked)")
+ax.set_ylabel(r'$|x^*\rangle$ (marked)')
+ax.set_title('Geometric Rotation')
+ax.set_xlim(-0.2, 1.2)
+ax.set_ylim(-0.2, 1.2)
+ax.set_aspect('equal')
+ax.grid(True, alpha=0.3)
+
+# Speedup comparison
+ax = axes[1, 1]
+n_values = np.arange(2, 12)
+N_values = 2**n_values
+classical = N_values
+quantum = np.pi/4 * np.sqrt(N_values)
+
+ax.semilogy(n_values, classical, 'ro-', label='Classical $O(N)$')
+ax.semilogy(n_values, quantum, 'bs-', label=r'Quantum $O(\sqrt{N})$')
+ax.set_xlabel('Number of qubits $n$')
+ax.set_ylabel('Number of queries')
+ax.set_title('Query Complexity Comparison')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('grover_algorithm.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+final_prob = history[optimal_iterations][marked]**2
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{grover_algorithm.pdf}
+\caption{Grover's algorithm: (a) probability evolution, (b) marked state probability, (c) geometric rotation, (d) query complexity comparison.}
+\end{figure}
+
+\chapter{Optimal Number of Iterations}
+
+The optimal number of iterations is:
+\begin{equation}
+k_{opt} = \left\lfloor \frac{\pi}{4}\sqrt{N} \right\rfloor
+\end{equation}
+
+After $k_{opt}$ iterations, the probability of measuring $\ket{x^*}$ is approximately 1.
+
+\begin{pycode}
+# Analyze different database sizes
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Success probability vs iterations for different N
+ax = axes[0]
+for n in [2, 3, 4, 5]:
+    N = 2**n
+    marked = 0
+    max_iter = int(np.pi * np.sqrt(N))
+    history = run_grover(n, marked, max_iter)
+    probs = [h[marked]**2 for h in history]
+    ax.plot(range(len(probs)), probs, label=f'$N = {N}$')
+ax.set_xlabel('Iterations')
+ax.set_ylabel('Success Probability')
+ax.set_title('Optimal Iterations for Different $N$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Multiple marked items
+ax = axes[1]
+n = 4
+N = 2**n
+for m in [1, 2, 4]:
+    # Simplified: single marked item analysis
+    optimal = int(np.pi/4 * np.sqrt(N/m))
+    ax.bar(m, optimal, alpha=0.7)
+ax.set_xlabel('Number of marked items $M$')
+ax.set_ylabel('Optimal iterations')
+ax.set_title(f'$N = {N}$: Effect of Multiple Solutions')
+ax.grid(True, alpha=0.3)
+
+# Phase angle analysis
+ax = axes[2]
+N_range = np.logspace(1, 4, 100)
+theta = np.arcsin(1/np.sqrt(N_range))
+ax.plot(N_range, np.degrees(theta), 'b-')
+ax.set_xlabel('Database size $N$')
+ax.set_ylabel('Initial angle $\\theta$ (degrees)')
+ax.set_title('Rotation Angle vs Database Size')
+ax.set_xscale('log')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('grover_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Calculate complexity for different sizes
+complexity_table = []
+for n in [4, 6, 8, 10]:
+    N = 2**n
+    classical = N
+    quantum = int(np.pi/4 * np.sqrt(N))
+    speedup = classical / quantum
+    complexity_table.append((n, N, classical, quantum, f'{speedup:.1f}'))
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{grover_analysis.pdf}
+\caption{Grover analysis: success probability curves, multiple solutions effect, rotation angle.}
+\end{figure}
+
+\chapter{Complexity Analysis}
+
+\begin{table}[htbp]
+\centering
+\caption{Query complexity comparison}
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+Qubits & $N$ & Classical & Quantum & Speedup \\
+\midrule
+\py{complexity_table[0][0]} & \py{complexity_table[0][1]} & \py{complexity_table[0][2]} & \py{complexity_table[0][3]} & \py{complexity_table[0][4]}$\times$ \\
+\py{complexity_table[1][0]} & \py{complexity_table[1][1]} & \py{complexity_table[1][2]} & \py{complexity_table[1][3]} & \py{complexity_table[1][4]}$\times$ \\
+\py{complexity_table[2][0]} & \py{complexity_table[2][1]} & \py{complexity_table[2][2]} & \py{complexity_table[2][3]} & \py{complexity_table[2][4]}$\times$ \\
+\py{complexity_table[3][0]} & \py{complexity_table[3][1]} & \py{complexity_table[3][2]} & \py{complexity_table[3][3]} & \py{complexity_table[3][4]}$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Final success probability for $n=3$, $N=8$: $P = \py{f'{final_prob:.4f}'}$
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Grover's algorithm provides quadratic speedup: $O(\sqrt{N})$ vs $O(N)$
+    \item Oracle marks target by phase flip
+    \item Diffusion operator amplifies marked amplitude
+    \item Optimal iterations: $\approx \frac{\pi}{4}\sqrt{N}$
+    \item Over-iteration reduces success probability (periodic behavior)
+\end{enumerate}
+
+\end{document}

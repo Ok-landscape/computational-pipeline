@@ -1,0 +1,561 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Stellar Evolution: From Main Sequence to Stellar Remnants\\
+\large A Comprehensive Analysis of the HR Diagram and Nuclear Burning Stages}
+\author{Stellar Astrophysics Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This comprehensive analysis explores stellar structure and evolution through the Hertzsprung-Russell diagram. We derive the fundamental stellar relations including the mass-luminosity relation, main sequence lifetime, and Stefan-Boltzmann law. The analysis covers all major evolutionary phases from pre-main sequence contraction through hydrogen and helium burning to white dwarf, neutron star, and black hole endpoints. We generate synthetic stellar populations to visualize the main sequence, red giant branch, horizontal branch, and white dwarf cooling sequence, and explore the physics governing each evolutionary stage.
+\end{abstract}
+
+\section{Introduction}
+
+The Hertzsprung-Russell (HR) diagram, independently developed by Ejnar Hertzsprung and Henry Norris Russell in the early 1900s, provides a powerful tool for understanding stellar populations and evolution. By plotting stellar luminosity against effective temperature (or equivalently, color or spectral type), the HR diagram reveals the fundamental relationships governing stellar structure.
+
+\begin{definition}[Hertzsprung-Russell Diagram]
+A scatter plot of stellar luminosity $L$ versus effective temperature $T_{\text{eff}}$ (with temperature decreasing to the right), showing distinct regions occupied by different stellar types and evolutionary stages.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Stellar Luminosity}
+
+The luminosity of a star is determined by its radius and effective temperature:
+
+\begin{theorem}[Stefan-Boltzmann Law]
+\begin{equation}
+L = 4\pi R^2 \sigma T_{\text{eff}}^4
+\end{equation}
+where $\sigma = 5.67 \times 10^{-8}$ W m$^{-2}$ K$^{-4}$ is the Stefan-Boltzmann constant.
+\end{theorem}
+
+\subsection{Mass-Luminosity Relation}
+
+For main sequence stars, luminosity scales strongly with mass:
+
+\begin{theorem}[Mass-Luminosity Relation]
+\begin{equation}
+\frac{L}{L_\odot} = \left(\frac{M}{M_\odot}\right)^\alpha
+\end{equation}
+where $\alpha \approx 3.5$ for stars with $0.5 < M/M_\odot < 20$, with variations at the extremes.
+\end{theorem}
+
+\begin{remark}[Mass-Luminosity Variations]
+\begin{itemize}
+    \item Low mass ($M < 0.5 M_\odot$): $\alpha \approx 2.3$
+    \item Intermediate mass: $\alpha \approx 4$
+    \item High mass ($M > 20 M_\odot$): $\alpha \approx 1$ (Eddington limit)
+\end{itemize}
+\end{remark}
+
+\subsection{Main Sequence Lifetime}
+
+Nuclear burning timescale depends on fuel supply and consumption rate:
+
+\begin{equation}
+\tau_{\text{MS}} \approx \frac{M}{L} \propto M^{1-\alpha} \approx \frac{10^{10}}{(M/M_\odot)^{2.5}} \text{ years}
+\end{equation}
+
+\subsection{Stellar Spectral Classification}
+
+\begin{definition}[Spectral Types]
+The Harvard classification scheme orders stars by temperature:
+\begin{center}
+O - B - A - F - G - K - M
+\end{center}
+(``Oh Be A Fine Girl/Guy Kiss Me'')
+
+Temperature ranges: O ($>$30,000 K), B (10,000-30,000 K), A (7,500-10,000 K), F (6,000-7,500 K), G (5,200-6,000 K), K (3,700-5,200 K), M ($<$3,700 K)
+\end{definition}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Solar values
+L_sun = 3.828e26  # W
+T_sun = 5778  # K
+R_sun = 6.96e8  # m
+M_sun = 1.989e30  # kg
+
+# Main sequence population
+n_ms = 800
+# IMF-weighted mass distribution (Salpeter)
+mass_exponent = -2.35
+mass_ms = 10**np.random.uniform(-1, 1.7, n_ms)  # 0.1 - 50 M_sun
+
+# Mass-luminosity relation with mass-dependent exponent
+def mass_to_luminosity(M):
+    """Mass-luminosity relation with mass-dependent exponent"""
+    L = np.zeros_like(M)
+    low = M < 0.43
+    mid_low = (M >= 0.43) & (M < 2)
+    mid_high = (M >= 2) & (M < 20)
+    high = M >= 20
+
+    L[low] = 0.23 * M[low]**2.3
+    L[mid_low] = M[mid_low]**4
+    L[mid_high] = 1.5 * M[mid_high]**3.5
+    L[high] = 3200 * M[high]
+    return L
+
+L_ms = mass_to_luminosity(mass_ms)
+
+# Mass-temperature relation
+def mass_to_temperature(M):
+    """Main sequence temperature from mass"""
+    return T_sun * M**0.5
+
+T_ms = mass_to_temperature(mass_ms)
+
+# Add scatter
+L_ms *= 10**np.random.normal(0, 0.08, n_ms)
+T_ms *= 10**np.random.normal(0, 0.015, n_ms)
+
+# Calculate radii from Stefan-Boltzmann
+R_ms = np.sqrt(L_ms * L_sun / (4 * np.pi * 5.67e-8 * T_ms**4)) / R_sun
+
+# Red Giant Branch
+n_rgb = 200
+T_rgb = np.random.uniform(3500, 5200, n_rgb)
+L_rgb = 10**np.random.uniform(1.5, 3.5, n_rgb)
+
+# Horizontal Branch (helium burning)
+n_hb = 100
+T_hb = np.random.uniform(4500, 20000, n_hb)
+L_hb = 10**np.random.uniform(1.5, 2.5, n_hb)
+
+# Asymptotic Giant Branch
+n_agb = 80
+T_agb = np.random.uniform(2800, 4000, n_agb)
+L_agb = 10**np.random.uniform(3.0, 4.5, n_agb)
+
+# White Dwarfs (cooling sequence)
+n_wd = 150
+T_wd = 10**np.random.uniform(3.5, 5.0, n_wd)  # 3000 - 100000 K
+# WD cooling: L ~ T^4 * R^2, with R ~ 0.01 R_sun
+R_wd = 0.01  # solar radii
+L_wd = (R_wd)**2 * (T_wd/T_sun)**4 * 10**np.random.normal(0, 0.2, n_wd)
+
+# Supergiants
+n_sg = 50
+T_sg = np.random.uniform(3000, 30000, n_sg)
+L_sg = 10**np.random.uniform(4, 6, n_sg)
+
+# Pre-main sequence (Hayashi track)
+n_pms = 100
+T_pms = np.random.uniform(3000, 5000, n_pms)
+L_pms = 10**np.random.uniform(0, 2, n_pms)
+
+# Spectral classification
+def spectral_class(T):
+    if T > 30000: return 'O'
+    elif T > 10000: return 'B'
+    elif T > 7500: return 'A'
+    elif T > 6000: return 'F'
+    elif T > 5200: return 'G'
+    elif T > 3700: return 'K'
+    else: return 'M'
+
+# Luminosity class
+def luminosity_class(L, T):
+    if L > 1e4:
+        return 'I (Supergiant)'
+    elif L > 100:
+        return 'III (Giant)'
+    elif L > 10:
+        return 'IV (Subgiant)'
+    else:
+        return 'V (Main Seq.)'
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(14, 16))
+
+# Plot 1: Full HR diagram
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.scatter(T_ms, L_ms, c='blue', s=3, alpha=0.4, label='Main Sequence')
+ax1.scatter(T_rgb, L_rgb, c='red', s=10, alpha=0.5, label='RGB')
+ax1.scatter(T_hb, L_hb, c='orange', s=8, alpha=0.5, label='HB')
+ax1.scatter(T_agb, L_agb, c='darkred', s=15, alpha=0.5, label='AGB')
+ax1.scatter(T_wd, L_wd, c='white', edgecolors='gray', s=8, alpha=0.6, label='WD')
+ax1.scatter(T_sg, L_sg, c='yellow', edgecolors='black', s=25, alpha=0.7, label='Supergiant')
+
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+ax1.set_xlim([50000, 2000])
+ax1.set_ylim([1e-5, 1e7])
+ax1.set_xlabel('Effective Temperature (K)')
+ax1.set_ylabel('Luminosity ($L_\\odot$)')
+ax1.set_title('Hertzsprung-Russell Diagram')
+ax1.legend(fontsize=6, loc='lower left')
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Main sequence only with constant radius lines
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.scatter(T_ms, L_ms, c=np.log10(mass_ms), s=10, alpha=0.6, cmap='viridis')
+
+# Constant radius lines
+T_line = np.logspace(3.5, 5, 100)
+for R_val in [0.1, 1, 10, 100]:
+    L_R = (R_val)**2 * (T_line/T_sun)**4
+    ax2.plot(T_line, L_R, 'k--', alpha=0.4, linewidth=1)
+    ax2.text(T_line[-1]*0.8, L_R[-1]*1.5, f'{R_val}$R_\\odot$', fontsize=7)
+
+ax2.set_xscale('log')
+ax2.set_yscale('log')
+ax2.set_xlim([50000, 2500])
+ax2.set_ylim([1e-4, 1e6])
+ax2.set_xlabel('Temperature (K)')
+ax2.set_ylabel('Luminosity ($L_\\odot$)')
+ax2.set_title('Main Sequence (colored by mass)')
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Mass-luminosity relation
+ax3 = fig.add_subplot(3, 3, 3)
+mass_plot = np.logspace(-1, 2, 100)
+L_theory = mass_to_luminosity(mass_plot)
+ax3.plot(mass_plot, L_theory, 'r-', linewidth=2, label='Theory')
+ax3.scatter(mass_ms, L_ms, c='blue', s=5, alpha=0.3, label='Synthetic')
+
+ax3.set_xscale('log')
+ax3.set_yscale('log')
+ax3.set_xlabel('Mass ($M_\\odot$)')
+ax3.set_ylabel('Luminosity ($L_\\odot$)')
+ax3.set_title('Mass-Luminosity Relation')
+ax3.legend(fontsize=8)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Main sequence lifetime
+ax4 = fig.add_subplot(3, 3, 4)
+tau_ms = 10e9 / mass_ms**2.5  # years
+ax4.scatter(mass_ms, tau_ms/1e9, c='blue', s=10, alpha=0.5)
+
+# Reference points
+ref_masses = [0.5, 1, 2, 5, 10, 25]
+ref_tau = [10e9/m**2.5/1e9 for m in ref_masses]
+for m, t in zip(ref_masses, ref_tau):
+    ax4.plot(m, t, 'ro', markersize=8)
+
+ax4.set_xscale('log')
+ax4.set_yscale('log')
+ax4.set_xlabel('Mass ($M_\\odot$)')
+ax4.set_ylabel('MS Lifetime (Gyr)')
+ax4.set_title('Main Sequence Lifetime')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Spectral type distribution
+ax5 = fig.add_subplot(3, 3, 5)
+all_T = np.concatenate([T_ms, T_rgb, T_hb, T_agb, T_wd, T_sg])
+spectral_types = ['O', 'B', 'A', 'F', 'G', 'K', 'M']
+spec_counts = [sum(1 for T in all_T if spectral_class(T) == s) for s in spectral_types]
+colors = ['blue', 'cyan', 'white', 'lightyellow', 'yellow', 'orange', 'red']
+
+bars = ax5.bar(spectral_types, spec_counts, color=colors, edgecolor='black', alpha=0.8)
+ax5.set_xlabel('Spectral Class')
+ax5.set_ylabel('Count')
+ax5.set_title('Spectral Type Distribution')
+ax5.grid(True, alpha=0.3, axis='y')
+
+# Plot 6: Evolutionary track (1 solar mass)
+ax6 = fig.add_subplot(3, 3, 6)
+# Simplified evolutionary track for 1 M_sun
+track_phases = {
+    'ZAMS': (5778, 1, 'o'),
+    'TO': (5900, 1.5, 's'),
+    'RGB': (4500, 100, '^'),
+    'HB': (5000, 50, 'D'),
+    'AGB': (3500, 1000, 'p'),
+    'PN': (100000, 100, '*'),
+    'WD': (10000, 0.01, 'v')
+}
+
+for phase, (T, L, marker) in track_phases.items():
+    ax6.scatter([T], [L], marker=marker, s=100, label=phase, zorder=10)
+
+# Connect with line
+T_track = [5778, 5900, 4500, 5000, 3500, 100000, 10000]
+L_track = [1, 1.5, 100, 50, 1000, 100, 0.01]
+ax6.plot(T_track, L_track, 'k--', alpha=0.5, linewidth=1)
+
+ax6.set_xscale('log')
+ax6.set_yscale('log')
+ax6.set_xlim([200000, 2500])
+ax6.set_ylim([1e-3, 1e4])
+ax6.set_xlabel('Temperature (K)')
+ax6.set_ylabel('Luminosity ($L_\\odot$)')
+ax6.set_title('1 $M_\\odot$ Evolutionary Track')
+ax6.legend(fontsize=7, loc='lower left', ncol=2)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Stellar endpoints by mass
+ax7 = fig.add_subplot(3, 3, 7)
+mass_range = np.linspace(0.1, 50, 100)
+remnant_mass = np.zeros_like(mass_range)
+
+for i, m in enumerate(mass_range):
+    if m < 8:  # White dwarf
+        remnant_mass[i] = 0.5 + 0.1 * m
+    elif m < 25:  # Neutron star
+        remnant_mass[i] = 1.4
+    else:  # Black hole
+        remnant_mass[i] = 0.1 * m
+
+ax7.plot(mass_range, remnant_mass, 'b-', linewidth=2)
+ax7.axvline(x=8, color='r', linestyle='--', alpha=0.7, label='WD/NS boundary')
+ax7.axvline(x=25, color='purple', linestyle='--', alpha=0.7, label='NS/BH boundary')
+ax7.set_xlabel('Initial Mass ($M_\\odot$)')
+ax7.set_ylabel('Remnant Mass ($M_\\odot$)')
+ax7.set_title('Stellar Remnant Masses')
+ax7.legend(fontsize=8)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Nuclear burning stages
+ax8 = fig.add_subplot(3, 3, 8)
+burning_stages = ['H', 'He', 'C', 'Ne', 'O', 'Si']
+temps = [1.5e7, 1e8, 5e8, 1.2e9, 1.5e9, 2.7e9]  # K
+durations_25 = [7e6, 5e5, 600, 1, 0.5, 0.001]  # years for 25 M_sun
+
+ax8.barh(burning_stages, np.log10(durations_25), color='steelblue', alpha=0.7)
+ax8.set_xlabel('$\\log_{10}$(Duration/yr)')
+ax8.set_ylabel('Burning Stage')
+ax8.set_title('Nuclear Burning (25 $M_\\odot$)')
+ax8.grid(True, alpha=0.3, axis='x')
+
+# Plot 9: Color-magnitude diagram
+ax9 = fig.add_subplot(3, 3, 9)
+# B-V color index (simplified)
+def T_to_BV(T):
+    return 7090/T - 0.71
+
+BV_ms = T_to_BV(T_ms)
+BV_rgb = T_to_BV(T_rgb)
+BV_wd = T_to_BV(T_wd)
+
+# Absolute magnitude
+Mv_ms = 4.83 - 2.5*np.log10(L_ms)
+Mv_rgb = 4.83 - 2.5*np.log10(L_rgb)
+Mv_wd = 4.83 - 2.5*np.log10(L_wd)
+
+ax9.scatter(BV_ms, Mv_ms, c='blue', s=3, alpha=0.4, label='MS')
+ax9.scatter(BV_rgb, Mv_rgb, c='red', s=8, alpha=0.5, label='RGB')
+ax9.scatter(BV_wd, Mv_wd, c='gray', s=5, alpha=0.5, label='WD')
+
+ax9.set_xlim([-0.5, 2.5])
+ax9.set_ylim([15, -10])
+ax9.set_xlabel('B-V Color Index')
+ax9.set_ylabel('Absolute Magnitude $M_V$')
+ax9.set_title('Color-Magnitude Diagram')
+ax9.legend(fontsize=8)
+ax9.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('stellar_evolution_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{stellar_evolution_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Statistics
+total_stars = n_ms + n_rgb + n_hb + n_agb + n_wd + n_sg
+ms_fraction = n_ms / total_stars * 100
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Stellar Population Statistics}
+
+\begin{pycode}
+# Population statistics table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Synthetic Stellar Population Statistics}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Evolutionary Stage & Count & Fraction (\\%) \\')
+print(r'\midrule')
+stages = [('Main Sequence', n_ms), ('Red Giant Branch', n_rgb),
+          ('Horizontal Branch', n_hb), ('AGB', n_agb),
+          ('White Dwarf', n_wd), ('Supergiant', n_sg)]
+for name, count in stages:
+    frac = count / total_stars * 100
+    print(f"{name} & {count} & {frac:.1f} \\\\")
+print(r'\midrule')
+print(f"Total & {total_stars} & 100 \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Main Sequence Properties}
+
+\begin{pycode}
+# MS lifetime table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Main Sequence Lifetimes}')
+print(r'\begin{tabular}{cccc}')
+print(r'\toprule')
+print(r'Mass ($M_\\odot$) & Luminosity ($L_\\odot$) & Temperature (K) & Lifetime (Gyr) \\')
+print(r'\midrule')
+ref_masses = [0.5, 1, 2, 5, 10, 25]
+for m in ref_masses:
+    L = mass_to_luminosity(np.array([m]))[0]
+    T = mass_to_temperature(m)
+    tau = 10 / m**2.5
+    print(f"{m:.1f} & {L:.1f} & {T:.0f} & {tau:.2f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{example}[Solar Evolution]
+The Sun is a G2V main sequence star with the following properties:
+\begin{itemize}
+    \item Mass: $M = 1 M_\odot$
+    \item Luminosity: $L = 1 L_\odot = $ \py{f"{L_sun:.3e}"} W
+    \item Effective temperature: $T_{\text{eff}} = $ \py{f"{T_sun}"} K
+    \item Main sequence lifetime: $\tau_{\text{MS}} \approx 10$ Gyr
+    \item Current age: 4.6 Gyr (middle of MS phase)
+\end{itemize}
+\end{example}
+
+\section{Evolutionary Phases}
+
+\subsection{Pre-Main Sequence}
+
+Stars form from collapsing molecular clouds and contract along Hayashi tracks (nearly vertical in HR diagram) before reaching the main sequence.
+
+\subsection{Main Sequence}
+
+Core hydrogen burning via pp-chain (low mass) or CNO cycle (high mass). Stars spend $\sim$90\% of their lives on the main sequence.
+
+\subsection{Red Giant Branch}
+
+After core hydrogen exhaustion:
+\begin{enumerate}
+    \item Hydrogen shell burning begins
+    \item Core contracts, envelope expands
+    \item Surface cools to $\sim$4000 K
+    \item Luminosity increases to $\sim$100-1000 $L_\odot$
+\end{enumerate}
+
+\subsection{Helium Burning}
+
+\begin{remark}[Helium Flash]
+In low-mass stars ($M < 2 M_\odot$), helium ignition is degenerate and occurs explosively (helium flash), though the energy is absorbed internally.
+\end{remark}
+
+Stars on the Horizontal Branch burn helium in the core and hydrogen in a shell.
+
+\subsection{Asymptotic Giant Branch}
+
+Double-shell burning (H and He) produces thermal pulses and significant mass loss.
+
+\section{Stellar Endpoints}
+
+\subsection{White Dwarfs}
+
+Final state for $M < 8 M_\odot$:
+\begin{itemize}
+    \item Supported by electron degeneracy pressure
+    \item Mass limit: Chandrasekhar mass $M_{Ch} = 1.4 M_\odot$
+    \item Cooling timescale: $\sim$10 Gyr
+\end{itemize}
+
+\subsection{Neutron Stars}
+
+Core-collapse remnants for $8 < M/M_\odot < 25$:
+\begin{itemize}
+    \item Supported by neutron degeneracy pressure
+    \item Typical mass: $1.4 M_\odot$
+    \item Radius: $\sim$10 km
+\end{itemize}
+
+\subsection{Black Holes}
+
+For $M > 25 M_\odot$, no known physics can halt collapse.
+
+\section{Nuclear Burning Stages}
+
+\begin{pycode}
+# Nuclear burning table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Nuclear Burning in Massive Stars (25 $M_\\odot$)}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Stage & Temperature (K) & Duration & Products \\')
+print(r'\midrule')
+print(r'H $\\rightarrow$ He & $1.5 \\times 10^7$ & 7 Myr & He \\')
+print(r'He $\\rightarrow$ C,O & $1 \\times 10^8$ & 500 kyr & C, O \\')
+print(r'C $\\rightarrow$ Ne,Mg & $5 \\times 10^8$ & 600 yr & Ne, Mg \\')
+print(r'Ne $\\rightarrow$ O,Mg & $1.2 \\times 10^9$ & 1 yr & O, Mg \\')
+print(r'O $\\rightarrow$ Si,S & $1.5 \\times 10^9$ & 6 months & Si, S \\')
+print(r'Si $\\rightarrow$ Fe & $2.7 \\times 10^9$ & 1 day & Fe \\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Single stars}: Binaries not included
+    \item \textbf{Solar metallicity}: Population II not modeled
+    \item \textbf{No rotation}: Rotating stars evolve differently
+    \item \textbf{Simplified tracks}: No detailed stellar models
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Binary evolution and mass transfer
+    \item Metallicity effects on evolution
+    \item Stellar rotation and magnetic fields
+    \item Detailed nucleosynthesis yields
+\end{itemize}
+
+\section{Conclusion}
+
+This analysis demonstrates the power of the HR diagram for stellar astrophysics:
+\begin{itemize}
+    \item Main sequence stars follow the mass-luminosity relation
+    \item MS lifetime: $\tau \propto M^{-2.5}$
+    \item Red giants: cool but luminous ($L \sim 100 L_\odot$, $T \sim 4000$ K)
+    \item White dwarfs: hot but dim ($L \sim 0.01 L_\odot$)
+    \item Stellar endpoints depend on initial mass
+\end{itemize}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Kippenhahn, R., Weigert, A., \& Weiss, A. (2012). \textit{Stellar Structure and Evolution}. Springer.
+    \item Prialnik, D. (2009). \textit{An Introduction to the Theory of Stellar Structure and Evolution}. Cambridge University Press.
+    \item Salaris, M. \& Cassisi, S. (2005). \textit{Evolution of Stars and Stellar Populations}. Wiley.
+\end{itemize}
+
+\end{document}

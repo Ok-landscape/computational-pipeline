@@ -1,0 +1,790 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[makestderr]{pythontex}
+
+\title{Optics: Polarization States and Jones Calculus}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Polarization describes the orientation of the electric field oscillation in electromagnetic waves. This analysis explores polarization states using Jones vectors and Mueller matrices, demonstrating the effects of optical elements like polarizers, wave plates, and rotators. Applications in ellipsometry, stress analysis, and optical communications are examined.
+
+\section{Mathematical Framework}
+
+\subsection{Jones Vectors}
+Jones vectors represent polarization states:
+\begin{equation}
+\mathbf{E} = \begin{pmatrix} E_x \\ E_y \end{pmatrix} = \begin{pmatrix} A_x e^{i\phi_x} \\ A_y e^{i\phi_y} \end{pmatrix}
+\end{equation}
+
+\subsection{Stokes Parameters}
+The Stokes vector describes polarization including partial polarization:
+\begin{equation}
+\mathbf{S} = \begin{pmatrix} S_0 \\ S_1 \\ S_2 \\ S_3 \end{pmatrix} = \begin{pmatrix} |E_x|^2 + |E_y|^2 \\ |E_x|^2 - |E_y|^2 \\ 2\text{Re}(E_x E_y^*) \\ 2\text{Im}(E_x E_y^*) \end{pmatrix}
+\end{equation}
+
+\subsection{Jones Matrices}
+Common Jones matrices:
+\begin{itemize}
+    \item Linear polarizer at angle $\theta$: $J_P = \begin{pmatrix} \cos^2\theta & \cos\theta\sin\theta \\ \cos\theta\sin\theta & \sin^2\theta \end{pmatrix}$
+    \item Wave plate with retardance $\delta$: $J_W = \begin{pmatrix} e^{-i\delta/2} & 0 \\ 0 & e^{i\delta/2} \end{pmatrix}$
+\end{itemize}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Jones Vector Representation}
+\begin{pycode}
+# Jones vectors for common polarization states
+def linear_pol(theta):
+    """Linear polarization at angle theta."""
+    return np.array([np.cos(theta), np.sin(theta)])
+
+def circular_pol(handedness='right'):
+    """Circular polarization."""
+    if handedness == 'right':
+        return np.array([1, -1j]) / np.sqrt(2)
+    else:
+        return np.array([1, 1j]) / np.sqrt(2)
+
+def elliptical_pol(a, b, theta=0, handedness='right'):
+    """Elliptical polarization with semi-axes a, b at angle theta."""
+    sign = -1 if handedness == 'right' else 1
+    E = np.array([a, sign * 1j * b])
+    # Rotate by theta
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array([[c, -s], [s, c]])
+    return R @ E / np.sqrt(a**2 + b**2)
+
+# Jones matrices
+def linear_polarizer(theta):
+    """Linear polarizer at angle theta."""
+    c, s = np.cos(theta), np.sin(theta)
+    return np.array([[c**2, c*s], [c*s, s**2]])
+
+def wave_plate(delta, theta=0):
+    """Wave plate with retardance delta, fast axis at angle theta."""
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array([[c, s], [-s, c]])
+    W = np.array([[np.exp(-1j*delta/2), 0], [0, np.exp(1j*delta/2)]])
+    return R.T @ W @ R
+
+def quarter_wave(theta=0):
+    return wave_plate(np.pi/2, theta)
+
+def half_wave(theta=0):
+    return wave_plate(np.pi, theta)
+
+def rotator(theta):
+    """Polarization rotator (Faraday rotator)."""
+    c, s = np.cos(theta), np.sin(theta)
+    return np.array([[c, -s], [s, c]])
+
+# Visualization functions
+def polarization_ellipse(jones, n_points=100):
+    """Generate polarization ellipse from Jones vector."""
+    t = np.linspace(0, 2*np.pi, n_points)
+    Ex = np.real(jones[0] * np.exp(1j*t))
+    Ey = np.real(jones[1] * np.exp(1j*t))
+    return Ex, Ey
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Common polarization states
+states = [
+    ('Horizontal', linear_pol(0), 'blue'),
+    ('Vertical', linear_pol(np.pi/2), 'red'),
+    ('45$^\\circ$', linear_pol(np.pi/4), 'green'),
+    ('RCP', circular_pol('right'), 'purple'),
+    ('LCP', circular_pol('left'), 'orange')
+]
+
+for name, jones, color in states:
+    Ex, Ey = polarization_ellipse(jones)
+    axes[0, 0].plot(Ex, Ey, color=color, linewidth=2, label=name)
+
+axes[0, 0].set_xlabel('$E_x$')
+axes[0, 0].set_ylabel('$E_y$')
+axes[0, 0].set_title('Polarization States')
+axes[0, 0].legend(fontsize=8, loc='upper right')
+axes[0, 0].set_xlim([-1.2, 1.2])
+axes[0, 0].set_ylim([-1.2, 1.2])
+axes[0, 0].set_aspect('equal')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Elliptical polarization with different ellipticities
+ellipticities = [0, 0.3, 0.6, 1.0]
+colors_ell = ['blue', 'green', 'orange', 'red']
+
+for ell, color in zip(ellipticities, colors_ell):
+    a = 1
+    b = ell
+    jones = elliptical_pol(a, b, theta=np.pi/6)
+    Ex, Ey = polarization_ellipse(jones)
+    axes[0, 1].plot(Ex, Ey, color=color, linewidth=2, label=f'$\\varepsilon = {ell:.1f}$')
+
+axes[0, 1].set_xlabel('$E_x$')
+axes[0, 1].set_ylabel('$E_y$')
+axes[0, 1].set_title('Elliptical Polarization')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].set_aspect('equal')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: 3D representation of electric field
+t = np.linspace(0, 4*np.pi, 200)
+z = t / (2*np.pi)
+
+# Right circular polarization
+from mpl_toolkits.mplot3d import Axes3D
+ax3d = axes[1, 0]
+
+Ex_rcp = np.cos(t)
+Ey_rcp = np.sin(t)
+
+# Project onto 2D (simplified)
+ax3d.plot(t / np.pi, Ex_rcp, 'b-', linewidth=1.5, label='$E_x$')
+ax3d.plot(t / np.pi, Ey_rcp, 'r--', linewidth=1.5, label='$E_y$')
+ax3d.set_xlabel('Phase ($\\pi$)')
+ax3d.set_ylabel('Electric field')
+ax3d.set_title('RCP Electric Field Components')
+ax3d.legend()
+ax3d.grid(True, alpha=0.3)
+
+# Plot 4: Poincare sphere projection (Stokes parameters)
+def jones_to_stokes(jones):
+    Ex, Ey = jones
+    S0 = np.abs(Ex)**2 + np.abs(Ey)**2
+    S1 = np.abs(Ex)**2 - np.abs(Ey)**2
+    S2 = 2 * np.real(Ex * np.conj(Ey))
+    S3 = 2 * np.imag(Ex * np.conj(Ey))
+    return np.array([S0, S1, S2, S3])
+
+# Generate points on Poincare sphere
+theta_p = np.linspace(0, 2*np.pi, 50)
+phi_p = np.linspace(0, np.pi, 25)
+THETA, PHI = np.meshgrid(theta_p, phi_p)
+
+S1_sphere = np.sin(PHI) * np.cos(THETA)
+S2_sphere = np.sin(PHI) * np.sin(THETA)
+S3_sphere = np.cos(PHI)
+
+axes[1, 1].contourf(S1_sphere, S2_sphere, S3_sphere, levels=20, cmap='coolwarm')
+axes[1, 1].set_xlabel('$S_1/S_0$')
+axes[1, 1].set_ylabel('$S_2/S_0$')
+axes[1, 1].set_title('Poincar\\'e Sphere Projection')
+axes[1, 1].set_aspect('equal')
+
+# Mark key states
+for name, jones, color in states[:3]:
+    S = jones_to_stokes(jones)
+    axes[1, 1].plot(S[1]/S[0], S[2]/S[0], 'o', color=color, markersize=8)
+
+plt.tight_layout()
+save_plot('polarization_states.pdf', 'Polarization states: Jones vectors, elliptical polarization, and Poincar\\'e sphere.')
+\end{pycode}
+
+\section{Malus's Law and Polarizer Chains}
+\begin{pycode}
+# Malus's Law demonstration
+angles = np.linspace(0, np.pi, 100)
+input_pol = linear_pol(0)  # Horizontal
+transmitted = []
+for theta in angles:
+    P = linear_polarizer(theta)
+    output = P @ input_pol
+    intensity = np.abs(output[0])**2 + np.abs(output[1])**2
+    transmitted.append(intensity)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Malus's Law
+axes[0, 0].plot(np.rad2deg(angles), transmitted, 'b-', linewidth=2)
+axes[0, 0].plot(np.rad2deg(angles), np.cos(angles)**2, 'r--', linewidth=1.5, alpha=0.7, label='Theory')
+axes[0, 0].set_xlabel('Polarizer Angle (degrees)')
+axes[0, 0].set_ylabel('Transmitted Intensity')
+axes[0, 0].set_title("Malus's Law: $I = I_0\\cos^2\\theta$")
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Two crossed polarizers with intermediate polarizer
+intermediate_angles = np.linspace(0, np.pi/2, 50)
+transmission_chain = []
+
+for theta_mid in intermediate_angles:
+    # Three polarizers: 0, theta_mid, 90 degrees
+    P1 = linear_polarizer(0)
+    P2 = linear_polarizer(theta_mid)
+    P3 = linear_polarizer(np.pi/2)
+
+    output = P3 @ P2 @ P1 @ input_pol
+    intensity = np.abs(output[0])**2 + np.abs(output[1])**2
+    transmission_chain.append(intensity)
+
+# Theory: cos^2(theta) * cos^2(90-theta) = 0.25*sin^2(2*theta)
+theory = 0.25 * np.sin(2 * intermediate_angles)**2
+
+axes[0, 1].plot(np.rad2deg(intermediate_angles), transmission_chain, 'b-', linewidth=2, label='Simulation')
+axes[0, 1].plot(np.rad2deg(intermediate_angles), theory, 'r--', linewidth=1.5, alpha=0.7, label='Theory')
+axes[0, 1].set_xlabel('Intermediate Polarizer Angle (degrees)')
+axes[0, 1].set_ylabel('Transmitted Intensity')
+axes[0, 1].set_title('Crossed Polarizers with Intermediate')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: N polarizers between crossed pair
+N_polarizers = np.arange(1, 21)
+transmission_N = []
+
+for N in N_polarizers:
+    if N == 0:
+        transmission_N.append(0)
+    else:
+        angles_chain = np.linspace(0, np.pi/2, N + 2)
+        jones = input_pol
+        for angle in angles_chain:
+            P = linear_polarizer(angle)
+            jones = P @ jones
+        intensity = np.abs(jones[0])**2 + np.abs(jones[1])**2
+        transmission_N.append(intensity)
+
+# Theory: cos^(2N)(pi/(2N))
+theory_N = np.cos(np.pi / (2 * (N_polarizers + 1)))**(2 * (N_polarizers + 1))
+
+axes[1, 0].plot(N_polarizers, transmission_N, 'bo-', linewidth=1.5, markersize=4, label='Simulation')
+axes[1, 0].plot(N_polarizers, theory_N, 'r--', linewidth=1.5, alpha=0.7, label='Theory')
+axes[1, 0].set_xlabel('Number of Intermediate Polarizers')
+axes[1, 0].set_ylabel('Transmitted Intensity')
+axes[1, 0].set_title('Transmission Through N Polarizers')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Extinction ratio
+extinction_ratios = []
+polarizer_angles = np.linspace(0, np.pi, 500)
+
+# Perfect polarizer
+for theta in polarizer_angles:
+    P = linear_polarizer(theta)
+    output = P @ input_pol
+    intensity = np.abs(output[0])**2 + np.abs(output[1])**2
+    extinction_ratios.append(intensity)
+
+axes[1, 1].semilogy(np.rad2deg(polarizer_angles), extinction_ratios, 'b-', linewidth=2)
+axes[1, 1].set_xlabel('Polarizer Angle (degrees)')
+axes[1, 1].set_ylabel('Transmitted Intensity')
+axes[1, 1].set_title('Extinction Ratio')
+axes[1, 1].set_ylim([1e-6, 1.5])
+axes[1, 1].grid(True, alpha=0.3, which='both')
+
+plt.tight_layout()
+save_plot('malus_law.pdf', "Malus's law, polarizer chains, and extinction ratio analysis.")
+\end{pycode}
+
+\section{Wave Plates and Polarization Conversion}
+\begin{pycode}
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Quarter-wave plate effect
+input_linear = linear_pol(np.pi/4)
+qwp_angles = [0, np.pi/8, np.pi/4]
+colors = ['blue', 'green', 'red']
+labels = ['$\\theta = 0^\\circ$ (elliptical)', '$\\theta = 22.5^\\circ$', '$\\theta = 45^\\circ$ (circular)']
+
+for theta, color, label in zip(qwp_angles, colors, labels):
+    QWP = quarter_wave(theta)
+    output = QWP @ input_linear
+    Ex, Ey = polarization_ellipse(output)
+    axes[0, 0].plot(Ex, Ey, color=color, linewidth=2, label=label)
+
+axes[0, 0].set_xlabel('$E_x$')
+axes[0, 0].set_ylabel('$E_y$')
+axes[0, 0].set_title('Quarter-Wave Plate Effects (45$^\\circ$ input)')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].set_aspect('equal')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Half-wave plate rotation
+input_horizontal = linear_pol(0)
+hwp_angles = np.linspace(0, np.pi/2, 5)
+colors_hwp = plt.cm.viridis(np.linspace(0, 1, 5))
+
+for theta, color in zip(hwp_angles, colors_hwp):
+    HWP = half_wave(theta)
+    output = HWP @ input_horizontal
+    Ex, Ey = polarization_ellipse(output)
+    axes[0, 1].plot(Ex, Ey, color=color, linewidth=2, label=f'$\\theta = {np.rad2deg(theta):.0f}^\\circ$')
+
+axes[0, 1].set_xlabel('$E_x$')
+axes[0, 1].set_ylabel('$E_y$')
+axes[0, 1].set_title('Half-Wave Plate Rotation')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].set_aspect('equal')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Retardance scan - output intensity through analyzer
+retardances = np.linspace(0, 4*np.pi, 200)
+analyzer_angles = [0, np.pi/4, np.pi/2]
+colors_ret = ['blue', 'green', 'red']
+
+input_45 = linear_pol(np.pi/4)
+
+for analyzer, color in zip(analyzer_angles, colors_ret):
+    intensities = []
+    for delta in retardances:
+        WP = wave_plate(delta, theta=0)
+        A = linear_polarizer(analyzer)
+        output = A @ WP @ input_45
+        I = np.abs(output[0])**2 + np.abs(output[1])**2
+        intensities.append(I)
+
+    axes[1, 0].plot(retardances/np.pi, intensities, color=color, linewidth=2,
+                    label=f'Analyzer: {np.rad2deg(analyzer):.0f}$^\\circ$')
+
+axes[1, 0].set_xlabel('Retardance ($\\pi$)')
+axes[1, 0].set_ylabel('Transmitted Intensity')
+axes[1, 0].set_title('Intensity vs Retardance')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Circular to linear conversion (QWP)
+input_rcp = circular_pol('right')
+qwp_scan = np.linspace(0, np.pi, 100)
+ellipticity_output = []
+
+for theta in qwp_scan:
+    QWP = quarter_wave(theta)
+    output = QWP @ input_rcp
+
+    # Calculate ellipticity from Stokes parameters
+    S = jones_to_stokes(output)
+    ellipticity = np.arctan2(S[3], np.sqrt(S[1]**2 + S[2]**2)) / (np.pi/2)
+    ellipticity_output.append(ellipticity)
+
+axes[1, 1].plot(np.rad2deg(qwp_scan), ellipticity_output, 'b-', linewidth=2)
+axes[1, 1].axhline(y=0, color='gray', linestyle='--', alpha=0.7)
+axes[1, 1].set_xlabel('QWP Fast Axis Angle (degrees)')
+axes[1, 1].set_ylabel('Output Ellipticity')
+axes[1, 1].set_title('RCP Through QWP')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('wave_plates.pdf', 'Wave plate effects: QWP, HWP, retardance scan, and circular to linear conversion.')
+\end{pycode}
+
+\section{Mueller Matrix Formalism}
+\begin{pycode}
+# Mueller matrices for partially polarized light
+def jones_to_mueller(J):
+    """Convert Jones matrix to Mueller matrix."""
+    # Using Kronecker product method
+    A = np.array([[1, 0, 0, 1],
+                  [1, 0, 0, -1],
+                  [0, 1, 1, 0],
+                  [0, 1j, -1j, 0]])
+    A_inv = np.linalg.inv(A)
+
+    # J tensor J* is 4x4
+    J_kron = np.kron(J, np.conj(J))
+
+    M = np.real(A @ J_kron @ A_inv)
+    return M
+
+# Mueller matrix for depolarizer
+def depolarizer_mueller(p):
+    """Mueller matrix for partial depolarizer with polarization degree p."""
+    return np.diag([1, p, p, p])
+
+# Mueller matrix for linear polarizer
+def polarizer_mueller(theta):
+    c2 = np.cos(2*theta)
+    s2 = np.sin(2*theta)
+    return 0.5 * np.array([[1, c2, s2, 0],
+                          [c2, c2**2, c2*s2, 0],
+                          [s2, c2*s2, s2**2, 0],
+                          [0, 0, 0, 0]])
+
+# Mueller matrix for retarder
+def retarder_mueller(delta, theta=0):
+    c2 = np.cos(2*theta)
+    s2 = np.sin(2*theta)
+    cd = np.cos(delta)
+    sd = np.sin(delta)
+    return np.array([[1, 0, 0, 0],
+                     [0, c2**2 + s2**2*cd, c2*s2*(1-cd), -s2*sd],
+                     [0, c2*s2*(1-cd), s2**2 + c2**2*cd, c2*sd],
+                     [0, s2*sd, -c2*sd, cd]])
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Degree of polarization through depolarizer
+S_in = np.array([1, 1, 0, 0])  # Horizontal polarized
+dop_values = np.linspace(0, 1, 100)
+dop_out = []
+
+for p in dop_values:
+    M = depolarizer_mueller(p)
+    S_out = M @ S_in
+    dop = np.sqrt(S_out[1]**2 + S_out[2]**2 + S_out[3]**2) / S_out[0]
+    dop_out.append(dop)
+
+axes[0, 0].plot(dop_values, dop_out, 'b-', linewidth=2)
+axes[0, 0].plot([0, 1], [0, 1], 'r--', linewidth=1.5, alpha=0.7, label='Linear')
+axes[0, 0].set_xlabel('Depolarizer parameter $p$')
+axes[0, 0].set_ylabel('Output DOP')
+axes[0, 0].set_title('Degree of Polarization Through Depolarizer')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Partially polarized light through polarizer
+dop_in_values = [0.2, 0.5, 0.8, 1.0]
+colors_dop = ['red', 'orange', 'green', 'blue']
+polarizer_angles = np.linspace(0, np.pi, 100)
+
+for dop_in, color in zip(dop_in_values, colors_dop):
+    # Partially polarized horizontal
+    S_in = np.array([1, dop_in, 0, 0])
+    intensities = []
+
+    for theta in polarizer_angles:
+        M = polarizer_mueller(theta)
+        S_out = M @ S_in
+        intensities.append(S_out[0])
+
+    axes[0, 1].plot(np.rad2deg(polarizer_angles), intensities, color=color, linewidth=2,
+                    label=f'DOP = {dop_in:.1f}')
+
+axes[0, 1].set_xlabel('Polarizer Angle (degrees)')
+axes[0, 1].set_ylabel('Transmitted Intensity')
+axes[0, 1].set_title('Partially Polarized Light Through Polarizer')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Mueller matrix visualization
+M_qwp = retarder_mueller(np.pi/2, 0)
+
+im = axes[1, 0].imshow(M_qwp, cmap='RdBu', vmin=-1, vmax=1)
+axes[1, 0].set_xticks([0, 1, 2, 3])
+axes[1, 0].set_yticks([0, 1, 2, 3])
+axes[1, 0].set_xticklabels(['$S_0$', '$S_1$', '$S_2$', '$S_3$'])
+axes[1, 0].set_yticklabels(['$S_0$', '$S_1$', '$S_2$', '$S_3$'])
+axes[1, 0].set_title('Mueller Matrix: QWP at 0$^\\circ$')
+
+for i in range(4):
+    for j in range(4):
+        val = M_qwp[i, j]
+        axes[1, 0].text(j, i, f'{val:.2f}', ha='center', va='center', fontsize=9)
+
+# Plot 4: Stokes vector trajectory on Poincare sphere
+# RCP through rotating HWP
+hwp_rotation = np.linspace(0, np.pi, 100)
+S_rcp = np.array([1, 0, 0, 1])  # RCP
+
+S1_traj = []
+S2_traj = []
+S3_traj = []
+
+for theta in hwp_rotation:
+    M = retarder_mueller(np.pi, theta)
+    S_out = M @ S_rcp
+    S1_traj.append(S_out[1]/S_out[0])
+    S2_traj.append(S_out[2]/S_out[0])
+    S3_traj.append(S_out[3]/S_out[0])
+
+axes[1, 1].plot(S1_traj, S2_traj, 'b-', linewidth=2)
+axes[1, 1].plot(S1_traj[0], S2_traj[0], 'go', markersize=8, label='Start')
+axes[1, 1].plot(S1_traj[-1], S2_traj[-1], 'ro', markersize=8, label='End')
+# Draw unit circle
+theta_circle = np.linspace(0, 2*np.pi, 100)
+axes[1, 1].plot(np.cos(theta_circle), np.sin(theta_circle), 'k--', alpha=0.3)
+axes[1, 1].set_xlabel('$S_1/S_0$')
+axes[1, 1].set_ylabel('$S_2/S_0$')
+axes[1, 1].set_title('Stokes Vector Trajectory (RCP through rotating HWP)')
+axes[1, 1].legend()
+axes[1, 1].set_aspect('equal')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('mueller_matrix.pdf', 'Mueller matrix formalism: depolarization, partial polarization, and Stokes trajectories.')
+\end{pycode}
+
+\section{Optical Activity and Faraday Effect}
+\begin{pycode}
+# Optical activity (natural rotation)
+def optically_active_medium(thickness, specific_rotation, concentration=1):
+    """Jones matrix for optically active medium."""
+    rotation = specific_rotation * thickness * concentration
+    return rotator(rotation)
+
+# Faraday rotator
+def faraday_rotator(thickness, verdet_constant, B_field):
+    """Jones matrix for Faraday effect."""
+    rotation = verdet_constant * B_field * thickness
+    return rotator(rotation)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Optical rotation vs thickness
+thicknesses = np.linspace(0, 10, 100)  # cm
+specific_rotation = 66.5  # degrees/dm for sucrose
+concentrations = [0.1, 0.2, 0.5, 1.0]  # g/mL
+colors_conc = ['blue', 'green', 'orange', 'red']
+
+input_h = linear_pol(0)
+
+for conc, color in zip(concentrations, colors_conc):
+    rotations = []
+    for t in thicknesses:
+        M = optically_active_medium(t/10, np.deg2rad(specific_rotation), conc)
+        output = M @ input_h
+        # Calculate rotation angle
+        angle = np.arctan2(np.real(output[1]), np.real(output[0]))
+        rotations.append(np.rad2deg(angle))
+
+    axes[0, 0].plot(thicknesses, rotations, color=color, linewidth=2,
+                    label=f'c = {conc} g/mL')
+
+axes[0, 0].set_xlabel('Path length (cm)')
+axes[0, 0].set_ylabel('Rotation angle (degrees)')
+axes[0, 0].set_title('Optical Rotation (Sucrose)')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Faraday rotation vs magnetic field
+B_fields = np.linspace(0, 1, 100)  # Tesla
+verdet_constant = 3.8  # rad/(T*m) for terbium gallium garnet
+thickness = 0.01  # m
+
+rotation_faraday = verdet_constant * B_fields * thickness * 180 / np.pi
+
+axes[0, 1].plot(B_fields, rotation_faraday, 'b-', linewidth=2)
+axes[0, 1].set_xlabel('Magnetic field (T)')
+axes[0, 1].set_ylabel('Rotation angle (degrees)')
+axes[0, 1].set_title('Faraday Rotation (TGG, 1 cm)')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Optical isolator
+# Forward: polarizer -> Faraday rotator (45 deg) -> analyzer (45 deg)
+# Backward: analyzer -> Faraday rotator (45 deg) -> polarizer
+
+rotation_45 = np.pi/4
+FR = rotator(rotation_45)
+P0 = linear_polarizer(0)
+P45 = linear_polarizer(np.pi/4)
+
+# Forward pass
+input_forward = np.array([1, 0])
+forward_1 = P0 @ input_forward
+forward_2 = FR @ forward_1
+forward_out = P45 @ forward_2
+I_forward = np.abs(forward_out[0])**2 + np.abs(forward_out[1])**2
+
+# Backward pass (Faraday effect is non-reciprocal)
+input_backward = np.array([np.cos(np.pi/4), np.sin(np.pi/4)])
+backward_1 = FR @ input_backward  # Same rotation direction
+backward_out = P0 @ backward_1
+I_backward = np.abs(backward_out[0])**2 + np.abs(backward_out[1])**2
+
+bar_positions = [0, 1]
+bar_heights = [I_forward, I_backward]
+bar_labels = ['Forward', 'Backward']
+bar_colors = ['green', 'red']
+
+axes[1, 0].bar(bar_positions, bar_heights, color=bar_colors, alpha=0.7)
+axes[1, 0].set_xticks(bar_positions)
+axes[1, 0].set_xticklabels(bar_labels)
+axes[1, 0].set_ylabel('Transmitted Intensity')
+axes[1, 0].set_title('Optical Isolator Performance')
+axes[1, 0].grid(True, alpha=0.3, axis='y')
+
+# Add isolation ratio text
+isolation = 10 * np.log10(I_forward / I_backward) if I_backward > 0 else np.inf
+
+# Plot 4: Polarization rotation in chiral medium
+# Different for left and right circular polarizations
+input_lcp = circular_pol('left')
+input_rcp = circular_pol('right')
+
+rotation_angles = np.linspace(0, np.pi, 100)
+
+# Track phase difference between LCP and RCP
+lcp_phase = []
+rcp_phase = []
+
+for rot in rotation_angles:
+    R = rotator(rot)
+    out_lcp = R @ input_lcp
+    out_rcp = R @ input_rcp
+
+    # Phase is argument of complex amplitude
+    lcp_phase.append(np.angle(out_lcp[0]))
+    rcp_phase.append(np.angle(out_rcp[0]))
+
+axes[1, 1].plot(np.rad2deg(rotation_angles), np.rad2deg(lcp_phase), 'b-', linewidth=2, label='LCP')
+axes[1, 1].plot(np.rad2deg(rotation_angles), np.rad2deg(rcp_phase), 'r-', linewidth=2, label='RCP')
+axes[1, 1].set_xlabel('Rotator angle (degrees)')
+axes[1, 1].set_ylabel('Output phase (degrees)')
+axes[1, 1].set_title('Circular Polarization Through Rotator')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('optical_activity.pdf', 'Optical activity and Faraday effect: rotation, isolators, and circular birefringence.')
+\end{pycode}
+
+\section{Birefringence and Stress Analysis}
+\begin{pycode}
+# Photoelastic stress analysis
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Birefringent material between crossed polarizers
+# Intensity depends on retardance and orientation
+retardances = np.linspace(0, 4*np.pi, 100)
+orientations = [0, np.pi/8, np.pi/4, 3*np.pi/8]
+colors_orient = ['blue', 'green', 'orange', 'red']
+
+input_h = linear_pol(0)
+analyzer_v = linear_polarizer(np.pi/2)
+
+for theta, color in zip(orientations, colors_orient):
+    intensities = []
+    for delta in retardances:
+        WP = wave_plate(delta, theta)
+        output = analyzer_v @ WP @ input_h
+        I = np.abs(output[0])**2 + np.abs(output[1])**2
+        intensities.append(I)
+
+    axes[0, 0].plot(retardances/np.pi, intensities, color=color, linewidth=2,
+                    label=f'$\\theta = {np.rad2deg(theta):.0f}^\\circ$')
+
+axes[0, 0].set_xlabel('Retardance ($\\pi$)')
+axes[0, 0].set_ylabel('Transmitted Intensity')
+axes[0, 0].set_title('Birefringent Material Between Crossed Polarizers')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Simulated photoelastic pattern
+x = np.linspace(-5, 5, 200)
+y = np.linspace(-5, 5, 200)
+X, Y = np.meshgrid(x, y)
+
+# Simulated stress field (disk under diametral compression)
+sigma_1 = 1 / (X**2 + Y**2 + 0.5)  # Radial pattern
+sigma_2 = -0.5 * sigma_1
+stress_diff = sigma_1 - sigma_2
+
+# Retardance proportional to stress difference
+C = 1  # Stress-optic coefficient
+d = 1  # Thickness
+delta_stress = 2 * np.pi * C * d * stress_diff
+
+# Fast axis along principal stress
+theta_stress = 0.5 * np.arctan2(Y, X)
+
+# Intensity between crossed polarizers
+I_photo = np.sin(2 * theta_stress)**2 * np.sin(delta_stress/2)**2
+
+im = axes[0, 1].pcolormesh(X, Y, I_photo, cmap='hot', shading='auto')
+axes[0, 1].set_xlabel('$x$')
+axes[0, 1].set_ylabel('$y$')
+axes[0, 1].set_title('Photoelastic Stress Pattern')
+axes[0, 1].set_aspect('equal')
+
+# Plot 3: Isochromatic fringes (constant retardance)
+# Represent different orders
+fringe_orders = np.arange(0, 5)
+for m in fringe_orders:
+    # Find contour where delta = 2*pi*m
+    contour_level = m
+    axes[1, 0].contour(X, Y, delta_stress/(2*np.pi), levels=[m], colors='k', linewidths=1)
+
+axes[1, 0].set_xlabel('$x$')
+axes[1, 0].set_ylabel('$y$')
+axes[1, 0].set_title('Isochromatic Fringes')
+axes[1, 0].set_aspect('equal')
+
+# Plot 4: Liquid crystal retardance
+# Voltage-controlled birefringence
+voltages = np.linspace(0, 10, 100)  # V
+
+# Simplified model: retardance decreases with voltage
+V_threshold = 1  # Threshold voltage
+delta_0 = 2 * np.pi  # Maximum retardance
+delta_lc = delta_0 * np.exp(-((voltages - V_threshold)/3)**2)
+delta_lc[voltages < V_threshold] = delta_0
+
+# Transmission between crossed polarizers at 45 degrees
+T_lc = np.sin(delta_lc/2)**2
+
+axes[1, 1].plot(voltages, T_lc, 'b-', linewidth=2)
+axes[1, 1].set_xlabel('Applied Voltage (V)')
+axes[1, 1].set_ylabel('Normalized Transmission')
+axes[1, 1].set_title('Liquid Crystal Cell Response')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('birefringence.pdf', 'Birefringence applications: photoelasticity, isochromatics, and LC response.')
+\end{pycode}
+
+\section{Results Summary}
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of Polarization Parameters}')
+print(r'\begin{tabular}{lll}')
+print(r'\toprule')
+print(r'Configuration & Parameter & Result \\')
+print(r'\midrule')
+print(r"Malus's Law & Maximum transmission & 1.0 \\")
+print(r"Crossed polarizers & Transmission & 0 \\")
+print(f"Three polarizers (0$^\\circ$, 45$^\\circ$, 90$^\\circ$) & Transmission & {0.25:.2f} \\\\")
+print(r"QWP at 45$^\circ$ & Linear $\rightarrow$ circular & Yes \\")
+print(r"HWP at $\theta$ & Rotation & $2\theta$ \\")
+print(r'\midrule')
+print(f"Optical isolator & Forward transmission & {I_forward:.2f} \\\\")
+print(f"Optical isolator & Backward transmission & {I_backward:.3f} \\\\")
+print(f"Sucrose specific rotation & $[\\alpha]_D$ & {specific_rotation:.1f}$^\\circ$/dm \\\\")
+print(f"TGG Verdet constant & $V$ & {verdet_constant:.1f} rad/(T$\\cdot$m) \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+\begin{itemize}
+    \item \textbf{Malus's Law}: $I = I_0\cos^2\theta$ verified
+    \item \textbf{Quarter-wave plate}: Converts linear to circular polarization at 45$^\circ$
+    \item \textbf{Half-wave plate}: Rotates polarization by $2\theta$
+    \item \textbf{Stokes parameters}: $S_0^2 = S_1^2 + S_2^2 + S_3^2$ for fully polarized light
+    \item \textbf{Three-polarizer transmission}: 25\% maximum at 45$^\circ$ intermediate
+    \item \textbf{N-polarizer limit}: Approaches 100\% as $N \to \infty$
+    \item \textbf{Optical isolator}: Non-reciprocal due to Faraday effect
+\end{itemize}
+
+\section{Conclusion}
+Jones and Mueller calculus provide complete descriptions of polarization transformations for coherent and partially coherent light. Circular polarization requires a phase difference of $\pi/2$ between orthogonal components. Wave plates are essential for polarization control in optical systems, from LCD displays to optical communications. The Faraday effect enables non-reciprocal devices like optical isolators, critical for protecting laser sources. Photoelasticity exploits stress-induced birefringence for mechanical stress analysis. Understanding polarization is fundamental to many optical technologies including polarimetry, ellipsometry, and quantum key distribution.
+
+\end{document}

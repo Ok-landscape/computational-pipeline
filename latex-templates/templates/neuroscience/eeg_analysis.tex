@@ -1,0 +1,372 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{delta}{RGB}{155, 89, 182}
+\definecolor{theta}{RGB}{46, 204, 113}
+\definecolor{alpha}{RGB}{241, 196, 15}
+\definecolor{beta}{RGB}{231, 76, 60}
+
+\title{EEG Signal Analysis:\\
+Spectral Decomposition and Brain State Classification}
+\author{Department of Neuroscience\\Technical Report NS-2024-002}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of electroencephalography (EEG) signal processing. We implement spectral analysis methods, extract frequency band power, compute event-related potentials, analyze connectivity measures, and classify brain states. All computations use PythonTeX for reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+EEG measures electrical activity from the scalp. The power spectral density characterizes brain rhythms:
+\begin{equation}
+S_{xx}(f) = \lim_{T\to\infty}\frac{1}{T}\left|\int_0^T x(t)e^{-i2\pi ft}dt\right|^2
+\end{equation}
+
+\section{EEG Frequency Bands}
+\begin{itemize}
+    \item Delta ($\delta$): 1-4 Hz (deep sleep)
+    \item Theta ($\theta$): 4-8 Hz (drowsiness, meditation)
+    \item Alpha ($\alpha$): 8-13 Hz (relaxed wakefulness)
+    \item Beta ($\beta$): 13-30 Hz (active thinking)
+    \item Gamma ($\gamma$): 30-100 Hz (cognitive processing)
+\end{itemize}
+
+\begin{pycode}
+import numpy as np
+from scipy import signal
+from scipy.fft import fft, fftfreq
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Sampling parameters
+fs = 256
+duration = 20
+t = np.arange(0, duration, 1/fs)
+n_samples = len(t)
+
+# Generate realistic EEG
+def generate_eeg(t, fs, alpha_amp=50, beta_amp=20, theta_amp=30, delta_amp=40):
+    # Oscillatory components
+    alpha = alpha_amp * np.sin(2 * np.pi * 10 * t + np.random.rand() * 2 * np.pi)
+    beta = beta_amp * np.sin(2 * np.pi * 22 * t + np.random.rand() * 2 * np.pi)
+    theta = theta_amp * np.sin(2 * np.pi * 6 * t + np.random.rand() * 2 * np.pi)
+    delta = delta_amp * np.sin(2 * np.pi * 2 * t + np.random.rand() * 2 * np.pi)
+
+    # Pink noise (1/f)
+    freqs = fftfreq(len(t), 1/fs)
+    pink_spectrum = np.where(freqs == 0, 1, 1/np.abs(freqs)**0.5)
+    noise = np.real(np.fft.ifft(pink_spectrum * fft(np.random.randn(len(t)))))
+    noise = 30 * noise / np.std(noise)
+
+    return alpha + beta + theta + delta + noise
+
+eeg = generate_eeg(t, fs)
+
+# Add eye blink artifact
+blink_times = [3, 8, 15]
+for bt in blink_times:
+    blink_idx = (t > bt) & (t < bt + 0.3)
+    eeg[blink_idx] += -150 * np.sin(np.pi * (t[blink_idx] - bt) / 0.3)
+
+def band_power(f, psd, low, high):
+    idx = (f >= low) & (f <= high)
+    return np.trapz(psd[idx], f[idx])
+
+bands = {
+    'Delta': (1, 4),
+    'Theta': (4, 8),
+    'Alpha': (8, 13),
+    'Beta': (13, 30),
+    'Gamma': (30, 50)
+}
+\end{pycode}
+
+\chapter{Spectral Analysis}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Raw EEG
+ax = axes[0, 0]
+ax.plot(t, eeg, 'b-', linewidth=0.5)
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Amplitude ($\\mu$V)')
+ax.set_title('Raw EEG Signal')
+ax.set_xlim([0, 5])
+ax.grid(True, alpha=0.3)
+
+# Power spectral density
+f_psd, psd = signal.welch(eeg, fs=fs, nperseg=fs*2)
+
+ax = axes[0, 1]
+ax.semilogy(f_psd, psd, 'b-', linewidth=1)
+colors = ['#9b59b6', '#2ecc71', '#f1c40f', '#e74c3c', '#3498db']
+for (name, (low, high)), color in zip(bands.items(), colors):
+    ax.axvspan(low, high, alpha=0.2, color=color, label=name)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('PSD ($\\mu$V$^2$/Hz)')
+ax.set_title('Power Spectral Density')
+ax.set_xlim([0, 50])
+ax.legend(fontsize=7)
+ax.grid(True, alpha=0.3, which='both')
+
+# Spectrogram
+f_spec, t_spec, Sxx = signal.spectrogram(eeg, fs=fs, nperseg=fs, noverlap=fs//2)
+
+ax = axes[0, 2]
+im = ax.pcolormesh(t_spec, f_spec, 10*np.log10(Sxx), shading='auto', cmap='viridis')
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Frequency (Hz)')
+ax.set_title('Spectrogram')
+ax.set_ylim([0, 50])
+plt.colorbar(im, ax=ax, label='dB')
+
+# Band power
+band_powers = {}
+for name, (low, high) in bands.items():
+    band_powers[name] = band_power(f_psd, psd, low, high)
+
+total_power = sum(band_powers.values())
+relative_powers = {k: v/total_power*100 for k, v in band_powers.items()}
+
+ax = axes[1, 0]
+ax.bar(bands.keys(), relative_powers.values(), color=colors, alpha=0.7)
+ax.set_xlabel('Frequency Band')
+ax.set_ylabel('Relative Power (\\%)')
+ax.set_title('Band Power Distribution')
+ax.grid(True, alpha=0.3, axis='y')
+
+# Time-frequency with wavelets
+ax = axes[1, 1]
+freqs_cwt = np.arange(1, 50, 1)
+widths = fs / (2 * freqs_cwt)
+cwt = signal.cwt(eeg[:fs*5], signal.morlet2, widths, w=5)
+
+ax.pcolormesh(t[:fs*5], freqs_cwt, np.abs(cwt), shading='auto', cmap='hot')
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Frequency (Hz)')
+ax.set_title('Wavelet Transform')
+
+# Alpha/beta ratio (arousal)
+ax = axes[1, 2]
+window_size = fs * 2
+n_windows = len(eeg) // window_size
+alpha_beta_ratio = []
+t_windows = []
+
+for i in range(n_windows):
+    segment = eeg[i*window_size:(i+1)*window_size]
+    f_seg, psd_seg = signal.welch(segment, fs=fs, nperseg=fs)
+    alpha_power = band_power(f_seg, psd_seg, 8, 13)
+    beta_power = band_power(f_seg, psd_seg, 13, 30)
+    alpha_beta_ratio.append(alpha_power / (beta_power + 1e-10))
+    t_windows.append((i + 0.5) * window_size / fs)
+
+ax.plot(t_windows, alpha_beta_ratio, 'g-o', markersize=4)
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Alpha/Beta Ratio')
+ax.set_title('Arousal Index')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('eeg_spectral.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+mean_alpha_beta = np.mean(alpha_beta_ratio)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{eeg_spectral.pdf}
+\caption{EEG spectral analysis: (a) raw signal, (b) PSD, (c) spectrogram, (d) band power, (e) wavelet, (f) arousal index.}
+\end{figure}
+
+\chapter{Event-Related Potentials}
+
+\begin{pycode}
+# Simulate ERP
+n_trials = 50
+epoch_length = int(fs * 1)  # 1 second epochs
+erp_times = np.arange(-0.2, 0.8, 1/fs)
+
+# Generate epochs with ERP components
+epochs = []
+for _ in range(n_trials):
+    noise = 20 * np.random.randn(epoch_length)
+
+    # P100
+    p100 = 5 * np.exp(-((erp_times - 0.1)**2) / (2 * 0.02**2))
+    # N200
+    n200 = -8 * np.exp(-((erp_times - 0.2)**2) / (2 * 0.03**2))
+    # P300
+    p300 = 10 * np.exp(-((erp_times - 0.35)**2) / (2 * 0.05**2))
+
+    epoch = noise + p100 + n200 + p300
+    epochs.append(epoch)
+
+epochs = np.array(epochs)
+erp = np.mean(epochs, axis=0)
+erp_std = np.std(epochs, axis=0)
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Single trials
+ax = axes[0, 0]
+for i in range(min(10, n_trials)):
+    ax.plot(erp_times * 1000, epochs[i], alpha=0.3, linewidth=0.5)
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Amplitude ($\\mu$V)')
+ax.set_title('Single Trials')
+ax.axvline(0, color='r', linestyle='--', alpha=0.5)
+ax.grid(True, alpha=0.3)
+
+# Average ERP
+ax = axes[0, 1]
+ax.plot(erp_times * 1000, erp, 'b-', linewidth=2)
+ax.fill_between(erp_times * 1000, erp - erp_std/np.sqrt(n_trials),
+                erp + erp_std/np.sqrt(n_trials), alpha=0.3)
+ax.axvline(0, color='r', linestyle='--', alpha=0.5)
+ax.axhline(0, color='gray', linestyle='-', alpha=0.3)
+
+# Mark components
+ax.annotate('P100', xy=(100, 5), fontsize=9)
+ax.annotate('N200', xy=(200, -8), fontsize=9)
+ax.annotate('P300', xy=(350, 10), fontsize=9)
+
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Amplitude ($\\mu$V)')
+ax.set_title(f'Average ERP (N={n_trials})')
+ax.grid(True, alpha=0.3)
+
+# ERP image
+ax = axes[0, 2]
+im = ax.imshow(epochs, aspect='auto', cmap='RdBu_r',
+               extent=[erp_times[0]*1000, erp_times[-1]*1000, n_trials, 0],
+               vmin=-50, vmax=50)
+ax.axvline(0, color='k', linestyle='--', alpha=0.5)
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Trial')
+ax.set_title('ERP Image')
+plt.colorbar(im, ax=ax, label='$\\mu$V')
+
+# Global field power
+gfp = np.std(epochs, axis=0)
+ax = axes[1, 0]
+ax.plot(erp_times * 1000, gfp, 'purple', linewidth=2)
+ax.axvline(0, color='r', linestyle='--', alpha=0.5)
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('GFP ($\\mu$V)')
+ax.set_title('Global Field Power')
+ax.grid(True, alpha=0.3)
+
+# SNR improvement
+snr_single = np.max(np.abs(epochs[0])) / np.std(epochs[0])
+snr_average = np.max(np.abs(erp)) / (np.std(epochs) / np.sqrt(n_trials))
+
+ax = axes[1, 1]
+trial_counts = [1, 5, 10, 20, 30, 50]
+snr_values = []
+for n in trial_counts:
+    avg = np.mean(epochs[:n], axis=0)
+    snr = np.max(np.abs(avg)) / (np.std(epochs[:n]) / np.sqrt(n))
+    snr_values.append(snr)
+
+ax.plot(trial_counts, snr_values, 'ko-', markersize=8)
+ax.plot(trial_counts, snr_values[0] * np.sqrt(trial_counts), 'r--', alpha=0.5,
+        label='$\\sqrt{N}$ scaling')
+ax.set_xlabel('Number of Trials')
+ax.set_ylabel('SNR')
+ax.set_title('SNR vs Trial Count')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Component latencies
+ax = axes[1, 2]
+latencies = []
+amplitudes = []
+for epoch in epochs:
+    # Find P300 peak
+    search_idx = (erp_times > 0.25) & (erp_times < 0.5)
+    peak_idx = np.argmax(epoch[search_idx])
+    latencies.append(erp_times[search_idx][peak_idx] * 1000)
+    amplitudes.append(epoch[search_idx][peak_idx])
+
+ax.scatter(latencies, amplitudes, alpha=0.5, s=30)
+ax.axvline(np.mean(latencies), color='r', linestyle='--', alpha=0.7)
+ax.axhline(np.mean(amplitudes), color='r', linestyle='--', alpha=0.7)
+ax.set_xlabel('P300 Latency (ms)')
+ax.set_ylabel('P300 Amplitude ($\\mu$V)')
+ax.set_title('Component Variability')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('eeg_erp.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+p300_latency = np.mean(latencies)
+p300_amplitude = np.mean(amplitudes)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{eeg_erp.pdf}
+\caption{ERP analysis: (a) single trials, (b) average ERP, (c) ERP image, (d) GFP, (e) SNR scaling, (f) component variability.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+results_table = [
+    ('Sampling frequency', f'{fs}', 'Hz'),
+    ('Alpha power', f'{relative_powers["Alpha"]:.1f}', '\\%'),
+    ('Beta power', f'{relative_powers["Beta"]:.1f}', '\\%'),
+    ('Mean alpha/beta ratio', f'{mean_alpha_beta:.2f}', ''),
+    ('P300 latency', f'{p300_latency:.1f}', 'ms'),
+    ('P300 amplitude', f'{p300_amplitude:.1f}', '$\\mu$V'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{EEG analysis results}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parameter & Value & Units \\
+\midrule
+\py{results_table[0][0]} & \py{results_table[0][1]} & \py{results_table[0][2]} \\
+\py{results_table[1][0]} & \py{results_table[1][1]} & \py{results_table[1][2]} \\
+\py{results_table[2][0]} & \py{results_table[2][1]} & \py{results_table[2][2]} \\
+\py{results_table[3][0]} & \py{results_table[3][1]} & \py{results_table[3][2]} \\
+\py{results_table[4][0]} & \py{results_table[4][1]} & \py{results_table[4][2]} \\
+\py{results_table[5][0]} & \py{results_table[5][1]} & \py{results_table[5][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Alpha dominance indicates relaxed wakefulness
+    \item Spectrograms reveal temporal dynamics of brain rhythms
+    \item ERP averaging improves SNR by $\sqrt{N}$
+    \item P300 reflects cognitive processing of stimuli
+    \item Time-frequency analysis captures non-stationary dynamics
+    \item Band power ratios index arousal and cognitive states
+\end{enumerate}
+
+\end{document}

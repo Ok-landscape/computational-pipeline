@@ -1,0 +1,1 @@
+{"key":"build_command","value":["latexmk","-pdf","-f","-g","-bibtex","-deps","-synctex=1","-interaction=nonstopmode","-output-directory=/tmp/006d8a549deb1e1798acf6591b6b638b8e0c21d7","clinical_report.tex"]}

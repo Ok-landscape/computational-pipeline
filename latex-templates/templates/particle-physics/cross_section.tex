@@ -1,0 +1,395 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Particle Scattering Cross Sections: Rutherford, Mott, and Form Factor Analysis}
+\author{High Energy Physics Computation Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of particle scattering cross sections. We implement the Rutherford formula for classical Coulomb scattering, Mott cross section with relativistic and spin corrections, and nuclear form factors for extended charge distributions. The analysis covers differential and integrated cross sections, structure functions, and momentum transfer dependence essential for understanding particle interactions and nuclear structure.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Differential Cross Section]
+The differential cross section $d\sigma/d\Omega$ gives the probability per unit solid angle for scattering into direction $(\theta, \phi)$:
+\begin{equation}
+\frac{dN}{dt} = I_0 n \frac{d\sigma}{d\Omega} d\Omega
+\end{equation}
+where $I_0$ is incident flux and $n$ is target number density.
+\end{definition}
+
+\begin{theorem}[Rutherford Scattering]
+For Coulomb scattering of a particle with charge $Z_1 e$ from a nucleus with charge $Z_2 e$:
+\begin{equation}
+\frac{d\sigma}{d\Omega}_{Ruth} = \left(\frac{Z_1 Z_2 \alpha \hbar c}{4 E_k \sin^2(\theta/2)}\right)^2
+\end{equation}
+where $\alpha \approx 1/137$ is the fine structure constant.
+\end{theorem}
+
+\subsection{Relativistic and Quantum Corrections}
+
+\begin{theorem}[Mott Cross Section]
+For relativistic electron scattering, the Mott formula includes spin effects:
+\begin{equation}
+\frac{d\sigma}{d\Omega}_{Mott} = \frac{d\sigma}{d\Omega}_{Ruth} \left(1 - \beta^2 \sin^2(\theta/2)\right)
+\end{equation}
+where $\beta = v/c$.
+\end{theorem}
+
+\begin{example}[Nuclear Form Factor]
+For extended nuclear charge distribution $\rho(r)$:
+\begin{equation}
+\frac{d\sigma}{d\Omega} = \frac{d\sigma}{d\Omega}_{Mott} |F(q)|^2
+\end{equation}
+where $F(q) = \int \rho(r) e^{i\mathbf{q}\cdot\mathbf{r}} d^3r$ is the form factor and $q = 2k\sin(\theta/2)$ is momentum transfer.
+\end{example}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.special import spherical_jn
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# Physical constants
+alpha = 1/137.036  # Fine structure constant
+hbar_c = 197.327   # MeV fm
+m_e = 0.511        # Electron mass (MeV/c^2)
+fm_to_barn = 100   # fm^2 to barn
+
+def rutherford_cross_section(theta, E_lab, Z1, Z2):
+    """Rutherford differential cross section (fm^2/sr)."""
+    sin2 = np.sin(theta/2)**2
+    sin2 = np.maximum(sin2, 1e-10)  # Avoid singularity
+    return (Z1 * Z2 * alpha * hbar_c / (4 * E_lab * sin2))**2
+
+def mott_cross_section(theta, E_lab, Z1, Z2, m_proj):
+    """Mott differential cross section with relativistic correction."""
+    gamma = E_lab / m_proj
+    beta = np.sqrt(1 - 1/gamma**2) if gamma > 1 else 0
+    ruth = rutherford_cross_section(theta, E_lab, Z1, Z2)
+    return ruth * (1 - beta**2 * np.sin(theta/2)**2)
+
+def momentum_transfer(theta, E_lab, m_proj):
+    """Calculate momentum transfer q in fm^-1."""
+    gamma = E_lab / m_proj
+    p = np.sqrt(E_lab**2 - m_proj**2)  # MeV/c
+    q = 2 * p * np.sin(theta/2) / hbar_c  # fm^-1
+    return q
+
+# Nuclear form factors
+def uniform_sphere_ff(q, R):
+    """Form factor for uniform sphere charge distribution."""
+    qR = q * R
+    # Avoid numerical issues at qR = 0
+    qR = np.maximum(qR, 1e-10)
+    return 3 * (np.sin(qR) - qR * np.cos(qR)) / qR**3
+
+def gaussian_ff(q, a):
+    """Form factor for Gaussian charge distribution."""
+    return np.exp(-q**2 * a**2 / 6)
+
+def fermi_ff(q, c, a):
+    """Form factor for Woods-Saxon (Fermi) distribution."""
+    # Approximate form factor using parametrization
+    R_rms = np.sqrt(0.6) * c  # RMS radius approximation
+    return uniform_sphere_ff(q, R_rms)
+
+# Target parameters
+Z_target = 79  # Gold
+A_target = 197
+R_Au = 1.2 * A_target**(1/3)  # Nuclear radius (fm)
+R_rms = 5.33  # RMS charge radius of Au (fm)
+
+# Carbon for form factor analysis
+Z_C = 6
+A_C = 12
+R_C = 1.2 * A_C**(1/3)
+
+# Scattering angles
+theta = np.linspace(0.01, np.pi, 500)
+
+# Beam energies (MeV)
+energies = [50, 100, 200, 500]
+
+# Calculate cross sections for different energies
+cs_ruth = []
+cs_mott = []
+for E in energies:
+    ruth = rutherford_cross_section(theta, E, 1, Z_target)
+    mott = mott_cross_section(theta, E, 1, Z_target, m_e)
+    cs_ruth.append(ruth)
+    cs_mott.append(mott)
+
+# Form factor analysis
+E_form = 500  # MeV
+q_values = momentum_transfer(theta, E_form, m_e)
+
+# Different form factors
+ff_uniform = uniform_sphere_ff(q_values, R_C)
+ff_gaussian = gaussian_ff(q_values, R_C / np.sqrt(5/3))
+
+# Cross section with form factor
+cs_mott_ff = mott_cross_section(theta, E_form, 1, Z_C, m_e)
+cs_with_ff = cs_mott_ff * ff_uniform**2
+
+# Integrated cross section (above minimum angle)
+def integrated_cross_section(theta_min, E_lab, Z1, Z2, m_proj):
+    """Integrated cross section for theta > theta_min."""
+    theta_int = np.linspace(theta_min, np.pi, 1000)
+    dsigma = mott_cross_section(theta_int, E_lab, Z1, Z2, m_proj)
+    # Integrate over solid angle
+    sigma = 2 * np.pi * np.trapz(dsigma * np.sin(theta_int), theta_int)
+    return sigma
+
+# Total cross section vs energy
+E_range = np.logspace(1, 4, 100)
+theta_min = np.deg2rad(1)  # Minimum angle
+sigma_total = [integrated_cross_section(theta_min, E, 1, Z_target, m_e) for E in E_range]
+
+# Mandelstam variables
+def mandelstam_t(theta, E_lab, m_proj, m_target):
+    """Calculate Mandelstam t variable."""
+    s = m_target**2 + 2 * E_lab * m_target  # Assuming target at rest
+    p_cm_sq = (s - (m_proj + m_target)**2) * (s - (m_proj - m_target)**2) / (4*s)
+    t = -2 * p_cm_sq * (1 - np.cos(theta))
+    return t
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Rutherford cross section at different energies
+ax1 = fig.add_subplot(gs[0, 0])
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(energies)))
+for E, cs, color in zip(energies, cs_ruth, colors):
+    ax1.semilogy(np.rad2deg(theta), cs * fm_to_barn, color=color,
+                 lw=1.5, label=f'{E} MeV')
+ax1.set_xlabel('Scattering Angle (deg)')
+ax1.set_ylabel(r'$d\sigma/d\Omega$ (barn/sr)')
+ax1.set_title('Rutherford Cross Section (Au)')
+ax1.legend(fontsize=7)
+ax1.grid(True, alpha=0.3, which='both')
+ax1.set_xlim([0, 180])
+
+# Plot 2: Mott vs Rutherford
+ax2 = fig.add_subplot(gs[0, 1])
+E_compare = 200
+ruth_200 = rutherford_cross_section(theta, E_compare, 1, Z_target)
+mott_200 = mott_cross_section(theta, E_compare, 1, Z_target, m_e)
+
+ax2.semilogy(np.rad2deg(theta), ruth_200 * fm_to_barn, 'b-', lw=2, label='Rutherford')
+ax2.semilogy(np.rad2deg(theta), mott_200 * fm_to_barn, 'r--', lw=2, label='Mott')
+ax2.set_xlabel('Scattering Angle (deg)')
+ax2.set_ylabel(r'$d\sigma/d\Omega$ (barn/sr)')
+ax2.set_title(f'Rutherford vs Mott ({E_compare} MeV)')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3, which='both')
+
+# Plot 3: Mott/Rutherford ratio
+ax3 = fig.add_subplot(gs[0, 2])
+ratio = mott_200 / ruth_200
+ax3.plot(np.rad2deg(theta), ratio, 'g-', lw=2)
+ax3.set_xlabel('Scattering Angle (deg)')
+ax3.set_ylabel('Mott / Rutherford')
+ax3.set_title('Relativistic Correction')
+ax3.grid(True, alpha=0.3)
+ax3.set_ylim([0, 1.1])
+ax3.set_xlim([0, 180])
+
+# Plot 4: Form factors
+ax4 = fig.add_subplot(gs[1, 0])
+ax4.plot(q_values, np.abs(ff_uniform)**2, 'b-', lw=2, label='Uniform sphere')
+ax4.plot(q_values, np.abs(ff_gaussian)**2, 'r--', lw=1.5, label='Gaussian')
+ax4.set_xlabel('Momentum Transfer $q$ (fm$^{-1}$)')
+ax4.set_ylabel('$|F(q)|^2$')
+ax4.set_title('Nuclear Form Factors (C-12)')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+ax4.set_xlim([0, 4])
+ax4.set_ylim([0, 1.1])
+
+# Plot 5: Cross section with form factor
+ax5 = fig.add_subplot(gs[1, 1])
+ax5.semilogy(np.rad2deg(theta), cs_mott_ff * fm_to_barn, 'b-', lw=2, label='Point nucleus')
+ax5.semilogy(np.rad2deg(theta), cs_with_ff * fm_to_barn, 'r-', lw=2, label='With $F(q)$')
+ax5.set_xlabel('Scattering Angle (deg)')
+ax5.set_ylabel(r'$d\sigma/d\Omega$ (barn/sr)')
+ax5.set_title(f'Form Factor Effect (C-12, {E_form} MeV)')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3, which='both')
+
+# Plot 6: Cross section vs q^2
+ax6 = fig.add_subplot(gs[1, 2])
+q2 = q_values**2
+ax6.semilogy(q2, cs_with_ff * fm_to_barn, 'b-', lw=2)
+ax6.set_xlabel('$q^2$ (fm$^{-2}$)')
+ax6.set_ylabel(r'$d\sigma/d\Omega$ (barn/sr)')
+ax6.set_title('Cross Section vs $q^2$')
+ax6.grid(True, alpha=0.3, which='both')
+ax6.set_xlim([0, 4])
+
+# Plot 7: Integrated cross section vs energy
+ax7 = fig.add_subplot(gs[2, 0])
+ax7.loglog(E_range, np.array(sigma_total) * fm_to_barn, 'b-', lw=2)
+ax7.set_xlabel('Beam Energy (MeV)')
+ax7.set_ylabel(r'$\sigma$ (barn)')
+ax7.set_title(f'Integrated Cross Section ($\\theta > 1^\\circ$)')
+ax7.grid(True, alpha=0.3, which='both')
+
+# Plot 8: Angular distribution (polar plot)
+ax8 = fig.add_subplot(gs[2, 1], projection='polar')
+for E, cs, color in zip([100, 500], [cs_mott[1], cs_mott[3]], ['blue', 'red']):
+    cs_norm = cs / np.max(cs)
+    ax8.plot(theta, cs_norm, color=color, lw=1.5, label=f'{E} MeV')
+ax8.set_title('Angular Distribution')
+ax8.legend(fontsize=7, loc='lower right')
+
+# Plot 9: Mandelstam t distribution
+ax9 = fig.add_subplot(gs[2, 2])
+m_target_Au = A_target * 931.5  # MeV
+t_200 = mandelstam_t(theta, 200, m_e, m_target_Au)
+ax9.semilogy(np.rad2deg(theta), np.abs(t_200), 'purple', lw=2)
+ax9.set_xlabel('Scattering Angle (deg)')
+ax9.set_ylabel('$|t|$ (MeV$^2$)')
+ax9.set_title('Momentum Transfer Squared')
+ax9.grid(True, alpha=0.3, which='both')
+
+plt.savefig('cross_section_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{cross_section_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Summary calculations
+dsigma_90_ruth = rutherford_cross_section(np.pi/2, 100, 1, Z_target)
+dsigma_90_mott = mott_cross_section(np.pi/2, 100, 1, Z_target, m_e)
+ratio_90 = dsigma_90_mott / dsigma_90_ruth
+ff_first_min = np.deg2rad(180 * 4.49 / (q_values[-1] * R_C))  # First zero of j_1
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Cross Section Scaling}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Differential Cross Sections at 90$^\circ$ (Gold Target)}')
+print(r'\begin{tabular}{ccccc}')
+print(r'\toprule')
+print(r'Energy (MeV) & Rutherford & Mott & Ratio & $\beta$ \\')
+print(r'\midrule')
+
+for E in energies:
+    ruth = rutherford_cross_section(np.pi/2, E, 1, Z_target) * fm_to_barn
+    mott = mott_cross_section(np.pi/2, E, 1, Z_target, m_e) * fm_to_barn
+    gamma = E / m_e
+    beta = np.sqrt(1 - 1/gamma**2) if gamma > 1 else 0
+    r = mott/ruth
+    print(f'{E} & {ruth:.2e} & {mott:.2e} & {r:.3f} & {beta:.3f} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Key Cross Section Features}
+
+The analysis reveals:
+\begin{itemize}
+    \item Rutherford formula: $d\sigma/d\Omega \propto \sin^{-4}(\theta/2)$ singularity at $\theta = 0$
+    \item Mott correction: reduces backscattering by factor $(1 - \beta^2)$ at 180$^\circ$
+    \item Energy scaling: $\sigma \propto E^{-2}$ for Coulomb scattering
+    \item Form factor: creates diffraction minima at $q \cdot R \approx 4.49$
+\end{itemize}
+
+\begin{remark}
+The Mott/Rutherford ratio at 90$^\circ$ for 100 MeV electrons is \py{f"{ratio_90:.3f}"}, showing significant relativistic suppression.
+\end{remark}
+
+\subsection{Form Factor Analysis}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Nuclear Form Factor Parameters}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Nucleus & $R$ (fm) & $R_{rms}$ (fm) & First minimum ($q$) \\')
+print(r'\midrule')
+print(f'C-12 & {R_C:.2f} & {R_C * np.sqrt(3/5):.2f} & {4.49/R_C:.2f} fm$^{{-1}}$ \\\\')
+print(f'Au-197 & {R_Au:.2f} & {R_rms:.2f} & {4.49/R_Au:.2f} fm$^{{-1}}$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Applications}
+
+\begin{example}[Nuclear Size Measurement]
+Electron scattering experiments determine nuclear charge radii through form factor analysis. The position of diffraction minima in $d\sigma/d\Omega$ directly gives the nuclear radius: $R \approx 4.49/q_{min}$.
+\end{example}
+
+\begin{example}[Deep Inelastic Scattering]
+At high $Q^2 = -t$, structure functions $F_1(x, Q^2)$ and $F_2(x, Q^2)$ probe quark distributions inside nucleons, revealing parton dynamics.
+\end{example}
+
+\begin{theorem}[Optical Theorem]
+The total cross section relates to the forward scattering amplitude:
+\begin{equation}
+\sigma_{tot} = \frac{4\pi}{k} \text{Im}[f(0)]
+\end{equation}
+This connects elastic and inelastic scattering processes.
+\end{theorem}
+
+\section{Discussion}
+
+The cross section analysis demonstrates:
+
+\begin{enumerate}
+    \item \textbf{Classical limit}: Rutherford formula recovers Coulomb scattering with $d\sigma \propto Z^2/E^2$.
+    \item \textbf{Relativistic effects}: Mott correction accounts for electron spin-orbit coupling.
+    \item \textbf{Nuclear structure}: Form factors encode charge distribution information.
+    \item \textbf{Diffraction}: Wave nature of matter creates interference patterns in angular distribution.
+    \item \textbf{Scale dependence}: Different energies probe different length scales via $\lambda = \hbar c/E$.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis demonstrates:
+\begin{itemize}
+    \item Cross section at 90$^\circ$ (100 MeV, Au): \py{f"{dsigma_90_mott * fm_to_barn:.2e}"} barn/sr
+    \item Mott/Rutherford ratio (100 MeV): \py{f"{ratio_90:.3f}"}
+    \item Gold nuclear radius: \py{f"{R_Au:.2f}"} fm
+    \item Carbon nuclear radius: \py{f"{R_C:.2f}"} fm
+\end{itemize}
+
+Cross section measurements form the foundation of particle physics experiments, enabling precise determination of fundamental interactions and nuclear structure.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Povh, B., Rith, K., Scholz, C., Zetsche, F., \textit{Particles and Nuclei}, 7th Ed., Springer, 2015
+    \item Hofstadter, R., Electron scattering and nuclear structure, \textit{Rev. Mod. Phys.} 28, 214 (1956)
+    \item Halzen, F., Martin, A.D., \textit{Quarks and Leptons}, Wiley, 1984
+\end{itemize}
+
+\end{document}

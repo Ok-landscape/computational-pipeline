@@ -1,0 +1,250 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Atmospheric Dynamics\\Geostrophic Wind and Thermal Balance}
+\author{Department of Atmospheric Sciences}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of atmospheric dynamics including geostrophic balance, thermal wind, and jet stream formation.
+\end{abstract}
+
+
+\section{Introduction}
+
+Atmospheric dynamics governs weather and climate through pressure, temperature, and wind relationships.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+# Constants
+Omega = 7.292e-5  # Earth rotation rate
+R = 287  # Gas constant for air
+g = 9.81  # Gravity
+\end{pycode}
+
+\section{Geostrophic Wind}
+
+$u_g = -\frac{1}{f\rho}\frac{\partial p}{\partial y}$, $v_g = \frac{1}{f\rho}\frac{\partial p}{\partial x}$
+
+\begin{pycode}
+lat = np.linspace(10, 80, 100)
+f = 2 * Omega * np.sin(np.radians(lat))
+
+# Pressure gradient (typical mid-latitude)
+dp_dy = 1e-3  # Pa/m
+rho = 1.2  # kg/m^3
+
+u_g = -dp_dy / (f * rho)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(lat, u_g, 'b-', linewidth=2)
+ax.set_xlabel('Latitude (degrees)')
+ax.set_ylabel('Geostrophic Wind Speed (m/s)')
+ax.set_title('Geostrophic Wind vs Latitude')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('geostrophic_wind.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{geostrophic_wind.pdf}
+\caption{Geostrophic wind speed dependence on latitude.}
+\end{figure}
+
+\section{Thermal Wind}
+
+\begin{pycode}
+p_levels = np.array([1000, 850, 700, 500, 300, 200])
+T_profile = np.array([288, 278, 268, 253, 228, 218])
+
+# Temperature gradient
+dT_dy = -2e-6  # K/m (typical)
+phi = 45  # Latitude
+f_45 = 2 * Omega * np.sin(np.radians(phi))
+
+# Thermal wind shear
+du_dz = -(g / (f_45 * T_profile)) * dT_dy
+z = np.array([0, 1.5, 3, 5.5, 9, 12])  # km
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(du_dz * 1000, z, 'b-o', linewidth=1.5, markersize=8)
+ax.set_xlabel('Wind Shear (m/s per km)')
+ax.set_ylabel('Altitude (km)')
+ax.set_title('Thermal Wind Shear Profile')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('thermal_wind.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{thermal_wind.pdf}
+\caption{Thermal wind shear as function of altitude.}
+\end{figure}
+
+\section{Rossby Number}
+
+$Ro = \frac{U}{fL}$
+
+\begin{pycode}
+U = 10  # Typical wind speed m/s
+L = np.logspace(3, 7, 100)  # Length scales
+
+Ro_30 = U / (2 * Omega * np.sin(np.radians(30)) * L)
+Ro_60 = U / (2 * Omega * np.sin(np.radians(60)) * L)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(L/1000, Ro_30, label='30$^\\circ$N', linewidth=1.5)
+ax.loglog(L/1000, Ro_60, label='60$^\\circ$N', linewidth=1.5)
+ax.axhline(y=1, color='r', linestyle='--', label='Ro = 1')
+ax.set_xlabel('Length Scale (km)')
+ax.set_ylabel('Rossby Number')
+ax.set_title('Rossby Number vs Length Scale')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('rossby_number.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{rossby_number.pdf}
+\caption{Rossby number for different latitudes and scales.}
+\end{figure}
+
+\section{Jet Stream}
+
+\begin{pycode}
+lat_jet = np.linspace(20, 70, 100)
+z_jet = np.linspace(0, 15, 50)
+LAT, Z = np.meshgrid(lat_jet, z_jet)
+
+# Simplified jet stream model
+U_jet = 40 * np.exp(-((LAT - 45)**2/100)) * np.exp(-((Z - 10)**2/10))
+
+fig, ax = plt.subplots(figsize=(12, 6))
+cs = ax.contourf(LAT, Z, U_jet, levels=20, cmap='jet')
+plt.colorbar(cs, label='Wind Speed (m/s)')
+ax.set_xlabel('Latitude (degrees)')
+ax.set_ylabel('Altitude (km)')
+ax.set_title('Jet Stream Wind Speed')
+plt.tight_layout()
+plt.savefig('jet_stream.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{jet_stream.pdf}
+\caption{Cross-section of jet stream wind speed.}
+\end{figure}
+
+\section{Potential Vorticity}
+
+\begin{pycode}
+theta = np.linspace(280, 350, 100)  # Potential temperature
+f_pv = 1e-4
+dtheta_dp = -0.1  # K/Pa
+
+PV = -g * f_pv * dtheta_dp * np.ones_like(theta)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(theta, PV * 1e6, 'b-', linewidth=2)
+ax.set_xlabel('Potential Temperature (K)')
+ax.set_ylabel('PV (PVU)')
+ax.set_title('Potential Vorticity')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('potential_vorticity.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{potential_vorticity.pdf}
+\caption{Potential vorticity on isentropic surfaces.}
+\end{figure}
+
+\section{Ekman Spiral}
+
+\begin{pycode}
+z_ek = np.linspace(0, 2000, 100)
+K = 10  # Eddy diffusivity
+f_ek = 1e-4
+delta = np.sqrt(2 * K / f_ek)
+
+u_ek = 10 * (1 - np.exp(-z_ek/delta) * np.cos(z_ek/delta))
+v_ek = 10 * np.exp(-z_ek/delta) * np.sin(z_ek/delta)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+ax1.plot(u_ek, z_ek, 'b-', linewidth=2, label='u')
+ax1.plot(v_ek, z_ek, 'r-', linewidth=2, label='v')
+ax1.set_xlabel('Wind Speed (m/s)')
+ax1.set_ylabel('Height (m)')
+ax1.set_title('Ekman Layer Wind Profile')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+ax2.plot(u_ek, v_ek, 'b-', linewidth=1.5)
+ax2.plot(u_ek[0], v_ek[0], 'go', markersize=10)
+ax2.set_xlabel('u (m/s)')
+ax2.set_ylabel('v (m/s)')
+ax2.set_title('Ekman Spiral')
+ax2.grid(True, alpha=0.3)
+ax2.axis('equal')
+plt.tight_layout()
+plt.savefig('ekman_spiral.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{ekman_spiral.pdf}
+\caption{Ekman layer wind profile and spiral.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Atmospheric Parameters at 45$^\circ$N}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Coriolis parameter & {f_45:.2e} s$^{{-1}}$ \\\\')
+print(f'Ekman depth & {delta:.0f} m \\\\')
+print(f'Rossby deformation radius & $\\sim$1000 km \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Atmospheric dynamics is governed by the balance between pressure gradient, Coriolis, and frictional forces.
+
+
+\end{document}

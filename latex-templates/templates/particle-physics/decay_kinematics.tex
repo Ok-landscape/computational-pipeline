@@ -1,0 +1,442 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Particle Decay Kinematics: Two-Body and Three-Body Phase Space Analysis}
+\author{High Energy Physics Computation Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of relativistic decay kinematics for unstable particles. We implement energy-momentum conservation for two-body and three-body decays, compute Lorentz transformations between rest and laboratory frames, analyze Dalitz plots for three-body phase space, and calculate decay widths from matrix elements. Applications include particle identification, resonance analysis, and detector design optimization.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Invariant Mass]
+For a system of particles with four-momenta $p_i^\mu$, the invariant mass is:
+\begin{equation}
+M^2 c^4 = \left(\sum_i p_i^\mu\right) \left(\sum_j p_{j\mu}\right) = \left(\sum_i E_i\right)^2 - \left(\sum_i \mathbf{p}_i\right)^2 c^2
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Two-Body Decay]
+For decay $A \to B + C$ in the rest frame of $A$:
+\begin{align}
+E_B &= \frac{m_A^2 + m_B^2 - m_C^2}{2m_A} c^2 \\
+|\mathbf{p}| &= \frac{c}{2m_A} \sqrt{\lambda(m_A^2, m_B^2, m_C^2)}
+\end{align}
+where $\lambda(x,y,z) = x^2 + y^2 + z^2 - 2xy - 2yz - 2zx$ is the K\"allen function.
+\end{theorem}
+
+\subsection{Lorentz Transformations}
+
+\begin{definition}[Lorentz Boost]
+For boost along z-axis with velocity $\beta c$:
+\begin{align}
+E' &= \gamma(E + \beta c p_z) \\
+p_z' &= \gamma(p_z + \beta E/c)
+\end{align}
+where $\gamma = (1 - \beta^2)^{-1/2}$.
+\end{definition}
+
+\begin{example}[Dalitz Plot]
+For three-body decay $A \to 1 + 2 + 3$, the Dalitz plot shows the distribution in:
+\begin{equation}
+m_{12}^2 = (p_1 + p_2)^2, \quad m_{23}^2 = (p_2 + p_3)^2
+\end{equation}
+Resonances appear as bands in this plot.
+\end{example}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# Particle masses (MeV/c^2)
+particles = {
+    'pion+': 139.57,
+    'pion0': 134.98,
+    'kaon+': 493.68,
+    'kaon0': 497.61,
+    'muon': 105.66,
+    'electron': 0.511,
+    'nu_e': 0,
+    'nu_mu': 0,
+    'proton': 938.27,
+    'neutron': 939.57,
+    'eta': 547.86,
+    'D+': 1869.65,
+    'D0': 1864.84,
+    'B+': 5279.34,
+    'Jpsi': 3096.90,
+    'phi': 1019.46
+}
+
+def kallen(x, y, z):
+    """Kallen triangle function."""
+    return x**2 + y**2 + z**2 - 2*x*y - 2*y*z - 2*z*x
+
+def two_body_decay(m_parent, m_d1, m_d2):
+    """Two-body decay kinematics in parent rest frame."""
+    if m_parent < m_d1 + m_d2:
+        return 0, 0, 0
+
+    E1 = (m_parent**2 + m_d1**2 - m_d2**2) / (2 * m_parent)
+    E2 = (m_parent**2 + m_d2**2 - m_d1**2) / (2 * m_parent)
+    p = np.sqrt(kallen(m_parent**2, m_d1**2, m_d2**2)) / (2 * m_parent)
+
+    return E1, E2, p
+
+def lorentz_boost(E, p_par, p_perp, beta):
+    """Lorentz boost along parallel direction."""
+    gamma = 1 / np.sqrt(1 - beta**2)
+    E_lab = gamma * (E + beta * p_par)
+    p_par_lab = gamma * (p_par + beta * E)
+    p_perp_lab = p_perp
+    return E_lab, p_par_lab, p_perp_lab
+
+def lab_frame_kinematics(m_parent, m_d1, m_d2, gamma_parent, theta_cm):
+    """Calculate daughter kinematics in lab frame."""
+    E_cm, _, p_cm = two_body_decay(m_parent, m_d1, m_d2)
+
+    beta = np.sqrt(1 - 1/gamma_parent**2)
+
+    p_par = p_cm * np.cos(theta_cm)
+    p_perp = p_cm * np.sin(theta_cm)
+
+    E_lab, p_par_lab, p_perp_lab = lorentz_boost(E_cm, p_par, p_perp, beta)
+
+    p_lab = np.sqrt(p_par_lab**2 + p_perp_lab**2)
+    theta_lab = np.arctan2(p_perp_lab, p_par_lab)
+
+    return E_lab, p_lab, theta_lab
+
+# Example: pion decay pi+ -> mu+ + nu_mu
+m_pi = particles['pion+']
+m_mu = particles['muon']
+m_nu = particles['nu_mu']
+
+E_mu_cm, E_nu_cm, p_decay = two_body_decay(m_pi, m_mu, m_nu)
+KE_mu = E_mu_cm - m_mu
+
+# Kaon decay K+ -> pi+ + pi0
+m_K = particles['kaon+']
+m_pi_p = particles['pion+']
+m_pi_0 = particles['pion0']
+
+E_pip_cm, E_pi0_cm, p_K_decay = two_body_decay(m_K, m_pi_p, m_pi_0)
+
+# Three-body decay: D+ -> K- pi+ pi+
+m_D = particles['D+']
+m_K_d = particles['kaon+']
+m_pi_d = particles['pion+']
+
+# Phase space boundaries
+m12_min = (m_K_d + m_pi_d)**2
+m12_max = (m_D - m_pi_d)**2
+m23_min = (m_pi_d + m_pi_d)**2
+m23_max = (m_D - m_K_d)**2
+
+# Generate Dalitz plot points (uniform phase space)
+np.random.seed(42)
+n_events = 5000
+
+# Sample uniformly in m12^2, m23^2
+m12_sq = np.random.uniform(m12_min, m12_max, n_events * 3)
+m23_sq = np.random.uniform(m23_min, m23_max, n_events * 3)
+
+# Check kinematic boundaries
+E1_star = (m_D**2 + m_K_d**2 - m12_sq) / (2 * m_D)
+E3_star = (m_D**2 + m_pi_d**2 - m23_sq) / (2 * m_D)
+
+m12 = np.sqrt(m12_sq)
+m23 = np.sqrt(m23_sq)
+
+# Kinematic constraint: m13^2 determined
+m13_sq = m_D**2 + m_K_d**2 + 2*m_pi_d**2 - m12_sq - m23_sq
+
+# Physical boundaries
+physical = (m13_sq > (m_K_d + m_pi_d)**2) & (m13_sq < (m_D - m_pi_d)**2)
+m12_sq_phys = m12_sq[physical][:n_events]
+m23_sq_phys = m23_sq[physical][:n_events]
+
+# Lab frame analysis: boosted pion
+gamma_pi = np.array([1, 2, 5, 10, 50])
+theta_cm = np.linspace(0, np.pi, 100)
+
+# Common decay modes table
+decay_modes = [
+    ('$\\pi^+ \\to \\mu^+ \\nu_\\mu$', m_pi, m_mu, m_nu),
+    ('$K^+ \\to \\pi^+ \\pi^0$', m_K, m_pi_p, m_pi_0),
+    ('$K^+ \\to \\mu^+ \\nu_\\mu$', m_K, m_mu, m_nu),
+    ('$D^0 \\to K^- \\pi^+$', particles['D0'], m_K_d, m_pi_p),
+    ('$B^+ \\to J/\\psi K^+$', particles['B+'], particles['Jpsi'], m_K_d)
+]
+
+# Q-value and phase space
+def phase_space_factor(m_parent, m_d1, m_d2):
+    """Two-body phase space factor."""
+    p = np.sqrt(kallen(m_parent**2, m_d1**2, m_d2**2)) / (2 * m_parent)
+    return p / m_parent
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Two-body decay energies
+ax1 = fig.add_subplot(gs[0, 0])
+names = [d[0] for d in decay_modes]
+E_d1 = [two_body_decay(d[1], d[2], d[3])[0] for d in decay_modes]
+E_d2 = [two_body_decay(d[1], d[2], d[3])[1] for d in decay_modes]
+
+x_pos = range(len(names))
+width = 0.35
+ax1.bar([x - width/2 for x in x_pos], E_d1, width, label='Daughter 1', alpha=0.7)
+ax1.bar([x + width/2 for x in x_pos], E_d2, width, label='Daughter 2', alpha=0.7)
+ax1.set_xticks(x_pos)
+ax1.set_xticklabels(['$\\pi$', 'K$\\to\\pi$', 'K$\\to\\mu$', 'D', 'B'], fontsize=8)
+ax1.set_ylabel('Energy (MeV)')
+ax1.set_title('Rest Frame Energies')
+ax1.legend(fontsize=7)
+ax1.set_yscale('log')
+ax1.grid(True, alpha=0.3, axis='y')
+
+# Plot 2: Lab frame energy vs angle
+ax2 = fig.add_subplot(gs[0, 1])
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(gamma_pi)))
+for gamma, color in zip([2, 5, 10], colors[1:4]):
+    E_lab_vals = []
+    theta_lab_vals = []
+    for th in theta_cm:
+        E, p, th_lab = lab_frame_kinematics(m_pi, m_mu, m_nu, gamma, th)
+        E_lab_vals.append(E)
+        theta_lab_vals.append(th_lab)
+    ax2.plot(np.rad2deg(theta_lab_vals), E_lab_vals, color=color,
+             lw=1.5, label=f'$\\gamma = {gamma}$')
+ax2.set_xlabel('Lab Angle (deg)')
+ax2.set_ylabel('Muon Energy (MeV)')
+ax2.set_title('$\\pi \\to \\mu\\nu$ Lab Frame')
+ax2.legend(fontsize=7)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: CM to Lab angle transformation
+ax3 = fig.add_subplot(gs[0, 2])
+for gamma, color in zip([2, 5, 10], colors[1:4]):
+    theta_lab_vals = []
+    for th in theta_cm:
+        _, _, th_lab = lab_frame_kinematics(m_pi, m_mu, m_nu, gamma, th)
+        theta_lab_vals.append(th_lab)
+    ax3.plot(np.rad2deg(theta_cm), np.rad2deg(theta_lab_vals), color=color,
+             lw=1.5, label=f'$\\gamma = {gamma}$')
+ax3.plot([0, 180], [0, 180], 'k--', alpha=0.3)
+ax3.set_xlabel('CM Angle (deg)')
+ax3.set_ylabel('Lab Angle (deg)')
+ax3.set_title('Angular Transformation')
+ax3.legend(fontsize=7)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Dalitz plot
+ax4 = fig.add_subplot(gs[1, 0])
+ax4.scatter(m12_sq_phys/1e6, m23_sq_phys/1e6, s=1, alpha=0.3, c='blue')
+ax4.set_xlabel('$m_{K\\pi}^2$ (GeV$^2$/c$^4$)')
+ax4.set_ylabel('$m_{\\pi\\pi}^2$ (GeV$^2$/c$^4$)')
+ax4.set_title('Dalitz Plot: $D^+ \\to K^-\\pi^+\\pi^+$')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Invariant mass projection
+ax5 = fig.add_subplot(gs[1, 1])
+ax5.hist(np.sqrt(m12_sq_phys), bins=50, alpha=0.7, color='blue', label='$m_{K\\pi}$')
+ax5.set_xlabel('Invariant Mass (MeV/c$^2$)')
+ax5.set_ylabel('Events')
+ax5.set_title('Invariant Mass Projection')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Phase space factor
+ax6 = fig.add_subplot(gs[1, 2])
+m_parent_range = np.linspace(300, 6000, 100)
+ps_Kpi = [phase_space_factor(m, m_K_d, m_pi_p) if m > m_K_d + m_pi_p else 0
+          for m in m_parent_range]
+ps_munu = [phase_space_factor(m, m_mu, 0) if m > m_mu else 0
+           for m in m_parent_range]
+
+ax6.plot(m_parent_range, ps_Kpi, 'b-', lw=1.5, label='$K\\pi$')
+ax6.plot(m_parent_range, ps_munu, 'r--', lw=1.5, label='$\\mu\\nu$')
+ax6.set_xlabel('Parent Mass (MeV/c$^2$)')
+ax6.set_ylabel('Phase Space Factor')
+ax6.set_title('Two-Body Phase Space')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Decay momentum
+ax7 = fig.add_subplot(gs[2, 0])
+momenta = [two_body_decay(d[1], d[2], d[3])[2] for d in decay_modes]
+ax7.barh(range(len(names)), momenta, color='green', alpha=0.7)
+ax7.set_yticks(range(len(names)))
+ax7.set_yticklabels(['$\\pi$', 'K$\\to\\pi$', 'K$\\to\\mu$', 'D', 'B'], fontsize=8)
+ax7.set_xlabel('Momentum (MeV/c)')
+ax7.set_title('Decay Momentum')
+ax7.grid(True, alpha=0.3, axis='x')
+
+# Plot 8: Maximum lab angle
+ax8 = fig.add_subplot(gs[2, 1])
+gamma_range = np.logspace(0, 3, 100)
+theta_max_lab = []
+
+for g in gamma_range:
+    if g > 1:
+        beta = np.sqrt(1 - 1/g**2)
+        beta_cm = p_decay / E_mu_cm
+        if beta > beta_cm:
+            theta_max_lab.append(np.arcsin(beta_cm / beta))
+        else:
+            theta_max_lab.append(np.pi)
+    else:
+        theta_max_lab.append(np.pi)
+
+ax8.semilogx(gamma_range, np.rad2deg(theta_max_lab), 'b-', lw=2)
+ax8.set_xlabel('Parent $\\gamma$')
+ax8.set_ylabel('Maximum Lab Angle (deg)')
+ax8.set_title('Forward Focusing')
+ax8.grid(True, alpha=0.3, which='both')
+ax8.set_ylim([0, 180])
+
+# Plot 9: Q-value comparison
+ax9 = fig.add_subplot(gs[2, 2])
+Q_values = [d[1] - d[2] - d[3] for d in decay_modes]
+colors = ['blue', 'green', 'orange', 'red', 'purple']
+ax9.bar(range(len(Q_values)), Q_values, color=colors, alpha=0.7)
+ax9.set_xticks(range(len(names)))
+ax9.set_xticklabels(['$\\pi$', 'K$\\to\\pi$', 'K$\\to\\mu$', 'D', 'B'], fontsize=8)
+ax9.set_ylabel('Q-value (MeV)')
+ax9.set_title('Decay Q-Values')
+ax9.grid(True, alpha=0.3, axis='y')
+ax9.set_yscale('log')
+
+plt.savefig('decay_kinematics_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{decay_kinematics_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Summary calculations
+Q_pi = m_pi - m_mu - m_nu
+Q_K_pipi = m_K - m_pi_p - m_pi_0
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Two-Body Decay Kinematics}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Two-Body Decay Parameters in Rest Frame}')
+print(r'\begin{tabular}{lccccc}')
+print(r'\toprule')
+print(r'Decay & $Q$ (MeV) & $p$ (MeV/c) & $E_1$ (MeV) & $E_2$ (MeV) & $\beta_1$ \\')
+print(r'\midrule')
+
+for name, m_p, m_d1, m_d2 in decay_modes:
+    Q = m_p - m_d1 - m_d2
+    E1, E2, p = two_body_decay(m_p, m_d1, m_d2)
+    beta = p / E1 if E1 > 0 else 0
+    print(f'{name} & {Q:.1f} & {p:.1f} & {E1:.1f} & {E2:.1f} & {beta:.3f} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Pion Decay Analysis}
+
+For $\pi^+ \to \mu^+ + \nu_\mu$:
+\begin{itemize}
+    \item Q-value: \py{f"{Q_pi:.2f}"} MeV
+    \item Muon energy: \py{f"{E_mu_cm:.2f}"} MeV
+    \item Muon kinetic energy: \py{f"{KE_mu:.2f}"} MeV
+    \item Decay momentum: \py{f"{p_decay:.2f}"} MeV/c
+\end{itemize}
+
+\begin{remark}
+The muon receives most of the available energy due to helicity suppression of the electron channel. The ratio $\Gamma(\pi \to e\nu)/\Gamma(\pi \to \mu\nu) \approx 1.2 \times 10^{-4}$.
+\end{remark}
+
+\section{Three-Body Phase Space}
+
+\begin{theorem}[Dalitz Plot Boundaries]
+For three-body decay $A \to 1 + 2 + 3$, the kinematically allowed region in the $(m_{12}^2, m_{23}^2)$ plane is bounded by:
+\begin{equation}
+(E_1^* + E_2^*)^2 - \left(\sqrt{E_1^{*2} - m_1^2} + \sqrt{E_2^{*2} - m_2^2}\right)^2 \leq m_{12}^2
+\end{equation}
+where $E_i^* = (M^2 + m_i^2 - m_{jk}^2)/(2M)$.
+\end{theorem}
+
+\begin{example}[Resonance Identification]
+In the Dalitz plot:
+\begin{itemize}
+    \item Vertical/horizontal bands indicate $s$-channel resonances
+    \item Diagonal bands indicate $t$-channel or $u$-channel exchanges
+    \item Interference patterns reveal relative phases
+\end{itemize}
+\end{example}
+
+\section{Laboratory Frame Effects}
+
+\begin{theorem}[Forward Focusing]
+For a relativistic parent with $\gamma \gg 1$, the maximum lab angle of daughter particles is:
+\begin{equation}
+\sin\theta_{max} = \frac{\beta_{CM}}{\beta_{parent}}
+\end{equation}
+where $\beta_{CM}$ is the daughter velocity in the CM frame.
+\end{theorem}
+
+\section{Discussion}
+
+The decay kinematics analysis reveals:
+
+\begin{enumerate}
+    \item \textbf{Energy distribution}: Heavier daughters receive larger energy fractions in two-body decays.
+    \item \textbf{Forward focusing}: Relativistic boosts compress angular distributions toward the beam axis.
+    \item \textbf{Phase space}: Available phase space determines relative decay rates for different channels.
+    \item \textbf{Dalitz analysis}: Two-dimensional phase space plots reveal resonance structure.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis demonstrates:
+\begin{itemize}
+    \item Pion decay muon energy: \py{f"{E_mu_cm:.2f}"} MeV
+    \item Pion decay momentum: \py{f"{p_decay:.2f}"} MeV/c
+    \item Kaon $\to$ 2$\pi$ Q-value: \py{f"{Q_K_pipi:.2f}"} MeV
+    \item D meson mass: \py{f"{m_D:.1f}"} MeV/c$^2$
+\end{itemize}
+
+Kinematic analysis is essential for particle identification, background rejection, and precision measurements in collider experiments.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Particle Data Group, Review of Particle Physics, \textit{Phys. Rev. D}, 2022
+    \item Byckling, E., Kajantie, K., \textit{Particle Kinematics}, Wiley, 1973
+    \item Perkins, D.H., \textit{Introduction to High Energy Physics}, 4th Ed., Cambridge, 2000
+\end{itemize}
+
+\end{document}

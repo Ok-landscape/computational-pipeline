@@ -1,0 +1,520 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Diffraction Grating Spectroscopy: Principles and Applications}
+\author{Computational Optics}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Diffraction gratings are fundamental optical elements that disperse light into its spectral components
+through interference effects. This comprehensive analysis explores the physics of multi-slit diffraction,
+spectral resolution, blazed gratings, and practical applications in spectroscopy. We implement
+numerical simulations of grating patterns, analyze the trade-offs between resolution and intensity,
+and demonstrate techniques for spectral line identification and analysis.
+
+\section{Mathematical Framework}
+
+\subsection{Grating Equation}
+Principal maxima occur when:
+\begin{equation}
+d(\sin\theta_i + \sin\theta_m) = m\lambda
+\end{equation}
+where $d$ is the grating period, $\theta_i$ is the incident angle, $\theta_m$ is the diffraction angle,
+and $m$ is the diffraction order.
+
+\subsection{Intensity Distribution}
+For an N-slit grating with slit width $a$:
+\begin{equation}
+I(\theta) = I_0 \left(\frac{\sin\beta}{\beta}\right)^2 \left(\frac{\sin(N\alpha)}{\sin\alpha}\right)^2
+\end{equation}
+where:
+\begin{align}
+\alpha &= \frac{\pi d \sin\theta}{\lambda} \\
+\beta &= \frac{\pi a \sin\theta}{\lambda}
+\end{align}
+
+\subsection{Resolving Power}
+The chromatic resolving power:
+\begin{equation}
+R = \frac{\lambda}{\Delta\lambda} = mN
+\end{equation}
+
+\subsection{Angular Dispersion}
+\begin{equation}
+\frac{d\theta}{d\lambda} = \frac{m}{d\cos\theta_m}
+\end{equation}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Basic Grating Diffraction Pattern}
+\begin{pycode}
+def grating_intensity(theta, wavelength, N, d, a):
+    """Calculate normalized grating diffraction intensity."""
+    alpha = np.pi * d * np.sin(theta) / wavelength
+    beta = np.pi * a * np.sin(theta) / wavelength
+
+    # Avoid division by zero
+    alpha = np.where(np.abs(alpha) < 1e-10, 1e-10, alpha)
+    beta = np.where(np.abs(beta) < 1e-10, 1e-10, beta)
+
+    # Single slit envelope
+    I_slit = (np.sin(beta) / beta)**2
+
+    # Multi-slit interference
+    I_grating = (np.sin(N * alpha) / np.sin(alpha))**2
+
+    return I_slit * I_grating / N**2
+
+# Grating parameters
+d = 1e-6  # Grating period (1000 lines/mm)
+a = d / 2  # Slit width (50% fill factor)
+wavelength = 550e-9  # Green light
+
+# Angular range covering multiple orders
+theta = np.linspace(-0.8, 0.8, 5000)
+
+# Calculate patterns for different N
+N_values = [5, 20, 100, 500]
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for idx, N in enumerate(N_values):
+    row, col = divmod(idx, 2)
+    I = grating_intensity(theta, wavelength, N, d, a)
+
+    axes[row, col].plot(np.rad2deg(theta), I, 'b-', linewidth=0.5)
+    axes[row, col].set_xlabel('Angle (degrees)')
+    axes[row, col].set_ylabel('Intensity (normalized)')
+    axes[row, col].set_title(f'N = {N} slits')
+    axes[row, col].set_xlim([-50, 50])
+    axes[row, col].grid(True, alpha=0.3)
+
+    # Mark diffraction orders
+    for m in range(-1, 2):
+        if abs(m * wavelength / d) <= 1:
+            theta_m = np.rad2deg(np.arcsin(m * wavelength / d))
+            axes[row, col].axvline(x=theta_m, color='r', linestyle='--', alpha=0.5)
+
+plt.tight_layout()
+save_plot('grating_n_comparison.pdf',
+          'Diffraction patterns for gratings with different numbers of slits.')
+\end{pycode}
+
+\section{Spectral Resolution Analysis}
+\begin{pycode}
+# Sodium D-lines (classic test of spectral resolution)
+lambda1 = 589.0e-9  # D1 line
+lambda2 = 589.6e-9  # D2 line
+delta_lambda = lambda2 - lambda1
+
+# Grating parameters for high resolution
+d = 1e-6  # 1000 lines/mm
+a = d / 2
+
+# Test different N values
+N_test = [100, 500, 1000, 2000]
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for idx, N in enumerate(N_test):
+    row, col = divmod(idx, 2)
+
+    # Angular range around first order
+    theta_center = np.arcsin(lambda1 / d)
+    theta = np.linspace(theta_center - 0.01, theta_center + 0.01, 3000)
+
+    # Calculate patterns for both lines
+    I1 = grating_intensity(theta, lambda1, N, d, a)
+    I2 = grating_intensity(theta, lambda2, N, d, a)
+    I_total = I1 + I2
+
+    axes[row, col].plot(np.rad2deg(theta), I1, 'b-', linewidth=1, alpha=0.7, label='D1')
+    axes[row, col].plot(np.rad2deg(theta), I2, 'r-', linewidth=1, alpha=0.7, label='D2')
+    axes[row, col].plot(np.rad2deg(theta), I_total, 'k-', linewidth=1.5, label='Total')
+
+    # Resolution criterion
+    R_needed = lambda1 / delta_lambda
+    R_actual = N  # First order
+    resolved = "Resolved" if R_actual >= R_needed else "Unresolved"
+
+    axes[row, col].set_xlabel('Angle (degrees)')
+    axes[row, col].set_ylabel('Intensity')
+    axes[row, col].set_title(f'N = {N}, R = {R_actual} ({resolved})')
+    axes[row, col].legend(fontsize=8)
+    axes[row, col].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('sodium_resolution.pdf',
+          'Resolution of sodium D-lines with different numbers of grating lines.')
+
+# Calculate required N for Rayleigh resolution
+N_required = int(np.ceil(lambda1 / delta_lambda))
+\end{pycode}
+
+\section{Multiple Diffraction Orders}
+\begin{pycode}
+# Analyze multiple diffraction orders
+d = 2e-6  # 500 lines/mm for more visible orders
+a = d / 3  # Smaller fill factor
+N = 200
+wavelength = 550e-9
+
+theta = np.linspace(-1.2, 1.2, 8000)
+I = grating_intensity(theta, wavelength, N, d, a)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Full pattern
+axes[0, 0].plot(np.rad2deg(theta), I, 'b-', linewidth=0.5)
+axes[0, 0].set_xlabel('Angle (degrees)')
+axes[0, 0].set_ylabel('Intensity')
+axes[0, 0].set_title('Multiple Diffraction Orders')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Mark and label orders
+order_angles = []
+order_intensities = []
+for m in range(-3, 4):
+    sin_theta = m * wavelength / d
+    if abs(sin_theta) <= 1:
+        theta_m = np.arcsin(sin_theta)
+        order_angles.append(np.rad2deg(theta_m))
+
+        # Find peak intensity at this order
+        idx = np.argmin(np.abs(theta - theta_m))
+        order_intensities.append(I[idx])
+
+        axes[0, 0].annotate(f'm={m}', xy=(np.rad2deg(theta_m), I[idx]),
+                           xytext=(np.rad2deg(theta_m), I[idx] + 0.1),
+                           ha='center', fontsize=8)
+
+# Order intensities comparison
+valid_orders = list(range(-3, 4))
+axes[0, 1].bar(valid_orders[:len(order_intensities)], order_intensities,
+               color='green', alpha=0.7, edgecolor='black')
+axes[0, 1].set_xlabel('Diffraction Order m')
+axes[0, 1].set_ylabel('Peak Intensity')
+axes[0, 1].set_title('Intensity vs Diffraction Order')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Blaze effect: fill factor variation
+fill_factors = [0.2, 0.3, 0.5, 0.7]
+for ff in fill_factors:
+    a_test = d * ff
+    I_test = grating_intensity(theta, wavelength, N, d, a_test)
+    axes[1, 0].plot(np.rad2deg(theta), I_test, linewidth=0.5,
+                    label=f'a/d = {ff}', alpha=0.7)
+
+axes[1, 0].set_xlabel('Angle (degrees)')
+axes[1, 0].set_ylabel('Intensity')
+axes[1, 0].set_title('Effect of Fill Factor')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_xlim([-70, 70])
+
+# Angular dispersion across orders
+wavelengths = np.linspace(400e-9, 700e-9, 100)
+colors_spectrum = plt.cm.rainbow(np.linspace(0, 1, len(wavelengths)))
+
+for m in [1, 2, 3]:
+    angles = []
+    valid_wavelengths = []
+    for wl in wavelengths:
+        sin_theta = m * wl / d
+        if abs(sin_theta) <= 1:
+            angles.append(np.rad2deg(np.arcsin(sin_theta)))
+            valid_wavelengths.append(wl * 1e9)
+
+    if len(angles) > 0:
+        axes[1, 1].plot(valid_wavelengths, angles, linewidth=2, label=f'm = {m}')
+
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Diffraction Angle (degrees)')
+axes[1, 1].set_title('Angular Dispersion')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('multiple_orders.pdf',
+          'Analysis of multiple diffraction orders and angular dispersion.')
+\end{pycode}
+
+\section{Blazed Grating Simulation}
+\begin{pycode}
+def blazed_grating_intensity(theta, wavelength, N, d, blaze_angle):
+    """Blazed grating with specified blaze angle."""
+    # Phase from grating period
+    alpha = np.pi * d * np.sin(theta) / wavelength
+
+    # Blaze envelope centered on blaze angle
+    beta_blaze = np.pi * d * (np.sin(theta) - np.sin(blaze_angle)) / wavelength
+    beta_blaze = np.where(np.abs(beta_blaze) < 1e-10, 1e-10, beta_blaze)
+
+    # Intensities
+    I_blaze = (np.sin(beta_blaze) / beta_blaze)**2
+
+    alpha = np.where(np.abs(alpha) < 1e-10, 1e-10, alpha)
+    I_grating = (np.sin(N * alpha) / np.sin(alpha))**2
+
+    return I_blaze * I_grating / N**2
+
+# Blazed grating parameters
+d = 1.5e-6
+N = 300
+wavelength = 550e-9
+
+# Blaze angle for maximum in first order
+blaze_angle = np.arcsin(wavelength / d)
+
+theta = np.linspace(-0.6, 0.6, 5000)
+
+# Compare blazed vs non-blazed
+I_blazed = blazed_grating_intensity(theta, wavelength, N, d, blaze_angle)
+I_normal = grating_intensity(theta, wavelength, N, d, d/2)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Comparison
+axes[0, 0].plot(np.rad2deg(theta), I_normal, 'b-', linewidth=0.5, label='Symmetric')
+axes[0, 0].plot(np.rad2deg(theta), I_blazed, 'r-', linewidth=0.5, label='Blazed')
+axes[0, 0].set_xlabel('Angle (degrees)')
+axes[0, 0].set_ylabel('Intensity')
+axes[0, 0].set_title('Blazed vs Symmetric Grating')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Different blaze angles
+blaze_angles_deg = [10, 20, 30]
+for ba_deg in blaze_angles_deg:
+    ba = np.deg2rad(ba_deg)
+    I = blazed_grating_intensity(theta, wavelength, N, d, ba)
+    axes[0, 1].plot(np.rad2deg(theta), I, linewidth=0.5, label=f'Blaze = {ba_deg}$^\\circ$')
+
+axes[0, 1].set_xlabel('Angle (degrees)')
+axes[0, 1].set_ylabel('Intensity')
+axes[0, 1].set_title('Effect of Blaze Angle')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Efficiency at different wavelengths
+wavelengths_test = np.linspace(400e-9, 700e-9, 50)
+first_order_efficiency = []
+second_order_efficiency = []
+
+for wl in wavelengths_test:
+    blaze = np.arcsin(wl / d)
+    theta_1 = np.arcsin(wl / d)
+    theta_2 = np.arcsin(2 * wl / d) if 2*wl/d <= 1 else 0
+
+    # Calculate intensity at first and second order
+    I1 = blazed_grating_intensity(np.array([theta_1]), wl, N, d, blaze)[0]
+    if theta_2 > 0:
+        I2 = blazed_grating_intensity(np.array([theta_2]), wl, N, d, blaze)[0]
+    else:
+        I2 = 0
+
+    first_order_efficiency.append(I1)
+    second_order_efficiency.append(I2)
+
+axes[1, 0].plot(wavelengths_test*1e9, first_order_efficiency, 'b-',
+                linewidth=2, label='1st order')
+axes[1, 0].plot(wavelengths_test*1e9, second_order_efficiency, 'r--',
+                linewidth=2, label='2nd order')
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('Efficiency')
+axes[1, 0].set_title('Order Efficiency vs Wavelength')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Grating groove profile
+x_groove = np.linspace(0, 3*d*1e6, 300)
+y_groove = np.mod(x_groove, d*1e6) * np.tan(blaze_angle)
+
+axes[1, 1].plot(x_groove, y_groove, 'k-', linewidth=2)
+axes[1, 1].fill_between(x_groove, 0, y_groove, alpha=0.3)
+axes[1, 1].set_xlabel('Position ($\\mu$m)')
+axes[1, 1].set_ylabel('Height ($\\mu$m)')
+axes[1, 1].set_title(f'Blazed Groove Profile (blaze = {np.rad2deg(blaze_angle):.1f}$^\\circ$)')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('blazed_grating.pdf',
+          'Blazed grating analysis showing efficiency enhancement.')
+\end{pycode}
+
+\section{Spectroscopy Application}
+\begin{pycode}
+# Simulate a spectrum with multiple emission lines
+emission_lines = {
+    'H-alpha': 656.3e-9,
+    'H-beta': 486.1e-9,
+    'Na-D1': 589.0e-9,
+    'Na-D2': 589.6e-9,
+    'Hg-green': 546.1e-9
+}
+
+d = 1e-6
+N = 1000
+a = d / 2
+
+# Full spectrum
+theta_full = np.linspace(0.2, 0.8, 10000)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Individual line patterns
+I_total = np.zeros_like(theta_full)
+colors = ['red', 'blue', 'orange', 'darkorange', 'green']
+
+for (name, wl), color in zip(emission_lines.items(), colors):
+    I = grating_intensity(theta_full, wl, N, d, a)
+    I_total += I
+
+    if name in ['H-alpha', 'H-beta', 'Na-D1', 'Hg-green']:
+        axes[0, 0].plot(np.rad2deg(theta_full), I, color=color,
+                        linewidth=1, alpha=0.7, label=name)
+
+axes[0, 0].set_xlabel('Angle (degrees)')
+axes[0, 0].set_ylabel('Intensity')
+axes[0, 0].set_title('Individual Emission Lines')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Combined spectrum
+axes[0, 1].plot(np.rad2deg(theta_full), I_total, 'k-', linewidth=0.5)
+axes[0, 1].set_xlabel('Angle (degrees)')
+axes[0, 1].set_ylabel('Total Intensity')
+axes[0, 1].set_title('Combined Emission Spectrum')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Wavelength calibration
+# Convert angle to wavelength (first order)
+wavelength_scale = d * np.sin(theta_full) * 1e9  # nm
+
+axes[1, 0].plot(wavelength_scale, I_total, 'k-', linewidth=0.5)
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('Intensity')
+axes[1, 0].set_title('Calibrated Spectrum')
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_xlim([400, 700])
+
+# Mark line positions
+for name, wl in emission_lines.items():
+    axes[1, 0].axvline(x=wl*1e9, color='r', linestyle='--', alpha=0.3)
+
+# Peak finding and identification
+peaks, properties = find_peaks(I_total, height=0.01, distance=50)
+peak_wavelengths = wavelength_scale[peaks]
+peak_intensities = I_total[peaks]
+
+axes[1, 1].scatter(peak_wavelengths, peak_intensities, c='red', s=50)
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Peak Intensity')
+axes[1, 1].set_title('Detected Peaks')
+axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].set_xlim([400, 700])
+
+# Annotate peaks
+for i, (wl, intensity) in enumerate(zip(peak_wavelengths, peak_intensities)):
+    if 400 < wl < 700:
+        axes[1, 1].annotate(f'{wl:.1f}', (wl, intensity),
+                           textcoords="offset points", xytext=(0, 10),
+                           ha='center', fontsize=7)
+
+plt.tight_layout()
+save_plot('spectroscopy_application.pdf',
+          'Spectroscopy application showing emission line identification.')
+
+# Count identified peaks
+n_peaks_found = len([wl for wl in peak_wavelengths if 400 < wl < 700])
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Grating Specifications}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Grating Parameters and Performance}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Grating period & {d*1e6:.2f} $\\mu$m \\\\')
+print(f'Lines per mm & {1/(d*1e3):.0f} \\\\')
+print(f'Number of lines illuminated & {N} \\\\')
+print(f'Resolving power (1st order) & {N} \\\\')
+print(f'Required N for Na D-lines & {N_required} \\\\')
+print(f'Angular dispersion (1st order) & {1e9/(d*np.cos(np.arcsin(550e-9/d))):.2f} nm/rad \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Emission Lines Detected}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Emission Line Identification}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Line & Wavelength (nm) & First Order Angle \\')
+print(r'\midrule')
+
+for name, wl in emission_lines.items():
+    angle = np.rad2deg(np.arcsin(wl / d))
+    print(f'{name} & {wl*1e9:.1f} & {angle:.2f}$^\\circ$ \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+Key diffraction grating results:
+\begin{itemize}
+    \item Grating lines per mm: \py{f"{1/(d*1e3):.0f}"}
+    \item Resolving power (N=1000): \py{f"{N}"}
+    \item Minimum resolvable wavelength difference: \py{f"{550/N:.3f}"} nm
+    \item Required N for sodium D-lines: \py{f"{N_required}"}
+    \item Blaze angle for 550 nm: \py{f"{np.rad2deg(np.arcsin(550e-9/d)):.2f}"}$^\circ$
+    \item Spectral peaks identified: \py{f"{n_peaks_found}"}
+\end{itemize}
+
+\section{Conclusion}
+This computational analysis demonstrates the principles of diffraction grating spectroscopy.
+The resolving power scales linearly with the number of illuminated grating lines, enabling
+high-resolution spectral analysis. Blazed gratings concentrate diffracted energy into specific
+orders, improving efficiency. The grating equation provides accurate wavelength calibration
+for spectroscopic measurements. These techniques are fundamental to atomic spectroscopy,
+astronomical observations, and analytical chemistry applications.
+
+\end{document}

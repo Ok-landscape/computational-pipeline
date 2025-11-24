@@ -1,0 +1,587 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+
+\title{Crystal Structure Analysis: Unit Cells, Miller Indices,\\and X-Ray Diffraction Patterns}
+\author{Materials Science Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents a comprehensive analysis of crystal structures in materials science. We examine unit cell geometry, Miller index notation, interplanar spacing calculations, and X-ray diffraction pattern simulation. Computational analysis using Python demonstrates structure factor calculations and powder diffraction profiles for common crystal systems.
+\end{abstract}
+
+\section{Introduction}
+
+Crystallography forms the foundation for understanding material properties. The periodic arrangement of atoms determines mechanical, electrical, and optical characteristics.
+
+\begin{definition}[Miller Indices]
+Miller indices $(hkl)$ describe the orientation of crystal planes through the reciprocals of the intercepts on crystallographic axes, reduced to the smallest integers.
+\end{definition}
+
+\section{Unit Cell Geometry}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=9)
+np.random.seed(42)
+
+# Lattice parameters for different crystal systems
+# FCC Aluminum
+a_Al = 4.05  # Angstroms
+# BCC Iron
+a_Fe = 2.87
+# HCP Titanium
+a_Ti = 2.95
+c_Ti = 4.68
+
+# Atomic positions for FCC
+fcc_positions = np.array([
+    [0, 0, 0], [0.5, 0.5, 0], [0.5, 0, 0.5], [0, 0.5, 0.5]
+])
+
+# Atomic positions for BCC
+bcc_positions = np.array([
+    [0, 0, 0], [0.5, 0.5, 0.5]
+])
+
+# Coordination numbers
+CN_fcc = 12
+CN_bcc = 8
+CN_hcp = 12
+
+# Atomic packing fractions
+APF_fcc = np.pi * np.sqrt(2) / 6
+APF_bcc = np.pi * np.sqrt(3) / 8
+APF_hcp = np.pi * np.sqrt(2) / 6
+
+fig = plt.figure(figsize=(12, 8))
+
+# FCC unit cell
+ax1 = fig.add_subplot(2, 3, 1, projection='3d')
+for pos in fcc_positions:
+    ax1.scatter(*pos, s=200, c='blue', alpha=0.8)
+# Draw unit cell edges
+for i in [0, 1]:
+    for j in [0, 1]:
+        ax1.plot([i, i], [j, j], [0, 1], 'k-', alpha=0.3)
+        ax1.plot([i, i], [0, 1], [j, j], 'k-', alpha=0.3)
+        ax1.plot([0, 1], [i, i], [j, j], 'k-', alpha=0.3)
+ax1.set_xlabel('x')
+ax1.set_ylabel('y')
+ax1.set_zlabel('z')
+ax1.set_title('FCC Unit Cell')
+
+# BCC unit cell
+ax2 = fig.add_subplot(2, 3, 2, projection='3d')
+for pos in bcc_positions:
+    ax2.scatter(*pos, s=200, c='red', alpha=0.8)
+for i in [0, 1]:
+    for j in [0, 1]:
+        ax2.plot([i, i], [j, j], [0, 1], 'k-', alpha=0.3)
+        ax2.plot([i, i], [0, 1], [j, j], 'k-', alpha=0.3)
+        ax2.plot([0, 1], [i, i], [j, j], 'k-', alpha=0.3)
+ax2.set_xlabel('x')
+ax2.set_ylabel('y')
+ax2.set_zlabel('z')
+ax2.set_title('BCC Unit Cell')
+
+# Packing fraction comparison
+ax3 = fig.add_subplot(2, 3, 3)
+structures = ['FCC', 'BCC', 'HCP', 'SC']
+apfs = [APF_fcc, APF_bcc, APF_hcp, np.pi/6]
+colors = ['blue', 'red', 'green', 'orange']
+bars = ax3.bar(structures, apfs, color=colors, alpha=0.7)
+ax3.set_ylabel('Atomic Packing Fraction')
+ax3.set_title('Packing Efficiency')
+ax3.grid(True, alpha=0.3, axis='y')
+for bar, apf in zip(bars, apfs):
+    ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
+             f'{apf:.3f}', ha='center', fontsize=8)
+
+# Coordination number
+ax4 = fig.add_subplot(2, 3, 4)
+cn_values = [CN_fcc, CN_bcc, CN_hcp, 6]
+ax4.bar(structures, cn_values, color=colors, alpha=0.7)
+ax4.set_ylabel('Coordination Number')
+ax4.set_title('Nearest Neighbors')
+ax4.grid(True, alpha=0.3, axis='y')
+
+# Lattice parameter comparison
+ax5 = fig.add_subplot(2, 3, 5)
+materials = ['Al (FCC)', 'Fe (BCC)', 'Cu (FCC)', 'Ti (HCP)']
+a_values = [4.05, 2.87, 3.61, 2.95]
+ax5.barh(materials, a_values, color=['blue', 'red', 'cyan', 'green'], alpha=0.7)
+ax5.set_xlabel('Lattice Parameter a (A)')
+ax5.set_title('Lattice Parameters')
+ax5.grid(True, alpha=0.3, axis='x')
+
+# c/a ratio for HCP
+ax6 = fig.add_subplot(2, 3, 6)
+hcp_materials = ['Ti', 'Mg', 'Zn', 'Cd', 'Ideal']
+ca_ratios = [1.587, 1.624, 1.856, 1.886, 1.633]
+colors_hcp = ['green', 'purple', 'orange', 'brown', 'gray']
+ax6.bar(hcp_materials, ca_ratios, color=colors_hcp, alpha=0.7)
+ax6.axhline(y=1.633, color='red', linestyle='--', alpha=0.7, label='Ideal')
+ax6.set_ylabel('c/a Ratio')
+ax6.set_title('HCP c/a Ratios')
+ax6.grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+plt.savefig('crystal_structure_plot1.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{crystal_structure_plot1.pdf}
+\caption{Unit cell structures and crystallographic parameters for common crystal systems.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Crystal Structure Properties}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Structure} & \textbf{APF} & \textbf{CN} & \textbf{Atoms/Cell} & \textbf{Examples} \\
+\midrule
+FCC & \py{f"{APF_fcc:.3f}"} & \py{CN_fcc} & 4 & Al, Cu, Au \\
+BCC & \py{f"{APF_bcc:.3f}"} & \py{CN_bcc} & 2 & Fe, W, Cr \\
+HCP & \py{f"{APF_hcp:.3f}"} & \py{CN_hcp} & 2 & Ti, Mg, Zn \\
+SC & \py{f"{np.pi/6:.3f}"} & 6 & 1 & Po \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Miller Indices and Interplanar Spacing}
+
+\begin{theorem}[Interplanar Spacing]
+For a cubic crystal system, the spacing between $(hkl)$ planes is:
+\begin{equation}
+d_{hkl} = \frac{a}{\sqrt{h^2 + k^2 + l^2}}
+\end{equation}
+\end{theorem}
+
+\begin{pycode}
+# Miller indices calculations
+def d_spacing_cubic(h, k, l, a):
+    """Calculate interplanar spacing for cubic system"""
+    return a / np.sqrt(h**2 + k**2 + l**2)
+
+def d_spacing_hexagonal(h, k, l, a, c):
+    """Calculate interplanar spacing for hexagonal system"""
+    return 1 / np.sqrt((4/3)*(h**2 + h*k + k**2)/a**2 + l**2/c**2)
+
+# Common planes for FCC
+planes_fcc = [(1,1,1), (2,0,0), (2,2,0), (3,1,1), (2,2,2), (4,0,0)]
+d_values_Al = [d_spacing_cubic(h,k,l, a_Al) for h,k,l in planes_fcc]
+
+# Common planes for BCC
+planes_bcc = [(1,1,0), (2,0,0), (2,1,1), (2,2,0), (3,1,0), (2,2,2)]
+d_values_Fe = [d_spacing_cubic(h,k,l, a_Fe) for h,k,l in planes_bcc]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# d-spacing vs plane index for Al
+plane_labels = [f'({h}{k}{l})' for h,k,l in planes_fcc]
+axes[0, 0].bar(plane_labels, d_values_Al, color='blue', alpha=0.7)
+axes[0, 0].set_ylabel('d-spacing (A)')
+axes[0, 0].set_title('FCC Aluminum d-spacings')
+axes[0, 0].tick_params(axis='x', rotation=45)
+axes[0, 0].grid(True, alpha=0.3, axis='y')
+
+# d-spacing vs plane index for Fe
+plane_labels_bcc = [f'({h}{k}{l})' for h,k,l in planes_bcc]
+axes[0, 1].bar(plane_labels_bcc, d_values_Fe, color='red', alpha=0.7)
+axes[0, 1].set_ylabel('d-spacing (A)')
+axes[0, 1].set_title('BCC Iron d-spacings')
+axes[0, 1].tick_params(axis='x', rotation=45)
+axes[0, 1].grid(True, alpha=0.3, axis='y')
+
+# Multiplicity factors
+multiplicities_fcc = [8, 6, 12, 24, 8, 6]
+multiplicities_bcc = [12, 6, 24, 12, 24, 8]
+
+axes[1, 0].bar(plane_labels, multiplicities_fcc, color='green', alpha=0.7)
+axes[1, 0].set_ylabel('Multiplicity')
+axes[1, 0].set_title('FCC Plane Multiplicities')
+axes[1, 0].tick_params(axis='x', rotation=45)
+axes[1, 0].grid(True, alpha=0.3, axis='y')
+
+# 1/d^2 relationship
+h_range = np.arange(1, 6)
+for k in [0, 1, 2]:
+    inv_d_sq = [(h**2 + k**2) / a_Al**2 for h in h_range]
+    axes[1, 1].plot(h_range, inv_d_sq, 'o-', label=f'k={k}')
+axes[1, 1].set_xlabel('h index')
+axes[1, 1].set_ylabel('$1/d^2$ (A$^{-2}$)')
+axes[1, 1].set_title('$1/d^2$ vs Miller Index')
+axes[1, 1].legend(loc='upper left', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('crystal_structure_plot2.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{crystal_structure_plot2.pdf}
+\caption{Interplanar spacing and multiplicity factors for FCC and BCC structures.}
+\end{figure}
+
+\section{X-Ray Diffraction Simulation}
+
+\begin{definition}[Bragg's Law]
+Constructive interference occurs when:
+\begin{equation}
+n\lambda = 2d_{hkl}\sin\theta
+\end{equation}
+\end{definition}
+
+\begin{pycode}
+# XRD simulation
+lambda_Cu = 1.5406  # Cu K-alpha wavelength (Angstroms)
+
+def bragg_angle(d, wavelength=lambda_Cu):
+    """Calculate Bragg angle for given d-spacing"""
+    sin_theta = wavelength / (2 * d)
+    if sin_theta <= 1:
+        return np.rad2deg(np.arcsin(sin_theta))
+    return None
+
+# Structure factor for FCC
+def structure_factor_fcc(h, k, l):
+    """Calculate structure factor magnitude squared for FCC"""
+    if (h+k) % 2 == 0 and (k+l) % 2 == 0 and (h+l) % 2 == 0:
+        return 16  # All even or all odd
+    elif (h+k) % 2 != 0 or (k+l) % 2 != 0 or (h+l) % 2 != 0:
+        if (h % 2 == k % 2 == l % 2):
+            return 16
+    return 0
+
+# Structure factor for BCC
+def structure_factor_bcc(h, k, l):
+    """Calculate structure factor magnitude squared for BCC"""
+    if (h + k + l) % 2 == 0:
+        return 4
+    return 0
+
+# Generate XRD pattern
+two_theta_Al = []
+intensity_Al = []
+for h, k, l in planes_fcc:
+    d = d_spacing_cubic(h, k, l, a_Al)
+    theta = bragg_angle(d)
+    if theta and theta < 90:
+        two_theta_Al.append(2 * theta)
+        F2 = structure_factor_fcc(h, k, l)
+        mult = multiplicities_fcc[planes_fcc.index((h,k,l))]
+        intensity_Al.append(F2 * mult / (np.sin(np.deg2rad(theta))**2 * np.cos(np.deg2rad(theta))))
+
+two_theta_Fe = []
+intensity_Fe = []
+for h, k, l in planes_bcc:
+    d = d_spacing_cubic(h, k, l, a_Fe)
+    theta = bragg_angle(d)
+    if theta and theta < 90:
+        two_theta_Fe.append(2 * theta)
+        F2 = structure_factor_bcc(h, k, l)
+        mult = multiplicities_bcc[planes_bcc.index((h,k,l))]
+        intensity_Fe.append(F2 * mult / (np.sin(np.deg2rad(theta))**2 * np.cos(np.deg2rad(theta))))
+
+# Normalize intensities
+intensity_Al = np.array(intensity_Al) / max(intensity_Al) * 100
+intensity_Fe = np.array(intensity_Fe) / max(intensity_Fe) * 100
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# XRD pattern for Al
+for tt, I, (h,k,l) in zip(two_theta_Al, intensity_Al, planes_fcc):
+    axes[0, 0].vlines(tt, 0, I, colors='blue', linewidth=2)
+    if I > 20:
+        axes[0, 0].text(tt, I+5, f'({h}{k}{l})', ha='center', fontsize=7)
+axes[0, 0].set_xlabel(r'2$\theta$ (degrees)')
+axes[0, 0].set_ylabel('Relative Intensity')
+axes[0, 0].set_title('XRD Pattern: FCC Aluminum')
+axes[0, 0].set_xlim([20, 120])
+axes[0, 0].grid(True, alpha=0.3)
+
+# XRD pattern for Fe
+for tt, I, (h,k,l) in zip(two_theta_Fe, intensity_Fe, planes_bcc):
+    axes[0, 1].vlines(tt, 0, I, colors='red', linewidth=2)
+    if I > 20:
+        axes[0, 1].text(tt, I+5, f'({h}{k}{l})', ha='center', fontsize=7)
+axes[0, 1].set_xlabel(r'2$\theta$ (degrees)')
+axes[0, 1].set_ylabel('Relative Intensity')
+axes[0, 1].set_title('XRD Pattern: BCC Iron')
+axes[0, 1].set_xlim([20, 120])
+axes[0, 1].grid(True, alpha=0.3)
+
+# Peak broadening simulation (Scherrer equation)
+crystallite_sizes = np.linspace(10, 100, 50)  # nm
+K = 0.9  # Scherrer constant
+beta = (K * lambda_Cu * 0.1) / (crystallite_sizes * np.cos(np.deg2rad(22)))  # radians
+beta_deg = np.rad2deg(beta)
+
+axes[1, 0].plot(crystallite_sizes, beta_deg, 'b-', linewidth=1.5)
+axes[1, 0].set_xlabel('Crystallite Size (nm)')
+axes[1, 0].set_ylabel('Peak Width FWHM (degrees)')
+axes[1, 0].set_title('Scherrer Broadening')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Simulated powder pattern with peak shapes
+two_theta_range = np.linspace(20, 120, 1000)
+pattern = np.zeros_like(two_theta_range)
+FWHM = 0.3  # degrees
+
+for tt, I in zip(two_theta_Al, intensity_Al):
+    # Pseudo-Voigt peak shape
+    pattern += I * np.exp(-4*np.log(2)*((two_theta_range - tt)/FWHM)**2)
+
+axes[1, 1].plot(two_theta_range, pattern, 'b-', linewidth=1)
+axes[1, 1].set_xlabel(r'2$\theta$ (degrees)')
+axes[1, 1].set_ylabel('Intensity')
+axes[1, 1].set_title('Simulated Powder Pattern (Al)')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('crystal_structure_plot3.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+
+# Calculate first peak position
+first_peak_Al = two_theta_Al[0] if two_theta_Al else 0
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{crystal_structure_plot3.pdf}
+\caption{X-ray diffraction patterns and peak characteristics for FCC and BCC metals.}
+\end{figure}
+
+\section{Structure Factor Analysis}
+
+\begin{pycode}
+# Systematic absences and structure factors
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Generate all (hkl) combinations
+hkl_list = []
+F2_fcc_list = []
+F2_bcc_list = []
+
+for h in range(5):
+    for k in range(5):
+        for l in range(5):
+            if h == k == l == 0:
+                continue
+            hkl_list.append((h, k, l))
+            F2_fcc_list.append(structure_factor_fcc(h, k, l))
+            F2_bcc_list.append(structure_factor_bcc(h, k, l))
+
+# Plot allowed vs forbidden reflections
+N_squared = [h**2 + k**2 + l**2 for h, k, l in hkl_list]
+
+# FCC selection rules
+fcc_allowed = [N for N, F2 in zip(N_squared, F2_fcc_list) if F2 > 0]
+fcc_forbidden = [N for N, F2 in zip(N_squared, F2_fcc_list) if F2 == 0]
+
+axes[0, 0].hist(fcc_allowed, bins=range(1, max(N_squared)+2), alpha=0.7,
+                 color='blue', label='Allowed', edgecolor='black')
+axes[0, 0].hist(fcc_forbidden, bins=range(1, max(N_squared)+2), alpha=0.5,
+                 color='red', label='Forbidden', edgecolor='black')
+axes[0, 0].set_xlabel('$h^2 + k^2 + l^2$')
+axes[0, 0].set_ylabel('Count')
+axes[0, 0].set_title('FCC Selection Rules')
+axes[0, 0].legend(loc='upper right', fontsize=8)
+
+# BCC selection rules
+bcc_allowed = [N for N, F2 in zip(N_squared, F2_bcc_list) if F2 > 0]
+bcc_forbidden = [N for N, F2 in zip(N_squared, F2_bcc_list) if F2 == 0]
+
+axes[0, 1].hist(bcc_allowed, bins=range(1, max(N_squared)+2), alpha=0.7,
+                 color='blue', label='Allowed', edgecolor='black')
+axes[0, 1].hist(bcc_forbidden, bins=range(1, max(N_squared)+2), alpha=0.5,
+                 color='red', label='Forbidden', edgecolor='black')
+axes[0, 1].set_xlabel('$h^2 + k^2 + l^2$')
+axes[0, 1].set_ylabel('Count')
+axes[0, 1].set_title('BCC Selection Rules')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+
+# Atomic scattering factor (approximate)
+sin_theta_lambda = np.linspace(0, 1.5, 100)
+# Simplified atomic scattering factors
+f_Al = 13 * np.exp(-10 * sin_theta_lambda**2)
+f_Fe = 26 * np.exp(-8 * sin_theta_lambda**2)
+f_Cu = 29 * np.exp(-9 * sin_theta_lambda**2)
+
+axes[1, 0].plot(sin_theta_lambda, f_Al, 'b-', linewidth=1.5, label='Al (Z=13)')
+axes[1, 0].plot(sin_theta_lambda, f_Fe, 'r-', linewidth=1.5, label='Fe (Z=26)')
+axes[1, 0].plot(sin_theta_lambda, f_Cu, 'g-', linewidth=1.5, label='Cu (Z=29)')
+axes[1, 0].set_xlabel(r'$\sin\theta/\lambda$ (A$^{-1}$)')
+axes[1, 0].set_ylabel('Atomic Scattering Factor')
+axes[1, 0].set_title('Atomic Scattering Factors')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Temperature factor (Debye-Waller)
+B_values = [0.5, 1.0, 2.0, 4.0]  # Debye-Waller parameter
+for B in B_values:
+    DW = np.exp(-B * sin_theta_lambda**2)
+    axes[1, 1].plot(sin_theta_lambda, DW, linewidth=1.5, label=f'B = {B}')
+axes[1, 1].set_xlabel(r'$\sin\theta/\lambda$ (A$^{-1}$)')
+axes[1, 1].set_ylabel('Debye-Waller Factor')
+axes[1, 1].set_title('Temperature Factor')
+axes[1, 1].legend(loc='upper right', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('crystal_structure_plot4.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{crystal_structure_plot4.pdf}
+\caption{Structure factor analysis: selection rules and scattering factors.}
+\end{figure}
+
+\section{Lattice Strain and Defect Analysis}
+
+\begin{pycode}
+# Williamson-Hall analysis for strain/size separation
+# beta * cos(theta) = K*lambda/D + 4*epsilon*sin(theta)
+
+# Simulated data with strain
+D_actual = 50  # nm
+epsilon_actual = 0.002  # strain
+
+sin_theta_values = np.sin(np.deg2rad(np.array(two_theta_Al)/2))
+cos_theta_values = np.cos(np.deg2rad(np.array(two_theta_Al)/2))
+
+# Calculate expected broadening
+beta_size = K * lambda_Cu * 0.1 / D_actual
+beta_strain = 4 * epsilon_actual * sin_theta_values
+beta_total = np.sqrt(beta_size**2 + beta_strain**2)
+
+# Williamson-Hall plot coordinates
+x_WH = 4 * sin_theta_values / lambda_Cu
+y_WH = beta_total * cos_theta_values / lambda_Cu
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Williamson-Hall plot
+axes[0, 0].plot(x_WH, y_WH, 'bo-', markersize=8)
+# Linear fit
+z_WH = np.polyfit(x_WH, y_WH, 1)
+p_WH = np.poly1d(z_WH)
+x_fit = np.linspace(0, max(x_WH)*1.1, 100)
+axes[0, 0].plot(x_fit, p_WH(x_fit), 'r--', linewidth=1.5)
+axes[0, 0].set_xlabel(r'$4\sin\theta/\lambda$')
+axes[0, 0].set_ylabel(r'$\beta\cos\theta/\lambda$')
+axes[0, 0].set_title('Williamson-Hall Plot')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Extract parameters from fit
+epsilon_fit = z_WH[0]
+D_fit = K / z_WH[1] if z_WH[1] > 0 else 0
+
+# Dislocation density estimation
+rho_disl = 2 * np.sqrt(3) * epsilon_actual / (a_Al * 1e-8 * 100)  # per m^2
+
+# Microstrain distribution
+strain_range = np.linspace(-0.01, 0.01, 100)
+strain_dist = np.exp(-strain_range**2 / (2 * epsilon_actual**2))
+axes[0, 1].plot(strain_range*100, strain_dist, 'b-', linewidth=1.5)
+axes[0, 1].axvline(x=epsilon_actual*100, color='r', linestyle='--', alpha=0.7)
+axes[0, 1].axvline(x=-epsilon_actual*100, color='r', linestyle='--', alpha=0.7)
+axes[0, 1].set_xlabel('Microstrain (%)')
+axes[0, 1].set_ylabel('Probability')
+axes[0, 1].set_title('Microstrain Distribution')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Crystallite size distribution (lognormal)
+D_range = np.linspace(1, 200, 200)
+sigma_D = 0.3
+D_median = 50
+size_dist = (1/(D_range * sigma_D * np.sqrt(2*np.pi))) * \
+            np.exp(-(np.log(D_range) - np.log(D_median))**2 / (2*sigma_D**2))
+axes[1, 0].plot(D_range, size_dist, 'b-', linewidth=1.5)
+axes[1, 0].axvline(x=D_median, color='r', linestyle='--', alpha=0.7, label='Median')
+axes[1, 0].set_xlabel('Crystallite Size (nm)')
+axes[1, 0].set_ylabel('Probability Density')
+axes[1, 0].set_title('Crystallite Size Distribution')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Stacking fault probability
+# Affects peak positions and shapes
+SF_prob = np.linspace(0, 0.1, 100)
+# Peak shift for FCC (111)
+delta_theta = 90 * np.sqrt(3) * SF_prob / (np.pi**2)
+
+axes[1, 1].plot(SF_prob*100, delta_theta, 'b-', linewidth=1.5)
+axes[1, 1].set_xlabel('Stacking Fault Probability (%)')
+axes[1, 1].set_ylabel('Peak Shift (degrees)')
+axes[1, 1].set_title('Stacking Fault Effect on (111) Peak')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('crystal_structure_plot5.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{crystal_structure_plot5.pdf}
+\caption{Microstructural analysis: Williamson-Hall plot and defect characterization.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Microstructural Parameters}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Crystallite Size & \py{f"{D_actual:.0f}"} & nm \\
+Microstrain & \py{f"{epsilon_actual*100:.2f}"} & \% \\
+Dislocation Density & \py{f"{rho_disl:.2e}"} & m$^{-2}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusions}
+
+This analysis of crystal structures demonstrated:
+
+\begin{enumerate}
+    \item \textbf{Unit Cell Geometry}: FCC has the highest packing efficiency (APF = \py{f"{APF_fcc:.3f}"}) with coordination number 12.
+
+    \item \textbf{Miller Indices}: Interplanar spacing follows $d_{hkl} = a/\sqrt{h^2+k^2+l^2}$ for cubic systems, with the (111) plane having the largest d-spacing in FCC.
+
+    \item \textbf{XRD Patterns}: Selection rules determine allowed reflections (all odd or all even for FCC, $h+k+l$ = even for BCC).
+
+    \item \textbf{Structure Factors}: Systematic absences provide fingerprints for crystal structure identification.
+
+    \item \textbf{Defect Analysis}: Williamson-Hall analysis separates size ($D = \py{f"{D_actual:.0f}"}$ nm) and strain ($\epsilon = \py{f"{epsilon_actual*100:.2f}"}\%$) contributions to peak broadening.
+\end{enumerate}
+
+\end{document}

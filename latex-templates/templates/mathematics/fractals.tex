@@ -1,0 +1,459 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{mandel}{RGB}{0, 0, 139}
+\definecolor{julia}{RGB}{139, 0, 139}
+\definecolor{sierp}{RGB}{34, 139, 34}
+\definecolor{koch}{RGB}{255, 140, 0}
+
+\title{Fractal Geometry and Self-Similarity:\\
+Computational Analysis of Fractal Structures}
+\author{Department of Applied Mathematics\\Technical Report AM-2024-003}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a computational exploration of fractal geometry, examining the Mandelbrot set, Julia sets, Sierpinski triangle, and Koch snowflake. We compute fractal dimensions using box-counting methods, analyze escape-time algorithms, and investigate the self-similar structures that characterize these mathematical objects. All visualizations are generated using PythonTeX for complete reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Fractals are geometric objects that exhibit self-similarity at all scales. Unlike classical Euclidean geometry, fractals often have non-integer (fractal) dimensions, reflecting their intricate structure.
+
+\section{Defining Fractals}
+A set $F$ is a fractal if:
+\begin{itemize}
+    \item It has a fine structure at arbitrarily small scales
+    \item It is too irregular to be described by traditional geometry
+    \item It exhibits self-similarity (exact or statistical)
+    \item Its fractal dimension exceeds its topological dimension
+\end{itemize}
+
+\section{Fractal Dimension}
+The box-counting dimension is defined as:
+\begin{equation}
+D = \lim_{\epsilon \to 0} \frac{\log N(\epsilon)}{\log(1/\epsilon)}
+\end{equation}
+where $N(\epsilon)$ is the number of boxes of size $\epsilon$ needed to cover the set.
+
+\chapter{The Mandelbrot Set}
+
+\section{Definition}
+The Mandelbrot set $M$ is defined as the set of complex numbers $c$ for which the iteration:
+\begin{equation}
+z_{n+1} = z_n^2 + c, \quad z_0 = 0
+\end{equation}
+remains bounded as $n \to \infty$.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def mandelbrot(c, max_iter):
+    z = 0
+    for n in range(max_iter):
+        if abs(z) > 2:
+            return n
+        z = z*z + c
+    return max_iter
+
+def mandelbrot_set(xmin, xmax, ymin, ymax, width, height, max_iter):
+    x = np.linspace(xmin, xmax, width)
+    y = np.linspace(ymin, ymax, height)
+    mset = np.zeros((height, width))
+
+    for i in range(height):
+        for j in range(width):
+            c = complex(x[j], y[i])
+            mset[i, j] = mandelbrot(c, max_iter)
+
+    return mset
+
+# Generate Mandelbrot set
+width, height = 800, 600
+max_iter = 100
+
+# Full view
+mset_full = mandelbrot_set(-2.5, 1.0, -1.25, 1.25, width, height, max_iter)
+
+# Zoomed view (Seahorse valley)
+mset_zoom = mandelbrot_set(-0.75, -0.73, 0.1, 0.12, width, height, 200)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+ax = axes[0]
+im = ax.imshow(mset_full, extent=[-2.5, 1.0, -1.25, 1.25], cmap='hot', aspect='equal')
+ax.set_xlabel('Re$(c)$')
+ax.set_ylabel('Im$(c)$')
+ax.set_title('Mandelbrot Set')
+plt.colorbar(im, ax=ax, label='Iterations')
+
+ax = axes[1]
+im = ax.imshow(mset_zoom, extent=[-0.75, -0.73, 0.1, 0.12], cmap='twilight_shifted', aspect='equal')
+ax.set_xlabel('Re$(c)$')
+ax.set_ylabel('Im$(c)$')
+ax.set_title('Seahorse Valley (Zoom)')
+plt.colorbar(im, ax=ax, label='Iterations')
+
+plt.tight_layout()
+plt.savefig('mandelbrot_set.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{mandelbrot_set.pdf}
+\caption{The Mandelbrot set: full view (left) and zoomed into the Seahorse Valley (right), demonstrating self-similarity.}
+\end{figure}
+
+\section{Escape Time Algorithm}
+Points outside $M$ are colored by escape time---the number of iterations before $|z_n| > 2$:
+\begin{equation}
+\text{escape time}(c) = \min\{n : |z_n| > 2\}
+\end{equation}
+
+\chapter{Julia Sets}
+
+\section{Definition}
+For a fixed $c$, the filled Julia set $K_c$ consists of initial points $z_0$ for which $z_{n+1} = z_n^2 + c$ remains bounded.
+
+\begin{pycode}
+def julia_set(c, xmin, xmax, ymin, ymax, width, height, max_iter):
+    x = np.linspace(xmin, xmax, width)
+    y = np.linspace(ymin, ymax, height)
+    jset = np.zeros((height, width))
+
+    for i in range(height):
+        for j in range(width):
+            z = complex(x[j], y[i])
+            for n in range(max_iter):
+                if abs(z) > 2:
+                    jset[i, j] = n
+                    break
+                z = z*z + c
+            else:
+                jset[i, j] = max_iter
+
+    return jset
+
+# Different Julia sets
+c_values = [
+    complex(-0.7, 0.27015),
+    complex(0.285, 0.01),
+    complex(-0.8, 0.156),
+    complex(-0.4, 0.6),
+]
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+
+for ax, c in zip(axes.flatten(), c_values):
+    jset = julia_set(c, -1.5, 1.5, -1.5, 1.5, 600, 600, 100)
+    ax.imshow(jset, extent=[-1.5, 1.5, -1.5, 1.5], cmap='magma', aspect='equal')
+    ax.set_xlabel('Re$(z)$')
+    ax.set_ylabel('Im$(z)$')
+    ax.set_title(f'Julia Set: $c = {c.real:.3f} + {c.imag:.3f}i$')
+
+plt.tight_layout()
+plt.savefig('julia_sets.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{julia_sets.pdf}
+\caption{Julia sets for different values of $c$, showing connected ($c \in M$) and disconnected ($c \notin M$) structures.}
+\end{figure}
+
+\section{Connection to Mandelbrot Set}
+The Julia set $K_c$ is connected if and only if $c \in M$. Otherwise, $K_c$ is a Cantor set (totally disconnected).
+
+\chapter{Sierpinski Triangle}
+
+\section{Iterated Function System}
+The Sierpinski triangle can be generated using three affine transformations:
+\begin{align}
+T_1(\mathbf{x}) &= \frac{1}{2}\mathbf{x} \\
+T_2(\mathbf{x}) &= \frac{1}{2}\mathbf{x} + \begin{pmatrix} 1/2 \\ 0 \end{pmatrix} \\
+T_3(\mathbf{x}) &= \frac{1}{2}\mathbf{x} + \begin{pmatrix} 1/4 \\ \sqrt{3}/4 \end{pmatrix}
+\end{align}
+
+\begin{pycode}
+def sierpinski_chaos_game(n_points):
+    # Vertices of equilateral triangle
+    vertices = np.array([[0, 0], [1, 0], [0.5, np.sqrt(3)/2]])
+
+    # Start from random point
+    point = np.random.rand(2)
+    points = [point.copy()]
+
+    for _ in range(n_points):
+        vertex = vertices[np.random.randint(3)]
+        point = (point + vertex) / 2
+        points.append(point.copy())
+
+    return np.array(points)
+
+def sierpinski_recursive(vertices, depth):
+    if depth == 0:
+        return [vertices]
+
+    v0, v1, v2 = vertices
+    m01 = (v0 + v1) / 2
+    m12 = (v1 + v2) / 2
+    m02 = (v0 + v2) / 2
+
+    triangles = []
+    triangles.extend(sierpinski_recursive([v0, m01, m02], depth - 1))
+    triangles.extend(sierpinski_recursive([m01, v1, m12], depth - 1))
+    triangles.extend(sierpinski_recursive([m02, m12, v2], depth - 1))
+
+    return triangles
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Chaos game
+ax = axes[0]
+points = sierpinski_chaos_game(50000)
+ax.scatter(points[:, 0], points[:, 1], s=0.1, c='darkgreen', alpha=0.5)
+ax.set_xlabel('$x$')
+ax.set_ylabel('$y$')
+ax.set_title('Chaos Game (50,000 points)')
+ax.set_aspect('equal')
+
+# Recursive construction
+ax = axes[1]
+vertices = np.array([[0, 0], [1, 0], [0.5, np.sqrt(3)/2]])
+triangles = sierpinski_recursive(vertices, 6)
+for tri in triangles:
+    triangle = plt.Polygon(tri, fill=True, facecolor='darkgreen', edgecolor='none')
+    ax.add_patch(triangle)
+ax.set_xlim(-0.1, 1.1)
+ax.set_ylim(-0.1, 1.0)
+ax.set_xlabel('$x$')
+ax.set_ylabel('$y$')
+ax.set_title('Recursive Construction (Depth 6)')
+ax.set_aspect('equal')
+
+# Different depths
+ax = axes[2]
+colors = plt.cm.Greens(np.linspace(0.3, 0.9, 5))
+for i, depth in enumerate([1, 2, 3, 4, 5]):
+    n_triangles = 3**depth
+    ax.scatter(depth, n_triangles, c=[colors[i]], s=100)
+ax.set_xlabel('Recursion Depth')
+ax.set_ylabel('Number of Triangles')
+ax.set_title('Scaling: $N = 3^d$')
+ax.set_yscale('log')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('sierpinski.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Fractal dimension
+sierpinski_dim = np.log(3) / np.log(2)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{sierpinski.pdf}
+\caption{Sierpinski triangle: chaos game method (left), recursive IFS (center), scaling behavior (right).}
+\end{figure}
+
+The fractal dimension is $D = \frac{\log 3}{\log 2} \approx \py{f'{sierpinski_dim:.4f}'}$.
+
+\chapter{Koch Snowflake}
+
+\section{Construction}
+Each line segment is replaced by four segments of length $1/3$:
+
+\begin{pycode}
+def koch_curve(p1, p2, depth):
+    if depth == 0:
+        return [p1, p2]
+
+    # Divide segment into thirds
+    d = (p2 - p1) / 3
+    a = p1
+    b = p1 + d
+    c = p1 + 2*d
+    e = p2
+
+    # Compute apex of equilateral triangle
+    angle = np.pi / 3
+    rotation = np.array([[np.cos(angle), -np.sin(angle)],
+                         [np.sin(angle), np.cos(angle)]])
+    apex = b + rotation @ d
+
+    # Recurse
+    points = []
+    for seg in [(a, b), (b, apex), (apex, c), (c, e)]:
+        pts = koch_curve(seg[0], seg[1], depth - 1)
+        points.extend(pts[:-1])
+    points.append(e)
+
+    return points
+
+def koch_snowflake(depth):
+    # Start with equilateral triangle
+    p1 = np.array([0, 0])
+    p2 = np.array([1, 0])
+    p3 = np.array([0.5, np.sqrt(3)/2])
+
+    # Generate each side
+    side1 = koch_curve(p1, p2, depth)
+    side2 = koch_curve(p2, p3, depth)
+    side3 = koch_curve(p3, p1, depth)
+
+    return side1[:-1] + side2[:-1] + side3
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Different iteration depths
+for i, depth in enumerate([0, 1, 2, 3, 4, 5]):
+    ax = axes[i // 3, i % 3]
+    points = koch_snowflake(depth)
+    points = np.array(points)
+    ax.plot(points[:, 0], points[:, 1], 'b-', linewidth=0.5)
+    ax.fill(points[:, 0], points[:, 1], alpha=0.3, color='blue')
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.set_title(f'Iteration {depth}')
+    ax.set_aspect('equal')
+    ax.set_xlim(-0.1, 1.1)
+    ax.set_ylim(-0.2, 1.0)
+
+plt.tight_layout()
+plt.savefig('koch_snowflake.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Compute perimeter and area
+koch_dim = np.log(4) / np.log(3)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{koch_snowflake.pdf}
+\caption{Koch snowflake construction: iterations 0-5. The perimeter grows infinitely while the area converges.}
+\end{figure}
+
+\section{Properties}
+\begin{itemize}
+    \item Perimeter: $L_n = L_0 \cdot (4/3)^n \to \infty$
+    \item Area: $A_n \to \frac{2\sqrt{3}}{5} s^2$ (finite)
+    \item Fractal dimension: $D = \frac{\log 4}{\log 3} \approx \py{f'{koch_dim:.4f}'}$
+\end{itemize}
+
+\chapter{Box-Counting Dimension}
+
+\begin{pycode}
+def box_counting(points, box_sizes):
+    counts = []
+    for size in box_sizes:
+        # Count occupied boxes
+        boxes = set()
+        for p in points:
+            box = (int(p[0] / size), int(p[1] / size))
+            boxes.add(box)
+        counts.append(len(boxes))
+    return np.array(counts)
+
+# Generate Sierpinski points
+sierp_points = sierpinski_chaos_game(100000)
+
+# Box sizes
+box_sizes = np.logspace(-3, 0, 20)
+counts = box_counting(sierp_points, box_sizes)
+
+# Fit for dimension
+log_sizes = np.log(1 / box_sizes)
+log_counts = np.log(counts)
+coeffs = np.polyfit(log_sizes, log_counts, 1)
+computed_dim = coeffs[0]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+ax = axes[0]
+ax.loglog(1/box_sizes, counts, 'bo-')
+ax.set_xlabel('$1/\\epsilon$')
+ax.set_ylabel('$N(\\epsilon)$')
+ax.set_title('Box-Counting for Sierpinski Triangle')
+ax.grid(True, alpha=0.3)
+
+ax = axes[1]
+ax.plot(log_sizes, log_counts, 'bo', label='Data')
+ax.plot(log_sizes, np.polyval(coeffs, log_sizes), 'r-', label=f'Fit: $D = {computed_dim:.3f}$')
+ax.set_xlabel('$\\log(1/\\epsilon)$')
+ax.set_ylabel('$\\log N(\\epsilon)$')
+ax.set_title('Linear Fit for Fractal Dimension')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('box_counting.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{box_counting.pdf}
+\caption{Box-counting dimension estimation: log-log plot (left) and linear fit (right).}
+\end{figure}
+
+Computed dimension: $D = \py{f'{computed_dim:.4f}'}$ (theoretical: $\py{f'{sierpinski_dim:.4f}'}$)
+
+\chapter{Summary of Results}
+
+\begin{pycode}
+fractal_data = [
+    ('Mandelbrot boundary', 2.0, 'Coastline'),
+    ('Julia set ($c \\in M$)', '$\\approx 2$', 'Connected'),
+    ('Sierpinski triangle', f'{sierpinski_dim:.4f}', 'Self-similar'),
+    ('Koch snowflake', f'{koch_dim:.4f}', 'Infinite perimeter'),
+    ('Cantor set', f'{np.log(2)/np.log(3):.4f}', 'Disconnected'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Fractal dimensions of common fractals}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Fractal & Dimension & Property \\
+\midrule
+\py{fractal_data[0][0]} & \py{fractal_data[0][1]} & \py{fractal_data[0][2]} \\
+\py{fractal_data[1][0]} & \py{fractal_data[1][1]} & \py{fractal_data[1][2]} \\
+\py{fractal_data[2][0]} & \py{fractal_data[2][1]} & \py{fractal_data[2][2]} \\
+\py{fractal_data[3][0]} & \py{fractal_data[3][1]} & \py{fractal_data[3][2]} \\
+\py{fractal_data[4][0]} & \py{fractal_data[4][1]} & \py{fractal_data[4][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item The Mandelbrot set contains all $c$ for which Julia sets are connected
+    \item Julia sets exhibit diverse topologies depending on parameter $c$
+    \item IFS methods generate exact self-similar fractals
+    \item Box-counting provides numerical estimates of fractal dimension
+    \item Fractals demonstrate that infinite complexity can arise from simple rules
+\end{enumerate}
+
+\end{document}

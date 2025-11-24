@@ -1,0 +1,257 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Pharmacokinetics\\Compartment Models and Drug Concentration}
+\author{Clinical Pharmacology Division}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Computational modeling of drug absorption, distribution, metabolism, and elimination using compartment models.
+\end{abstract}
+
+
+\section{Introduction}
+
+Pharmacokinetics describes the time course of drug concentration in the body.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+\end{pycode}
+
+\section{One-Compartment Model}
+
+$\frac{dC}{dt} = -k_e C$
+
+\begin{pycode}
+# IV bolus
+C0 = 100  # Initial concentration (mg/L)
+k_e = 0.1  # Elimination rate constant (1/h)
+t = np.linspace(0, 48, 200)
+
+C = C0 * np.exp(-k_e * t)
+t_half = np.log(2) / k_e
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.semilogy(t, C, 'b-', linewidth=2)
+ax.axhline(y=C0/2, color='r', linestyle='--', label=f'$t_{{1/2}}$ = {t_half:.1f} h')
+ax.axvline(x=t_half, color='r', linestyle='--')
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Concentration (mg/L)')
+ax.set_title('One-Compartment Model: IV Bolus')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('one_compartment.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{one_compartment.pdf}
+\caption{Drug concentration after IV bolus administration.}
+\end{figure}
+
+\section{Oral Administration}
+
+\begin{pycode}
+k_a = 1.0  # Absorption rate constant
+F = 0.8    # Bioavailability
+D = 500    # Dose (mg)
+V = 50     # Volume of distribution (L)
+
+C_oral = (F * D * k_a / (V * (k_a - k_e))) * (np.exp(-k_e * t) - np.exp(-k_a * t))
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(t, C_oral, 'b-', linewidth=2)
+t_max = np.log(k_a / k_e) / (k_a - k_e)
+C_max = (F * D * k_a / (V * (k_a - k_e))) * (np.exp(-k_e * t_max) - np.exp(-k_a * t_max))
+ax.plot(t_max, C_max, 'ro', markersize=10)
+ax.annotate(f'$C_{{max}}$ = {C_max:.1f} mg/L\n$t_{{max}}$ = {t_max:.1f} h',
+            xy=(t_max, C_max), xytext=(t_max + 5, C_max))
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Concentration (mg/L)')
+ax.set_title('Oral Administration')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('oral_admin.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{oral_admin.pdf}
+\caption{Drug concentration after oral administration.}
+\end{figure}
+
+\section{Two-Compartment Model}
+
+\begin{pycode}
+def two_compartment(y, t, k12, k21, k10):
+    C1, C2 = y
+    dC1dt = -k12 * C1 + k21 * C2 - k10 * C1
+    dC2dt = k12 * C1 - k21 * C2
+    return [dC1dt, dC2dt]
+
+k12 = 0.5
+k21 = 0.2
+k10 = 0.1
+y0 = [100, 0]
+
+sol = odeint(two_compartment, y0, t, args=(k12, k21, k10))
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.semilogy(t, sol[:, 0], 'b-', linewidth=2, label='Central')
+ax.semilogy(t, sol[:, 1], 'r-', linewidth=2, label='Peripheral')
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Concentration (mg/L)')
+ax.set_title('Two-Compartment Model')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('two_compartment.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{two_compartment.pdf}
+\caption{Two-compartment model showing distribution phase.}
+\end{figure}
+
+\section{Multiple Dosing}
+
+\begin{pycode}
+tau = 8  # Dosing interval (h)
+n_doses = 6
+t_multi = np.linspace(0, n_doses * tau, 500)
+C_multi = np.zeros_like(t_multi)
+
+for i in range(n_doses):
+    t_dose = i * tau
+    mask = t_multi >= t_dose
+    C_multi[mask] += C0 * np.exp(-k_e * (t_multi[mask] - t_dose))
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(t_multi, C_multi, 'b-', linewidth=2)
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Concentration (mg/L)')
+ax.set_title('Multiple Dosing Regimen')
+ax.grid(True, alpha=0.3)
+
+# Steady state
+C_ss_max = C0 / (1 - np.exp(-k_e * tau))
+C_ss_min = C0 * np.exp(-k_e * tau) / (1 - np.exp(-k_e * tau))
+ax.axhline(y=C_ss_max, color='r', linestyle='--', alpha=0.5)
+ax.axhline(y=C_ss_min, color='g', linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.savefig('multiple_dosing.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{multiple_dosing.pdf}
+\caption{Drug accumulation with repeated dosing.}
+\end{figure}
+
+\section{Continuous Infusion}
+
+\begin{pycode}
+R = 50  # Infusion rate (mg/h)
+CL = k_e * V  # Clearance
+
+C_infusion = (R / CL) * (1 - np.exp(-k_e * t))
+C_ss = R / CL
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(t, C_infusion, 'b-', linewidth=2)
+ax.axhline(y=C_ss, color='r', linestyle='--', label=f'$C_{{ss}}$ = {C_ss:.1f} mg/L')
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Concentration (mg/L)')
+ax.set_title('Continuous IV Infusion')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('infusion.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{infusion.pdf}
+\caption{Drug concentration during continuous infusion.}
+\end{figure}
+
+\section{Loading Dose}
+
+\begin{pycode}
+D_loading = C_ss * V
+t_loading = np.linspace(0, 24, 200)
+
+# With loading dose
+C_with_load = C_ss + (D_loading/V - C_ss) * np.exp(-k_e * t_loading)
+# Without loading dose
+C_without_load = (R / CL) * (1 - np.exp(-k_e * t_loading))
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(t_loading, C_with_load, 'b-', linewidth=2, label='With loading dose')
+ax.plot(t_loading, C_without_load, 'r--', linewidth=2, label='Without loading dose')
+ax.axhline(y=C_ss, color='k', linestyle=':', alpha=0.5)
+ax.set_xlabel('Time (h)')
+ax.set_ylabel('Concentration (mg/L)')
+ax.set_title('Effect of Loading Dose')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('loading_dose.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{loading_dose.pdf}
+\caption{Comparison with and without loading dose.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Pharmacokinetic Parameters}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Half-life & {t_half:.1f} h \\\\')
+print(f'Volume of distribution & {V} L \\\\')
+print(f'Clearance & {CL:.1f} L/h \\\\')
+print(f'Steady-state concentration & {C_ss:.1f} mg/L \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Compartment models provide essential tools for drug dosing optimization and therapeutic monitoring.
+
+
+\end{document}

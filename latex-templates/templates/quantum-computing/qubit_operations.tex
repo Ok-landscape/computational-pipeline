@@ -1,0 +1,383 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{braket}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{pauli}{RGB}{231, 76, 60}
+\definecolor{hadamard}{RGB}{46, 204, 113}
+\definecolor{entangle}{RGB}{52, 152, 219}
+
+\title{Qubit Operations and Quantum Gates:\\
+Pauli Gates, Superposition, Entanglement, and Bell States}
+\author{Department of Quantum Computing\\Technical Report QC-2024-002}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report explores fundamental qubit operations and quantum gates. We implement Pauli gates (X, Y, Z), demonstrate superposition using Hadamard gates, create entangled Bell states, and visualize quantum states on the Bloch sphere. Matrix representations and state evolution are simulated using PythonTeX.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+A qubit is the fundamental unit of quantum information:
+\begin{equation}
+\ket{\psi} = \alpha\ket{0} + \beta\ket{1}, \quad |\alpha|^2 + |\beta|^2 = 1
+\end{equation}
+
+\section{Computational Basis}
+\begin{equation}
+\ket{0} = \begin{pmatrix} 1 \\ 0 \end{pmatrix}, \quad
+\ket{1} = \begin{pmatrix} 0 \\ 1 \end{pmatrix}
+\end{equation}
+
+\chapter{Pauli Gates}
+
+\section{Definitions}
+\begin{align}
+X &= \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \quad \text{(NOT gate)} \\
+Y &= \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix} \\
+Z &= \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} \quad \text{(Phase flip)}
+\end{align}
+
+Properties: $X^2 = Y^2 = Z^2 = I$
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Single qubit gates
+I = np.array([[1, 0], [0, 1]], dtype=complex)
+X = np.array([[0, 1], [1, 0]], dtype=complex)
+Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+Z = np.array([[1, 0], [0, -1]], dtype=complex)
+H = np.array([[1, 1], [1, -1]], dtype=complex) / np.sqrt(2)
+S = np.array([[1, 0], [0, 1j]], dtype=complex)
+T = np.array([[1, 0], [0, np.exp(1j*np.pi/4)]], dtype=complex)
+
+# Two-qubit gates
+CNOT = np.array([[1, 0, 0, 0],
+                  [0, 1, 0, 0],
+                  [0, 0, 0, 1],
+                  [0, 0, 1, 0]], dtype=complex)
+
+# Basis states
+ket_0 = np.array([1, 0], dtype=complex)
+ket_1 = np.array([0, 1], dtype=complex)
+ket_plus = (ket_0 + ket_1) / np.sqrt(2)
+ket_minus = (ket_0 - ket_1) / np.sqrt(2)
+
+def state_to_bloch(state):
+    alpha, beta = state
+    theta = 2 * np.arccos(np.abs(alpha))
+    phi = np.angle(beta) - np.angle(alpha)
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z = np.cos(theta)
+    return np.array([x, y, z])
+
+def plot_bloch_sphere(ax, states, labels):
+    # Draw sphere
+    u = np.linspace(0, 2*np.pi, 50)
+    v = np.linspace(0, np.pi, 50)
+    x = np.outer(np.cos(u), np.sin(v))
+    y = np.outer(np.sin(u), np.sin(v))
+    z = np.outer(np.ones(np.size(u)), np.cos(v))
+    ax.plot_surface(x, y, z, alpha=0.1, color='gray')
+
+    # Axes
+    ax.plot([-1.3, 1.3], [0, 0], [0, 0], 'k-', alpha=0.3)
+    ax.plot([0, 0], [-1.3, 1.3], [0, 0], 'k-', alpha=0.3)
+    ax.plot([0, 0], [0, 0], [-1.3, 1.3], 'k-', alpha=0.3)
+
+    # Plot states
+    colors = plt.cm.tab10(np.linspace(0, 1, len(states)))
+    for state, label, color in zip(states, labels, colors):
+        bloch = state_to_bloch(state)
+        ax.quiver(0, 0, 0, bloch[0], bloch[1], bloch[2],
+                  arrow_length_ratio=0.1, color=color, linewidth=2)
+        ax.text(bloch[0]*1.2, bloch[1]*1.2, bloch[2]*1.2, label, fontsize=10)
+
+    ax.set_xlabel('$X$')
+    ax.set_ylabel('$Y$')
+    ax.set_zlabel('$Z$')
+\end{pycode}
+
+\section{Gate Operations}
+
+\begin{pycode}
+fig = plt.figure(figsize=(14, 5))
+
+# Pauli gate effects
+ax = fig.add_subplot(131, projection='3d')
+states = [ket_0, X @ ket_0, Y @ ket_0, Z @ ket_0]
+labels = [r'$|0\rangle$', r'$X|0\rangle$', r'$Y|0\rangle$', r'$Z|0\rangle$']
+plot_bloch_sphere(ax, states, labels)
+ax.set_title('Pauli Gates on $|0\\rangle$')
+
+# Hadamard and superposition
+ax = fig.add_subplot(132, projection='3d')
+states = [ket_0, H @ ket_0, ket_1, H @ ket_1]
+labels = [r'$|0\rangle$', r'$|+\rangle$', r'$|1\rangle$', r'$|-\rangle$']
+plot_bloch_sphere(ax, states, labels)
+ax.set_title('Hadamard: Superposition')
+
+# Rotation sequence
+ax = fig.add_subplot(133, projection='3d')
+state = ket_0
+sequence = [state.copy()]
+sequence.append((H @ state).copy())
+sequence.append((S @ H @ state).copy())
+sequence.append((T @ S @ H @ state).copy())
+labels = [r'$|0\rangle$', r'$H|0\rangle$', r'$SH|0\rangle$', r'$TSH|0\rangle$']
+plot_bloch_sphere(ax, sequence, labels)
+ax.set_title('Gate Sequence')
+
+plt.tight_layout()
+plt.savefig('qubit_gates.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{qubit_gates.pdf}
+\caption{Bloch sphere visualization: (a) Pauli gates, (b) Hadamard creating superposition, (c) gate sequence.}
+\end{figure}
+
+\chapter{Superposition}
+
+The Hadamard gate creates superposition:
+\begin{align}
+H\ket{0} &= \frac{1}{\sqrt{2}}(\ket{0} + \ket{1}) = \ket{+} \\
+H\ket{1} &= \frac{1}{\sqrt{2}}(\ket{0} - \ket{1}) = \ket{-}
+\end{align}
+
+\chapter{Entanglement and Bell States}
+
+\section{Bell States}
+The four maximally entangled Bell states:
+\begin{align}
+\ket{\Phi^+} &= \frac{1}{\sqrt{2}}(\ket{00} + \ket{11}) \\
+\ket{\Phi^-} &= \frac{1}{\sqrt{2}}(\ket{00} - \ket{11}) \\
+\ket{\Psi^+} &= \frac{1}{\sqrt{2}}(\ket{01} + \ket{10}) \\
+\ket{\Psi^-} &= \frac{1}{\sqrt{2}}(\ket{01} - \ket{10})
+\end{align}
+
+\begin{pycode}
+# Create Bell states
+ket_00 = np.kron(ket_0, ket_0)
+ket_01 = np.kron(ket_0, ket_1)
+ket_10 = np.kron(ket_1, ket_0)
+ket_11 = np.kron(ket_1, ket_1)
+
+# Bell circuit: H on first qubit, then CNOT
+H_I = np.kron(H, I)  # H on first qubit
+
+phi_plus = CNOT @ H_I @ ket_00   # |00> -> |Phi+>
+phi_minus = CNOT @ H_I @ ket_10  # |10> -> |Phi->
+psi_plus = CNOT @ H_I @ ket_01   # |01> -> |Psi+>
+psi_minus = CNOT @ H_I @ ket_11  # |11> -> |Psi->
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Bell state amplitudes
+bell_states = [
+    (phi_plus, r'$|\Phi^+\rangle$'),
+    (phi_minus, r'$|\Phi^-\rangle$'),
+    (psi_plus, r'$|\Psi^+\rangle$'),
+    (psi_minus, r'$|\Psi^-\rangle$')
+]
+
+for ax, (state, name) in zip(axes.flatten(), bell_states):
+    probs = np.abs(state)**2
+    ax.bar(['00', '01', '10', '11'], probs, color='blue', alpha=0.7)
+    ax.set_xlabel('Basis state')
+    ax.set_ylabel('Probability')
+    ax.set_title(f'Bell State {name}')
+    ax.set_ylim(0, 1)
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('bell_states.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Verify entanglement: cannot be written as product state
+# Check by computing reduced density matrix
+def partial_trace(state, keep_qubit):
+    rho = np.outer(state, np.conj(state))
+    if keep_qubit == 0:
+        rho_reduced = np.array([[rho[0,0] + rho[1,1], rho[0,2] + rho[1,3]],
+                                [rho[2,0] + rho[3,1], rho[2,2] + rho[3,3]]])
+    else:
+        rho_reduced = np.array([[rho[0,0] + rho[2,2], rho[0,1] + rho[2,3]],
+                                [rho[1,0] + rho[3,2], rho[1,1] + rho[3,3]]])
+    return rho_reduced
+
+# Compute purity of reduced state (purity < 1 indicates entanglement)
+rho_A = partial_trace(phi_plus, 0)
+purity = np.real(np.trace(rho_A @ rho_A))
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{bell_states.pdf}
+\caption{The four Bell states showing equal superposition of correlated basis states.}
+\end{figure}
+
+\chapter{Quantum Circuit Analysis}
+
+\begin{pycode}
+# Gate matrix properties
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Show gate matrices as heatmaps
+gates = [
+    (X, 'X (NOT)'),
+    (Y, 'Y'),
+    (Z, 'Z'),
+    (H, 'Hadamard'),
+    (S, 'S (Phase)'),
+    (T, 'T ($\\pi/8$)')
+]
+
+for ax, (gate, name) in zip(axes.flatten(), gates):
+    # Show real part
+    im = ax.imshow(np.real(gate), cmap='RdBu', vmin=-1, vmax=1)
+    ax.set_title(name)
+    ax.set_xticks([0, 1])
+    ax.set_yticks([0, 1])
+    ax.set_xticklabels(['0', '1'])
+    ax.set_yticklabels(['0', '1'])
+
+    # Annotate with values
+    for i in range(2):
+        for j in range(2):
+            val = gate[i, j]
+            if np.abs(val.imag) < 1e-10:
+                text = f'{val.real:.2f}'
+            else:
+                text = f'{val.real:.1f}{val.imag:+.1f}i'
+            ax.text(j, i, text, ha='center', va='center', fontsize=8)
+
+plt.tight_layout()
+plt.savefig('gate_matrices.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{gate_matrices.pdf}
+\caption{Single-qubit gate matrices (real part shown, complex values annotated).}
+\end{figure}
+
+\chapter{Measurement and Probabilities}
+
+\begin{pycode}
+# Measurement statistics
+n_measurements = 1000
+state = H @ ket_0  # |+> state
+
+# Simulate measurements
+probs = np.abs(state)**2
+measurements = np.random.choice([0, 1], size=n_measurements, p=probs)
+counts_0 = np.sum(measurements == 0)
+counts_1 = np.sum(measurements == 1)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+ax = axes[0]
+ax.bar(['$|0\\rangle$', '$|1\\rangle$'], [counts_0, counts_1], color=['blue', 'red'], alpha=0.7)
+ax.axhline(n_measurements/2, color='black', linestyle='--', alpha=0.5, label='Expected')
+ax.set_ylabel('Counts')
+ax.set_title(f'Measurements of $|+\\rangle$ ($N = {n_measurements}$)')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Different states measurement
+ax = axes[1]
+test_states = [
+    (ket_0, r'$|0\rangle$'),
+    (ket_1, r'$|1\rangle$'),
+    (ket_plus, r'$|+\rangle$'),
+    ((ket_0 + 1j*ket_1)/np.sqrt(2), r'$|+i\rangle$')
+]
+
+x_pos = np.arange(len(test_states))
+for i, (state, label) in enumerate(test_states):
+    prob_0 = np.abs(state[0])**2
+    ax.bar(i, prob_0, color='blue', alpha=0.7, label='$|0\\rangle$' if i == 0 else '')
+    ax.bar(i, 1-prob_0, bottom=prob_0, color='red', alpha=0.7, label='$|1\\rangle$' if i == 0 else '')
+
+ax.set_xticks(x_pos)
+ax.set_xticklabels([s[1] for s in test_states])
+ax.set_ylabel('Probability')
+ax.set_title('Measurement Probabilities')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('measurements.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{measurements.pdf}
+\caption{Quantum measurements: simulated counts (left), theoretical probabilities (right).}
+\end{figure}
+
+\chapter{Summary}
+
+\begin{pycode}
+gate_properties = [
+    ('$X$', 'Bit flip', '$X|0\\rangle = |1\\rangle$'),
+    ('$Y$', 'Bit+phase flip', '$Y|0\\rangle = i|1\\rangle$'),
+    ('$Z$', 'Phase flip', '$Z|1\\rangle = -|1\\rangle$'),
+    ('$H$', 'Superposition', '$H|0\\rangle = |+\\rangle$'),
+    ('CNOT', 'Entanglement', 'Control-target flip'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Summary of quantum gates}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Gate & Function & Example \\
+\midrule
+\py{gate_properties[0][0]} & \py{gate_properties[0][1]} & \py{gate_properties[0][2]} \\
+\py{gate_properties[1][0]} & \py{gate_properties[1][1]} & \py{gate_properties[1][2]} \\
+\py{gate_properties[2][0]} & \py{gate_properties[2][1]} & \py{gate_properties[2][2]} \\
+\py{gate_properties[3][0]} & \py{gate_properties[3][1]} & \py{gate_properties[3][2]} \\
+\py{gate_properties[4][0]} & \py{gate_properties[4][1]} & \py{gate_properties[4][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Purity of reduced density matrix for $\ket{\Phi^+}$: $\py{f'{purity:.3f}'}$ (maximum entanglement = 0.5)
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Pauli gates rotate states on Bloch sphere axes
+    \item Hadamard creates equal superposition
+    \item Bell states are maximally entangled two-qubit states
+    \item CNOT gate enables entanglement between qubits
+    \item Measurement collapses superposition to basis states
+\end{enumerate}
+
+\end{document}

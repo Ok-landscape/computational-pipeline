@@ -1,0 +1,406 @@
+% Logistic Growth Model Template
+% Topics: Carrying capacity, Allee effect, competition, harvesting
+% Style: Research article with ecological applications
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Logistic Growth Models: Density Dependence and Population Regulation}
+\author{Quantitative Ecology Research}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This study presents a comprehensive analysis of logistic population growth models and
+their extensions. We examine the classic logistic equation, the Allee effect (positive
+density dependence at low populations), interspecific competition, and sustainable
+harvesting strategies. Computational analysis demonstrates population dynamics under
+various parameter regimes and identifies optimal management strategies for harvested
+populations.
+\end{abstract}
+
+\section{Introduction}
+
+The logistic growth model represents a fundamental advance over exponential growth by
+incorporating density-dependent regulation through carrying capacity. Extensions of this
+model address important ecological phenomena including Allee effects and species competition.
+
+\begin{definition}[Logistic Growth]
+The logistic growth equation describes population dynamics with density-dependent regulation:
+\begin{equation}
+\frac{dN}{dt} = rN\left(1 - \frac{N}{K}\right)
+\end{equation}
+where $r$ is the intrinsic growth rate and $K$ is the carrying capacity.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Classic Logistic Model}
+
+\begin{theorem}[Logistic Solution]
+The analytical solution of the logistic equation is:
+\begin{equation}
+N(t) = \frac{K}{1 + \left(\frac{K - N_0}{N_0}\right)e^{-rt}}
+\end{equation}
+The population approaches $K$ asymptotically with an inflection point at $N = K/2$.
+\end{theorem}
+
+\begin{remark}[Maximum Sustainable Yield]
+The growth rate $dN/dt$ is maximized when $N = K/2$, yielding the maximum sustainable
+yield (MSY): $\text{MSY} = rK/4$.
+\end{remark}
+
+\subsection{Allee Effect}
+
+\begin{definition}[Allee Effect]
+The Allee effect describes reduced per capita growth rate at low population densities due
+to difficulties in mate finding, reduced group defense, or inbreeding. A strong Allee
+effect creates a critical population threshold $A$ below which extinction occurs:
+\begin{equation}
+\frac{dN}{dt} = rN\left(1 - \frac{N}{K}\right)\left(\frac{N}{A} - 1\right)
+\end{equation}
+\end{definition}
+
+\subsection{Competition Models}
+
+\begin{theorem}[Lotka-Volterra Competition]
+For two competing species:
+\begin{align}
+\frac{dN_1}{dt} &= r_1 N_1 \left(1 - \frac{N_1 + \alpha_{12} N_2}{K_1}\right) \\
+\frac{dN_2}{dt} &= r_2 N_2 \left(1 - \frac{N_2 + \alpha_{21} N_1}{K_2}\right)
+\end{align}
+where $\alpha_{ij}$ is the competition coefficient (effect of species $j$ on species $i$).
+\end{theorem}
+
+\subsection{Harvesting}
+
+\begin{definition}[Harvesting Strategies]
+Common harvesting models include:
+\begin{itemize}
+\item \textbf{Constant harvest}: $dN/dt = rN(1 - N/K) - H$
+\item \textbf{Proportional harvest}: $dN/dt = rN(1 - N/K) - qEN$
+\item \textbf{Threshold harvest}: Harvest only when $N > N_{threshold}$
+\end{itemize}
+where $H$ is harvest rate, $q$ is catchability, and $E$ is effort.
+\end{definition}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+from scipy.optimize import fsolve
+
+np.random.seed(42)
+
+# Model definitions
+def logistic(N, t, r, K):
+    return r * N * (1 - N/K)
+
+def allee(N, t, r, K, A):
+    if N <= 0:
+        return 0
+    return r * N * (1 - N/K) * (N/A - 1)
+
+def logistic_harvest(N, t, r, K, H):
+    return r * N * (1 - N/K) - H
+
+def competition(y, t, r1, K1, r2, K2, alpha12, alpha21):
+    N1, N2 = y
+    dN1 = r1 * N1 * (1 - (N1 + alpha12*N2)/K1)
+    dN2 = r2 * N2 * (1 - (N2 + alpha21*N1)/K2)
+    return [dN1, dN2]
+
+# Parameters
+r = 0.5
+K = 1000
+N0 = 50
+A = 100  # Allee threshold
+
+# Time arrays
+t_short = np.linspace(0, 30, 500)
+t_long = np.linspace(0, 50, 500)
+
+# Basic logistic
+N_logistic = odeint(logistic, N0, t_long, args=(r, K))[:, 0]
+
+# Exponential comparison
+N_exp = N0 * np.exp(r * t_long)
+
+# Different growth rates
+r_values = [0.3, 0.5, 0.8, 1.0]
+N_r_vary = {}
+for r_val in r_values:
+    N_r_vary[r_val] = odeint(logistic, N0, t_long, args=(r_val, K))[:, 0]
+
+# Allee effect
+N_allee_above = odeint(allee, 150, t_long, args=(r, K, A))[:, 0]
+N_allee_below = odeint(allee, 80, t_long, args=(r, K, A))[:, 0]
+N_allee_threshold = odeint(allee, A, t_long, args=(r, K, A))[:, 0]
+
+# Harvesting analysis
+H_values = [0, 30, 60, 90, 120]
+N_harvest = {}
+for H in H_values:
+    N_harvest[H] = odeint(logistic_harvest, 800, t_long, args=(r, K, H))[:, 0]
+
+# MSY calculation
+MSY = r * K / 4
+N_MSY = K / 2
+
+# Competition outcomes
+# Coexistence
+N_coex = odeint(competition, [100, 100], t_long, args=(0.5, 1000, 0.5, 1000, 0.5, 0.5))
+# Competitive exclusion
+N_excl = odeint(competition, [100, 100], t_long, args=(0.5, 1000, 0.4, 800, 1.2, 1.5))
+
+# Growth rate vs population
+N_range = np.linspace(0, K, 200)
+dN_dt_logistic = r * N_range * (1 - N_range/K)
+dN_dt_allee = r * N_range * (1 - N_range/K) * (N_range/A - 1)
+
+# Per capita growth rate
+per_capita_logistic = r * (1 - N_range/K)
+per_capita_allee = np.where(N_range > 0, r * (1 - N_range/K) * (N_range/A - 1), 0)
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Logistic vs exponential
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t_long, N_logistic, 'b-', linewidth=2, label='Logistic')
+ax1.plot(t_long, np.clip(N_exp, 0, 2500), 'r--', linewidth=2, label='Exponential')
+ax1.axhline(y=K, color='gray', linestyle='--', alpha=0.7, label=f'K = {K}')
+ax1.set_xlabel('Time')
+ax1.set_ylabel('Population $N$')
+ax1.set_title('Logistic vs Exponential Growth')
+ax1.legend(fontsize=8)
+ax1.set_ylim([0, 1500])
+
+# Plot 2: Growth rate vs population
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.plot(N_range, dN_dt_logistic, 'b-', linewidth=2, label='Logistic')
+ax2.plot(N_range, dN_dt_allee, 'r-', linewidth=2, label='Allee')
+ax2.axvline(x=K/2, color='blue', linestyle=':', alpha=0.7)
+ax2.axvline(x=A, color='red', linestyle=':', alpha=0.7)
+ax2.axhline(y=0, color='black', linewidth=0.5)
+ax2.set_xlabel('Population $N$')
+ax2.set_ylabel('$dN/dt$')
+ax2.set_title('Population Growth Rate')
+ax2.legend(fontsize=8)
+
+# Plot 3: Effect of growth rate
+ax3 = fig.add_subplot(3, 3, 3)
+colors = plt.cm.viridis(np.linspace(0, 0.8, len(r_values)))
+for i, r_val in enumerate(r_values):
+    ax3.plot(t_long, N_r_vary[r_val], color=colors[i], linewidth=2, label=f'r = {r_val}')
+ax3.axhline(y=K, color='gray', linestyle='--', alpha=0.7)
+ax3.set_xlabel('Time')
+ax3.set_ylabel('Population $N$')
+ax3.set_title('Effect of Growth Rate')
+ax3.legend(fontsize=8)
+
+# Plot 4: Allee effect
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.plot(t_long, N_allee_above, 'g-', linewidth=2, label=f'$N_0 = 150 > A$')
+ax4.plot(t_long, N_allee_below, 'r-', linewidth=2, label=f'$N_0 = 80 < A$')
+ax4.plot(t_long, N_allee_threshold, 'orange', linewidth=2, label=f'$N_0 = A$')
+ax4.axhline(y=K, color='gray', linestyle='--', alpha=0.7)
+ax4.axhline(y=A, color='black', linestyle=':', alpha=0.7)
+ax4.set_xlabel('Time')
+ax4.set_ylabel('Population $N$')
+ax4.set_title(f'Allee Effect (A = {A})')
+ax4.legend(fontsize=8)
+ax4.set_ylim([0, 1200])
+
+# Plot 5: Harvesting
+ax5 = fig.add_subplot(3, 3, 5)
+colors_h = plt.cm.plasma(np.linspace(0, 0.8, len(H_values)))
+for i, H in enumerate(H_values):
+    ax5.plot(t_long, N_harvest[H], color=colors_h[i], linewidth=2, label=f'H = {H}')
+ax5.axhline(y=0, color='black', linewidth=0.5)
+ax5.set_xlabel('Time')
+ax5.set_ylabel('Population $N$')
+ax5.set_title('Constant Harvest Rate')
+ax5.legend(fontsize=8, loc='upper right')
+ax5.set_ylim([0, 1000])
+
+# Plot 6: Yield curve
+ax6 = fig.add_subplot(3, 3, 6)
+N_eq = np.linspace(0, K, 200)
+yield_curve = r * N_eq * (1 - N_eq/K)
+ax6.plot(N_eq, yield_curve, 'b-', linewidth=2)
+ax6.axvline(x=N_MSY, color='red', linestyle='--', alpha=0.7)
+ax6.axhline(y=MSY, color='red', linestyle='--', alpha=0.7)
+ax6.scatter([N_MSY], [MSY], s=100, c='red', zorder=5, label=f'MSY = {MSY:.0f}')
+ax6.set_xlabel('Equilibrium population $N^*$')
+ax6.set_ylabel('Sustainable yield')
+ax6.set_title('Maximum Sustainable Yield')
+ax6.legend(fontsize=8)
+
+# Plot 7: Competition - coexistence
+ax7 = fig.add_subplot(3, 3, 7)
+ax7.plot(t_long, N_coex[:, 0], 'b-', linewidth=2, label='Species 1')
+ax7.plot(t_long, N_coex[:, 1], 'r-', linewidth=2, label='Species 2')
+ax7.set_xlabel('Time')
+ax7.set_ylabel('Population')
+ax7.set_title('Competition: Coexistence')
+ax7.legend(fontsize=8)
+
+# Plot 8: Competition - exclusion
+ax8 = fig.add_subplot(3, 3, 8)
+ax8.plot(t_long, N_excl[:, 0], 'b-', linewidth=2, label='Species 1')
+ax8.plot(t_long, N_excl[:, 1], 'r-', linewidth=2, label='Species 2')
+ax8.set_xlabel('Time')
+ax8.set_ylabel('Population')
+ax8.set_title('Competition: Exclusion')
+ax8.legend(fontsize=8)
+
+# Plot 9: Per capita growth rate
+ax9 = fig.add_subplot(3, 3, 9)
+ax9.plot(N_range, per_capita_logistic, 'b-', linewidth=2, label='Logistic')
+ax9.plot(N_range, per_capita_allee, 'r-', linewidth=2, label='Allee')
+ax9.axhline(y=0, color='black', linewidth=0.5)
+ax9.axvline(x=A, color='red', linestyle=':', alpha=0.7)
+ax9.set_xlabel('Population $N$')
+ax9.set_ylabel('Per capita growth rate')
+ax9.set_title('Density Dependence')
+ax9.legend(fontsize=8)
+
+plt.tight_layout()
+plt.savefig('logistic_growth_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Calculate key values
+t_inflection = np.log((K - N0) / N0) / r
+doubling_time = np.log(2) / r
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{logistic_growth_analysis.pdf}
+\caption{Logistic growth analysis: (a) Comparison with exponential growth; (b) Population
+growth rate showing inflection points; (c) Effect of intrinsic growth rate; (d) Allee
+effect dynamics; (e) Constant harvest scenarios; (f) Maximum sustainable yield curve;
+(g-h) Competition outcomes; (i) Per capita growth rate showing density dependence.}
+\label{fig:logistic}
+\end{figure}
+
+\section{Results}
+
+\subsection{Model Parameters}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Logistic Growth Model Parameters and Key Values}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Symbol & Value \\")
+print(r"\midrule")
+print(f"Intrinsic growth rate & $r$ & {r} \\\\")
+print(f"Carrying capacity & $K$ & {K} \\\\")
+print(f"Initial population & $N_0$ & {N0} \\\\")
+print(f"Allee threshold & $A$ & {A} \\\\")
+print(r"\midrule")
+print(f"MSY population & $N_{{MSY}}$ & {N_MSY:.0f} \\\\")
+print(f"Maximum sustainable yield & MSY & {MSY:.1f} \\\\")
+print(f"Time to inflection & $t_{{infl}}$ & {t_inflection:.2f} \\\\")
+print(f"Doubling time & $t_d$ & {doubling_time:.2f} \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:parameters}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Harvesting Outcomes}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Equilibrium Populations Under Different Harvest Rates}")
+print(r"\begin{tabular}{ccc}")
+print(r"\toprule")
+print(r"Harvest rate $H$ & Equilibrium $N^*$ & Sustainable? \\")
+print(r"\midrule")
+
+for H in H_values:
+    N_final = N_harvest[H][-1]
+    if N_final > 1:
+        sustainable = "Yes"
+    else:
+        sustainable = "No (collapse)"
+    print(f"{H} & {N_final:.0f} & {sustainable} \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:harvest}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Maximum Sustainable Yield]
+For fisheries management, the MSY occurs at $N = K/2$:
+\begin{equation}
+\text{MSY} = r \cdot \frac{K}{2} \cdot \left(1 - \frac{K/2}{K}\right) = \frac{rK}{4} = \py{f"{MSY:.1f}"}
+\end{equation}
+Harvesting at rates exceeding MSY leads to population collapse.
+\end{example}
+
+\begin{remark}[Allee Effect and Conservation]
+The Allee effect has critical implications for conservation:
+\begin{itemize}
+\item Small populations face extinction risk even without external threats
+\item Minimum viable population size must exceed the Allee threshold
+\item Reintroduction programs must establish populations above this threshold
+\item Habitat fragmentation increases Allee effect risks
+\end{itemize}
+\end{remark}
+
+\begin{example}[Competition Outcomes]
+The outcome of Lotka-Volterra competition depends on $\alpha$ values:
+\begin{itemize}
+\item Coexistence: $\alpha_{12} < K_1/K_2$ and $\alpha_{21} < K_2/K_1$
+\item Species 1 wins: $\alpha_{12} < K_1/K_2$ and $\alpha_{21} > K_2/K_1$
+\item Species 2 wins: $\alpha_{12} > K_1/K_2$ and $\alpha_{21} < K_2/K_1$
+\item Unstable: Both inequalities reversed
+\end{itemize}
+\end{example}
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of logistic population dynamics:
+\begin{enumerate}
+\item The population approaches carrying capacity $K = \py{f"{K}"}$ with inflection at $K/2$
+\item MSY of $\py{f"{MSY:.1f}"}$ occurs when harvesting maintains population at $K/2$
+\item The Allee effect creates an extinction threshold at $A = \py{f"{A}"}$
+\item Competition outcomes depend on relative competition coefficients
+\item Per capita growth rate decreases linearly with population in the logistic model
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Gotelli, N.J. \textit{A Primer of Ecology}, 4th ed. Sinauer Associates, 2008.
+\item Courchamp, F. et al. \textit{Allee Effects in Ecology and Conservation}. Oxford, 2008.
+\item Clark, C.W. \textit{Mathematical Bioeconomics}, 3rd ed. Wiley-Interscience, 2010.
+\end{itemize}
+
+\end{document}

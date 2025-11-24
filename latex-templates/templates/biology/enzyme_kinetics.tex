@@ -1,0 +1,449 @@
+% Enzyme Kinetics Analysis Template
+% Topics: Michaelis-Menten kinetics, enzyme inhibition, Lineweaver-Burk plots
+% Style: Laboratory report with experimental data analysis
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Enzyme Kinetics: Michaelis-Menten Analysis and Inhibition Studies}
+\author{Biochemistry Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This laboratory report presents a comprehensive analysis of enzyme kinetics using the
+Michaelis-Menten framework and its linearizations. We examine the kinetic parameters
+$K_m$ and $V_{max}$ for a model enzyme system, analyze three types of reversible
+inhibition (competitive, uncompetitive, and mixed), and compare parameter estimation
+methods including Lineweaver-Burk, Eadie-Hofstee, and Hanes-Woolf plots. Computational
+analysis demonstrates the determination of inhibition constants and the diagnostic
+patterns that distinguish inhibition mechanisms.
+\end{abstract}
+
+\section{Introduction}
+
+Enzyme kinetics provides fundamental insights into enzyme-catalyzed reactions and their
+regulation. The Michaelis-Menten equation forms the cornerstone of enzyme kinetics,
+describing the hyperbolic relationship between substrate concentration and reaction velocity.
+
+\begin{definition}[Michaelis-Menten Equation]
+For an enzyme-catalyzed reaction following simple kinetics, the initial velocity $v_0$
+as a function of substrate concentration $[S]$ is:
+\begin{equation}
+v_0 = \frac{V_{max}[S]}{K_m + [S]}
+\end{equation}
+where $V_{max}$ is the maximum velocity and $K_m$ is the Michaelis constant.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Derivation of the Michaelis-Menten Equation}
+
+Consider the enzyme-substrate reaction scheme:
+\begin{equation}
+E + S \underset{k_{-1}}{\stackrel{k_1}{\rightleftharpoons}} ES \stackrel{k_{cat}}{\longrightarrow} E + P
+\end{equation}
+
+\begin{theorem}[Steady-State Approximation]
+Under steady-state conditions where $d[ES]/dt = 0$, the Michaelis constant is:
+\begin{equation}
+K_m = \frac{k_{-1} + k_{cat}}{k_1}
+\end{equation}
+and represents the substrate concentration at which $v_0 = V_{max}/2$.
+\end{theorem}
+
+\subsection{Enzyme Inhibition}
+
+\begin{definition}[Inhibition Types]
+Reversible inhibitors modify kinetic parameters as follows:
+\begin{itemize}
+\item \textbf{Competitive}: Inhibitor binds only to free enzyme; $K_m^{app} = K_m(1 + [I]/K_i)$, $V_{max}$ unchanged
+\item \textbf{Uncompetitive}: Inhibitor binds only to ES complex; $K_m^{app} = K_m/(1 + [I]/K_i')$, $V_{max}^{app} = V_{max}/(1 + [I]/K_i')$
+\item \textbf{Mixed}: Inhibitor binds both E and ES; both $K_m$ and $V_{max}$ affected
+\end{itemize}
+\end{definition}
+
+The general rate equation with mixed inhibition:
+\begin{equation}
+v_0 = \frac{V_{max}[S]}{K_m(1 + [I]/K_i) + [S](1 + [I]/K_i')}
+\end{equation}
+
+\subsection{Linear Transformations}
+
+\begin{theorem}[Lineweaver-Burk Transformation]
+Taking the reciprocal of the Michaelis-Menten equation:
+\begin{equation}
+\frac{1}{v_0} = \frac{K_m}{V_{max}} \cdot \frac{1}{[S]} + \frac{1}{V_{max}}
+\end{equation}
+A plot of $1/v_0$ versus $1/[S]$ yields slope $K_m/V_{max}$ and y-intercept $1/V_{max}$.
+\end{theorem}
+
+\begin{remark}[Alternative Linearizations]
+Other linearization methods include:
+\begin{itemize}
+\item \textbf{Eadie-Hofstee}: $v_0 = V_{max} - K_m(v_0/[S])$
+\item \textbf{Hanes-Woolf}: $[S]/v_0 = [S]/V_{max} + K_m/V_{max}$
+\end{itemize}
+\end{remark}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from scipy.stats import linregress
+
+np.random.seed(42)
+
+def michaelis_menten(S, Vmax, Km):
+    return (Vmax * S) / (Km + S)
+
+def competitive_inhibition(S, Vmax, Km, I, Ki):
+    Km_app = Km * (1 + I / Ki)
+    return (Vmax * S) / (Km_app + S)
+
+def uncompetitive_inhibition(S, Vmax, Km, I, Ki_prime):
+    factor = 1 + I / Ki_prime
+    return (Vmax * S) / (Km / factor + S * factor)
+
+def mixed_inhibition(S, Vmax, Km, I, Ki, Ki_prime):
+    return (Vmax * S) / (Km * (1 + I / Ki) + S * (1 + I / Ki_prime))
+
+# True kinetic parameters
+Vmax_true = 100.0
+Km_true = 50.0
+Ki_true = 25.0
+Ki_prime_true = 40.0
+
+# Substrate concentrations
+S_conc = np.array([5, 10, 20, 30, 50, 75, 100, 150, 200, 300])
+
+# Generate experimental data with noise
+noise_level = 0.05
+v_no_inhibitor = michaelis_menten(S_conc, Vmax_true, Km_true)
+v_no_inhibitor_exp = v_no_inhibitor * (1 + noise_level * np.random.randn(len(S_conc)))
+
+# Inhibitor concentrations
+I_conc = np.array([0, 25, 50, 100])
+
+# Generate data for different inhibition types
+v_competitive = {}
+v_uncompetitive = {}
+v_mixed = {}
+
+for I in I_conc:
+    v_comp = competitive_inhibition(S_conc, Vmax_true, Km_true, I, Ki_true)
+    v_uncomp = uncompetitive_inhibition(S_conc, Vmax_true, Km_true, I, Ki_prime_true)
+    v_mix = mixed_inhibition(S_conc, Vmax_true, Km_true, I, Ki_true, Ki_prime_true)
+    v_competitive[I] = v_comp * (1 + noise_level * np.random.randn(len(S_conc)))
+    v_uncompetitive[I] = v_uncomp * (1 + noise_level * np.random.randn(len(S_conc)))
+    v_mixed[I] = v_mix * (1 + noise_level * np.random.randn(len(S_conc)))
+
+# Fit Michaelis-Menten to uninhibited data
+popt_mm, pcov_mm = curve_fit(michaelis_menten, S_conc, v_no_inhibitor_exp, p0=[100, 50])
+Vmax_fit, Km_fit = popt_mm
+
+# Lineweaver-Burk analysis
+inv_S = 1 / S_conc
+inv_v = 1 / v_no_inhibitor_exp
+slope_lb, intercept_lb, r_lb, p_lb, se_lb = linregress(inv_S, inv_v)
+Vmax_lb = 1 / intercept_lb
+Km_lb = slope_lb * Vmax_lb
+
+# Eadie-Hofstee analysis
+v_over_S = v_no_inhibitor_exp / S_conc
+slope_eh, intercept_eh, r_eh, p_eh, se_eh = linregress(v_over_S, v_no_inhibitor_exp)
+Vmax_eh = intercept_eh
+Km_eh = -slope_eh
+
+# Hanes-Woolf analysis
+S_over_v = S_conc / v_no_inhibitor_exp
+slope_hw, intercept_hw, r_hw, p_hw, se_hw = linregress(S_conc, S_over_v)
+Vmax_hw = 1 / slope_hw
+Km_hw = intercept_hw * Vmax_hw
+
+# Calculate apparent Km values for competitive inhibition
+Km_app_competitive = {}
+for I in I_conc:
+    if I > 0:
+        inv_v_inh = 1 / v_competitive[I]
+        slope_inh, intercept_inh, _, _, _ = linregress(inv_S, inv_v_inh)
+        Vmax_inh = 1 / intercept_inh
+        Km_app_competitive[I] = slope_inh * Vmax_inh
+
+# Estimate Ki from competitive inhibition
+if len(Km_app_competitive) > 0:
+    I_values = np.array(list(Km_app_competitive.keys()))
+    Km_app_values = np.array(list(Km_app_competitive.values()))
+    slope_ki, intercept_ki, _, _, _ = linregress(I_values, Km_app_values)
+    Ki_estimated = Km_fit / slope_ki
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Michaelis-Menten curve
+ax1 = fig.add_subplot(3, 3, 1)
+S_fine = np.linspace(0.1, 350, 500)
+ax1.scatter(S_conc, v_no_inhibitor_exp, s=60, c='blue', edgecolor='black', label='Experimental')
+ax1.plot(S_fine, michaelis_menten(S_fine, Vmax_fit, Km_fit), 'r-', linewidth=2, label='Fitted')
+ax1.axhline(y=Vmax_fit, color='gray', linestyle='--', alpha=0.7)
+ax1.axhline(y=Vmax_fit/2, color='gray', linestyle=':', alpha=0.7)
+ax1.axvline(x=Km_fit, color='gray', linestyle=':', alpha=0.7)
+ax1.set_xlabel('[S] (uM)')
+ax1.set_ylabel('$v_0$ (umol/min)')
+ax1.set_title('Michaelis-Menten Kinetics')
+ax1.legend(fontsize=8)
+ax1.set_xlim(0, 350)
+ax1.set_ylim(0, 120)
+
+# Plot 2: Lineweaver-Burk plot
+ax2 = fig.add_subplot(3, 3, 2)
+inv_S_fine = np.linspace(-0.02, 0.22, 100)
+ax2.scatter(inv_S, inv_v, s=60, c='blue', edgecolor='black')
+ax2.plot(inv_S_fine, slope_lb * inv_S_fine + intercept_lb, 'r-', linewidth=2)
+ax2.axhline(y=0, color='black', linewidth=0.5)
+ax2.axvline(x=0, color='black', linewidth=0.5)
+ax2.set_xlabel('1/[S] (uM$^{-1}$)')
+ax2.set_ylabel('1/$v_0$ (min/umol)')
+ax2.set_title('Lineweaver-Burk Plot')
+ax2.set_xlim(-0.03, 0.22)
+
+# Plot 3: Competitive inhibition
+ax3 = fig.add_subplot(3, 3, 3)
+colors = plt.cm.viridis(np.linspace(0, 0.8, len(I_conc)))
+for i, I in enumerate(I_conc):
+    inv_v_comp = 1 / v_competitive[I]
+    ax3.scatter(inv_S, inv_v_comp, s=40, c=[colors[i]], edgecolor='black')
+    slope_c, intercept_c, _, _, _ = linregress(inv_S, inv_v_comp)
+    ax3.plot(inv_S_fine, slope_c * inv_S_fine + intercept_c, color=colors[i],
+             linewidth=1.5, label=f'[I]={I} uM')
+ax3.axhline(y=0, color='black', linewidth=0.5)
+ax3.axvline(x=0, color='black', linewidth=0.5)
+ax3.set_xlabel('1/[S] (uM$^{-1}$)')
+ax3.set_ylabel('1/$v_0$ (min/umol)')
+ax3.set_title('Competitive Inhibition')
+ax3.legend(fontsize=7, loc='upper left')
+
+# Plot 4: Uncompetitive inhibition
+ax4 = fig.add_subplot(3, 3, 4)
+for i, I in enumerate(I_conc):
+    inv_v_uncomp = 1 / v_uncompetitive[I]
+    ax4.scatter(inv_S, inv_v_uncomp, s=40, c=[colors[i]], edgecolor='black')
+    slope_u, intercept_u, _, _, _ = linregress(inv_S, inv_v_uncomp)
+    ax4.plot(inv_S_fine, slope_u * inv_S_fine + intercept_u, color=colors[i],
+             linewidth=1.5, label=f'[I]={I} uM')
+ax4.axhline(y=0, color='black', linewidth=0.5)
+ax4.axvline(x=0, color='black', linewidth=0.5)
+ax4.set_xlabel('1/[S] (uM$^{-1}$)')
+ax4.set_ylabel('1/$v_0$ (min/umol)')
+ax4.set_title('Uncompetitive Inhibition')
+ax4.legend(fontsize=7, loc='upper left')
+
+# Plot 5: Mixed inhibition
+ax5 = fig.add_subplot(3, 3, 5)
+for i, I in enumerate(I_conc):
+    inv_v_mix = 1 / v_mixed[I]
+    ax5.scatter(inv_S, inv_v_mix, s=40, c=[colors[i]], edgecolor='black')
+    slope_m, intercept_m, _, _, _ = linregress(inv_S, inv_v_mix)
+    ax5.plot(inv_S_fine, slope_m * inv_S_fine + intercept_m, color=colors[i],
+             linewidth=1.5, label=f'[I]={I} uM')
+ax5.axhline(y=0, color='black', linewidth=0.5)
+ax5.axvline(x=0, color='black', linewidth=0.5)
+ax5.set_xlabel('1/[S] (uM$^{-1}$)')
+ax5.set_ylabel('1/$v_0$ (min/umol)')
+ax5.set_title('Mixed Inhibition')
+ax5.legend(fontsize=7, loc='upper left')
+
+# Plot 6: Eadie-Hofstee plot
+ax6 = fig.add_subplot(3, 3, 6)
+ax6.scatter(v_over_S, v_no_inhibitor_exp, s=60, c='blue', edgecolor='black')
+v_over_S_fine = np.linspace(0, 3, 100)
+ax6.plot(v_over_S_fine, Vmax_eh - Km_eh * v_over_S_fine, 'r-', linewidth=2)
+ax6.set_xlabel('$v_0$/[S] (min$^{-1}$)')
+ax6.set_ylabel('$v_0$ (umol/min)')
+ax6.set_title('Eadie-Hofstee Plot')
+
+# Plot 7: Hanes-Woolf plot
+ax7 = fig.add_subplot(3, 3, 7)
+ax7.scatter(S_conc, S_over_v, s=60, c='blue', edgecolor='black')
+S_fine_hw = np.linspace(-50, 350, 100)
+ax7.plot(S_fine_hw, slope_hw * S_fine_hw + intercept_hw, 'r-', linewidth=2)
+ax7.axhline(y=0, color='black', linewidth=0.5)
+ax7.axvline(x=0, color='black', linewidth=0.5)
+ax7.set_xlabel('[S] (uM)')
+ax7.set_ylabel('[S]/$v_0$ (min)')
+ax7.set_title('Hanes-Woolf Plot')
+
+# Plot 8: Dixon plot
+ax8 = fig.add_subplot(3, 3, 8)
+S_selected = [20, 50, 100]
+colors_dixon = ['blue', 'green', 'red']
+for j, S in enumerate(S_selected):
+    idx = np.where(S_conc == S)[0][0]
+    inv_v_dixon = [1/v_competitive[I][idx] for I in I_conc]
+    ax8.scatter(I_conc, inv_v_dixon, s=50, c=colors_dixon[j], edgecolor='black')
+    slope_d, intercept_d, _, _, _ = linregress(I_conc, inv_v_dixon)
+    I_fine = np.linspace(-40, 120, 100)
+    ax8.plot(I_fine, slope_d * I_fine + intercept_d, color=colors_dixon[j],
+             linewidth=1.5, label=f'[S]={S} uM')
+ax8.axhline(y=0, color='black', linewidth=0.5)
+ax8.axvline(x=0, color='black', linewidth=0.5)
+ax8.set_xlabel('[I] (uM)')
+ax8.set_ylabel('1/$v_0$ (min/umol)')
+ax8.set_title('Dixon Plot (Competitive)')
+ax8.legend(fontsize=8)
+
+# Plot 9: Method comparison
+ax9 = fig.add_subplot(3, 3, 9)
+methods = ['NL fit', 'L-B', 'E-H', 'H-W']
+Vmax_values = [Vmax_fit, Vmax_lb, Vmax_eh, Vmax_hw]
+Km_values = [Km_fit, Km_lb, Km_eh, Km_hw]
+x_pos = np.arange(len(methods))
+width = 0.35
+ax9.bar(x_pos - width/2, Vmax_values, width, label='$V_{max}$', color='steelblue', edgecolor='black')
+ax9_twin = ax9.twinx()
+ax9_twin.bar(x_pos + width/2, Km_values, width, label='$K_m$', color='coral', edgecolor='black')
+ax9.axhline(y=Vmax_true, color='steelblue', linestyle='--', alpha=0.7)
+ax9_twin.axhline(y=Km_true, color='coral', linestyle='--', alpha=0.7)
+ax9.set_xlabel('Method')
+ax9.set_ylabel('$V_{max}$ (umol/min)', color='steelblue')
+ax9_twin.set_ylabel('$K_m$ (uM)', color='coral')
+ax9.set_xticks(x_pos)
+ax9.set_xticklabels(methods, fontsize=9)
+ax9.set_title('Parameter Comparison')
+
+plt.tight_layout()
+plt.savefig('enzyme_kinetics_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{enzyme_kinetics_analysis.pdf}
+\caption{Comprehensive enzyme kinetics analysis: (a) Michaelis-Menten saturation curve;
+(b) Lineweaver-Burk plot; (c-e) Inhibition patterns for competitive, uncompetitive, and
+mixed inhibition; (f-g) Eadie-Hofstee and Hanes-Woolf linearizations; (h) Dixon plot for
+$K_i$ determination; (i) Parameter estimation method comparison.}
+\label{fig:kinetics}
+\end{figure}
+
+\section{Results}
+
+\subsection{Kinetic Parameter Determination}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Comparison of Kinetic Parameter Estimation Methods}")
+print(r"\begin{tabular}{lcccc}")
+print(r"\toprule")
+print(r"Method & $V_{max}$ ($\mu$mol/min) & Error (\%) & $K_m$ ($\mu$M) & Error (\%) \\")
+print(r"\midrule")
+
+Vmax_err_fit = abs(Vmax_fit - Vmax_true) / Vmax_true * 100
+Km_err_fit = abs(Km_fit - Km_true) / Km_true * 100
+Vmax_err_lb = abs(Vmax_lb - Vmax_true) / Vmax_true * 100
+Km_err_lb = abs(Km_lb - Km_true) / Km_true * 100
+Vmax_err_eh = abs(Vmax_eh - Vmax_true) / Vmax_true * 100
+Km_err_eh = abs(Km_eh - Km_true) / Km_true * 100
+Vmax_err_hw = abs(Vmax_hw - Vmax_true) / Vmax_true * 100
+Km_err_hw = abs(Km_hw - Km_true) / Km_true * 100
+
+print(f"Non-linear fit & {Vmax_fit:.2f} & {Vmax_err_fit:.2f} & {Km_fit:.2f} & {Km_err_fit:.2f} \\\\")
+print(f"Lineweaver-Burk & {Vmax_lb:.2f} & {Vmax_err_lb:.2f} & {Km_lb:.2f} & {Km_err_lb:.2f} \\\\")
+print(f"Eadie-Hofstee & {Vmax_eh:.2f} & {Vmax_err_eh:.2f} & {Km_eh:.2f} & {Km_err_eh:.2f} \\\\")
+print(f"Hanes-Woolf & {Vmax_hw:.2f} & {Vmax_err_hw:.2f} & {Km_hw:.2f} & {Km_err_hw:.2f} \\\\")
+print(r"\midrule")
+print(f"True values & {Vmax_true:.2f} & --- & {Km_true:.2f} & --- \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:parameters}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Inhibition Constants}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Apparent Kinetic Parameters Under Competitive Inhibition}")
+print(r"\begin{tabular}{cccc}")
+print(r"\toprule")
+print(r"[I] ($\mu$M) & $K_m^{app}$ ($\mu$M) & $V_{max}^{app}$ ($\mu$mol/min) & $K_i$ ($\mu$M) \\")
+print(r"\midrule")
+
+for I in [25, 50, 100]:
+    inv_v_c = 1 / v_competitive[I]
+    slope_c, intercept_c, _, _, _ = linregress(inv_S, inv_v_c)
+    Vmax_c = 1 / intercept_c
+    Km_c = slope_c * Vmax_c
+    Ki_c = I / (Km_c / Km_fit - 1) if Km_c > Km_fit else float('inf')
+    print(f"{I} & {Km_c:.1f} & {Vmax_c:.1f} & {Ki_c:.1f} \\\\")
+
+print(r"\midrule")
+print(f"True $K_i$ & --- & --- & {Ki_true:.1f} \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:inhibition}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Distinguishing Inhibition Mechanisms]
+The Lineweaver-Burk plots reveal characteristic patterns:
+\begin{itemize}
+\item \textbf{Competitive}: Lines intersect on the y-axis (unchanged $V_{max}$, increased $K_m^{app}$)
+\item \textbf{Uncompetitive}: Parallel lines (proportional decreases in both parameters)
+\item \textbf{Mixed}: Lines intersect left of y-axis (both parameters affected)
+\end{itemize}
+\end{example}
+
+\begin{remark}[Method Accuracy]
+Non-linear regression provides the most accurate parameter estimates because it properly
+weights data points. The Lineweaver-Burk plot systematically overweights low-substrate
+data where experimental error is highest.
+\end{remark}
+
+\subsection{Catalytic Efficiency}
+
+\begin{pycode}
+kcat = Vmax_fit / 1.0
+specificity = kcat / Km_fit
+print(f"The catalytic efficiency ($k_{{cat}}/K_m$) is {specificity:.2f} $\\mu$M$^{{-1}}$ min$^{{-1}}$.")
+\end{pycode}
+
+\section{Conclusions}
+
+This analysis demonstrates the application of Michaelis-Menten kinetics:
+\begin{enumerate}
+\item Non-linear regression yields $V_{max} = \py{f"{Vmax_fit:.1f}"}$ $\mu$mol/min and $K_m = \py{f"{Km_fit:.1f}"}$ $\mu$M
+\item Different inhibition types show diagnostic patterns in double-reciprocal plots
+\item The estimated $K_i$ for competitive inhibition agrees with the true value
+\item Linear transformations remain useful for visualization despite statistical limitations
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Cornish-Bowden, A. \textit{Fundamentals of Enzyme Kinetics}, 4th ed. Wiley-Blackwell, 2012.
+\item Bisswanger, H. \textit{Enzyme Kinetics: Principles and Methods}, 3rd ed. Wiley-VCH, 2017.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,271 @@
+% Gravitational Wave Physics
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Gravitational Wave Physics\\Strain, Detection, and Binary Systems}
+\author{Gravitational Wave Astronomy Group}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of gravitational wave generation, propagation, and detection including chirp mass calculations and LIGO sensitivity.
+\end{abstract}
+
+\section{Introduction}
+
+Gravitational waves are ripples in spacetime caused by accelerating masses.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+G = 6.674e-11
+c = 2.998e8
+M_sun = 1.989e30
+pc = 3.086e16  # parsec in meters
+\end{pycode}
+
+\section{Chirp Mass}
+
+$\mathcal{M} = \frac{(m_1 m_2)^{3/5}}{(m_1 + m_2)^{1/5}}$
+
+\begin{pycode}
+m1_range = np.linspace(1, 50, 50)
+m2 = 30  # Fixed second mass
+
+M_chirp = (m1_range * m2)**(3/5) / (m1_range + m2)**(1/5)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+for m2_val in [10, 20, 30, 40]:
+    M_c = (m1_range * m2_val)**(3/5) / (m1_range + m2_val)**(1/5)
+    ax.plot(m1_range, M_c, linewidth=1.5, label=f'$m_2$ = {m2_val} $M_\\odot$')
+ax.set_xlabel('$m_1$ ($M_\\odot$)')
+ax.set_ylabel('Chirp Mass ($M_\\odot$)')
+ax.set_title('Chirp Mass for Binary Systems')
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('chirp_mass.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{chirp_mass.pdf}
+\caption{Chirp mass for different binary configurations.}
+\end{figure}
+
+\section{Gravitational Wave Frequency}
+
+\begin{pycode}
+# Orbital frequency to GW frequency
+M_total = 60 * M_sun  # Total mass
+r_sep = np.logspace(6, 8, 100) * 1000  # Separation in meters
+
+f_orb = np.sqrt(G * M_total / r_sep**3) / (2 * np.pi)
+f_gw = 2 * f_orb  # GW frequency is twice orbital
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(r_sep / 1000, f_gw, 'b-', linewidth=2)
+ax.set_xlabel('Separation (km)')
+ax.set_ylabel('GW Frequency (Hz)')
+ax.set_title('Gravitational Wave Frequency vs Separation')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('gw_frequency.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{gw_frequency.pdf}
+\caption{GW frequency dependence on binary separation.}
+\end{figure}
+
+\section{Strain Amplitude}
+
+$h = \frac{4}{D}\left(\frac{G\mathcal{M}}{c^2}\right)^{5/3}\left(\frac{\pi f}{c}\right)^{2/3}$
+
+\begin{pycode}
+D = 400 * 1e6 * pc  # Distance (400 Mpc)
+M_c = 30 * M_sun     # Chirp mass
+f_range = np.logspace(0, 3, 100)
+
+h = (4 / D) * (G * M_c / c**2)**(5/3) * (np.pi * f_range / c)**(2/3)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(f_range, h, 'b-', linewidth=2)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Strain $h$')
+ax.set_title(f'GW Strain at D = 400 Mpc')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('gw_strain.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{gw_strain.pdf}
+\caption{Gravitational wave strain amplitude.}
+\end{figure}
+
+\section{Inspiral Waveform}
+
+\begin{pycode}
+# Simple inspiral model
+M_c_kg = 30 * M_sun
+t_merge = 1.0  # Time to merger
+t = np.linspace(0, t_merge - 0.01, 10000)
+tau = t_merge - t  # Time to coalescence
+
+# Frequency evolution
+f_t = (1 / np.pi) * (5 / (256 * tau))**(3/8) * (G * M_c_kg / c**3)**(-5/8)
+f_t = np.clip(f_t, 10, 1000)
+
+# Phase
+phi_t = -2 * (tau / (5 * G * M_c_kg / c**3))**(5/8)
+h_t = np.sin(phi_t)
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+ax1.plot(t, f_t, 'b-', linewidth=1)
+ax1.set_ylabel('Frequency (Hz)')
+ax1.set_title('Inspiral Waveform')
+ax1.set_yscale('log')
+ax1.grid(True, alpha=0.3)
+
+ax2.plot(t, h_t, 'b-', linewidth=0.5)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('Strain (arb. units)')
+ax2.set_xlim([0.8, 1])
+ax2.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('inspiral_waveform.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{inspiral_waveform.pdf}
+\caption{Binary inspiral frequency and waveform evolution.}
+\end{figure}
+
+\section{LIGO Sensitivity}
+
+\begin{pycode}
+# Simplified LIGO noise curve
+f_ligo = np.logspace(0.5, 4, 500)
+S_n = 1e-47 * ((f_ligo / 100)**(-4) + 2 * (1 + (f_ligo / 100)**2))
+h_n = np.sqrt(S_n * f_ligo)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(f_ligo, np.sqrt(S_n), 'b-', linewidth=2, label='LIGO Sensitivity')
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Strain Noise ($1/\\sqrt{\\mathrm{Hz}}$)')
+ax.set_title('LIGO Sensitivity Curve')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+ax.set_xlim([10, 3000])
+plt.tight_layout()
+plt.savefig('ligo_sensitivity.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{ligo_sensitivity.pdf}
+\caption{LIGO detector sensitivity curve.}
+\end{figure}
+
+\section{Energy Radiated}
+
+\begin{pycode}
+# Energy in GWs
+eta = 0.25  # Symmetric mass ratio
+M_total_energy = 60 * M_sun
+E_rad = eta * M_total_energy * c**2 * 0.1  # ~10% radiated
+
+distances = np.logspace(7, 10, 100) * pc
+L_gw = E_rad / 0.1  # Peak luminosity over 0.1 s
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(distances / (1e6 * pc), np.sqrt(L_gw * G / (c**3 * distances**2)), 'b-', linewidth=2)
+ax.set_xlabel('Distance (Mpc)')
+ax.set_ylabel('Strain')
+ax.set_title('Detectable Strain vs Distance')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('strain_distance.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{strain_distance.pdf}
+\caption{GW strain as function of source distance.}
+\end{figure}
+
+\section{Merger Rate}
+
+\begin{pycode}
+# Merger rate density
+z = np.linspace(0, 2, 100)
+R_0 = 100  # Local rate per Gpc^3 per year
+R_z = R_0 * (1 + z)**1.5  # Simple evolution
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(z, R_z, 'b-', linewidth=2)
+ax.set_xlabel('Redshift $z$')
+ax.set_ylabel('Merger Rate (Gpc$^{-3}$ yr$^{-1}$)')
+ax.set_title('Binary Black Hole Merger Rate')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('merger_rate.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{merger_rate.pdf}
+\caption{Merger rate evolution with redshift.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+M_c_example = (30 * 30)**(3/5) / (60)**(1/5)
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{GW150914-like Parameters}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f'Chirp mass & {M_c_example:.1f} $M_\\odot$ \\\\')
+print(f'Energy radiated & {E_rad/M_sun/c**2:.1f} $M_\\odot c^2$ \\\\')
+print(f'Peak frequency & $\\sim$250 Hz \\\\')
+print(f'Peak strain & $\\sim 10^{{-21}}$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Gravitational wave astronomy provides unique insights into compact binary systems and strong-field gravity.
+
+\end{document}

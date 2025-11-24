@@ -1,0 +1,383 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{braket}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+
+\title{Quantum Gate Operations and Qubit Visualization\\
+\large Bloch Sphere Dynamics and Gate Sequences}
+\author{Quantum Information Science Lab\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document explores single-qubit quantum gates and their geometric representation on the Bloch sphere. We implement matrix representations of common gates (Pauli, Hadamard, phase gates), visualize state evolution, and analyze gate sequences for quantum algorithms. The analysis includes gate decomposition, fidelity calculations, and comparisons between different gate implementations.
+\end{abstract}
+
+\section{Introduction to Quantum Gates}
+
+Quantum gates are unitary operations that transform quantum states. Unlike classical logic gates, they are reversible and can create superposition and entanglement.
+
+\begin{definition}[Qubit State]
+A qubit state can be written as:
+\begin{equation}
+\ket{\psi} = \alpha\ket{0} + \beta\ket{1} = \cos\frac{\theta}{2}\ket{0} + e^{i\phi}\sin\frac{\theta}{2}\ket{1}
+\end{equation}
+where $|\alpha|^2 + |\beta|^2 = 1$, and $\theta, \phi$ are angles on the Bloch sphere.
+\end{definition}
+
+\section{Single-Qubit Gates}
+
+\subsection{Pauli Gates}
+The Pauli matrices form the basis for single-qubit operations:
+\begin{equation}
+X = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \quad
+Y = \begin{pmatrix} 0 & -i \\ i & 0 \end{pmatrix}, \quad
+Z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix}
+\end{equation}
+
+\subsection{Hadamard Gate}
+Creates superposition from basis states:
+\begin{equation}
+H = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}, \quad
+H\ket{0} = \ket{+} = \frac{\ket{0} + \ket{1}}{\sqrt{2}}
+\end{equation}
+
+\subsection{Phase Gates}
+\begin{equation}
+S = \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix}, \quad
+T = \begin{pmatrix} 1 & 0 \\ 0 & e^{i\pi/4} \end{pmatrix}
+\end{equation}
+
+\subsection{Rotation Gates}
+Rotations around each axis by angle $\theta$:
+\begin{align}
+R_x(\theta) &= e^{-i\theta X/2} = \cos\frac{\theta}{2}I - i\sin\frac{\theta}{2}X \\
+R_y(\theta) &= e^{-i\theta Y/2} = \cos\frac{\theta}{2}I - i\sin\frac{\theta}{2}Y \\
+R_z(\theta) &= e^{-i\theta Z/2} = \cos\frac{\theta}{2}I - i\sin\frac{\theta}{2}Z
+\end{align}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Define basic gates
+I = np.eye(2, dtype=complex)
+X = np.array([[0, 1], [1, 0]], dtype=complex)
+Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+Z = np.array([[1, 0], [0, -1]], dtype=complex)
+H = np.array([[1, 1], [1, -1]], dtype=complex) / np.sqrt(2)
+S = np.array([[1, 0], [0, 1j]], dtype=complex)
+T = np.array([[1, 0], [0, np.exp(1j*np.pi/4)]], dtype=complex)
+
+def Rx(theta):
+    """Rotation around X-axis."""
+    return np.cos(theta/2)*I - 1j*np.sin(theta/2)*X
+
+def Ry(theta):
+    """Rotation around Y-axis."""
+    return np.cos(theta/2)*I - 1j*np.sin(theta/2)*Y
+
+def Rz(theta):
+    """Rotation around Z-axis."""
+    return np.cos(theta/2)*I - 1j*np.sin(theta/2)*Z
+
+# Basis states
+ket_0 = np.array([[1], [0]], dtype=complex)
+ket_1 = np.array([[0], [1]], dtype=complex)
+
+def state_to_bloch(state):
+    """Convert quantum state to Bloch sphere coordinates."""
+    alpha = state[0, 0]
+    beta = state[1, 0]
+
+    # Handle global phase
+    if np.abs(alpha) > 1e-10:
+        phase = np.angle(alpha)
+        alpha = alpha * np.exp(-1j * phase)
+        beta = beta * np.exp(-1j * phase)
+
+    # Bloch sphere coordinates
+    theta = 2 * np.arccos(np.clip(np.abs(alpha), 0, 1))
+    phi = np.angle(beta)
+
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z = np.cos(theta)
+
+    return np.real(x), np.real(y), np.real(z)
+
+def draw_bloch_sphere(ax):
+    """Draw wireframe Bloch sphere."""
+    u = np.linspace(0, 2*np.pi, 50)
+    v = np.linspace(0, np.pi, 30)
+    x = np.outer(np.cos(u), np.sin(v))
+    y = np.outer(np.sin(u), np.sin(v))
+    z = np.outer(np.ones_like(u), np.cos(v))
+    ax.plot_wireframe(x, y, z, color='lightgray', alpha=0.3, linewidth=0.5)
+
+    # Axes
+    ax.plot([-1.3, 1.3], [0, 0], [0, 0], 'k-', linewidth=0.5, alpha=0.5)
+    ax.plot([0, 0], [-1.3, 1.3], [0, 0], 'k-', linewidth=0.5, alpha=0.5)
+    ax.plot([0, 0], [0, 0], [-1.3, 1.3], 'k-', linewidth=0.5, alpha=0.5)
+
+    # Labels
+    ax.text(1.4, 0, 0, r'$|+\rangle$', fontsize=8)
+    ax.text(-1.4, 0, 0, r'$|-\rangle$', fontsize=8)
+    ax.text(0, 1.4, 0, r'$|+i\rangle$', fontsize=8)
+    ax.text(0, -1.4, 0, r'$|-i\rangle$', fontsize=8)
+    ax.text(0, 0, 1.4, r'$|0\rangle$', fontsize=8)
+    ax.text(0, 0, -1.4, r'$|1\rangle$', fontsize=8)
+
+# Simulate gate sequences
+def apply_sequence(state, gates):
+    """Apply sequence of gates to a state."""
+    trajectory = [state_to_bloch(state)]
+    current = state.copy()
+    for gate in gates:
+        current = gate @ current
+        trajectory.append(state_to_bloch(current))
+    return trajectory, current
+
+# Define several gate sequences
+sequences = {
+    'H-T-H': [H, T, H],
+    'X-Y-Z': [X, Y, Z],
+    'Rz-Ry-Rz': [Rz(np.pi/4), Ry(np.pi/3), Rz(np.pi/6)],
+    'T-gate sequence': [T, T, T, T, T, T, T, T]  # T^8 = I
+}
+
+# Calculate fidelity between states
+def fidelity(state1, state2):
+    """Calculate fidelity between two pure states."""
+    return np.abs(np.conj(state1.T) @ state2)[0, 0]**2
+
+# Gate decomposition: decompose H into rotations
+# H = Rz(pi) Ry(pi/2) up to global phase
+H_decomposed = Rz(np.pi) @ Ry(np.pi/2)
+decomp_fidelity = fidelity(H @ ket_0, H_decomposed @ ket_0)
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(12, 10))
+
+# Plot 1: Single gate effects on |0>
+ax1 = fig.add_subplot(2, 3, 1, projection='3d')
+draw_bloch_sphere(ax1)
+
+# Show effect of different gates on |0>
+gates_demo = {'$X$': X, '$H$': H, '$T$': T, '$S$': S}
+colors = ['red', 'blue', 'green', 'purple']
+for (name, gate), color in zip(gates_demo.items(), colors):
+    result = gate @ ket_0
+    x, y, z = state_to_bloch(result)
+    ax1.scatter([x], [y], [z], s=100, c=color, label=name, alpha=0.8)
+    ax1.plot([0, x], [0, y], [1, z], color=color, linewidth=1, alpha=0.5)
+
+# Initial state |0>
+ax1.scatter([0], [0], [1], s=100, c='black', marker='*', label='$|0\\rangle$')
+ax1.set_title('Gate Effects on $|0\\rangle$')
+ax1.legend(loc='upper left', fontsize=7)
+ax1.set_xlim([-1.5, 1.5])
+ax1.set_ylim([-1.5, 1.5])
+ax1.set_zlim([-1.5, 1.5])
+
+# Plot 2: Gate sequence trajectory
+ax2 = fig.add_subplot(2, 3, 2, projection='3d')
+draw_bloch_sphere(ax2)
+
+traj, final = apply_sequence(ket_0, sequences['H-T-H'])
+traj = np.array(traj)
+ax2.plot(traj[:, 0], traj[:, 1], traj[:, 2], 'b-', linewidth=2)
+ax2.scatter(traj[0, 0], traj[0, 1], traj[0, 2], s=100, c='green', marker='o', label='Start')
+ax2.scatter(traj[-1, 0], traj[-1, 1], traj[-1, 2], s=100, c='red', marker='s', label='End')
+for i in range(1, len(traj)-1):
+    ax2.scatter(traj[i, 0], traj[i, 1], traj[i, 2], s=50, c='blue', alpha=0.5)
+ax2.set_title('H-T-H Sequence')
+ax2.legend(fontsize=8)
+ax2.set_xlim([-1.5, 1.5])
+ax2.set_ylim([-1.5, 1.5])
+ax2.set_zlim([-1.5, 1.5])
+
+# Plot 3: T-gate rotation
+ax3 = fig.add_subplot(2, 3, 3, projection='3d')
+draw_bloch_sphere(ax3)
+
+# Apply H then multiple T gates (rotation around Z on equator)
+state = H @ ket_0  # Start at |+>
+traj_t = [state_to_bloch(state)]
+for _ in range(8):
+    state = T @ state
+    traj_t.append(state_to_bloch(state))
+traj_t = np.array(traj_t)
+
+ax3.plot(traj_t[:, 0], traj_t[:, 1], traj_t[:, 2], 'r-', linewidth=2)
+for i, (x, y, z) in enumerate(traj_t):
+    ax3.scatter(x, y, z, s=40, c=plt.cm.viridis(i/8), alpha=0.8)
+ax3.set_title('$T^8$ Rotation (starting from $|+\\rangle$)')
+ax3.set_xlim([-1.5, 1.5])
+ax3.set_ylim([-1.5, 1.5])
+ax3.set_zlim([-1.5, 1.5])
+
+# Plot 4: Gate matrix visualization
+ax4 = fig.add_subplot(2, 3, 4)
+gate_mats = [('X', X), ('Y', Y), ('Z', Z), ('H', H)]
+for i, (name, gate) in enumerate(gate_mats):
+    # Show magnitude
+    ax4.imshow(np.abs(gate), cmap='Blues', alpha=0.7,
+               extent=[i*2.5, i*2.5+2, 0, 2])
+    ax4.text(i*2.5+1, -0.3, name, ha='center', fontsize=10)
+ax4.set_xlim([-0.5, 10])
+ax4.set_ylim([-0.5, 2.5])
+ax4.axis('off')
+ax4.set_title('Gate Matrix Magnitudes')
+
+# Plot 5: Rotation angle sweep
+ax5 = fig.add_subplot(2, 3, 5)
+angles = np.linspace(0, 2*np.pi, 100)
+prob_0 = []
+prob_1 = []
+
+for theta in angles:
+    state = Ry(theta) @ ket_0
+    prob_0.append(np.abs(state[0, 0])**2)
+    prob_1.append(np.abs(state[1, 0])**2)
+
+ax5.plot(angles/np.pi, prob_0, 'b-', linewidth=2, label='$|\\langle 0|\\psi\\rangle|^2$')
+ax5.plot(angles/np.pi, prob_1, 'r-', linewidth=2, label='$|\\langle 1|\\psi\\rangle|^2$')
+ax5.axvline(0.5, color='gray', linestyle='--', alpha=0.5, label='$\\theta=\\pi/2$')
+ax5.axvline(1.0, color='gray', linestyle=':', alpha=0.5, label='$\\theta=\\pi$')
+ax5.set_xlabel('$\\theta / \\pi$')
+ax5.set_ylabel('Probability')
+ax5.set_title('$R_y(\\theta)$ Rotation: Measurement Probabilities')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Gate composition comparison
+ax6 = fig.add_subplot(2, 3, 6)
+
+# Compare different ways to create the same state
+target = H @ ket_0  # |+> state
+methods = {
+    '$H|0\\rangle$': H @ ket_0,
+    '$R_y(\\pi/2)|0\\rangle$': Ry(np.pi/2) @ ket_0,
+    '$R_x(\\pi/2)R_z(-\\pi/2)|0\\rangle$': Rx(np.pi/2) @ Rz(-np.pi/2) @ ket_0,
+}
+
+fidelities = []
+labels = []
+for name, state in methods.items():
+    fid = fidelity(target, state)
+    fidelities.append(fid)
+    labels.append(name)
+
+bars = ax6.barh(range(len(labels)), fidelities, color=['#3498db', '#2ecc71', '#e74c3c'], alpha=0.8)
+ax6.set_yticks(range(len(labels)))
+ax6.set_yticklabels(labels, fontsize=8)
+ax6.set_xlabel('Fidelity with $|+\\rangle$')
+ax6.set_title('Gate Composition Equivalence')
+ax6.set_xlim([0.9, 1.01])
+for i, fid in enumerate(fidelities):
+    ax6.text(fid + 0.002, i, f'{fid:.4f}', va='center', fontsize=8)
+ax6.grid(True, alpha=0.3, axis='x')
+
+plt.tight_layout()
+plt.savefig('quantum_gates_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{quantum_gates_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Calculate some results for text
+t_gate_period = 8  # T^8 = I (up to global phase)
+h_fidelity = fidelity(H @ ket_0, H_decomposed @ ket_0)
+\end{pycode}
+
+\section{Results}
+
+\subsection{Gate Properties}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Single-Qubit Gate Properties}')
+print(r'\begin{tabular}{lccl}')
+print(r'\toprule')
+print(r'Gate & Rotation Axis & Angle & Notes \\')
+print(r'\midrule')
+print(r'$X$ & $x$ & $\pi$ & Bit flip \\')
+print(r'$Y$ & $y$ & $\pi$ & Bit + phase flip \\')
+print(r'$Z$ & $z$ & $\pi$ & Phase flip \\')
+print(r'$H$ & $(x+z)/\sqrt{2}$ & $\pi$ & Hadamard \\')
+print(r'$S$ & $z$ & $\pi/2$ & Phase gate \\')
+print(r'$T$ & $z$ & $\pi/4$ & $\pi/8$ gate \\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Key Observations}
+
+\begin{enumerate}
+    \item \textbf{Bloch Sphere Visualization}: Each gate corresponds to a rotation around a specific axis. The Pauli gates are $\pi$ rotations, while phase gates are partial rotations around $z$.
+
+    \item \textbf{T-Gate Period}: The $T$ gate has period \py{t_gate_period}, meaning $T^8 = I$ (up to global phase). This is visible in the circular trajectory on the Bloch sphere equator.
+
+    \item \textbf{Gate Decomposition}: The Hadamard gate can be decomposed as $H = R_z(\pi)R_y(\pi/2)$ with fidelity \py{f"{h_fidelity:.6f}"}.
+
+    \item \textbf{Universal Gate Sets}: The set $\{H, T, \text{CNOT}\}$ is universal for quantum computation, meaning any unitary can be approximated to arbitrary precision.
+\end{enumerate}
+
+\subsection{Gate Sequence Analysis}
+
+The H-T-H sequence creates a rotation that is neither purely around $x$, $y$, or $z$:
+\begin{equation}
+HTH = \begin{pmatrix} \frac{1+e^{i\pi/4}}{2} & \frac{1-e^{i\pi/4}}{2} \\ \frac{1-e^{i\pi/4}}{2} & \frac{1+e^{i\pi/4}}{2} \end{pmatrix}
+\end{equation}
+
+This creates a rotation around an axis tilted from $z$ toward $x$, demonstrating how gate sequences can create arbitrary rotations.
+
+\section{Applications}
+
+\subsection{Quantum Algorithms}
+Common gate sequences appear in quantum algorithms:
+\begin{itemize}
+    \item \textbf{Quantum Fourier Transform}: Uses controlled phase gates
+    \item \textbf{Grover's Algorithm}: Uses Hadamard and oracle gates
+    \item \textbf{VQE}: Parameterized rotation gates for variational optimization
+\end{itemize}
+
+\subsection{Error Correction}
+Gate decomposition is crucial for:
+\begin{itemize}
+    \item Fault-tolerant quantum computing with magic state distillation
+    \item Compiling high-level algorithms to native gate sets
+    \item Optimizing circuit depth and gate count
+\end{itemize}
+
+\section{Conclusion}
+
+Quantum gates transform qubit states through unitary rotations on the Bloch sphere. Understanding these geometric transformations is essential for designing quantum algorithms and implementing them on real hardware. The visualization tools presented here provide intuition for gate behavior and sequence composition.
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Nielsen, M. A., \& Chuang, I. L. (2010). \textit{Quantum Computation and Quantum Information}. Cambridge.
+    \item Preskill, J. (2018). Quantum Computing in the NISQ era and beyond. \textit{Quantum}, 2, 79.
+\end{itemize}
+
+\end{document}

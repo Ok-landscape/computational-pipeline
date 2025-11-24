@@ -1,0 +1,468 @@
+\documentclass[11pt,a4paper]{article}
+
+% Document Setup
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{hyperref}
+
+% PythonTeX Setup
+\usepackage[makestderr]{pythontex}
+
+\title{Stress Analysis: Mohr's Circle and Failure Theories}
+\author{Mechanical Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents computational analysis of stress states in solid mechanics. We examine stress transformation using Mohr's circle, principal stresses, von Mises equivalent stress, and common failure theories. Python-based computations provide quantitative analysis with dynamic visualization.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Introduction to Stress Analysis}
+
+Stress analysis is fundamental to mechanical design and failure prediction. This analysis covers:
+\begin{itemize}
+    \item Plane stress transformation
+    \item Mohr's circle construction
+    \item Principal stress calculation
+    \item von Mises yield criterion
+    \item Failure theories (Tresca, Rankine, Mohr-Coulomb)
+\end{itemize}
+
+% Initialize Python environment
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, FancyArrowPatch
+
+plt.rcParams['figure.figsize'] = (8, 5)
+plt.rcParams['font.size'] = 10
+plt.rcParams['text.usetex'] = True
+
+def save_fig(filename):
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+\end{pycode}
+
+\section{Plane Stress State}
+
+For a 2D stress state, the stress tensor is:
+\begin{equation}
+\boldsymbol{\sigma} = \begin{pmatrix} \sigma_x & \tau_{xy} \\ \tau_{xy} & \sigma_y \end{pmatrix}
+\end{equation}
+
+\subsection{Stress Transformation}
+
+Stresses on a rotated plane (angle $\theta$ from x-axis):
+\begin{align}
+\sigma_{x'} &= \frac{\sigma_x + \sigma_y}{2} + \frac{\sigma_x - \sigma_y}{2}\cos(2\theta) + \tau_{xy}\sin(2\theta) \\
+\tau_{x'y'} &= -\frac{\sigma_x - \sigma_y}{2}\sin(2\theta) + \tau_{xy}\cos(2\theta)
+\end{align}
+
+\begin{pycode}
+# Define stress state
+sigma_x = 80  # MPa
+sigma_y = -40  # MPa
+tau_xy = 30   # MPa
+
+# Calculate center and radius of Mohr's circle
+sigma_avg = (sigma_x + sigma_y) / 2
+R = np.sqrt(((sigma_x - sigma_y) / 2)**2 + tau_xy**2)
+
+# Principal stresses
+sigma_1 = sigma_avg + R
+sigma_2 = sigma_avg - R
+
+# Principal angle
+theta_p = 0.5 * np.arctan2(2*tau_xy, sigma_x - sigma_y)
+theta_p_deg = np.degrees(theta_p)
+
+# Maximum shear stress
+tau_max = R
+theta_s = theta_p + np.pi/4
+
+# Stress transformation for various angles
+theta = np.linspace(0, np.pi, 180)
+sigma_n = sigma_avg + (sigma_x - sigma_y)/2 * np.cos(2*theta) + tau_xy * np.sin(2*theta)
+tau_nt = -(sigma_x - sigma_y)/2 * np.sin(2*theta) + tau_xy * np.cos(2*theta)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+# Mohr's Circle
+circle = Circle((sigma_avg, 0), R, fill=False, color='blue', linewidth=2)
+ax1.add_patch(circle)
+
+# Plot key points
+ax1.plot(sigma_x, tau_xy, 'ro', markersize=10, label=f'X: ({sigma_x}, {tau_xy})')
+ax1.plot(sigma_y, -tau_xy, 'go', markersize=10, label=f'Y: ({sigma_y}, {-tau_xy})')
+ax1.plot(sigma_1, 0, 'bs', markersize=10, label=f'$\\sigma_1$: {sigma_1:.1f}')
+ax1.plot(sigma_2, 0, 'bs', markersize=10, label=f'$\\sigma_2$: {sigma_2:.1f}')
+ax1.plot(sigma_avg, tau_max, 'r^', markersize=10)
+ax1.plot(sigma_avg, -tau_max, 'r^', markersize=10)
+
+# Draw XY line
+ax1.plot([sigma_x, sigma_y], [tau_xy, -tau_xy], 'k--', linewidth=1)
+
+ax1.axhline(0, color='k', linewidth=0.5)
+ax1.axvline(0, color='k', linewidth=0.5)
+ax1.set_xlabel('Normal Stress $\\sigma$ (MPa)')
+ax1.set_ylabel('Shear Stress $\\tau$ (MPa)')
+ax1.set_title("Mohr's Circle for Plane Stress")
+ax1.legend(loc='upper right', fontsize=8)
+ax1.grid(True, alpha=0.3)
+ax1.axis('equal')
+ax1.set_xlim(-80, 120)
+ax1.set_ylim(-80, 80)
+
+# Stress variation with angle
+ax2.plot(np.degrees(theta), sigma_n, 'b-', linewidth=2, label='$\\sigma_n$')
+ax2.plot(np.degrees(theta), tau_nt, 'r-', linewidth=2, label='$\\tau_{nt}$')
+ax2.axhline(sigma_1, color='b', linestyle='--', alpha=0.5)
+ax2.axhline(sigma_2, color='b', linestyle='--', alpha=0.5)
+ax2.axhline(tau_max, color='r', linestyle='--', alpha=0.5)
+ax2.axhline(-tau_max, color='r', linestyle='--', alpha=0.5)
+ax2.axvline(theta_p_deg, color='k', linestyle=':', alpha=0.5)
+ax2.set_xlabel('Angle $\\theta$ (degrees)')
+ax2.set_ylabel('Stress (MPa)')
+ax2.set_title('Stress Transformation')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('mohr_circle.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{mohr_circle.pdf}
+\caption{Mohr's circle construction and stress transformation with angle.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Principal Stress Results}
+\begin{tabular}{lcc}
+\toprule
+Parameter & Value & Units \\
+\midrule
+$\sigma_1$ (max principal) & \py{f"{sigma_1:.1f}"} & MPa \\
+$\sigma_2$ (min principal) & \py{f"{sigma_2:.1f}"} & MPa \\
+$\tau_{max}$ & \py{f"{tau_max:.1f}"} & MPa \\
+Principal angle $\theta_p$ & \py{f"{theta_p_deg:.1f}"} & degrees \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{3D Stress State and von Mises Stress}
+
+For a general 3D stress state, the von Mises equivalent stress is:
+\begin{equation}
+\sigma_{VM} = \sqrt{\frac{1}{2}[(\sigma_1-\sigma_2)^2 + (\sigma_2-\sigma_3)^2 + (\sigma_3-\sigma_1)^2]}
+\end{equation}
+
+For plane stress ($\sigma_3 = 0$):
+\begin{equation}
+\sigma_{VM} = \sqrt{\sigma_1^2 - \sigma_1\sigma_2 + \sigma_2^2}
+\end{equation}
+
+\begin{pycode}
+# von Mises stress calculation
+sigma_3 = 0  # plane stress
+sigma_VM = np.sqrt(sigma_1**2 - sigma_1*sigma_2 + sigma_2**2)
+
+# von Mises yield surface (ellipse in sigma_1-sigma_2 space)
+S_y = 250  # Yield strength (MPa)
+
+theta_vm = np.linspace(0, 2*np.pi, 200)
+# Parametric form of von Mises ellipse
+a = S_y * np.sqrt(2/3)
+b = S_y * np.sqrt(2)
+sigma_1_vm = a * np.cos(theta_vm) + b/2 * np.sin(theta_vm)
+sigma_2_vm = -a * np.cos(theta_vm) + b/2 * np.sin(theta_vm)
+
+# Tresca yield surface (hexagon)
+S_tresca = S_y
+tresca_points = np.array([
+    [S_tresca, 0], [S_tresca, S_tresca], [0, S_tresca],
+    [-S_tresca, 0], [-S_tresca, -S_tresca], [0, -S_tresca], [S_tresca, 0]
+])
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# von Mises and Tresca yield surfaces
+ax1.plot(sigma_1_vm, sigma_2_vm, 'b-', linewidth=2, label='von Mises')
+ax1.plot(tresca_points[:, 0], tresca_points[:, 1], 'r--', linewidth=2, label='Tresca')
+ax1.plot(sigma_1, sigma_2, 'ko', markersize=10, label=f'Current state')
+ax1.axhline(0, color='k', linewidth=0.5)
+ax1.axvline(0, color='k', linewidth=0.5)
+ax1.set_xlabel('$\\sigma_1$ (MPa)')
+ax1.set_ylabel('$\\sigma_2$ (MPa)')
+ax1.set_title('Yield Surfaces (Plane Stress)')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.axis('equal')
+
+# Safety factor visualization
+SF_VM = S_y / sigma_VM
+sigma_range = np.linspace(0, S_y, 100)
+
+# von Mises boundary at various sigma_2/sigma_1 ratios
+ratios = [-1, -0.5, 0, 0.5, 1]
+for ratio in ratios:
+    sigma_2_line = ratio * sigma_range
+    sigma_VM_line = np.sqrt(sigma_range**2 - sigma_range*sigma_2_line + sigma_2_line**2)
+    ax2.plot(sigma_range, sigma_VM_line, linewidth=1.5, label=f'$\\sigma_2/\\sigma_1$ = {ratio}')
+
+ax2.axhline(S_y, color='r', linestyle='--', linewidth=2, label=f'$S_y$ = {S_y} MPa')
+ax2.plot(sigma_1, sigma_VM, 'ko', markersize=10)
+ax2.set_xlabel('$\\sigma_1$ (MPa)')
+ax2.set_ylabel('$\\sigma_{VM}$ (MPa)')
+ax2.set_title('von Mises Equivalent Stress')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('von_mises.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{von_mises.pdf}
+\caption{Yield surfaces and von Mises equivalent stress analysis.}
+\end{figure}
+
+von Mises stress: $\sigma_{VM} = \py{f"{sigma_VM:.1f}"}$ MPa, Safety factor = \py{f"{S_y/sigma_VM:.2f}"}
+
+\section{Failure Theories}
+
+\begin{pycode}
+# Comparison of failure theories
+S_y = 250  # Tensile yield strength
+S_yc = 300  # Compressive yield strength (for Mohr-Coulomb)
+S_ut = 400  # Ultimate tensile strength
+
+# Create principal stress space
+s1 = np.linspace(-400, 400, 200)
+s2 = np.linspace(-400, 400, 200)
+S1, S2 = np.meshgrid(s1, s2)
+
+# von Mises criterion
+VM = np.sqrt(S1**2 - S1*S2 + S2**2)
+
+# Tresca criterion
+Tresca = np.maximum(np.abs(S1 - S2), np.maximum(np.abs(S1), np.abs(S2)))
+
+# Rankine (maximum normal stress)
+Rankine = np.maximum(np.abs(S1), np.abs(S2))
+
+# Mohr-Coulomb (simplified)
+MC = np.maximum(S1/S_y - S2/S_yc, S2/S_y - S1/S_yc)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# von Mises
+cs1 = axes[0, 0].contour(S1, S2, VM, levels=[S_y], colors='blue', linewidths=2)
+axes[0, 0].clabel(cs1, fmt='$S_y$=%d' % S_y)
+axes[0, 0].plot(sigma_1, sigma_2, 'ro', markersize=10)
+axes[0, 0].axhline(0, color='k', linewidth=0.5)
+axes[0, 0].axvline(0, color='k', linewidth=0.5)
+axes[0, 0].set_xlabel('$\\sigma_1$ (MPa)')
+axes[0, 0].set_ylabel('$\\sigma_2$ (MPa)')
+axes[0, 0].set_title('von Mises Criterion')
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].axis('equal')
+
+# Tresca
+cs2 = axes[0, 1].contour(S1, S2, Tresca, levels=[S_y], colors='red', linewidths=2)
+axes[0, 1].clabel(cs2, fmt='$S_y$=%d' % S_y)
+axes[0, 1].plot(sigma_1, sigma_2, 'ro', markersize=10)
+axes[0, 1].axhline(0, color='k', linewidth=0.5)
+axes[0, 1].axvline(0, color='k', linewidth=0.5)
+axes[0, 1].set_xlabel('$\\sigma_1$ (MPa)')
+axes[0, 1].set_ylabel('$\\sigma_2$ (MPa)')
+axes[0, 1].set_title('Tresca (Max Shear) Criterion')
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].axis('equal')
+
+# Rankine
+cs3 = axes[1, 0].contour(S1, S2, Rankine, levels=[S_ut], colors='green', linewidths=2)
+axes[1, 0].clabel(cs3, fmt='$S_{ut}$=%d' % S_ut)
+axes[1, 0].plot(sigma_1, sigma_2, 'ro', markersize=10)
+axes[1, 0].axhline(0, color='k', linewidth=0.5)
+axes[1, 0].axvline(0, color='k', linewidth=0.5)
+axes[1, 0].set_xlabel('$\\sigma_1$ (MPa)')
+axes[1, 0].set_ylabel('$\\sigma_2$ (MPa)')
+axes[1, 0].set_title('Rankine (Max Normal Stress) Criterion')
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].axis('equal')
+
+# Comparison
+axes[1, 1].contour(S1, S2, VM, levels=[S_y], colors='blue', linewidths=2)
+axes[1, 1].contour(S1, S2, Tresca, levels=[S_y], colors='red', linewidths=2, linestyles='--')
+axes[1, 1].plot(sigma_1, sigma_2, 'ko', markersize=10, label='Current state')
+axes[1, 1].axhline(0, color='k', linewidth=0.5)
+axes[1, 1].axvline(0, color='k', linewidth=0.5)
+axes[1, 1].set_xlabel('$\\sigma_1$ (MPa)')
+axes[1, 1].set_ylabel('$\\sigma_2$ (MPa)')
+axes[1, 1].set_title('Comparison: von Mises (blue) vs Tresca (red)')
+axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].axis('equal')
+
+plt.tight_layout()
+save_fig('failure_theories.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{failure_theories.pdf}
+\caption{Comparison of failure theories: von Mises, Tresca, and Rankine.}
+\end{figure}
+
+\section{Stress Concentration}
+
+Stress concentration factors modify nominal stress:
+\begin{equation}
+\sigma_{max} = K_t \cdot \sigma_{nom}
+\end{equation}
+
+\begin{pycode}
+# Stress concentration for plate with hole
+def Kt_plate_hole(d_w):
+    """Stress concentration factor for plate with central hole under tension"""
+    return 3.0 - 3.14*d_w + 3.667*d_w**2 - 1.527*d_w**3
+
+d_w_range = np.linspace(0.01, 0.7, 100)
+Kt = [Kt_plate_hole(dw) for dw in d_w_range]
+
+# For shaft with fillet
+def Kt_shaft_fillet(D_d, r_d):
+    """Approximate Kt for stepped shaft with fillet"""
+    C1 = 0.926 + 1.157*np.sqrt(r_d) - 0.099*r_d
+    C2 = 0.012 - 3.036*np.sqrt(r_d) + 0.961*r_d
+    return C1 + C2*(2*D_d/(D_d+1))
+
+D_d_values = [1.1, 1.2, 1.5, 2.0]
+r_d_range = np.linspace(0.01, 0.3, 100)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Plate with hole
+ax1.plot(d_w_range, Kt, 'b-', linewidth=2)
+ax1.set_xlabel('$d/w$ (hole diameter / plate width)')
+ax1.set_ylabel('$K_t$')
+ax1.set_title('Plate with Central Hole')
+ax1.grid(True, alpha=0.3)
+
+# Shaft with fillet
+for D_d in D_d_values:
+    Kt_shaft = [Kt_shaft_fillet(D_d, rd) for rd in r_d_range]
+    ax2.plot(r_d_range, Kt_shaft, linewidth=2, label=f'D/d = {D_d}')
+
+ax2.set_xlabel('$r/d$ (fillet radius / minor diameter)')
+ax2.set_ylabel('$K_t$')
+ax2.set_title('Stepped Shaft with Fillet (Tension)')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('stress_concentration.pdf')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{stress_concentration.pdf}
+\caption{Stress concentration factors for common geometries.}
+\end{figure}
+
+\section{Beam Bending Stress}
+
+\begin{pycode}
+# Cantilever beam with end load
+L = 1.0  # m
+P = 5000  # N
+b = 0.05  # m (width)
+h = 0.1   # m (height)
+I = b * h**3 / 12
+c = h / 2
+
+x = np.linspace(0, L, 100)
+M = P * (L - x)  # Moment distribution
+sigma_max = M * c / I  # Maximum bending stress
+V = P * np.ones_like(x)  # Shear force
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Bending moment diagram
+axes[0, 0].plot(x, M/1000, 'b-', linewidth=2)
+axes[0, 0].fill_between(x, 0, M/1000, alpha=0.3)
+axes[0, 0].set_xlabel('Position (m)')
+axes[0, 0].set_ylabel('Moment (kN$\\cdot$m)')
+axes[0, 0].set_title('Bending Moment Diagram')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Shear force diagram
+axes[0, 1].plot(x, V/1000, 'r-', linewidth=2)
+axes[0, 1].fill_between(x, 0, V/1000, alpha=0.3, color='red')
+axes[0, 1].set_xlabel('Position (m)')
+axes[0, 1].set_ylabel('Shear Force (kN)')
+axes[0, 1].set_title('Shear Force Diagram')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Stress distribution through depth at root
+y = np.linspace(-h/2, h/2, 100)
+M_root = P * L
+sigma_y = M_root * y / I
+
+axes[1, 0].plot(sigma_y/1e6, y*1000, 'g-', linewidth=2)
+axes[1, 0].axvline(0, color='k', linewidth=0.5)
+axes[1, 0].axhline(0, color='k', linewidth=0.5)
+axes[1, 0].set_xlabel('Bending Stress (MPa)')
+axes[1, 0].set_ylabel('Distance from neutral axis (mm)')
+axes[1, 0].set_title('Stress Distribution at Root')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Maximum stress along beam
+axes[1, 1].plot(x, sigma_max/1e6, 'm-', linewidth=2)
+axes[1, 1].set_xlabel('Position (m)')
+axes[1, 1].set_ylabel('Maximum Bending Stress (MPa)')
+axes[1, 1].set_title('Maximum Stress Distribution')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_fig('beam_bending.pdf')
+
+sigma_max_root = P * L * c / I
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{beam_bending.pdf}
+\caption{Cantilever beam analysis: moment, shear, and stress distributions.}
+\end{figure}
+
+Maximum bending stress at root: $\sigma_{max} = \py{f"{sigma_max_root/1e6:.1f}"}$ MPa
+
+\section{Conclusions}
+
+This analysis demonstrates key aspects of stress analysis:
+\begin{enumerate}
+    \item Mohr's circle provides graphical stress transformation
+    \item Principal stresses define maximum and minimum normal stresses
+    \item von Mises criterion is appropriate for ductile materials
+    \item Tresca is more conservative than von Mises by up to 15\%
+    \item Stress concentration must be considered at geometric discontinuities
+    \item Beam bending produces linear stress distribution through depth
+\end{enumerate}
+
+\end{document}

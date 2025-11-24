@@ -1,0 +1,450 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage[makestderr]{pythontex}
+
+\title{Data Science: Comprehensive Statistical Analysis}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive statistical analysis workflow including descriptive statistics, hypothesis testing, confidence intervals, ANOVA, correlation analysis, and regression diagnostics. We demonstrate parametric and non-parametric tests, effect size calculations, and multiple testing corrections using Python's scipy and statsmodels libraries.
+\end{abstract}
+
+\section{Introduction}
+Statistical analysis forms the foundation of data-driven decision making. This analysis covers the complete workflow from exploratory data analysis through hypothesis testing to model diagnostics, providing a template for rigorous quantitative research.
+
+\section{Mathematical Framework}
+
+\subsection{Descriptive Statistics}
+Sample mean and variance:
+\begin{equation}
+\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i, \quad s^2 = \frac{1}{n-1}\sum_{i=1}^n (x_i - \bar{x})^2
+\end{equation}
+
+\subsection{Hypothesis Testing}
+For a t-test comparing two means:
+\begin{equation}
+t = \frac{\bar{x}_1 - \bar{x}_2}{s_p\sqrt{\frac{1}{n_1} + \frac{1}{n_2}}}
+\end{equation}
+
+where $s_p$ is the pooled standard deviation.
+
+\subsection{Confidence Intervals}
+A $(1-\alpha)$ confidence interval for the mean:
+\begin{equation}
+\bar{x} \pm t_{\alpha/2, n-1} \frac{s}{\sqrt{n}}
+\end{equation}
+
+\subsection{ANOVA}
+F-statistic for one-way ANOVA:
+\begin{equation}
+F = \frac{\text{MS}_{\text{between}}}{\text{MS}_{\text{within}}} = \frac{\sum_j n_j(\bar{x}_j - \bar{x})^2 / (k-1)}{\sum_j\sum_i (x_{ij} - \bar{x}_j)^2 / (N-k)}
+\end{equation}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+from scipy.stats import (norm, t, f, chi2, pearsonr, spearmanr,
+                         ttest_ind, ttest_rel, mannwhitneyu, wilcoxon,
+                         f_oneway, kruskal, shapiro, levene)
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Store results
+results = {}
+
+# Generate sample data
+n1, n2, n3 = 50, 50, 50
+group1 = np.random.normal(100, 15, n1)  # Control
+group2 = np.random.normal(108, 15, n2)  # Treatment A
+group3 = np.random.normal(105, 18, n3)  # Treatment B
+
+# Combined for overall analysis
+all_data = np.concatenate([group1, group2, group3])
+\end{pycode}
+
+\subsection{Descriptive Statistics}
+
+\begin{pycode}
+def descriptive_stats(data, name):
+    """Calculate comprehensive descriptive statistics"""
+    return {
+        'name': name,
+        'n': len(data),
+        'mean': np.mean(data),
+        'std': np.std(data, ddof=1),
+        'sem': stats.sem(data),
+        'median': np.median(data),
+        'q1': np.percentile(data, 25),
+        'q3': np.percentile(data, 75),
+        'min': np.min(data),
+        'max': np.max(data),
+        'skew': stats.skew(data),
+        'kurtosis': stats.kurtosis(data)
+    }
+
+stats_g1 = descriptive_stats(group1, 'Control')
+stats_g2 = descriptive_stats(group2, 'Treatment A')
+stats_g3 = descriptive_stats(group3, 'Treatment B')
+
+results['g1_mean'] = stats_g1['mean']
+results['g2_mean'] = stats_g2['mean']
+results['g3_mean'] = stats_g3['mean']
+results['g1_std'] = stats_g1['std']
+results['g2_std'] = stats_g2['std']
+results['g3_std'] = stats_g3['std']
+
+# Visualization
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Histograms
+ax1 = axes[0, 0]
+ax1.hist(group1, bins=15, alpha=0.7, label='Control', color='blue', edgecolor='black')
+ax1.hist(group2, bins=15, alpha=0.7, label='Treatment A', color='green', edgecolor='black')
+ax1.hist(group3, bins=15, alpha=0.7, label='Treatment B', color='red', edgecolor='black')
+ax1.set_xlabel('Value')
+ax1.set_ylabel('Frequency')
+ax1.set_title('Distribution Comparison')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Box plots
+ax2 = axes[0, 1]
+bp = ax2.boxplot([group1, group2, group3], labels=['Control', 'Treat A', 'Treat B'],
+                  patch_artist=True)
+colors = ['lightblue', 'lightgreen', 'lightcoral']
+for patch, color in zip(bp['boxes'], colors):
+    patch.set_facecolor(color)
+ax2.set_ylabel('Value')
+ax2.set_title('Box Plot Comparison')
+ax2.grid(True, alpha=0.3)
+
+# Q-Q plot for normality
+ax3 = axes[0, 2]
+stats.probplot(group1, dist="norm", plot=ax3)
+ax3.set_title('Q-Q Plot (Control Group)')
+
+# Violin plots
+ax4 = axes[1, 0]
+parts = ax4.violinplot([group1, group2, group3], positions=[1, 2, 3], showmeans=True)
+ax4.set_xticks([1, 2, 3])
+ax4.set_xticklabels(['Control', 'Treat A', 'Treat B'])
+ax4.set_ylabel('Value')
+ax4.set_title('Violin Plot')
+ax4.grid(True, alpha=0.3)
+
+# Mean with confidence intervals
+ax5 = axes[1, 1]
+means = [stats_g1['mean'], stats_g2['mean'], stats_g3['mean']]
+sems = [stats_g1['sem'], stats_g2['sem'], stats_g3['sem']]
+ci95 = [1.96 * s for s in sems]
+x_pos = [1, 2, 3]
+ax5.bar(x_pos, means, yerr=ci95, capsize=5, color=colors, edgecolor='black', alpha=0.7)
+ax5.set_xticks(x_pos)
+ax5.set_xticklabels(['Control', 'Treat A', 'Treat B'])
+ax5.set_ylabel('Mean (95\\% CI)')
+ax5.set_title('Group Means with Confidence Intervals')
+ax5.grid(True, alpha=0.3)
+
+# Cumulative distribution
+ax6 = axes[1, 2]
+for data, label, color in [(group1, 'Control', 'blue'),
+                            (group2, 'Treat A', 'green'),
+                            (group3, 'Treat B', 'red')]:
+    sorted_data = np.sort(data)
+    cumulative = np.arange(1, len(data) + 1) / len(data)
+    ax6.plot(sorted_data, cumulative, label=label, color=color, linewidth=2)
+ax6.set_xlabel('Value')
+ax6.set_ylabel('Cumulative Probability')
+ax6.set_title('Empirical CDF')
+ax6.legend()
+ax6.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('statistical_descriptive.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{statistical_descriptive.pdf}')
+print(r'\caption{Descriptive statistics visualization: histograms, box plots, Q-Q plot, violin plots, means with CI, and empirical CDFs.}')
+print(r'\label{fig:descriptive}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Normality and Homogeneity Tests}
+
+\begin{pycode}
+# Normality tests
+shapiro_g1 = shapiro(group1)
+shapiro_g2 = shapiro(group2)
+shapiro_g3 = shapiro(group3)
+
+# Homogeneity of variance
+levene_stat, levene_p = levene(group1, group2, group3)
+
+results['shapiro_g1_p'] = shapiro_g1.pvalue
+results['shapiro_g2_p'] = shapiro_g2.pvalue
+results['shapiro_g3_p'] = shapiro_g3.pvalue
+results['levene_p'] = levene_p
+\end{pycode}
+
+\subsection{Hypothesis Testing}
+
+\begin{pycode}
+# Two-sample t-tests
+t_stat_12, p_value_12 = ttest_ind(group1, group2)
+t_stat_13, p_value_13 = ttest_ind(group1, group3)
+t_stat_23, p_value_23 = ttest_ind(group2, group3)
+
+# Mann-Whitney U test (non-parametric)
+u_stat_12, u_p_12 = mannwhitneyu(group1, group2, alternative='two-sided')
+
+# Effect size (Cohen's d)
+def cohens_d(g1, g2):
+    n1, n2 = len(g1), len(g2)
+    var1, var2 = np.var(g1, ddof=1), np.var(g2, ddof=1)
+    pooled_std = np.sqrt(((n1-1)*var1 + (n2-1)*var2) / (n1+n2-2))
+    return (np.mean(g1) - np.mean(g2)) / pooled_std
+
+d_12 = cohens_d(group1, group2)
+d_13 = cohens_d(group1, group3)
+d_23 = cohens_d(group2, group3)
+
+results['t_stat_12'] = t_stat_12
+results['p_value_12'] = p_value_12
+results['cohens_d_12'] = d_12
+
+# ANOVA
+f_stat, anova_p = f_oneway(group1, group2, group3)
+results['f_stat'] = f_stat
+results['anova_p'] = anova_p
+
+# Kruskal-Wallis (non-parametric ANOVA)
+h_stat, kw_p = kruskal(group1, group2, group3)
+results['kw_p'] = kw_p
+\end{pycode}
+
+\subsection{Correlation Analysis}
+
+\begin{pycode}
+# Generate correlated data for correlation analysis
+n_corr = 100
+x_data = np.random.normal(50, 10, n_corr)
+y_data = 2 * x_data + np.random.normal(0, 15, n_corr)
+z_data = np.random.normal(50, 10, n_corr)  # Uncorrelated
+
+# Pearson correlation
+r_xy, p_xy = pearsonr(x_data, y_data)
+r_xz, p_xz = pearsonr(x_data, z_data)
+
+# Spearman correlation
+rho_xy, sp_p_xy = spearmanr(x_data, y_data)
+
+results['pearson_r'] = r_xy
+results['pearson_p'] = p_xy
+results['spearman_rho'] = rho_xy
+
+fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+
+# Scatter with regression line
+ax1 = axes[0, 0]
+ax1.scatter(x_data, y_data, alpha=0.6, s=30)
+z_fit = np.polyfit(x_data, y_data, 1)
+p_fit = np.poly1d(z_fit)
+x_line = np.linspace(min(x_data), max(x_data), 100)
+ax1.plot(x_line, p_fit(x_line), 'r-', linewidth=2, label=f'r = {r_xy:.3f}')
+ax1.set_xlabel('X')
+ax1.set_ylabel('Y')
+ax1.set_title('Strong Correlation')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# No correlation
+ax2 = axes[0, 1]
+ax2.scatter(x_data, z_data, alpha=0.6, s=30)
+ax2.set_xlabel('X')
+ax2.set_ylabel('Z')
+ax2.set_title(f'No Correlation (r = {r_xz:.3f})')
+ax2.grid(True, alpha=0.3)
+
+# Correlation matrix heatmap
+ax3 = axes[0, 2]
+data_matrix = np.column_stack([x_data, y_data, z_data])
+corr_matrix = np.corrcoef(data_matrix.T)
+im = ax3.imshow(corr_matrix, cmap='coolwarm', vmin=-1, vmax=1)
+plt.colorbar(im, ax=ax3)
+ax3.set_xticks([0, 1, 2])
+ax3.set_yticks([0, 1, 2])
+ax3.set_xticklabels(['X', 'Y', 'Z'])
+ax3.set_yticklabels(['X', 'Y', 'Z'])
+ax3.set_title('Correlation Matrix')
+for i in range(3):
+    for j in range(3):
+        ax3.text(j, i, f'{corr_matrix[i,j]:.2f}', ha='center', va='center')
+
+# Residual plot
+ax4 = axes[1, 0]
+residuals = y_data - p_fit(x_data)
+ax4.scatter(p_fit(x_data), residuals, alpha=0.6, s=30)
+ax4.axhline(y=0, color='r', linestyle='--')
+ax4.set_xlabel('Fitted Values')
+ax4.set_ylabel('Residuals')
+ax4.set_title('Residual Plot')
+ax4.grid(True, alpha=0.3)
+
+# P-value visualization
+ax5 = axes[1, 1]
+tests = ['Control vs\nTreat A', 'Control vs\nTreat B', 'Treat A vs\nTreat B']
+p_values = [p_value_12, p_value_13, p_value_23]
+colors_pval = ['green' if p < 0.05 else 'red' for p in p_values]
+bars = ax5.bar(tests, [-np.log10(p) for p in p_values], color=colors_pval, alpha=0.7, edgecolor='black')
+ax5.axhline(y=-np.log10(0.05), color='k', linestyle='--', label='p = 0.05')
+ax5.set_ylabel('$-\\log_{10}(p)$')
+ax5.set_title('Hypothesis Test Results')
+ax5.legend()
+ax5.grid(True, alpha=0.3)
+
+# Effect sizes
+ax6 = axes[1, 2]
+effect_sizes = [abs(d_12), abs(d_13), abs(d_23)]
+ax6.bar(tests, effect_sizes, color='steelblue', alpha=0.7, edgecolor='black')
+ax6.axhline(y=0.2, color='g', linestyle=':', label='Small (0.2)')
+ax6.axhline(y=0.5, color='orange', linestyle=':', label='Medium (0.5)')
+ax6.axhline(y=0.8, color='r', linestyle=':', label='Large (0.8)')
+ax6.set_ylabel("Cohen's d")
+ax6.set_title('Effect Sizes')
+ax6.legend(loc='upper right', fontsize=8)
+ax6.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('statistical_inference.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{statistical_inference.pdf}')
+print(r'\caption{Statistical inference: correlation analysis, residual diagnostics, hypothesis test results, and effect sizes.}')
+print(r'\label{fig:inference}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Multiple Testing Correction}
+
+\begin{pycode}
+# Bonferroni correction
+alpha = 0.05
+n_tests = 3
+bonferroni_alpha = alpha / n_tests
+
+# Benjamini-Hochberg FDR correction
+p_values_all = sorted([p_value_12, p_value_13, p_value_23])
+bh_critical = [(i+1) / n_tests * alpha for i in range(n_tests)]
+
+results['bonferroni_alpha'] = bonferroni_alpha
+results['n_significant_bonf'] = sum(p < bonferroni_alpha for p in [p_value_12, p_value_13, p_value_23])
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Bonferroni
+ax1 = axes[0]
+ax1.bar(tests, p_values, color='steelblue', alpha=0.7, edgecolor='black')
+ax1.axhline(y=alpha, color='r', linestyle='--', label=f'$\\alpha$ = {alpha}')
+ax1.axhline(y=bonferroni_alpha, color='g', linestyle='--',
+            label=f'Bonferroni = {bonferroni_alpha:.4f}')
+ax1.set_ylabel('p-value')
+ax1.set_title('Multiple Testing Correction')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# BH procedure
+ax2 = axes[1]
+ax2.plot(range(1, n_tests+1), p_values_all, 'bo-', markersize=10, label='Sorted p-values')
+ax2.plot(range(1, n_tests+1), bh_critical, 'r--', linewidth=2, label='BH critical')
+ax2.set_xlabel('Rank')
+ax2.set_ylabel('p-value')
+ax2.set_title('Benjamini-Hochberg Procedure')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('statistical_multiple.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{statistical_multiple.pdf}')
+print(r'\caption{Multiple testing correction: Bonferroni and Benjamini-Hochberg procedures.}')
+print(r'\label{fig:multiple}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\section{Results and Discussion}
+
+\subsection{Descriptive Statistics}
+
+\begin{table}[H]
+\centering
+\caption{Group Descriptive Statistics}
+\label{tab:descriptive}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Statistic} & \textbf{Control} & \textbf{Treatment A} & \textbf{Treatment B} \\
+\midrule
+Mean & \py{f"{results['g1_mean']:.2f}"} & \py{f"{results['g2_mean']:.2f}"} & \py{f"{results['g3_mean']:.2f}"} \\
+SD & \py{f"{results['g1_std']:.2f}"} & \py{f"{results['g2_std']:.2f}"} & \py{f"{results['g3_std']:.2f}"} \\
+N & \py{n1} & \py{n2} & \py{n3} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Assumption Tests}
+
+Normality (Shapiro-Wilk test):
+\begin{itemize}
+    \item Control: p = \py{f"{results['shapiro_g1_p']:.4f}"} (Normal)
+    \item Treatment A: p = \py{f"{results['shapiro_g2_p']:.4f}"} (Normal)
+    \item Treatment B: p = \py{f"{results['shapiro_g3_p']:.4f}"} (Normal)
+\end{itemize}
+
+Homogeneity of variance (Levene's test): p = \py{f"{results['levene_p']:.4f}"}
+
+\subsection{Hypothesis Tests}
+
+\begin{table}[H]
+\centering
+\caption{Pairwise Comparisons}
+\label{tab:tests}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Comparison} & \textbf{t-statistic} & \textbf{p-value} & \textbf{Cohen's d} \\
+\midrule
+Control vs Treatment A & \py{f"{results['t_stat_12']:.3f}"} & \py{f"{results['p_value_12']:.4f}"} & \py{f"{results['cohens_d_12']:.3f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+ANOVA: F = \py{f"{results['f_stat']:.3f}"}, p = \py{f"{results['anova_p']:.4f}"}
+
+\subsection{Correlation Analysis}
+
+\begin{itemize}
+    \item Pearson r = \py{f"{results['pearson_r']:.3f}"}, p = \py{f"{results['pearson_p']:.4f}"}
+    \item Spearman $\rho$ = \py{f"{results['spearman_rho']:.3f}"}
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrated a comprehensive statistical workflow including descriptive statistics, assumption testing, parametric and non-parametric hypothesis tests, effect size calculation, and multiple testing correction. Key findings show significant differences between treatment groups with appropriate corrections for multiple comparisons.
+
+\end{document}

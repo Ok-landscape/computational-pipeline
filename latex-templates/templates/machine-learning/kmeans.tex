@@ -1,0 +1,478 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+\title{K-Means Clustering: Algorithm and Analysis}
+\author{Machine Learning Foundations}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive study of K-means clustering, including algorithm implementation, convergence analysis, cluster quality metrics (silhouette score, inertia), the elbow method for optimal K selection, and comparison with other clustering approaches. We demonstrate practical considerations for initialization and scaling.
+\end{abstract}
+
+\section{Introduction}
+K-means clustering partitions $n$ observations into $K$ clusters by minimizing within-cluster variance:
+\begin{equation}
+J = \sum_{k=1}^{K} \sum_{i \in C_k} \|x_i - \mu_k\|^2
+\end{equation}
+where $C_k$ is the set of points in cluster $k$ and $\mu_k$ is the centroid.
+
+The algorithm alternates between:
+\begin{enumerate}
+    \item \textbf{Assignment}: Assign each point to nearest centroid
+    \item \textbf{Update}: Recompute centroids as cluster means
+\end{enumerate}
+
+\section{Computational Environment}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial.distance import cdist
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[H]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.85\textwidth]{' + filename + '}')
+    print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Data Generation}
+\begin{pycode}
+# Generate clustered data
+def make_blobs(n_samples, centers, cluster_std=1.0, random_state=42):
+    np.random.seed(random_state)
+    n_centers = len(centers)
+    n_per_cluster = n_samples // n_centers
+    X = []
+    y = []
+    for i, center in enumerate(centers):
+        X.append(np.random.randn(n_per_cluster, 2) * cluster_std + center)
+        y.extend([i] * n_per_cluster)
+    return np.vstack(X), np.array(y)
+
+# Create dataset with 4 clusters
+true_centers = [[-4, -4], [-4, 4], [4, -4], [4, 4]]
+X, y_true = make_blobs(400, true_centers, cluster_std=1.2)
+
+n_samples = len(X)
+n_features = X.shape[1]
+true_k = len(true_centers)
+
+# Plot original data
+fig, ax = plt.subplots(figsize=(8, 6))
+scatter = ax.scatter(X[:, 0], X[:, 1], c=y_true, cmap='viridis',
+                     alpha=0.7, edgecolors='black', s=40)
+for i, center in enumerate(true_centers):
+    ax.plot(center[0], center[1], 'r*', markersize=15)
+ax.set_xlabel('Feature 1')
+ax.set_ylabel('Feature 2')
+ax.set_title('Generated Data with True Clusters')
+ax.grid(True, alpha=0.3)
+plt.colorbar(scatter, label='True Cluster')
+save_plot('km_data.pdf', 'Synthetic dataset with 4 well-separated clusters.')
+\end{pycode}
+
+Dataset: $n = \py{n_samples}$ samples, $p = \py{n_features}$ features, $K_{true} = \py{true_k}$ clusters.
+
+\section{K-Means Implementation}
+\begin{pycode}
+class KMeans:
+    def __init__(self, n_clusters=3, max_iter=300, tol=1e-4, init='kmeans++'):
+        self.n_clusters = n_clusters
+        self.max_iter = max_iter
+        self.tol = tol
+        self.init = init
+        self.centroids = None
+        self.labels_ = None
+        self.inertia_ = None
+        self.n_iter_ = 0
+        self.history = []
+
+    def _init_centroids(self, X):
+        n_samples = X.shape[0]
+        if self.init == 'random':
+            idx = np.random.choice(n_samples, self.n_clusters, replace=False)
+            return X[idx].copy()
+        elif self.init == 'kmeans++':
+            centroids = [X[np.random.randint(n_samples)]]
+            for _ in range(1, self.n_clusters):
+                distances = np.min(cdist(X, centroids), axis=1)
+                probs = distances**2 / np.sum(distances**2)
+                idx = np.random.choice(n_samples, p=probs)
+                centroids.append(X[idx])
+            return np.array(centroids)
+
+    def fit(self, X):
+        self.centroids = self._init_centroids(X)
+        self.history = [self.centroids.copy()]
+
+        for i in range(self.max_iter):
+            # Assignment step
+            distances = cdist(X, self.centroids)
+            self.labels_ = np.argmin(distances, axis=1)
+
+            # Update step
+            new_centroids = np.array([X[self.labels_ == k].mean(axis=0)
+                                      if np.sum(self.labels_ == k) > 0
+                                      else self.centroids[k]
+                                      for k in range(self.n_clusters)])
+
+            # Check convergence
+            shift = np.linalg.norm(new_centroids - self.centroids)
+            self.centroids = new_centroids
+            self.history.append(self.centroids.copy())
+            self.n_iter_ = i + 1
+
+            if shift < self.tol:
+                break
+
+        # Compute inertia
+        distances = cdist(X, self.centroids)
+        self.inertia_ = np.sum(np.min(distances, axis=1)**2)
+        return self
+
+    def predict(self, X):
+        distances = cdist(X, self.centroids)
+        return np.argmin(distances, axis=1)
+
+# Run K-means
+kmeans = KMeans(n_clusters=4, init='kmeans++')
+kmeans.fit(X)
+labels = kmeans.labels_
+\end{pycode}
+
+\section{Algorithm Convergence}
+\begin{pycode}
+# Visualize convergence
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+iterations_to_show = [0, 1, 2, 3, 5, min(len(kmeans.history)-1, 10)]
+
+for ax, it in zip(axes.flat, iterations_to_show):
+    # Get labels at this iteration
+    centroids = kmeans.history[it]
+    distances = cdist(X, centroids)
+    labels_it = np.argmin(distances, axis=1)
+
+    ax.scatter(X[:, 0], X[:, 1], c=labels_it, cmap='viridis',
+               alpha=0.5, s=20)
+    ax.scatter(centroids[:, 0], centroids[:, 1], c='red',
+               marker='X', s=200, edgecolors='black', linewidths=2)
+    ax.set_title(f'Iteration {it}')
+    ax.set_xlabel('Feature 1')
+    ax.set_ylabel('Feature 2')
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('km_convergence.pdf', 'K-means convergence showing centroid movement over iterations.')
+\end{pycode}
+
+Algorithm converged in \py{kmeans.n_iter_} iterations with inertia $J = \py{f"{kmeans.inertia_:.2f}"}$.
+
+\section{Elbow Method for Optimal K}
+\begin{pycode}
+# Compute inertia for different K values
+k_range = range(1, 11)
+inertias = []
+silhouettes = []
+
+def silhouette_score(X, labels):
+    """Compute silhouette score."""
+    n = len(X)
+    unique_labels = np.unique(labels)
+    if len(unique_labels) < 2:
+        return 0
+
+    scores = []
+    for i in range(n):
+        # a(i): mean distance to same cluster
+        same_cluster = X[labels == labels[i]]
+        if len(same_cluster) > 1:
+            a = np.mean(np.linalg.norm(same_cluster - X[i], axis=1))
+        else:
+            a = 0
+
+        # b(i): min mean distance to other clusters
+        b = np.inf
+        for k in unique_labels:
+            if k != labels[i]:
+                other_cluster = X[labels == k]
+                if len(other_cluster) > 0:
+                    b = min(b, np.mean(np.linalg.norm(other_cluster - X[i], axis=1)))
+
+        if b == np.inf:
+            b = 0
+
+        if max(a, b) > 0:
+            scores.append((b - a) / max(a, b))
+        else:
+            scores.append(0)
+
+    return np.mean(scores)
+
+for k in k_range:
+    km = KMeans(n_clusters=k, init='kmeans++')
+    km.fit(X)
+    inertias.append(km.inertia_)
+    if k > 1:
+        silhouettes.append(silhouette_score(X, km.labels_))
+    else:
+        silhouettes.append(0)
+
+# Find elbow using second derivative
+diffs = np.diff(inertias)
+diffs2 = np.diff(diffs)
+elbow_k = np.argmax(diffs2) + 2  # +2 because of two diffs
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Elbow plot
+axes[0].plot(k_range, inertias, 'b-o', linewidth=2, markersize=8)
+axes[0].axvline(elbow_k, color='r', linestyle='--', label=f'Elbow at K={elbow_k}')
+axes[0].set_xlabel('Number of Clusters (K)')
+axes[0].set_ylabel('Inertia')
+axes[0].set_title('Elbow Method')
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+# Silhouette plot
+axes[1].plot(k_range, silhouettes, 'g-s', linewidth=2, markersize=8)
+best_sil_k = k_range[np.argmax(silhouettes)]
+axes[1].axvline(best_sil_k, color='r', linestyle='--', label=f'Best at K={best_sil_k}')
+axes[1].set_xlabel('Number of Clusters (K)')
+axes[1].set_ylabel('Silhouette Score')
+axes[1].set_title('Silhouette Analysis')
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('km_elbow.pdf', 'Elbow method and silhouette analysis for optimal K selection.')
+
+best_silhouette = max(silhouettes)
+\end{pycode}
+
+Elbow method suggests $K = \py{elbow_k}$, silhouette analysis suggests $K = \py{best_sil_k}$ with score \py{f"{best_silhouette:.3f}"}.
+
+\section{Silhouette Analysis}
+\begin{pycode}
+# Detailed silhouette plot for K=4
+km_4 = KMeans(n_clusters=4, init='kmeans++')
+km_4.fit(X)
+labels_4 = km_4.labels_
+
+# Compute individual silhouette scores
+n = len(X)
+sil_samples = []
+for i in range(n):
+    same_cluster = X[labels_4 == labels_4[i]]
+    if len(same_cluster) > 1:
+        a = np.mean(np.linalg.norm(same_cluster - X[i], axis=1))
+    else:
+        a = 0
+
+    b = np.inf
+    for k in range(4):
+        if k != labels_4[i]:
+            other_cluster = X[labels_4 == k]
+            if len(other_cluster) > 0:
+                b = min(b, np.mean(np.linalg.norm(other_cluster - X[i], axis=1)))
+    if b == np.inf:
+        b = 0
+
+    if max(a, b) > 0:
+        sil_samples.append((b - a) / max(a, b))
+    else:
+        sil_samples.append(0)
+
+sil_samples = np.array(sil_samples)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+
+y_lower = 10
+for k in range(4):
+    cluster_sil = sil_samples[labels_4 == k]
+    cluster_sil.sort()
+    size_cluster = len(cluster_sil)
+    y_upper = y_lower + size_cluster
+
+    color = plt.cm.viridis(k / 4)
+    ax.fill_betweenx(np.arange(y_lower, y_upper), 0, cluster_sil,
+                     facecolor=color, edgecolor=color, alpha=0.7)
+    ax.text(-0.05, y_lower + 0.5 * size_cluster, str(k))
+    y_lower = y_upper + 10
+
+ax.axvline(np.mean(sil_samples), color='red', linestyle='--',
+           label=f'Mean: {np.mean(sil_samples):.3f}')
+ax.set_xlabel('Silhouette Coefficient')
+ax.set_ylabel('Cluster')
+ax.set_title('Silhouette Plot for K=4')
+ax.legend()
+ax.grid(True, alpha=0.3)
+save_plot('km_silhouette.pdf', 'Silhouette plot showing cluster quality for each sample.')
+\end{pycode}
+
+\section{Initialization Comparison}
+\begin{pycode}
+# Compare random vs kmeans++ initialization
+n_runs = 20
+random_inertias = []
+kpp_inertias = []
+
+for _ in range(n_runs):
+    km_random = KMeans(n_clusters=4, init='random')
+    km_random.fit(X)
+    random_inertias.append(km_random.inertia_)
+
+    km_kpp = KMeans(n_clusters=4, init='kmeans++')
+    km_kpp.fit(X)
+    kpp_inertias.append(km_kpp.inertia_)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Box plot
+bp = axes[0].boxplot([random_inertias, kpp_inertias],
+                      labels=['Random', 'K-Means++'])
+axes[0].set_ylabel('Inertia')
+axes[0].set_title('Initialization Method Comparison')
+axes[0].grid(True, alpha=0.3)
+
+# Histogram
+axes[1].hist(random_inertias, bins=10, alpha=0.6, label='Random', color='blue')
+axes[1].hist(kpp_inertias, bins=10, alpha=0.6, label='K-Means++', color='green')
+axes[1].set_xlabel('Inertia')
+axes[1].set_ylabel('Frequency')
+axes[1].set_title('Distribution of Final Inertia')
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('km_initialization.pdf', 'Comparison of random vs K-means++ initialization over 20 runs.')
+
+random_mean = np.mean(random_inertias)
+kpp_mean = np.mean(kpp_inertias)
+\end{pycode}
+
+Mean inertia: Random = \py{f"{random_mean:.1f}"}, K-Means++ = \py{f"{kpp_mean:.1f}"}.
+
+\section{Cluster Visualization}
+\begin{pycode}
+# Final clustering result
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Clustering result
+scatter = axes[0].scatter(X[:, 0], X[:, 1], c=km_4.labels_, cmap='viridis',
+                          alpha=0.7, edgecolors='black', s=40)
+axes[0].scatter(km_4.centroids[:, 0], km_4.centroids[:, 1], c='red',
+                marker='X', s=200, edgecolors='black', linewidths=2,
+                label='Centroids')
+axes[0].set_xlabel('Feature 1')
+axes[0].set_ylabel('Feature 2')
+axes[0].set_title('K-Means Clustering Result (K=4)')
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+# Voronoi diagram
+h = 0.05
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                     np.arange(y_min, y_max, h))
+Z = km_4.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[1].contourf(xx, yy, Z, alpha=0.3, cmap='viridis')
+axes[1].contour(xx, yy, Z, colors='black', linewidths=0.5)
+axes[1].scatter(X[:, 0], X[:, 1], c=km_4.labels_, cmap='viridis',
+                alpha=0.7, edgecolors='black', s=40)
+axes[1].scatter(km_4.centroids[:, 0], km_4.centroids[:, 1], c='red',
+                marker='X', s=200, edgecolors='black', linewidths=2)
+axes[1].set_xlabel('Feature 1')
+axes[1].set_ylabel('Feature 2')
+axes[1].set_title('Voronoi Regions')
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('km_result.pdf', 'Final K-means clustering with Voronoi decision boundaries.')
+\end{pycode}
+
+\section{Cluster Statistics}
+\begin{pycode}
+# Compute cluster statistics
+cluster_sizes = [np.sum(km_4.labels_ == k) for k in range(4)]
+cluster_stds = [np.mean(np.std(X[km_4.labels_ == k], axis=0)) for k in range(4)]
+
+# Compute distances to centroids
+cluster_distances = []
+for k in range(4):
+    points = X[km_4.labels_ == k]
+    dists = np.linalg.norm(points - km_4.centroids[k], axis=1)
+    cluster_distances.append(np.mean(dists))
+\end{pycode}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Cluster Statistics}')
+print(r'\begin{tabular}{ccccc}')
+print(r'\toprule')
+print(r'Cluster & Size & Mean Std & Mean Distance & Centroid \\')
+print(r'\midrule')
+for k in range(4):
+    print(f'{k} & {cluster_sizes[k]} & {cluster_stds[k]:.2f} & {cluster_distances[k]:.2f} & ({km_4.centroids[k, 0]:.2f}, {km_4.centroids[k, 1]:.2f}) \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Results Summary}
+\begin{table}[H]
+\centering
+\caption{K-Means Clustering Summary}
+\begin{tabular}{lr}
+\toprule
+Metric & Value \\
+\midrule
+Dataset Size & \py{n_samples} \\
+True Clusters & \py{true_k} \\
+Optimal K (Elbow) & \py{elbow_k} \\
+Optimal K (Silhouette) & \py{best_sil_k} \\
+Best Silhouette Score & \py{f"{best_silhouette:.3f}"} \\
+Final Inertia & \py{f"{km_4.inertia_:.2f}"} \\
+Convergence Iterations & \py{kmeans.n_iter_} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+This analysis demonstrated:
+\begin{itemize}
+    \item K-means algorithm implementation with K-means++ initialization
+    \item Convergence visualization showing centroid updates
+    \item Elbow method and silhouette analysis for optimal K selection
+    \item Importance of initialization (K-means++ outperforms random)
+    \item Voronoi regions showing cluster boundaries
+    \item Detailed cluster quality metrics
+\end{itemize}
+
+The K-means++ initialization consistently achieves lower inertia (\py{f"{kpp_mean:.1f}"} vs \py{f"{random_mean:.1f}"} for random), and the optimal number of clusters matches the true value of \py{true_k}.
+
+\end{document}

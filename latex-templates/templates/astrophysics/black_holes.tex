@@ -1,0 +1,274 @@
+% Black Hole Physics
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Black Hole Physics\\Schwarzschild Radius, Accretion, and Hawking Radiation}
+\author{Astrophysics Research Group}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Computational analysis of black hole physics including Schwarzschild geometry, accretion disk properties, and Hawking radiation calculations.
+\end{abstract}
+
+\section{Introduction}
+
+Black holes are regions of spacetime where gravity is so strong that nothing can escape.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+# Physical constants
+G = 6.674e-11  # Gravitational constant
+c = 2.998e8    # Speed of light
+h_bar = 1.055e-34  # Reduced Planck constant
+k_B = 1.381e-23    # Boltzmann constant
+M_sun = 1.989e30   # Solar mass
+\end{pycode}
+
+\section{Schwarzschild Radius}
+
+$r_s = \frac{2GM}{c^2}$
+
+\begin{pycode}
+masses = np.logspace(0, 10, 100)  # Solar masses
+r_s = 2 * G * masses * M_sun / c**2
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(masses, r_s / 1000, 'b-', linewidth=2)
+ax.set_xlabel('Mass ($M_\\odot$)')
+ax.set_ylabel('Schwarzschild Radius (km)')
+ax.set_title('Schwarzschild Radius vs Mass')
+ax.grid(True, alpha=0.3, which='both')
+
+# Mark notable objects
+notable = {'Stellar (10)': 10, 'Sgr A* (4e6)': 4e6, 'M87* (6.5e9)': 6.5e9}
+for name, M in notable.items():
+    r = 2 * G * M * M_sun / c**2
+    ax.plot(M, r/1000, 'ro', markersize=8)
+    ax.annotate(name, (M, r/1000), xytext=(5, 5), textcoords='offset points', fontsize=8)
+plt.tight_layout()
+plt.savefig('schwarzschild_radius.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{schwarzschild_radius.pdf}
+\caption{Schwarzschild radius as function of mass.}
+\end{figure}
+
+\section{ISCO and Photon Sphere}
+
+\begin{pycode}
+M_bh = 10 * M_sun
+r_s_bh = 2 * G * M_bh / c**2
+r_photon = 1.5 * r_s_bh  # Photon sphere
+r_isco = 3 * r_s_bh      # Innermost stable circular orbit
+
+r = np.linspace(1.01 * r_s_bh, 20 * r_s_bh, 1000)
+
+# Effective potential for massive particle (L = 4GM/c)
+L = 4 * G * M_bh / c
+V_eff = -G * M_bh / r + L**2 / (2 * r**2) - G * M_bh * L**2 / (c**2 * r**3)
+V_eff_normalized = V_eff / (c**2)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(r / r_s_bh, V_eff_normalized, 'b-', linewidth=2)
+ax.axvline(x=1.5, color='g', linestyle='--', label=f'Photon sphere')
+ax.axvline(x=3, color='r', linestyle='--', label=f'ISCO')
+ax.set_xlabel('$r/r_s$')
+ax.set_ylabel('$V_{eff}/c^2$')
+ax.set_title('Effective Potential near Black Hole')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim([1, 20])
+plt.tight_layout()
+plt.savefig('effective_potential.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{effective_potential.pdf}
+\caption{Effective potential showing ISCO and photon sphere.}
+\end{figure}
+
+\section{Hawking Temperature}
+
+$T_H = \frac{\hbar c^3}{8\pi G M k_B}$
+
+\begin{pycode}
+masses_hawking = np.logspace(-8, 10, 100) * M_sun
+T_H = h_bar * c**3 / (8 * np.pi * G * masses_hawking * k_B)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(masses_hawking / M_sun, T_H, 'b-', linewidth=2)
+ax.axhline(y=2.725, color='r', linestyle='--', label='CMB Temperature')
+ax.set_xlabel('Mass ($M_\\odot$)')
+ax.set_ylabel('Hawking Temperature (K)')
+ax.set_title('Hawking Temperature vs Black Hole Mass')
+ax.legend()
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('hawking_temperature.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Example calculation
+M_example = 10 * M_sun
+T_example = h_bar * c**3 / (8 * np.pi * G * M_example * k_B)
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{hawking_temperature.pdf}
+\caption{Hawking temperature for different black hole masses.}
+\end{figure}
+
+\section{Accretion Disk Temperature}
+
+$T(r) = \left(\frac{3GM\dot{M}}{8\pi\sigma r^3}\right)^{1/4}$
+
+\begin{pycode}
+sigma_sb = 5.67e-8  # Stefan-Boltzmann constant
+M_dot = 1e-8 * M_sun / (365.25 * 24 * 3600)  # Accretion rate
+
+r_disk = np.linspace(3 * r_s_bh, 100 * r_s_bh, 100)
+T_disk = (3 * G * M_bh * M_dot / (8 * np.pi * sigma_sb * r_disk**3))**0.25
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.semilogy(r_disk / r_s_bh, T_disk, 'b-', linewidth=2)
+ax.set_xlabel('$r/r_s$')
+ax.set_ylabel('Temperature (K)')
+ax.set_title('Accretion Disk Temperature Profile')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('disk_temperature.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{disk_temperature.pdf}
+\caption{Temperature profile of thin accretion disk.}
+\end{figure}
+
+\section{Time Dilation}
+
+\begin{pycode}
+r_time = np.linspace(1.01 * r_s_bh, 10 * r_s_bh, 100)
+time_dilation = np.sqrt(1 - r_s_bh / r_time)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(r_time / r_s_bh, time_dilation, 'b-', linewidth=2)
+ax.set_xlabel('$r/r_s$')
+ax.set_ylabel('$d\\tau/dt$')
+ax.set_title('Gravitational Time Dilation')
+ax.grid(True, alpha=0.3)
+ax.set_xlim([1, 10])
+ax.set_ylim([0, 1])
+plt.tight_layout()
+plt.savefig('time_dilation.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{time_dilation.pdf}
+\caption{Time dilation factor near black hole.}
+\end{figure}
+
+\section{Eddington Luminosity}
+
+$L_{Edd} = \frac{4\pi GMm_pc}{\sigma_T}$
+
+\begin{pycode}
+m_p = 1.673e-27     # Proton mass
+sigma_T = 6.65e-29  # Thomson cross-section
+L_sun = 3.828e26    # Solar luminosity
+
+masses_edd = np.logspace(0, 10, 100)
+L_edd = 4 * np.pi * G * masses_edd * M_sun * m_p * c / sigma_T
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.loglog(masses_edd, L_edd / L_sun, 'b-', linewidth=2)
+ax.set_xlabel('Mass ($M_\\odot$)')
+ax.set_ylabel('Eddington Luminosity ($L_\\odot$)')
+ax.set_title('Eddington Limit')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('eddington_luminosity.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+L_edd_10 = 4 * np.pi * G * 10 * M_sun * m_p * c / sigma_T
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{eddington_luminosity.pdf}
+\caption{Eddington luminosity limit.}
+\end{figure}
+
+\section{Black Hole Spin}
+
+\begin{pycode}
+a_spin = np.linspace(0, 0.998, 100)  # Dimensionless spin parameter
+r_isco_spin = 3 + (3 - a_spin) * np.sqrt(3 + a_spin) - np.sqrt((3 - a_spin) * (3 + a_spin + 2 * np.sqrt(3 + a_spin)))
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(a_spin, r_isco_spin, 'b-', linewidth=2)
+ax.set_xlabel('Spin Parameter $a/M$')
+ax.set_ylabel('ISCO Radius ($r_g$)')
+ax.set_title('ISCO vs Kerr Spin Parameter')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('kerr_isco.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{kerr_isco.pdf}
+\caption{ISCO radius for Kerr black holes.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+r_s_10 = 2 * G * 10 * M_sun / c**2
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Black Hole Properties (10 $M_\odot$)}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Property & Value \\')
+print(r'\midrule')
+print(f'Schwarzschild radius & {r_s_10/1000:.2f} km \\\\')
+print(f'ISCO radius & {3*r_s_10/1000:.2f} km \\\\')
+print(f'Hawking temperature & {T_example:.2e} K \\\\')
+print(f'Eddington luminosity & {L_edd_10/L_sun:.2e} $L_\\odot$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+This analysis covers key aspects of black hole physics including Schwarzschild geometry, thermal properties, and accretion processes.
+
+\end{document}

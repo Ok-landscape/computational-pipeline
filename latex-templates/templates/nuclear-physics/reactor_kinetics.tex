@@ -1,0 +1,449 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Nuclear Reactor Kinetics: Point Kinetics Model and Delayed Neutron Analysis}
+\author{Nuclear Engineering Computation Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of nuclear reactor kinetics using the point kinetics equations with delayed neutrons. We implement solutions for reactivity transients, analyze the role of delayed neutron precursors in reactor control, and compute reactor periods for various reactivity insertions. The analysis covers prompt criticality, xenon dynamics, and feedback mechanisms essential for safe reactor operation.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Reactivity]
+Reactivity $\rho$ measures the deviation from criticality:
+\begin{equation}
+\rho = \frac{k_{eff} - 1}{k_{eff}}
+\end{equation}
+where $k_{eff}$ is the effective multiplication factor.
+\end{definition}
+
+\begin{theorem}[Point Kinetics Equations]
+For six delayed neutron groups, the reactor power evolves according to:
+\begin{align}
+\frac{dn}{dt} &= \frac{\rho - \beta}{\Lambda} n + \sum_{i=1}^{6} \lambda_i C_i + S \\
+\frac{dC_i}{dt} &= \frac{\beta_i}{\Lambda} n - \lambda_i C_i
+\end{align}
+where $n$ is neutron density, $C_i$ are precursor concentrations, $\beta = \sum \beta_i$ is total delayed neutron fraction, $\Lambda$ is mean generation time, and $S$ is external source.
+\end{theorem}
+
+\subsection{Reactor Period}
+
+\begin{definition}[Stable Period]
+The asymptotic reactor period $T$ satisfies the inhour equation:
+\begin{equation}
+\rho = \frac{\Lambda}{T} + \sum_{i=1}^{6} \frac{\beta_i}{1 + \lambda_i T}
+\end{equation}
+\end{definition}
+
+\begin{example}[Reactivity Units]
+Reactivity is measured in:
+\begin{itemize}
+    \item \textbf{Dollar} (\$): $\rho/\beta$ (1\$ = one delayed neutron fraction)
+    \item \textbf{Cent}: 0.01\$ = 0.01$\beta$
+    \item \textbf{pcm}: $10^{-5}$ (parts per 100,000)
+\end{itemize}
+For U-235: $\beta \approx 0.0065$, so 1\$ $\approx$ 650 pcm.
+\end{example}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.integrate import odeint, solve_ivp
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# Reactor parameters (U-235 thermal)
+Lambda = 1e-4  # Mean generation time (s)
+beta_total = 0.0065  # Total delayed neutron fraction
+
+# Six-group delayed neutron data for U-235
+beta_i = np.array([0.000215, 0.001424, 0.001274, 0.002568, 0.000748, 0.000273])
+lambda_i = np.array([0.0124, 0.0305, 0.111, 0.301, 1.14, 3.01])  # decay constants (1/s)
+half_lives_i = np.log(2) / lambda_i  # seconds
+
+# Effective one-group parameters
+beta_eff = np.sum(beta_i)
+lambda_eff = np.sum(beta_i * lambda_i) / beta_eff
+
+# Point kinetics equations (6 groups)
+def point_kinetics_6group(y, t, rho_func):
+    """Six-group point kinetics equations."""
+    n = y[0]
+    C = y[1:7]
+
+    rho = rho_func(t)
+
+    dn_dt = (rho - beta_eff) / Lambda * n + np.sum(lambda_i * C)
+    dC_dt = beta_i / Lambda * n - lambda_i * C
+
+    return np.concatenate([[dn_dt], dC_dt])
+
+# Simplified one-group kinetics
+def point_kinetics_1group(y, t, rho_func):
+    """One-group point kinetics equations."""
+    n, C = y
+    rho = rho_func(t)
+    dn_dt = (rho - beta_eff) / Lambda * n + lambda_eff * C
+    dC_dt = beta_eff / Lambda * n - lambda_eff * C
+    return [dn_dt, dC_dt]
+
+# Inhour equation
+def inhour_equation(T, rho):
+    """Inhour equation for reactor period."""
+    if abs(T) < 1e-10:
+        return np.inf
+    return Lambda / T + np.sum(beta_i / (1 + lambda_i * T)) - rho
+
+def find_period(rho):
+    """Find stable period for given reactivity."""
+    if rho <= 0:
+        return np.inf
+    elif rho >= beta_eff:
+        return Lambda / (rho - beta_eff)  # Prompt critical
+    else:
+        # Newton-Raphson to solve inhour equation
+        T_guess = 1.0 / (lambda_eff * rho / (beta_eff - rho))
+        T_sol = fsolve(inhour_equation, T_guess, args=(rho,))[0]
+        return T_sol
+
+# Initial conditions (equilibrium at n=1)
+n0 = 1.0
+C0_i = beta_i / Lambda * n0 / lambda_i
+y0_6group = np.concatenate([[n0], C0_i])
+y0_1group = [n0, beta_eff / Lambda * n0 / lambda_eff]
+
+# Time arrays
+t_short = np.linspace(0, 10, 1000)  # seconds
+t_long = np.linspace(0, 100, 1000)
+
+# Reactivity insertions
+rho_values = [0.001, 0.003, 0.005]  # Below prompt critical
+rho_prompt = 0.007  # Above prompt critical
+
+# Solve for different reactivities
+solutions = []
+for rho_val in rho_values:
+    rho_func = lambda t, r=rho_val: r if t > 0 else 0
+    sol = odeint(point_kinetics_6group, y0_6group, t_short, args=(rho_func,))
+    solutions.append(sol[:, 0])
+
+# Prompt supercritical case
+t_prompt = np.linspace(0, 0.01, 500)  # milliseconds
+rho_func_prompt = lambda t: rho_prompt if t > 0 else 0
+sol_prompt = odeint(point_kinetics_6group, y0_6group, t_prompt, args=(rho_func_prompt,))
+
+# Negative reactivity (shutdown)
+rho_neg = -0.005
+rho_func_neg = lambda t: rho_neg if t > 0 else 0
+sol_neg = odeint(point_kinetics_6group, y0_6group, t_long, args=(rho_func_neg,))
+
+# Ramp reactivity insertion
+ramp_rate = 0.0001  # per second
+rho_func_ramp = lambda t: min(ramp_rate * t, 0.005) if t > 0 else 0
+sol_ramp = odeint(point_kinetics_6group, y0_6group, t_long, args=(rho_func_ramp,))
+
+# Reactor period vs reactivity
+rho_range = np.linspace(0.0001, 0.006, 100)
+periods = np.array([find_period(r) for r in rho_range])
+
+# Temperature feedback
+alpha_T = -3e-5  # Temperature coefficient (per K)
+def feedback_rho(t, n, rho_ext, T0=300, C_heat=1e6):
+    """Reactivity with temperature feedback."""
+    # Simple heat-up model
+    T = T0 + n * t / C_heat
+    return rho_ext + alpha_T * (T - T0)
+
+# Xenon dynamics (simplified)
+sigma_Xe = 2.65e-18  # Xe-135 absorption cross section (cm^2)
+Sigma_f = 0.1  # Macroscopic fission cross section (1/cm)
+gamma_Xe = 0.003  # Direct yield
+gamma_I = 0.061   # Iodine yield (-> Xe-135)
+lambda_Xe = 2.09e-5  # Xe-135 decay constant (1/s)
+lambda_I = 2.87e-5   # I-135 decay constant (1/s)
+
+# Equilibrium xenon concentration
+def xenon_equilibrium(phi):
+    """Equilibrium Xe-135 concentration."""
+    return (gamma_I + gamma_Xe) * Sigma_f * phi / (lambda_Xe + sigma_Xe * phi)
+
+# Xenon after shutdown
+def xenon_shutdown(t, phi0):
+    """Xe-135 concentration after shutdown."""
+    Xe0 = xenon_equilibrium(phi0)
+    I0 = gamma_I * Sigma_f * phi0 / lambda_I
+
+    Xe = (Xe0 * np.exp(-lambda_Xe * t) +
+          I0 * lambda_I / (lambda_Xe - lambda_I) *
+          (np.exp(-lambda_I * t) - np.exp(-lambda_Xe * t)))
+    return Xe
+
+phi0 = 1e14  # Initial flux (n/cm^2/s)
+t_xenon = np.linspace(0, 100 * 3600, 500)  # 100 hours
+Xe_shutdown = xenon_shutdown(t_xenon, phi0)
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Step reactivity response
+ax1 = fig.add_subplot(gs[0, 0])
+colors = ['blue', 'green', 'red']
+for sol, rho, color in zip(solutions, rho_values, colors):
+    rho_dollars = rho / beta_eff
+    ax1.plot(t_short, sol, color=color, lw=1.5,
+             label=f'{rho*1000:.0f} pcm ({rho_dollars:.2f}\\$)')
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('Relative Power')
+ax1.set_title('Step Reactivity Insertion')
+ax1.legend(fontsize=7)
+ax1.set_yscale('log')
+ax1.grid(True, alpha=0.3, which='both')
+
+# Plot 2: Prompt supercritical
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(t_prompt * 1000, sol_prompt[:, 0], 'r-', lw=2)
+ax2.set_xlabel('Time (ms)')
+ax2.set_ylabel('Relative Power')
+ax2.set_title(f'Prompt Critical ({rho_prompt*1000:.0f} pcm)')
+ax2.set_yscale('log')
+ax2.grid(True, alpha=0.3, which='both')
+
+# Plot 3: Reactor period
+ax3 = fig.add_subplot(gs[0, 2])
+ax3.semilogy(rho_range / beta_eff, periods, 'b-', lw=2)
+ax3.axhline(y=1, color='gray', ls='--', alpha=0.5)
+ax3.axvline(x=1, color='r', ls='--', alpha=0.5, label='Prompt critical')
+ax3.set_xlabel('Reactivity (\\$)')
+ax3.set_ylabel('Stable Period (s)')
+ax3.set_title('Reactor Period')
+ax3.legend(fontsize=8)
+ax3.grid(True, alpha=0.3, which='both')
+ax3.set_xlim([0, 1.1])
+ax3.set_ylim([0.1, 1000])
+
+# Plot 4: Shutdown transient
+ax4 = fig.add_subplot(gs[1, 0])
+ax4.plot(t_long, sol_neg[:, 0], 'b-', lw=2)
+ax4.set_xlabel('Time (s)')
+ax4.set_ylabel('Relative Power')
+ax4.set_title(f'Shutdown ({rho_neg*1000:.0f} pcm)')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Delayed neutron groups
+ax5 = fig.add_subplot(gs[1, 1])
+x_pos = range(len(beta_i))
+ax5.bar(x_pos, beta_i * 100, color='blue', alpha=0.7)
+ax5.set_xlabel('Precursor Group')
+ax5.set_ylabel('$\\beta_i$ (\\%)')
+ax5.set_title('Delayed Neutron Fractions')
+ax5.set_xticks(x_pos)
+ax5.set_xticklabels([1, 2, 3, 4, 5, 6])
+ax5.grid(True, alpha=0.3, axis='y')
+
+# Plot 6: Precursor half-lives
+ax6 = fig.add_subplot(gs[1, 2])
+ax6.bar(x_pos, half_lives_i, color='green', alpha=0.7)
+ax6.set_xlabel('Precursor Group')
+ax6.set_ylabel('Half-life (s)')
+ax6.set_title('Precursor Decay Half-lives')
+ax6.set_xticks(x_pos)
+ax6.set_xticklabels([1, 2, 3, 4, 5, 6])
+ax6.grid(True, alpha=0.3, axis='y')
+
+# Plot 7: Ramp insertion
+ax7 = fig.add_subplot(gs[2, 0])
+ax7.plot(t_long, sol_ramp[:, 0], 'purple', lw=2)
+ax7.set_xlabel('Time (s)')
+ax7.set_ylabel('Relative Power')
+ax7.set_title(f'Ramp Insertion ({ramp_rate*1e6:.0f} pcm/s)')
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Xenon poisoning after shutdown
+ax8 = fig.add_subplot(gs[2, 1])
+Xe_norm = Xe_shutdown / xenon_equilibrium(phi0)
+ax8.plot(t_xenon / 3600, Xe_norm, 'r-', lw=2)
+ax8.axhline(y=1, color='gray', ls='--', alpha=0.5)
+ax8.set_xlabel('Time after shutdown (hours)')
+ax8.set_ylabel('Xe-135 / Equilibrium')
+ax8.set_title('Xenon Transient')
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Inhour equation components
+ax9 = fig.add_subplot(gs[2, 2])
+T_range = np.logspace(-1, 3, 200)
+
+prompt_term = Lambda / T_range
+delayed_term = np.sum([beta_i[i] / (1 + lambda_i[i] * T_range[:, np.newaxis])
+                       for i in range(6)], axis=0).flatten()
+total = prompt_term + delayed_term
+
+ax9.loglog(T_range, prompt_term * 1000, 'b--', lw=1.5, label='Prompt')
+ax9.loglog(T_range, delayed_term * 1000, 'r--', lw=1.5, label='Delayed')
+ax9.loglog(T_range, total * 1000, 'k-', lw=2, label='Total')
+ax9.set_xlabel('Period (s)')
+ax9.set_ylabel('Reactivity (pcm)')
+ax9.set_title('Inhour Equation')
+ax9.legend(fontsize=7)
+ax9.grid(True, alpha=0.3, which='both')
+
+plt.savefig('reactor_kinetics_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{reactor_kinetics_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Calculate key values
+period_50cent = find_period(0.5 * beta_eff)
+prompt_period = Lambda / (rho_prompt - beta_eff)
+xe_max_time = t_xenon[np.argmax(Xe_shutdown)] / 3600
+xe_max_ratio = np.max(Xe_norm)
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Point Kinetics Parameters}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Reactor Kinetics Parameters (U-235 Thermal)}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Parameter & Value & Units \\')
+print(r'\midrule')
+print(f'Total $\\beta$ & {beta_eff*1000:.2f} & -- ($\\times 10^{{-3}}$) \\\\')
+print(f'Mean generation time $\\Lambda$ & {Lambda*1000:.2f} & ms \\\\')
+print(f'Effective decay constant & {lambda_eff:.3f} & s$^{{-1}}$ \\\\')
+print(f'1 dollar & {beta_eff*1e5:.0f} & pcm \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Delayed Neutron Groups}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Six-Group Delayed Neutron Data for U-235}')
+print(r'\begin{tabular}{ccccc}')
+print(r'\toprule')
+print(r'Group & $\beta_i$ & $\lambda_i$ (s$^{-1}$) & $t_{1/2}$ (s) & Precursors \\')
+print(r'\midrule')
+
+precursors = ['Br-87', 'I-137', 'Br-89', 'I-138', 'As-85', 'Br-92']
+for i in range(6):
+    print(f'{i+1} & {beta_i[i]:.6f} & {lambda_i[i]:.4f} & {half_lives_i[i]:.2f} & {precursors[i]} \\\\')
+
+print(r'\midrule')
+print(f'Total & {beta_eff:.6f} & {lambda_eff:.4f} (eff) & -- & -- \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Reactor Periods}
+
+\begin{remark}
+Delayed neutrons are essential for reactor control. Without them, the reactor period would be:
+\begin{equation}
+T_{prompt} = \frac{\Lambda}{\rho} \approx \frac{10^{-4} \text{ s}}{10^{-3}} = 0.1 \text{ s}
+\end{equation}
+With delayed neutrons, the effective generation time increases to $\sim$0.1 s, giving manageable periods.
+\end{remark}
+
+Key period values:
+\begin{itemize}
+    \item Period at 50 cents: \py{f"{period_50cent:.1f}"} s
+    \item Period at prompt critical: \py{f"{prompt_period*1000:.3f}"} ms
+    \item Prompt period ($\rho > \beta$): determined only by $\Lambda$
+\end{itemize}
+
+\subsection{Xenon Poisoning}
+
+After shutdown, Xe-135 builds up due to I-135 decay:
+\begin{itemize}
+    \item Maximum xenon at $t = \py{f"{xe_max_time:.1f}"}$ hours after shutdown
+    \item Peak concentration: \py{f"{xe_max_ratio:.2f}"} times equilibrium
+    \item This ``xenon dead time'' prevents immediate restart
+\end{itemize}
+
+\section{Safety Analysis}
+
+\begin{theorem}[Prompt Critical Limit]
+Prompt criticality occurs when $\rho = \beta$. Above this threshold:
+\begin{equation}
+T = \frac{\Lambda}{\rho - \beta}
+\end{equation}
+For $\rho = 1.1\beta$, $T = 10\Lambda \approx 1$ ms---uncontrollable.
+\end{theorem}
+
+\begin{example}[Control Rod Worth]
+A typical control rod worth is 1000--5000 pcm. Safe insertion requires:
+\begin{itemize}
+    \item Maximum rate: $<$ 0.1\$/s for normal operation
+    \item Shutdown margin: $>$ 1\% $\Delta k/k$ with strongest rod stuck out
+\end{itemize}
+\end{example}
+
+\begin{example}[Doppler Feedback]
+The prompt negative temperature coefficient:
+\begin{equation}
+\alpha_T = \frac{d\rho}{dT} \approx -3 \times 10^{-5} \text{ K}^{-1}
+\end{equation}
+provides inherent stability against power excursions.
+\end{example}
+
+\section{Discussion}
+
+The point kinetics model reveals critical features of reactor dynamics:
+
+\begin{enumerate}
+    \item \textbf{Delayed neutrons}: Increase effective generation time by factor $\beta/(\beta - \rho)$.
+    \item \textbf{Prompt jump}: Immediate power rise followed by asymptotic period.
+    \item \textbf{Xenon dynamics}: Creates operational constraints after shutdown.
+    \item \textbf{Feedback mechanisms}: Doppler and moderator coefficients ensure stability.
+    \item \textbf{Safety margins}: Reactivity limits prevent prompt criticality.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis demonstrates:
+\begin{itemize}
+    \item Total delayed neutron fraction: $\beta = \py{f"{beta_eff*1000:.2f}"} \times 10^{-3}$
+    \item Mean generation time: $\Lambda = \py{f"{Lambda*1000:.2f}"}$ ms
+    \item Stable period at 50\textcent: \py{f"{period_50cent:.1f}"} s
+    \item Xenon peak at \py{f"{xe_max_time:.1f}"} hours post-shutdown
+\end{itemize}
+
+Understanding reactor kinetics is essential for safe operation, transient analysis, and accident prevention in nuclear power plants.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Duderstadt, J.J., Hamilton, L.J., \textit{Nuclear Reactor Analysis}, Wiley, 1976
+    \item Stacey, W.M., \textit{Nuclear Reactor Physics}, 3rd Ed., Wiley-VCH, 2018
+    \item Keepin, G.R., \textit{Physics of Nuclear Kinetics}, Addison-Wesley, 1965
+\end{itemize}
+
+\end{document}

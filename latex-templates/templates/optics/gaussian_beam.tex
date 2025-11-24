@@ -1,0 +1,609 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[makestderr]{pythontex}
+
+\title{Optics: Gaussian Beam Propagation}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Gaussian beams are fundamental to laser optics and optical communication. They represent the lowest-order transverse electromagnetic mode (TEM$_{00}$) of optical resonators. This analysis computes the propagation characteristics of a Gaussian beam, including beam waist, divergence, Rayleigh range, and focuses on practical applications like focusing and optical system design using ABCD matrix methods.
+
+\section{Mathematical Framework}
+
+\subsection{Electric Field and Intensity}
+The Gaussian beam electric field amplitude:
+\begin{equation}
+E(r, z) = E_0 \frac{w_0}{w(z)} \exp\left(-\frac{r^2}{w(z)^2}\right) \exp\left(i\left(kz + k\frac{r^2}{2R(z)} - \psi(z)\right)\right)
+\end{equation}
+
+The intensity profile is:
+\begin{equation}
+I(r, z) = I_0 \left(\frac{w_0}{w(z)}\right)^2 \exp\left(-\frac{2r^2}{w(z)^2}\right)
+\end{equation}
+
+\subsection{Key Parameters}
+\begin{align}
+w(z) &= w_0\sqrt{1 + \left(\frac{z}{z_R}\right)^2} & \text{(beam width)} \\
+z_R &= \frac{\pi w_0^2}{\lambda} & \text{(Rayleigh range)} \\
+R(z) &= z\left[1 + \left(\frac{z_R}{z}\right)^2\right] & \text{(wavefront curvature)} \\
+\psi(z) &= \arctan\left(\frac{z}{z_R}\right) & \text{(Gouy phase)}
+\end{align}
+
+\subsection{Beam Quality Factor}
+The $M^2$ parameter characterizes beam quality:
+\begin{equation}
+M^2 = \frac{\pi w_0 \theta}{\lambda}
+\end{equation}
+where $\theta$ is the far-field divergence half-angle. For an ideal Gaussian beam, $M^2 = 1$.
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Basic Beam Propagation}
+\begin{pycode}
+# Beam parameters
+wavelength = 1064e-9  # Nd:YAG (m)
+w0 = 100e-6  # Beam waist (m)
+
+# Rayleigh range
+z_R = np.pi * w0**2 / wavelength
+
+# Propagation functions
+def beam_width(z, w0, z_R):
+    return w0 * np.sqrt(1 + (z / z_R)**2)
+
+def radius_of_curvature(z, z_R):
+    z = np.where(z == 0, 1e-10, z)
+    return z * (1 + (z_R / z)**2)
+
+def gouy_phase(z, z_R):
+    return np.arctan(z / z_R)
+
+def intensity_profile(r, z, w0, z_R):
+    w = beam_width(z, w0, z_R)
+    return (w0 / w)**2 * np.exp(-2 * r**2 / w**2)
+
+# z array
+z = np.linspace(-5 * z_R, 5 * z_R, 500)
+
+# Calculate beam parameters
+w = beam_width(z, w0, z_R)
+R = radius_of_curvature(z, z_R)
+psi = gouy_phase(z, z_R)
+
+# Divergence angle
+theta_div = wavelength / (np.pi * w0)
+
+# Beam profile at different z
+z_positions = [0, z_R, 3*z_R]
+r = np.linspace(-500e-6, 500e-6, 200)
+
+# Create plots
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Beam envelope
+z_mm = z * 1000
+w_um = w * 1e6
+axes[0, 0].fill_between(z_mm, -w_um, w_um, alpha=0.3, color='red')
+axes[0, 0].plot(z_mm, w_um, 'r-', linewidth=2)
+axes[0, 0].plot(z_mm, -w_um, 'r-', linewidth=2)
+axes[0, 0].axvline(x=z_R*1000, color='blue', linestyle='--', alpha=0.5, label=f'$z_R = {z_R*1000:.1f}$ mm')
+axes[0, 0].axvline(x=-z_R*1000, color='blue', linestyle='--', alpha=0.5)
+axes[0, 0].set_xlabel('Propagation distance (mm)')
+axes[0, 0].set_ylabel('Beam radius ($\\mu$m)')
+axes[0, 0].set_title('Gaussian Beam Envelope')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Intensity profiles at different z
+colors = ['blue', 'green', 'red']
+for z_pos, color in zip(z_positions, colors):
+    w_z = beam_width(z_pos, w0, z_R)
+    I = np.exp(-2 * r**2 / w_z**2)
+    label = f'$z = {z_pos/z_R:.0f} z_R$' if z_pos > 0 else '$z = 0$'
+    axes[0, 1].plot(r*1e6, I, color=color, linewidth=2, label=label)
+
+axes[0, 1].set_xlabel('Radial position ($\\mu$m)')
+axes[0, 1].set_ylabel('Intensity (normalized)')
+axes[0, 1].set_title('Intensity Profiles')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Radius of curvature
+R_mm = R / 1000
+axes[1, 0].plot(z_mm, R_mm, 'b-', linewidth=2)
+axes[1, 0].axhline(y=0, color='gray', linestyle='-', alpha=0.3)
+axes[1, 0].set_xlabel('Propagation distance (mm)')
+axes[1, 0].set_ylabel('Radius of curvature (m)')
+axes[1, 0].set_title('Wavefront Curvature')
+axes[1, 0].set_ylim([-50, 50])
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Gouy phase
+axes[1, 1].plot(z_mm, np.rad2deg(psi), 'purple', linewidth=2)
+axes[1, 1].axhline(y=90, color='gray', linestyle='--', alpha=0.5)
+axes[1, 1].axhline(y=-90, color='gray', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Propagation distance (mm)')
+axes[1, 1].set_ylabel('Gouy phase (degrees)')
+axes[1, 1].set_title('Gouy Phase Shift')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('gaussian_beam_basic.pdf', 'Basic Gaussian beam propagation: envelope, intensity profiles, wavefront curvature, and Gouy phase.')
+
+# Calculate beam quality factor
+M2 = 1.0  # Ideal Gaussian
+depth_of_focus = 2 * z_R
+\end{pycode}
+
+\section{2D Beam Propagation Visualization}
+\begin{pycode}
+# Create 2D visualization of beam propagation
+z_2d = np.linspace(-3*z_R, 3*z_R, 200)
+r_2d = np.linspace(-3*w0, 3*w0, 100)
+
+Z, R_mesh = np.meshgrid(z_2d, r_2d)
+
+# Calculate intensity distribution
+I_2d = np.zeros_like(Z)
+for i, zv in enumerate(z_2d):
+    w_z = beam_width(zv, w0, z_R)
+    I_2d[:, i] = (w0/w_z)**2 * np.exp(-2 * r_2d**2 / w_z**2)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: 2D intensity distribution (side view)
+im = axes[0, 0].pcolormesh(Z*1000, R_mesh*1e6, I_2d, cmap='hot', shading='auto')
+axes[0, 0].plot(z_2d*1000, beam_width(z_2d, w0, z_R)*1e6, 'w--', linewidth=1.5, label='$w(z)$')
+axes[0, 0].plot(z_2d*1000, -beam_width(z_2d, w0, z_R)*1e6, 'w--', linewidth=1.5)
+axes[0, 0].set_xlabel('$z$ (mm)')
+axes[0, 0].set_ylabel('$r$ ($\\mu$m)')
+axes[0, 0].set_title('Beam Intensity Distribution')
+plt.colorbar(im, ax=axes[0, 0], label='Intensity')
+
+# Plot 2: Cross-section at waist
+theta = np.linspace(0, 2*np.pi, 100)
+r_cross = np.linspace(0, 3*w0, 100)
+R_c, THETA = np.meshgrid(r_cross, theta)
+X = R_c * np.cos(THETA)
+Y = R_c * np.sin(THETA)
+I_cross = np.exp(-2 * R_c**2 / w0**2)
+
+im2 = axes[0, 1].pcolormesh(X*1e6, Y*1e6, I_cross, cmap='hot', shading='auto')
+circle = plt.Circle((0, 0), w0*1e6, fill=False, color='white', linestyle='--', linewidth=1.5)
+axes[0, 1].add_patch(circle)
+axes[0, 1].set_xlabel('$x$ ($\\mu$m)')
+axes[0, 1].set_ylabel('$y$ ($\\mu$m)')
+axes[0, 1].set_title('Cross-section at Waist')
+axes[0, 1].set_aspect('equal')
+
+# Plot 3: Power through aperture
+aperture_radii = np.linspace(0, 3*w0, 100)
+power_fraction = 1 - np.exp(-2 * aperture_radii**2 / w0**2)
+
+axes[1, 0].plot(aperture_radii/w0, power_fraction*100, 'b-', linewidth=2)
+axes[1, 0].axhline(y=86.5, color='gray', linestyle='--', alpha=0.7, label='$r = w_0$ (86.5\\%)')
+axes[1, 0].axhline(y=99, color='gray', linestyle=':', alpha=0.7, label='$r = 1.5w_0$ (99\\%)')
+axes[1, 0].axvline(x=1, color='red', linestyle='--', alpha=0.5)
+axes[1, 0].axvline(x=1.5, color='red', linestyle=':', alpha=0.5)
+axes[1, 0].set_xlabel('Aperture radius ($r/w_0$)')
+axes[1, 0].set_ylabel('Transmitted power (\\%)')
+axes[1, 0].set_title('Power Through Circular Aperture')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Peak intensity vs z
+z_peak = np.linspace(-5*z_R, 5*z_R, 200)
+I_peak = (w0 / beam_width(z_peak, w0, z_R))**2
+
+axes[1, 1].plot(z_peak/z_R, I_peak, 'g-', linewidth=2)
+axes[1, 1].axhline(y=0.5, color='gray', linestyle='--', alpha=0.7, label='Half maximum')
+axes[1, 1].axvline(x=1, color='red', linestyle='--', alpha=0.5)
+axes[1, 1].axvline(x=-1, color='red', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('$z/z_R$')
+axes[1, 1].set_ylabel('Peak intensity (normalized)')
+axes[1, 1].set_title('Axial Intensity')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('gaussian_beam_2d.pdf', '2D beam visualization: intensity distribution, cross-section, power transmission, and axial intensity.')
+\end{pycode}
+
+\section{Focusing with a Lens}
+\begin{pycode}
+# Gaussian beam focusing with a lens
+# Using ABCD matrix formalism
+
+def transform_gaussian_beam(q_in, ABCD):
+    """Transform Gaussian beam complex parameter q through ABCD matrix."""
+    A, B, C, D = ABCD[0,0], ABCD[0,1], ABCD[1,0], ABCD[1,1]
+    q_out = (A * q_in + B) / (C * q_in + D)
+    return q_out
+
+def q_to_params(q, wavelength):
+    """Extract beam waist position and size from complex beam parameter."""
+    # 1/q = 1/R - i*lambda/(pi*w^2)
+    inv_q = 1 / q
+    R = 1 / np.real(inv_q) if np.real(inv_q) != 0 else np.inf
+    w = np.sqrt(-wavelength / (np.pi * np.imag(inv_q)))
+    return R, w
+
+# Input beam parameters
+w0_input = 1e-3  # 1 mm beam waist
+z_R_input = np.pi * w0_input**2 / wavelength
+
+# Lens parameters
+f = 100e-3  # 100 mm focal length
+d1 = 200e-3  # Distance from waist to lens
+d2_values = np.linspace(50e-3, 200e-3, 100)
+
+# Calculate focused spot sizes
+focused_waists = []
+waist_positions = []
+
+for d2 in d2_values:
+    # ABCD matrices
+    # Free propagation d1
+    M1 = np.array([[1, d1], [0, 1]])
+    # Thin lens
+    M_lens = np.array([[1, 0], [-1/f, 1]])
+    # Free propagation d2
+    M2 = np.array([[1, d2], [0, 1]])
+
+    # Total system
+    M_total = M2 @ M_lens @ M1
+
+    # Input complex beam parameter at waist
+    q_in = 1j * z_R_input
+
+    # Transform
+    q_out = transform_gaussian_beam(q_in, M_total)
+
+    # Extract parameters
+    R_out, w_out = q_to_params(q_out, wavelength)
+    focused_waists.append(w_out)
+
+    # Find waist position (where R -> infinity)
+    # Waist is at q purely imaginary
+
+focused_waists = np.array(focused_waists)
+
+# Theoretical focused waist (thin lens approximation)
+w0_focused_theory = wavelength * f / (np.pi * w0_input)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Focused beam waist vs distance after lens
+axes[0, 0].plot(d2_values*1000, focused_waists*1e6, 'b-', linewidth=2)
+axes[0, 0].axhline(y=w0_focused_theory*1e6, color='gray', linestyle='--', alpha=0.7,
+                   label=f'Theory: {w0_focused_theory*1e6:.1f} $\\mu$m')
+axes[0, 0].axvline(x=f*1000, color='red', linestyle='--', alpha=0.5, label=f'$f = {f*1000:.0f}$ mm')
+axes[0, 0].set_xlabel('Distance after lens (mm)')
+axes[0, 0].set_ylabel('Beam radius ($\\mu$m)')
+axes[0, 0].set_title('Focused Beam Size')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Beam propagation through focusing system
+z_total = np.linspace(0, d1 + f*2, 300)
+w_propagation = []
+
+for z in z_total:
+    if z < d1:
+        # Before lens
+        q = 1j * z_R_input + z
+    else:
+        # After lens
+        M1 = np.array([[1, d1], [0, 1]])
+        M_lens = np.array([[1, 0], [-1/f, 1]])
+        M2 = np.array([[1, z - d1], [0, 1]])
+        M_total = M2 @ M_lens @ M1
+        q_in = 1j * z_R_input
+        q = transform_gaussian_beam(q_in, M_total)
+
+    R_z, w_z = q_to_params(q, wavelength)
+    w_propagation.append(w_z)
+
+w_propagation = np.array(w_propagation)
+
+axes[0, 1].plot(z_total*1000, w_propagation*1e6, 'b-', linewidth=2)
+axes[0, 1].plot(z_total*1000, -w_propagation*1e6, 'b-', linewidth=2)
+axes[0, 1].fill_between(z_total*1000, -w_propagation*1e6, w_propagation*1e6, alpha=0.3)
+axes[0, 1].axvline(x=d1*1000, color='green', linestyle='-', linewidth=3, label='Lens')
+axes[0, 1].set_xlabel('$z$ (mm)')
+axes[0, 1].set_ylabel('Beam radius ($\\mu$m)')
+axes[0, 1].set_title('Beam Focusing Through Lens')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Effect of lens focal length on spot size
+focal_lengths = np.linspace(20e-3, 200e-3, 100)
+spot_sizes = wavelength * focal_lengths / (np.pi * w0_input)
+
+axes[1, 0].plot(focal_lengths*1000, spot_sizes*1e6, 'g-', linewidth=2)
+axes[1, 0].set_xlabel('Focal length (mm)')
+axes[1, 0].set_ylabel('Minimum spot size ($\\mu$m)')
+axes[1, 0].set_title('Spot Size vs Focal Length')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Depth of focus of focused beam
+NA = w0_input / f  # Numerical aperture
+DOF = 2 * wavelength / (NA**2)
+
+# Intensity along axis near focus
+z_near_focus = np.linspace(-3*DOF, 3*DOF, 200)
+z_R_focused = np.pi * w0_focused_theory**2 / wavelength
+I_axial = 1 / (1 + (z_near_focus/z_R_focused)**2)
+
+axes[1, 1].plot(z_near_focus*1e6, I_axial, 'r-', linewidth=2)
+axes[1, 1].axhline(y=0.5, color='gray', linestyle='--', alpha=0.7)
+axes[1, 1].axvline(x=z_R_focused*1e6, color='blue', linestyle='--', alpha=0.5, label=f'$z_R = {z_R_focused*1e6:.1f}$ $\\mu$m')
+axes[1, 1].axvline(x=-z_R_focused*1e6, color='blue', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Distance from focus ($\\mu$m)')
+axes[1, 1].set_ylabel('Axial intensity (normalized)')
+axes[1, 1].set_title('Depth of Focus')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('gaussian_beam_focusing.pdf', 'Gaussian beam focusing: spot size, beam propagation through lens, and depth of focus.')
+\end{pycode}
+
+\section{Higher-Order Hermite-Gaussian Modes}
+\begin{pycode}
+from scipy.special import hermite
+
+# Higher-order mode analysis
+def hermite_gaussian(x, y, z, m, n, w0, wavelength):
+    """Calculate Hermite-Gaussian mode amplitude."""
+    z_R = np.pi * w0**2 / wavelength
+    w = w0 * np.sqrt(1 + (z/z_R)**2)
+    R = z * (1 + (z_R/z)**2) if z != 0 else np.inf
+    psi = np.arctan(z/z_R)
+
+    # Hermite polynomials
+    Hm = hermite(m)
+    Hn = hermite(n)
+
+    # Mode amplitude
+    E = (1/w) * Hm(np.sqrt(2)*x/w) * Hn(np.sqrt(2)*y/w) * np.exp(-(x**2 + y**2)/w**2)
+
+    return E
+
+# Create mode patterns
+x = np.linspace(-3*w0, 3*w0, 100)
+y = np.linspace(-3*w0, 3*w0, 100)
+X, Y = np.meshgrid(x, y)
+
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+
+modes = [(0, 0), (1, 0), (0, 1), (1, 1), (2, 0), (2, 2)]
+titles = ['TEM$_{00}$', 'TEM$_{10}$', 'TEM$_{01}$', 'TEM$_{11}$', 'TEM$_{20}$', 'TEM$_{22}$']
+
+for ax, (m, n), title in zip(axes.flat, modes, titles):
+    E = hermite_gaussian(X, Y, 0, m, n, w0, wavelength)
+    I = np.abs(E)**2
+
+    im = ax.pcolormesh(X*1e6, Y*1e6, I, cmap='hot', shading='auto')
+    ax.set_xlabel('$x$ ($\\mu$m)')
+    ax.set_ylabel('$y$ ($\\mu$m)')
+    ax.set_title(title)
+    ax.set_aspect('equal')
+
+plt.tight_layout()
+save_plot('hermite_gaussian_modes.pdf', 'Hermite-Gaussian transverse modes TEM$_{mn}$ intensity patterns.')
+\end{pycode}
+
+\section{Beam Quality Analysis}
+\begin{pycode}
+# M^2 beam quality analysis
+# Compare ideal Gaussian to real beam with M^2 > 1
+
+M2_values = [1.0, 1.5, 2.0, 3.0]
+colors_m2 = ['blue', 'green', 'orange', 'red']
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Beam width for different M^2
+z_m2 = np.linspace(-5*z_R, 5*z_R, 200)
+
+for M2, color in zip(M2_values, colors_m2):
+    w_m2 = w0 * np.sqrt(1 + (M2 * z_m2 / z_R)**2)
+    axes[0, 0].plot(z_m2/z_R, w_m2/w0, color=color, linewidth=2, label=f'$M^2 = {M2:.1f}$')
+
+axes[0, 0].set_xlabel('$z/z_R$')
+axes[0, 0].set_ylabel('$w(z)/w_0$')
+axes[0, 0].set_title('Beam Width vs $M^2$')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Divergence vs M^2
+M2_range = np.linspace(1, 5, 100)
+divergence = M2_range * wavelength / (np.pi * w0) * 1000  # mrad
+
+axes[0, 1].plot(M2_range, divergence, 'b-', linewidth=2)
+axes[0, 1].set_xlabel('$M^2$')
+axes[0, 1].set_ylabel('Divergence (mrad)')
+axes[0, 1].set_title('Far-field Divergence vs Beam Quality')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Brightness (power density per solid angle)
+P_total = 1  # Normalized power
+brightness = P_total / (np.pi * (M2_range * wavelength / (np.pi * w0))**2)
+brightness_norm = brightness / brightness[0]
+
+axes[1, 0].plot(M2_range, brightness_norm, 'g-', linewidth=2)
+axes[1, 0].set_xlabel('$M^2$')
+axes[1, 0].set_ylabel('Brightness (normalized)')
+axes[1, 0].set_title('Beam Brightness vs $M^2$')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Focused spot size for different M^2
+f_lens = 100e-3
+w0_focused = M2_range * wavelength * f_lens / (np.pi * w0_input)
+
+axes[1, 1].plot(M2_range, w0_focused*1e6, 'r-', linewidth=2)
+axes[1, 1].set_xlabel('$M^2$')
+axes[1, 1].set_ylabel('Focused spot size ($\\mu$m)')
+axes[1, 1].set_title(f'Focused Spot Size ($f = {f_lens*1000:.0f}$ mm)')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('beam_quality.pdf', 'Beam quality analysis: effect of $M^2$ on propagation, divergence, brightness, and focusing.')
+\end{pycode}
+
+\section{Optical Resonator Stability}
+\begin{pycode}
+# Stability of optical resonators
+# Stable if 0 <= g1*g2 <= 1, where g = 1 - L/R
+
+def resonator_stability(g1, g2):
+    """Return stability condition."""
+    return 0 <= g1 * g2 <= 1
+
+# Create stability diagram
+g1_range = np.linspace(-2, 2, 200)
+g2_range = np.linspace(-2, 2, 200)
+G1, G2 = np.meshgrid(g1_range, g2_range)
+
+stability = np.logical_and(G1 * G2 >= 0, G1 * G2 <= 1)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Stability diagram
+axes[0, 0].contourf(G1, G2, stability.astype(int), levels=[0.5, 1.5], colors=['lightblue'])
+axes[0, 0].contour(G1, G2, stability.astype(int), levels=[0.5], colors=['blue'], linewidths=2)
+
+# Mark common resonator types
+resonators = {
+    'Plane-plane': (1, 1),
+    'Confocal': (0, 0),
+    'Concentric': (-1, -1),
+    'Hemispherical': (1, 0),
+    'Concave-convex': (0.5, 2)
+}
+
+for name, (g1, g2) in resonators.items():
+    if resonator_stability(g1, g2):
+        axes[0, 0].plot(g1, g2, 'go', markersize=8)
+    else:
+        axes[0, 0].plot(g1, g2, 'rx', markersize=8)
+    axes[0, 0].annotate(name, (g1, g2), xytext=(5, 5), textcoords='offset points', fontsize=8)
+
+axes[0, 0].set_xlabel('$g_1 = 1 - L/R_1$')
+axes[0, 0].set_ylabel('$g_2 = 1 - L/R_2$')
+axes[0, 0].set_title('Resonator Stability Diagram')
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].set_xlim([-2, 2])
+axes[0, 0].set_ylim([-2, 2])
+
+# Plot 2: Mode waist in symmetric resonator
+L = 0.5  # Cavity length (m)
+R_range = np.linspace(0.3, 2, 100)  # Mirror ROC (m)
+g = 1 - L / R_range
+
+# Waist for symmetric resonator
+w0_cavity = np.sqrt(wavelength * L / np.pi) * ((1 - g**2)**0.25 / np.sqrt(2 * (1 - g)))
+w0_cavity = np.where(np.abs(g) < 1, w0_cavity, np.nan)
+
+axes[0, 1].plot(R_range*1000, w0_cavity*1e3, 'b-', linewidth=2)
+axes[0, 1].axvline(x=L*1000, color='gray', linestyle='--', alpha=0.7, label=f'$R = L$ (confocal)')
+axes[0, 1].set_xlabel('Mirror ROC (mm)')
+axes[0, 1].set_ylabel('Mode waist (mm)')
+axes[0, 1].set_title(f'Cavity Mode Waist ($L = {L*1000:.0f}$ mm)')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Mode at mirrors for symmetric resonator
+w_mirror = np.sqrt(wavelength * L / np.pi) * (1 / (1 - g**2)**0.25)
+w_mirror = np.where(np.abs(g) < 1, w_mirror, np.nan)
+
+axes[1, 0].plot(R_range*1000, w_mirror*1e3, 'r-', linewidth=2)
+axes[1, 0].axvline(x=L*1000, color='gray', linestyle='--', alpha=0.7)
+axes[1, 0].set_xlabel('Mirror ROC (mm)')
+axes[1, 0].set_ylabel('Mode size at mirror (mm)')
+axes[1, 0].set_title('Mode Size at Mirrors')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Free spectral range and finesse
+FSR = 3e8 / (2 * L)  # Free spectral range (Hz)
+reflectivities = np.linspace(0.9, 0.999, 100)
+finesse = np.pi * np.sqrt(reflectivities) / (1 - reflectivities)
+
+axes[1, 1].semilogy(reflectivities * 100, finesse, 'g-', linewidth=2)
+axes[1, 1].set_xlabel('Mirror reflectivity (\\%)')
+axes[1, 1].set_ylabel('Finesse')
+axes[1, 1].set_title(f'Cavity Finesse (FSR = {FSR/1e9:.1f} GHz)')
+axes[1, 1].grid(True, alpha=0.3, which='both')
+
+plt.tight_layout()
+save_plot('resonator_stability.pdf', 'Optical resonator analysis: stability diagram, mode sizes, and cavity finesse.')
+\end{pycode}
+
+\section{Results Summary}
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of Gaussian Beam Parameters}')
+print(r'\begin{tabular}{lll}')
+print(r'\toprule')
+print(r'Parameter & Symbol & Value \\')
+print(r'\midrule')
+print(f'Wavelength & $\\lambda$ & {wavelength*1e9:.0f} nm \\\\')
+print(f'Beam waist & $w_0$ & {w0*1e6:.0f} $\\mu$m \\\\')
+print(f'Rayleigh range & $z_R$ & {z_R*1000:.2f} mm \\\\')
+print(f'Divergence half-angle & $\\theta$ & {np.rad2deg(theta_div):.4f}$^\\circ$ \\\\')
+print(f'Depth of focus & $2z_R$ & {depth_of_focus*1000:.2f} mm \\\\')
+print(f'Beam quality factor & $M^2$ & {M2:.1f} \\\\')
+print(r'\midrule')
+print(f'Input waist (focusing) & $w_{{0,in}}$ & {w0_input*1e3:.0f} mm \\\\')
+print(f'Focal length & $f$ & {f*1000:.0f} mm \\\\')
+print(f'Focused spot size & $w_{{0,focus}}$ & {w0_focused_theory*1e6:.1f} $\\mu$m \\\\')
+print(f'Focused Rayleigh range & $z_{{R,focus}}$ & {z_R_focused*1e6:.1f} $\\mu$m \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+\begin{itemize}
+    \item \textbf{Wavelength}: $\lambda = $ \py{f"{wavelength*1e9:.0f}"} nm
+    \item \textbf{Beam waist}: $w_0 = $ \py{f"{w0*1e6:.0f}"} $\mu$m
+    \item \textbf{Rayleigh range}: $z_R = $ \py{f"{z_R*1000:.2f}"} mm
+    \item \textbf{Divergence half-angle}: $\theta = $ \py{f"{np.rad2deg(theta_div)*1000:.2f}"} mrad
+    \item \textbf{Depth of focus}: $2z_R = $ \py{f"{depth_of_focus*1000:.2f}"} mm
+    \item \textbf{Power in $1/e^2$ radius}: 86.5\%
+    \item \textbf{Focused spot (diffraction limit)}: $w_0' = $ \py{f"{w0_focused_theory*1e6:.1f}"} $\mu$m
+    \item \textbf{Confocal cavity FSR}: \py{f"{FSR/1e9:.1f}"} GHz
+\end{itemize}
+
+\section{Conclusion}
+Gaussian beam propagation is characterized by the Rayleigh range $z_R$, where the beam width increases by $\sqrt{2}$. The product $w_0 \cdot \theta = \lambda/\pi$ is minimum for an ideal Gaussian beam, representing the diffraction limit. Understanding beam propagation is essential for optical system design, including laser focusing, fiber coupling, and resonator mode analysis. The ABCD matrix formalism provides a powerful tool for analyzing complex optical systems. Higher-order Hermite-Gaussian modes exhibit characteristic multi-lobed intensity patterns and are important in resonator analysis and mode-selective applications.
+
+\end{document}

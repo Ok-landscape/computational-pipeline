@@ -1,0 +1,72 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs} % Required for xtable aesthetics
+
+\title{Phase III Clinical Trial Analysis}
+\author{Bioinformatics Division}
+
+\begin{document}
+\maketitle
+
+\section{Statistical Analysis Protocol}
+
+We investigate the efficacy of Treatment A vs. Placebo. The analysis is performed using R version \Sexpr{getRversion()}.
+
+% Global Chunk Options
+% echo=TRUE: Show R code in the document (transparency)
+% warning=FALSE: Suppress warning messages in final PDF
+% dev='pdf': Generate high-quality vector graphics
+<<setup, include=FALSE>>=
+library(knitr)
+library(ggplot2)
+library(xtable)
+opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, dev='pdf', fig.width=6, fig.height=4)
+@
+
+\section{Data Ingestion and Summary}
+
+<<data_load, results='asis'>>=
+# Simulate Clinical Data
+set.seed(2024)
+n <- 50
+df <- data.frame(
+  id = 1:(2*n),
+  group = factor(rep(c("Placebo", "Treatment"), each=n)),
+  recovery_days = c(rnorm(n, mean=14, sd=3), rnorm(n, mean=10, sd=2.5))
+)
+
+# Descriptive Statistics Table
+summary_stats <- aggregate(recovery_days ~ group, data=df, FUN=function(x) c(Mean=mean(x), SD=sd(x)))
+summary_stats <- do.call(data.frame, summary_stats) # Flatten structure
+
+# Print as LaTeX table using xtable
+print(xtable(summary_stats, caption="Descriptive Statistics by Group"),
+      booktabs=TRUE, include.rownames=FALSE)
+@
+
+The table above is generated dynamically. If the underlying dataset \texttt{df} changes, the table updates automatically without manual re-formatting.
+
+\section{Hypothesis Testing and Visualization}
+
+We perform an independent t-test to compare the groups.
+
+<<ttest, echo=FALSE>>=
+test_result <- t.test(recovery_days ~ group, data=df)
+pval <- test_result$p.value
+@
+
+The t-test yields a p-value of \Sexpr{format.pval(pval, eps=0.001)}.
+\Sexpr{ifelse(pval < 0.05, "This indicates a statistically significant difference.", "This result is not significant.")}
+
+<<boxplot, fig.cap="Distribution of Recovery Days by Treatment Group">>=
+ggplot(df, aes(x=group, y=recovery_days, fill=group)) +
+  geom_boxplot(alpha=0.7) +
+  geom_jitter(width=0.2, alpha=0.5) +
+  theme_minimal() +
+  labs(y="Days to Recovery", x="Study Group") +
+  scale_fill_brewer(palette="Pastel1")
+@
+
+\end{document}

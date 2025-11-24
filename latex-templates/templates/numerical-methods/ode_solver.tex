@@ -1,0 +1,463 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{algorithm2e}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+% Colors for method comparison
+\definecolor{euler}{RGB}{231, 76, 60}
+\definecolor{rk4}{RGB}{46, 204, 113}
+\definecolor{rkf45}{RGB}{52, 152, 219}
+\definecolor{exact}{RGB}{44, 62, 80}
+
+\title{Numerical Methods for Ordinary Differential Equations:\\
+A Comparative Analysis of Integration Schemes}
+\author{Computational Mathematics Division\\Technical Report CM-2024-003}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents a comprehensive comparison of numerical methods for solving ordinary differential equations. We implement and analyze Forward Euler, fourth-order Runge-Kutta (RK4), and adaptive Runge-Kutta-Fehlberg (RKF45) methods. Performance is evaluated on stiff and non-stiff test problems using accuracy, computational cost, and stability metrics. Results demonstrate the trade-offs between method complexity and solution quality, with RKF45 achieving optimal efficiency for most engineering applications.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Ordinary differential equations (ODEs) are fundamental to modeling physical, biological, and engineering systems. While analytical solutions exist for simple cases, most practical problems require numerical integration. This report evaluates three widely-used methods with increasing sophistication.
+
+\section{Problem Statement}
+We consider initial value problems of the form:
+\begin{equation}
+\frac{dy}{dt} = f(t, y), \quad y(t_0) = y_0
+\end{equation}
+
+The challenge is to approximate $y(t)$ at discrete time points with controllable accuracy and computational efficiency.
+
+\section{Methods Overview}
+
+\subsection{Forward Euler Method}
+The simplest explicit method, first-order accurate:
+\begin{equation}
+y_{n+1} = y_n + h f(t_n, y_n)
+\end{equation}
+\textbf{Stability:} Conditionally stable, $|1 + h\lambda| < 1$ for $\dot{y} = \lambda y$.
+
+\subsection{Classical Runge-Kutta (RK4)}
+Fourth-order method using weighted average of slopes:
+\begin{align}
+k_1 &= f(t_n, y_n) \\
+k_2 &= f(t_n + h/2, y_n + hk_1/2) \\
+k_3 &= f(t_n + h/2, y_n + hk_2/2) \\
+k_4 &= f(t_n + h, y_n + hk_3) \\
+y_{n+1} &= y_n + \frac{h}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+\end{align}
+
+\subsection{Runge-Kutta-Fehlberg (RKF45)}
+Adaptive method with embedded error estimation using 4th and 5th order formulas:
+\begin{equation}
+\text{Error estimate: } \epsilon = |y_{n+1}^{(5)} - y_{n+1}^{(4)}|
+\end{equation}
+
+Step size adapts to maintain $\epsilon < \text{tolerance}$.
+
+\chapter{Implementation}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from time import time
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Define numerical methods
+def euler(f, y0, t_span, h):
+    """Forward Euler method."""
+    t = np.arange(t_span[0], t_span[1] + h, h)
+    y = np.zeros((len(t), len(np.atleast_1d(y0))))
+    y[0] = np.atleast_1d(y0)
+
+    for i in range(len(t) - 1):
+        y[i+1] = y[i] + h * np.atleast_1d(f(t[i], y[i]))
+
+    return t, y, len(t) - 1  # Return function evaluations
+
+def rk4(f, y0, t_span, h):
+    """Classical 4th-order Runge-Kutta."""
+    t = np.arange(t_span[0], t_span[1] + h, h)
+    y = np.zeros((len(t), len(np.atleast_1d(y0))))
+    y[0] = np.atleast_1d(y0)
+    n_evals = 0
+
+    for i in range(len(t) - 1):
+        k1 = np.atleast_1d(f(t[i], y[i]))
+        k2 = np.atleast_1d(f(t[i] + h/2, y[i] + h*k1/2))
+        k3 = np.atleast_1d(f(t[i] + h/2, y[i] + h*k2/2))
+        k4 = np.atleast_1d(f(t[i] + h, y[i] + h*k3))
+        y[i+1] = y[i] + h/6 * (k1 + 2*k2 + 2*k3 + k4)
+        n_evals += 4
+
+    return t, y, n_evals
+
+def rkf45(f, y0, t_span, tol=1e-6, h_init=0.1):
+    """Adaptive Runge-Kutta-Fehlberg 4(5) method."""
+    # Butcher tableau coefficients
+    c = np.array([0, 1/4, 3/8, 12/13, 1, 1/2])
+    a = np.array([
+        [0, 0, 0, 0, 0],
+        [1/4, 0, 0, 0, 0],
+        [3/32, 9/32, 0, 0, 0],
+        [1932/2197, -7200/2197, 7296/2197, 0, 0],
+        [439/216, -8, 3680/513, -845/4104, 0],
+        [-8/27, 2, -3544/2565, 1859/4104, -11/40]
+    ])
+    b4 = np.array([25/216, 0, 1408/2565, 2197/4104, -1/5, 0])
+    b5 = np.array([16/135, 0, 6656/12825, 28561/56430, -9/50, 2/55])
+
+    t_list = [t_span[0]]
+    y_list = [np.atleast_1d(y0)]
+    h = h_init
+    t = t_span[0]
+    y = np.atleast_1d(y0)
+    n_evals = 0
+
+    while t < t_span[1]:
+        if t + h > t_span[1]:
+            h = t_span[1] - t
+
+        # Compute stages
+        k = np.zeros((6, len(y)))
+        for i in range(6):
+            yi = y + h * sum(a[i, j] * k[j] for j in range(i))
+            k[i] = np.atleast_1d(f(t + c[i] * h, yi))
+            n_evals += 1
+
+        # 4th and 5th order solutions
+        y4 = y + h * sum(b4[i] * k[i] for i in range(6))
+        y5 = y + h * sum(b5[i] * k[i] for i in range(6))
+
+        # Error estimate
+        error = np.max(np.abs(y5 - y4))
+
+        # Step size control
+        if error < tol or h < 1e-10:
+            t = t + h
+            y = y5
+            t_list.append(t)
+            y_list.append(y.copy())
+
+        # Adjust step size
+        if error > 0:
+            h = 0.9 * h * (tol / error) ** 0.2
+        h = min(h, 0.5)  # Cap step size
+
+    return np.array(t_list), np.array(y_list), n_evals
+
+# Test Problem 1: Exponential decay (non-stiff)
+def exp_decay(t, y):
+    return -2 * y
+
+def exp_decay_exact(t, y0=1):
+    return y0 * np.exp(-2 * t)
+
+# Test Problem 2: Van der Pol oscillator (stiff)
+def vanderpol(t, y, mu=1):
+    y1, y2 = y
+    dy1 = y2
+    dy2 = mu * (1 - y1**2) * y2 - y1
+    return np.array([dy1, dy2])
+
+# Test Problem 3: Lorenz system (chaotic)
+def lorenz(t, y, sigma=10, rho=28, beta=8/3):
+    x, y_l, z = y
+    dx = sigma * (y_l - x)
+    dy = x * (rho - z) - y_l
+    dz = x * y_l - beta * z
+    return np.array([dx, dy, dz])
+
+# Run comparison on exponential decay
+t_span = (0, 5)
+y0 = 1.0
+step_sizes = [0.5, 0.2, 0.1, 0.05, 0.02]
+
+# Store results for error analysis
+errors_euler = []
+errors_rk4 = []
+evals_euler = []
+evals_rk4 = []
+
+for h in step_sizes:
+    t_e, y_e, n_e = euler(exp_decay, y0, t_span, h)
+    t_r, y_r, n_r = rk4(exp_decay, y0, t_span, h)
+
+    exact_e = exp_decay_exact(t_e, y0)
+    exact_r = exp_decay_exact(t_r, y0)
+
+    errors_euler.append(np.max(np.abs(y_e.flatten() - exact_e)))
+    errors_rk4.append(np.max(np.abs(y_r.flatten() - exact_r)))
+    evals_euler.append(n_e)
+    evals_rk4.append(n_r)
+
+# RKF45 with adaptive stepping
+t_rkf, y_rkf, n_rkf = rkf45(exp_decay, y0, t_span, tol=1e-8)
+exact_rkf = exp_decay_exact(t_rkf, y0)
+error_rkf = np.max(np.abs(y_rkf.flatten() - exact_rkf))
+
+# Detailed comparison at h=0.1
+h_test = 0.1
+t_euler, y_euler, _ = euler(exp_decay, y0, t_span, h_test)
+t_rk4, y_rk4, _ = rk4(exp_decay, y0, t_span, h_test)
+
+# Van der Pol solution
+t_vdp = np.linspace(0, 20, 2000)
+from scipy.integrate import solve_ivp
+sol_vdp = solve_ivp(vanderpol, (0, 20), [2, 0], t_eval=t_vdp, method='RK45')
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(12, 10))
+
+# Plot 1: Solution comparison
+ax1 = fig.add_subplot(2, 2, 1)
+t_exact = np.linspace(0, 5, 200)
+ax1.plot(t_exact, exp_decay_exact(t_exact), 'k-', linewidth=2, label='Exact')
+ax1.plot(t_euler, y_euler, 'o-', color='#e74c3c', markersize=4, linewidth=1, label=f'Euler ($h={h_test}$)')
+ax1.plot(t_rk4, y_rk4, 's-', color='#2ecc71', markersize=3, linewidth=1, label=f'RK4 ($h={h_test}$)')
+ax1.plot(t_rkf, y_rkf, '^', color='#3498db', markersize=4, label=f'RKF45 ({len(t_rkf)} steps)')
+ax1.set_xlabel('Time $t$')
+ax1.set_ylabel('$y(t)$')
+ax1.set_title('Exponential Decay: Method Comparison')
+ax1.legend(fontsize=8)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Error convergence
+ax2 = fig.add_subplot(2, 2, 2)
+ax2.loglog(step_sizes, errors_euler, 'o-', color='#e74c3c', linewidth=2, label='Euler (slope$\\approx 1$)')
+ax2.loglog(step_sizes, errors_rk4, 's-', color='#2ecc71', linewidth=2, label='RK4 (slope$\\approx 4$)')
+ax2.axhline(error_rkf, color='#3498db', linestyle='--', label=f'RKF45 (tol=$10^{{-8}}$)')
+
+# Reference slopes
+h_ref = np.array([0.5, 0.02])
+ax2.loglog(h_ref, 0.5*h_ref, ':', color='gray', alpha=0.5, label='$O(h)$')
+ax2.loglog(h_ref, 0.005*h_ref**4, ':', color='gray', alpha=0.5, label='$O(h^4)$')
+
+ax2.set_xlabel('Step size $h$')
+ax2.set_ylabel('Maximum Error')
+ax2.set_title('Error Convergence')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3, which='both')
+
+# Plot 3: Van der Pol phase portrait
+ax3 = fig.add_subplot(2, 2, 3)
+ax3.plot(sol_vdp.y[0], sol_vdp.y[1], color='#9b59b6', linewidth=1)
+ax3.plot(sol_vdp.y[0, 0], sol_vdp.y[1, 0], 'go', markersize=8, label='Start')
+ax3.set_xlabel('$y_1$')
+ax3.set_ylabel('$y_2$')
+ax3.set_title('Van der Pol Oscillator Phase Portrait')
+ax3.legend()
+ax3.grid(True, alpha=0.3)
+ax3.set_aspect('equal')
+
+# Plot 4: Efficiency comparison
+ax4 = fig.add_subplot(2, 2, 4)
+ax4.loglog(evals_euler, errors_euler, 'o-', color='#e74c3c', linewidth=2, markersize=8, label='Euler')
+ax4.loglog(evals_rk4, errors_rk4, 's-', color='#2ecc71', linewidth=2, markersize=8, label='RK4')
+ax4.plot(n_rkf, error_rkf, '^', color='#3498db', markersize=12, label='RKF45')
+
+ax4.set_xlabel('Function Evaluations')
+ax4.set_ylabel('Maximum Error')
+ax4.set_title('Computational Efficiency')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3, which='both')
+
+plt.tight_layout()
+plt.savefig('ode_solver_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{ode_solver_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Additional stability analysis
+# Create stability region plot
+fig2, axes2 = plt.subplots(1, 2, figsize=(10, 4))
+
+# Euler stability region
+theta = np.linspace(0, 2*np.pi, 200)
+ax_stab1 = axes2[0]
+ax_stab1.plot(np.cos(theta) - 1, np.sin(theta), 'r-', linewidth=2)
+ax_stab1.fill(np.cos(theta) - 1, np.sin(theta), alpha=0.3, color='red')
+ax_stab1.axhline(0, color='k', linewidth=0.5)
+ax_stab1.axvline(0, color='k', linewidth=0.5)
+ax_stab1.set_xlabel(r'Re($h\lambda$)')
+ax_stab1.set_ylabel(r'Im($h\lambda$)')
+ax_stab1.set_title('Euler Stability Region')
+ax_stab1.set_xlim([-3, 1])
+ax_stab1.set_ylim([-2, 2])
+ax_stab1.grid(True, alpha=0.3)
+ax_stab1.set_aspect('equal')
+
+# RK4 stability region (approximate)
+x = np.linspace(-3, 1, 200)
+y = np.linspace(-3, 3, 200)
+X, Y = np.meshgrid(x, y)
+Z = X + 1j*Y
+R = 1 + Z + Z**2/2 + Z**3/6 + Z**4/24
+ax_stab2 = axes2[1]
+ax_stab2.contour(X, Y, np.abs(R), [1], colors='g', linewidths=2)
+ax_stab2.contourf(X, Y, np.abs(R), levels=[0, 1], colors=['green'], alpha=0.3)
+ax_stab2.axhline(0, color='k', linewidth=0.5)
+ax_stab2.axvline(0, color='k', linewidth=0.5)
+ax_stab2.set_xlabel(r'Re($h\lambda$)')
+ax_stab2.set_ylabel(r'Im($h\lambda$)')
+ax_stab2.set_title('RK4 Stability Region')
+ax_stab2.set_xlim([-3, 1])
+ax_stab2.set_ylim([-3, 3])
+ax_stab2.grid(True, alpha=0.3)
+ax_stab2.set_aspect('equal')
+
+plt.tight_layout()
+plt.savefig('stability_regions.pdf', bbox_inches='tight')
+print(r'\begin{center}')
+print(r'\includegraphics[width=0.9\textwidth]{stability_regions.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Store key results
+best_euler_error = errors_euler[-1]
+best_rk4_error = errors_rk4[-1]
+euler_order = np.log(errors_euler[0]/errors_euler[-1]) / np.log(step_sizes[0]/step_sizes[-1])
+rk4_order = np.log(errors_rk4[0]/errors_rk4[-1]) / np.log(step_sizes[0]/step_sizes[-1])
+\end{pycode}
+
+\chapter{Results and Analysis}
+
+\section{Accuracy Comparison}
+
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Error Analysis for Exponential Decay Problem}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Step Size & Euler Error & RK4 Error & Euler Evals & RK4 Evals \\')
+print(r'\midrule')
+for h, e_e, e_r, n_e, n_r in zip(step_sizes, errors_euler, errors_rk4, evals_euler, evals_rk4):
+    print(f'{h:.2f} & {e_e:.2e} & {e_r:.2e} & {n_e} & {n_r} \\\\')
+print(r'\midrule')
+print(f'RKF45 (adaptive) & \\multicolumn{{2}}{{c}}{{{error_rkf:.2e}}} & \\multicolumn{{2}}{{c}}{{{n_rkf}}} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Order of Convergence}
+The empirical convergence rates confirm theoretical predictions:
+\begin{itemize}
+    \item \textbf{Forward Euler}: Order $\approx$ \py{f"{euler_order:.2f}"} (theoretical: 1)
+    \item \textbf{RK4}: Order $\approx$ \py{f"{rk4_order:.2f}"} (theoretical: 4)
+\end{itemize}
+
+\section{Computational Efficiency}
+The efficiency plot reveals that:
+\begin{enumerate}
+    \item RK4 requires 4x more evaluations per step than Euler
+    \item For the same accuracy, RK4 is significantly more efficient
+    \item RKF45 achieves the best accuracy-to-cost ratio through adaptive stepping
+\end{enumerate}
+
+\section{Stability Analysis}
+The stability regions show:
+\begin{itemize}
+    \item \textbf{Euler}: Small circular region (radius 1 centered at $-1$)
+    \item \textbf{RK4}: Much larger region extending along the imaginary axis
+\end{itemize}
+
+This explains why Euler requires very small step sizes for oscillatory problems, while RK4 remains stable with larger steps.
+
+\chapter{Method Selection Guidelines}
+
+\section{Recommendations by Problem Type}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Method Selection Guidelines}')
+print(r'\begin{tabular}{lp{8cm}}')
+print(r'\toprule')
+print(r'Problem Type & Recommended Method \\')
+print(r'\midrule')
+print(r'Simple, smooth ODEs & RK4 with fixed step \\')
+print(r'Problems requiring error control & RKF45 or similar adaptive method \\')
+print(r'Stiff systems & Implicit methods (BDF, Radau) \\')
+print(r'Long-time integration & Symplectic methods for Hamiltonian systems \\')
+print(r'Real-time simulation & Euler or RK2 (when speed critical) \\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Key Performance Metrics}
+
+For the test problem $y' = -2y$:
+\begin{itemize}
+    \item Best Euler accuracy (h=0.02): \py{f"{best_euler_error:.2e}"}
+    \item Best RK4 accuracy (h=0.02): \py{f"{best_rk4_error:.2e}"}
+    \item RKF45 accuracy (tol=$10^{-8}$): \py{f"{error_rkf:.2e}"} with \py{n_rkf} evaluations
+\end{itemize}
+
+\chapter{Conclusions}
+
+\section{Summary}
+This report compared three numerical methods for ODE integration:
+
+\begin{enumerate}
+    \item \textbf{Forward Euler} is simple but has first-order accuracy and limited stability. Suitable only for quick estimates or when computational resources are extremely limited.
+
+    \item \textbf{Classical RK4} provides an excellent balance of accuracy (4th order) and implementation simplicity. Recommended for most smooth, non-stiff problems with known smoothness.
+
+    \item \textbf{RKF45} (adaptive) automatically adjusts step size to meet error tolerances. Optimal for problems where the solution behavior varies across the domain or when guaranteed accuracy is required.
+\end{enumerate}
+
+\section{Future Work}
+Extensions to consider:
+\begin{itemize}
+    \item Implement implicit methods for stiff problems
+    \item Add dense output for interpolation between steps
+    \item Parallelize for systems of ODEs
+    \item Investigate symplectic integrators for Hamiltonian systems
+\end{itemize}
+
+\appendix
+\chapter{Algorithm Pseudocode}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{$f(t,y)$, $y_0$, $[t_0, t_f]$, tolerance $\tau$}
+\KwOut{Solution arrays $t[], y[]$}
+$h \leftarrow h_{\text{initial}}$\;
+$t \leftarrow t_0$, $y \leftarrow y_0$\;
+\While{$t < t_f$}{
+    Compute $k_1, \ldots, k_6$ (RKF45 stages)\;
+    $y_4 \leftarrow y + h \sum b_i^{(4)} k_i$\;
+    $y_5 \leftarrow y + h \sum b_i^{(5)} k_i$\;
+    $\epsilon \leftarrow |y_5 - y_4|$\;
+    \eIf{$\epsilon < \tau$}{
+        Accept step: $t \leftarrow t + h$, $y \leftarrow y_5$\;
+    }{
+        Reject step\;
+    }
+    Update: $h \leftarrow 0.9 h (\tau/\epsilon)^{1/5}$\;
+}
+\caption{Adaptive Runge-Kutta-Fehlberg}
+\end{algorithm}
+
+\end{document}

@@ -1,0 +1,451 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{algorithm2e}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments for technical report style
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{remark}{Remark}
+
+\title{Satellite Coverage Analysis: Ground Coverage, Revisit Times, and Constellation Design\\
+\large A Comprehensive Study of Earth Observation and Communication Systems}
+\author{Space Systems Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents a comprehensive analysis of satellite ground coverage for Earth observation and communication missions. We compute instantaneous coverage footprints, revisit times for single satellites and constellations, and analyze Walker constellation parameters for global coverage. The analysis includes elevation angle constraints, slant range calculations, and coverage optimization for various orbital configurations.
+\end{abstract}
+
+\section{Executive Summary}
+Satellite coverage analysis is critical for mission design in Earth observation, communications, and navigation applications. This report analyzes coverage characteristics for various orbital configurations and provides design guidelines for constellation optimization.
+
+\section{Mathematical Framework}
+
+\begin{definition}[Coverage Half-Angle]
+The Earth-central angle from the sub-satellite point to the coverage edge:
+\begin{equation}
+\rho = \arccos\left(\frac{R_E}{R_E + h}\cos\varepsilon_{min}\right) - \varepsilon_{min}
+\end{equation}
+where $\varepsilon_{min}$ is the minimum elevation angle and $h$ is orbital altitude.
+\end{definition}
+
+\subsection{Coverage Area}
+The instantaneous coverage area on Earth's surface:
+\begin{equation}
+A_{cov} = 2\pi R_E^2 (1 - \cos\rho)
+\end{equation}
+
+\subsection{Slant Range}
+The distance from satellite to ground target:
+\begin{equation}
+d = R_E \left[\sqrt{\left(\frac{R_E + h}{R_E}\right)^2 - \cos^2\varepsilon} - \sin\varepsilon\right]
+\end{equation}
+
+\subsection{Revisit Time}
+\begin{theorem}[Single Satellite Revisit]
+For a circular orbit, the maximum revisit time at latitude $\phi$:
+\begin{equation}
+T_{revisit} \approx \frac{2\pi R_E \cos\phi}{W \cdot n_{orbits/day}}
+\end{equation}
+where $W$ is the swath width and $n_{orbits/day}$ is the number of orbits per day.
+\end{theorem}
+
+\subsection{Walker Constellation}
+A Walker Delta pattern is described by notation $i:T/P/F$:
+\begin{itemize}
+    \item $i$ = Inclination
+    \item $T$ = Total number of satellites
+    \item $P$ = Number of equally-spaced orbital planes
+    \item $F$ = Relative phasing factor
+\end{itemize}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Constants
+R_earth = 6371  # km
+mu = 398600  # km^3/s^2
+omega_E = 7.2921e-5  # rad/s (Earth rotation rate)
+
+# Function to compute coverage parameters
+def coverage_params(h, elev_min_deg):
+    elev_min = np.deg2rad(elev_min_deg)
+
+    # Earth central half-angle
+    sin_lambda = R_earth / (R_earth + h) * np.cos(elev_min)
+    lambda_0 = np.arcsin(sin_lambda)
+    rho = np.pi/2 - elev_min - lambda_0
+
+    # Coverage area
+    area = 2 * np.pi * R_earth**2 * (1 - np.cos(rho))
+
+    # Swath width
+    swath = 2 * R_earth * rho  # Arc length approximation
+
+    # Slant range
+    slant = R_earth * np.sin(rho) / np.cos(elev_min + rho)
+
+    # Nadir angle
+    nadir = np.arcsin(R_earth / (R_earth + h) * np.sin(np.pi/2 + elev_min))
+
+    return np.rad2deg(rho), area, swath, slant, np.rad2deg(nadir)
+
+# Orbital configurations
+altitudes = [400, 600, 800, 1200, 2000]  # km
+elev_angles = [5, 10, 15, 20, 30]  # degrees
+
+# Coverage analysis for different altitudes
+coverage_data = {}
+for h in altitudes:
+    rho, area, swath, slant, nadir = coverage_params(h, 10)
+    T = 2 * np.pi * np.sqrt((R_earth + h)**3 / mu)
+    n_orbits = 86400 / T
+    coverage_data[h] = {
+        'rho': rho, 'area': area, 'swath': swath,
+        'slant': slant, 'nadir': nadir, 'period': T/60,
+        'orbits_per_day': n_orbits
+    }
+
+# Ground track simulation
+def ground_track(h, inc_deg, duration_hours=3, n_points=1000):
+    a = R_earth + h
+    T = 2 * np.pi * np.sqrt(a**3 / mu)
+    t = np.linspace(0, duration_hours * 3600, n_points)
+
+    n = np.sqrt(mu / a**3)
+    inc = np.deg2rad(inc_deg)
+
+    # Simplified ground track (circular orbit)
+    lat = np.rad2deg(np.arcsin(np.sin(inc) * np.sin(n * t)))
+    # Longitude accounting for Earth rotation
+    lon_inertial = np.rad2deg(np.arctan2(np.cos(inc) * np.sin(n * t),
+                                          np.cos(n * t)))
+    lon = lon_inertial - np.rad2deg(omega_E * t)
+    lon = ((lon + 180) % 360) - 180
+
+    return lat, lon, T
+
+# Constellation configurations
+constellations = {
+    'Starlink (Shell 1)': {'T': 1584, 'P': 72, 'h': 550, 'i': 53.0},
+    'OneWeb': {'T': 648, 'P': 18, 'h': 1200, 'i': 87.9},
+    'GPS': {'T': 24, 'P': 6, 'h': 20180, 'i': 55.0},
+    'Iridium': {'T': 66, 'P': 6, 'h': 780, 'i': 86.4},
+    'Galileo': {'T': 24, 'P': 3, 'h': 23222, 'i': 56.0}
+}
+
+# Revisit time calculation
+def revisit_time(h, lat_deg, swath_km):
+    T = 2 * np.pi * np.sqrt((R_earth + h)**3 / mu)
+    n_orbits = 86400 / T
+
+    lat = np.deg2rad(abs(lat_deg))
+
+    # Ground track spacing per day
+    circumference_at_lat = 2 * np.pi * R_earth * np.cos(lat)
+    track_spacing = circumference_at_lat / n_orbits
+
+    if swath_km <= 0:
+        return float('inf')
+
+    # Days to cover
+    days_to_cover = track_spacing / swath_km
+
+    return days_to_cover * 24  # hours
+
+# Elevation angle effects
+elev_results = {}
+for elev in elev_angles:
+    rho, area, swath, slant, nadir = coverage_params(800, elev)
+    elev_results[elev] = {'rho': rho, 'area': area, 'swath': swath, 'slant': slant}
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Coverage vs altitude
+ax1 = fig.add_subplot(2, 3, 1)
+alts = list(coverage_data.keys())
+swaths = [coverage_data[h]['swath'] for h in alts]
+areas = [coverage_data[h]['area']/1e6 for h in alts]
+
+ax1.plot(alts, swaths, 'bo-', linewidth=2, markersize=6, label='Swath (km)')
+ax1_twin = ax1.twinx()
+ax1_twin.plot(alts, areas, 'rs-', linewidth=2, markersize=6, label='Area (M km$^2$)')
+ax1.set_xlabel('Altitude (km)')
+ax1.set_ylabel('Swath Width (km)', color='blue')
+ax1_twin.set_ylabel('Coverage Area (M km$^2$)', color='red')
+ax1.set_title('Coverage vs Altitude ($\\varepsilon_{min}=10^\\circ$)')
+ax1.legend(loc='upper left', fontsize=8)
+ax1_twin.legend(loc='lower right', fontsize=8)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Elevation angle effects
+ax2 = fig.add_subplot(2, 3, 2)
+elevs = list(elev_results.keys())
+swath_by_elev = [elev_results[e]['swath'] for e in elevs]
+slant_by_elev = [elev_results[e]['slant'] for e in elevs]
+
+x = np.arange(len(elevs))
+width = 0.35
+ax2.bar(x - width/2, swath_by_elev, width, label='Swath (km)', color='steelblue')
+ax2_twin = ax2.twinx()
+ax2_twin.bar(x + width/2, slant_by_elev, width, label='Slant Range (km)', color='coral')
+ax2.set_xlabel('Min Elevation (deg)')
+ax2.set_ylabel('Swath Width (km)', color='steelblue')
+ax2_twin.set_ylabel('Slant Range (km)', color='coral')
+ax2.set_xticks(x)
+ax2.set_xticklabels([f'{e}' for e in elevs])
+ax2.set_title('Elevation Angle Effects (h=800 km)')
+ax2.legend(loc='upper left', fontsize=7)
+ax2_twin.legend(loc='upper right', fontsize=7)
+
+# Plot 3: Ground track
+ax3 = fig.add_subplot(2, 3, 3)
+lat, lon, T = ground_track(700, 98.2, duration_hours=3)
+# Handle discontinuities
+split_idx = np.where(np.abs(np.diff(lon)) > 180)[0] + 1
+segments = np.split(np.arange(len(lon)), split_idx)
+for seg in segments:
+    if len(seg) > 1:
+        ax3.plot(lon[seg], lat[seg], 'b-', linewidth=1.5, alpha=0.7)
+ax3.set_xlim(-180, 180)
+ax3.set_ylim(-90, 90)
+ax3.set_xlabel('Longitude (deg)')
+ax3.set_ylabel('Latitude (deg)')
+ax3.set_title('Sun-Sync Ground Track (3 hrs)')
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Constellation comparison
+ax4 = fig.add_subplot(2, 3, 4)
+const_names = list(constellations.keys())
+n_sats = [constellations[c]['T'] for c in const_names]
+heights = [constellations[c]['h']/1000 for c in const_names]  # Convert to thousands
+
+x = np.arange(len(const_names))
+width = 0.35
+bars1 = ax4.bar(x - width/2, n_sats, width, label='Satellites', color='steelblue', alpha=0.8)
+ax4_twin = ax4.twinx()
+bars2 = ax4_twin.bar(x + width/2, heights, width, label='Alt (1000 km)', color='coral', alpha=0.8)
+ax4.set_xlabel('Constellation')
+ax4.set_ylabel('Number of Satellites', color='steelblue')
+ax4_twin.set_ylabel('Altitude (1000 km)', color='coral')
+ax4.set_xticks(x)
+ax4.set_xticklabels([c.split()[0] for c in const_names], rotation=45, ha='right')
+ax4.set_title('Major Constellations')
+ax4.legend(loc='upper left', fontsize=7)
+ax4_twin.legend(loc='upper right', fontsize=7)
+
+# Plot 5: Revisit time vs latitude
+ax5 = fig.add_subplot(2, 3, 5)
+lats = np.linspace(0, 80, 50)
+for h in [400, 800, 1200]:
+    swath = coverage_data.get(h, coverage_data[800])['swath']
+    revisits = [revisit_time(h, lat, swath) for lat in lats]
+    ax5.plot(lats, revisits, linewidth=2, label=f'{h} km')
+ax5.set_xlabel('Latitude (deg)')
+ax5.set_ylabel('Revisit Time (hours)')
+ax5.set_title('Single Satellite Revisit Time')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+ax5.set_ylim([0, 150])
+
+# Plot 6: Coverage footprint comparison
+ax6 = fig.add_subplot(2, 3, 6)
+theta = np.linspace(0, 2*np.pi, 100)
+for h in [400, 800, 1200, 2000]:
+    rho_deg = coverage_data[h]['rho']
+    # Footprint as circle
+    x_fp = rho_deg * np.cos(theta)
+    y_fp = rho_deg * np.sin(theta)
+    ax6.plot(x_fp, y_fp, linewidth=2, label=f'{h} km')
+ax6.plot(0, 0, 'ko', markersize=8)
+ax6.set_xlabel('Degrees from nadir')
+ax6.set_ylabel('Degrees from nadir')
+ax6.set_title('Coverage Footprint Size')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+ax6.set_aspect('equal')
+
+plt.tight_layout()
+plt.savefig('satellite_coverage_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{satellite_coverage_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Key results
+h_ref = 800
+ref_data = coverage_data[h_ref]
+\end{pycode}
+
+\section{Algorithm}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{Orbital altitude $h$, minimum elevation $\varepsilon_{min}$}
+\KwOut{Coverage parameters: $\rho$, $A_{cov}$, swath width, slant range}
+$\sin\lambda_0 \leftarrow \frac{R_E}{R_E + h} \cos\varepsilon_{min}$\;
+$\rho \leftarrow \pi/2 - \varepsilon_{min} - \arcsin(\sin\lambda_0)$\;
+$A_{cov} \leftarrow 2\pi R_E^2 (1 - \cos\rho)$\;
+$W \leftarrow 2 R_E \rho$\;
+$d \leftarrow R_E \sin\rho / \cos(\varepsilon_{min} + \rho)$\;
+\Return{$\rho, A_{cov}, W, d$}
+\caption{Satellite Coverage Calculation}
+\end{algorithm}
+
+\section{Results and Discussion}
+
+\subsection{Altitude Trade-offs}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Coverage Parameters vs Altitude ($\varepsilon_{min}=10^\circ$)}')
+print(r'\begin{tabular}{cccccc}')
+print(r'\toprule')
+print(r'Altitude & Period & Swath & Coverage & Slant & Orbits/ \\')
+print(r'(km) & (min) & (km) & (M km$^2$) & (km) & day \\')
+print(r'\midrule')
+for h in altitudes:
+    d = coverage_data[h]
+    print(f"{h} & {d['period']:.1f} & {d['swath']:.0f} & {d['area']/1e6:.2f} & {d['slant']:.0f} & {d['orbits_per_day']:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+For the reference altitude of \py{h_ref} km:
+\begin{itemize}
+    \item Coverage half-angle: \py{f"{ref_data['rho']:.1f}"}$^\circ$
+    \item Swath width: \py{f"{ref_data['swath']:.0f}"} km
+    \item Instantaneous coverage: \py{f"{ref_data['area']/1e6:.2f}"} million km$^2$
+    \item Orbital period: \py{f"{ref_data['period']:.1f}"} minutes
+    \item Orbits per day: \py{f"{ref_data['orbits_per_day']:.1f}"}
+\end{itemize}
+
+\begin{remark}[Altitude Selection Trade-offs]
+Higher altitudes provide larger coverage footprints but at the cost of:
+\begin{itemize}
+    \item Increased slant range (reduced resolution)
+    \item Higher launch cost
+    \item Longer signal delay (latency)
+\end{itemize}
+LEO constellations like Starlink use lower altitudes (550 km) for low latency, while GPS uses MEO (20,180 km) for fewer satellites to achieve global coverage.
+\end{remark}
+
+\subsection{Elevation Angle Effects}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Effect of Minimum Elevation Angle (h=800 km)}')
+print(r'\begin{tabular}{cccc}')
+print(r'\toprule')
+print(r'$\varepsilon_{min}$ (deg) & Swath (km) & Slant Range (km) & Coverage (M km$^2$) \\')
+print(r'\midrule')
+for elev in elev_angles:
+    d = elev_results[elev]
+    print(f"{elev} & {d['swath']:.0f} & {d['slant']:.0f} & {d['area']/1e6:.2f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{remark}[Elevation Angle Selection]
+Lower elevation angles increase coverage but degrade link quality due to:
+\begin{itemize}
+    \item Longer atmospheric path (attenuation, scintillation)
+    \item Higher multipath interference
+    \item Increased geometric dilution of precision (GDOP) for navigation
+\end{itemize}
+Typical values: 5-10$^\circ$ for communications, 10-15$^\circ$ for navigation, 20-30$^\circ$ for high-precision applications.
+\end{remark}
+
+\subsection{Constellation Design}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Major Constellation Configurations}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Constellation & Satellites & Planes & Altitude (km) & Inclination \\')
+print(r'\midrule')
+for name, params in constellations.items():
+    print(f"{name} & {params['T']} & {params['P']} & {params['h']} & {params['i']:.1f}$^\\circ$ \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Design Guidelines}
+
+\subsection{Mission-Specific Recommendations}
+\begin{itemize}
+    \item \textbf{Earth Observation}: Sun-synchronous LEO (600-800 km), consistent lighting
+    \item \textbf{Communications (Global)}: MEO or large LEO constellations
+    \item \textbf{Navigation}: MEO (20,000+ km) for geometric diversity
+    \item \textbf{Broadband Internet}: Dense LEO for low latency
+    \item \textbf{Polar Coverage}: High-inclination or Molniya orbits
+\end{itemize}
+
+\subsection{Constellation Sizing}
+Minimum satellites for continuous global coverage:
+\begin{equation}
+N_{min} \approx \frac{4\pi}{\Omega_{sat}} = \frac{2}{1 - \cos\rho}
+\end{equation}
+where $\Omega_{sat}$ is the solid angle covered by one satellite.
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Spherical Earth}: Does not account for Earth oblateness
+    \item \textbf{No terrain}: Ignores terrain masking effects
+    \item \textbf{Circular orbits}: Eccentric orbits not considered
+    \item \textbf{Simplified overlap}: Inter-satellite links not modeled
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item J2 perturbation for realistic orbit propagation
+    \item Terrain masking with digital elevation models
+    \item Monte Carlo analysis for coverage statistics
+    \item Inter-satellite link topology optimization
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrates the key trade-offs in satellite coverage design:
+\begin{itemize}
+    \item Higher altitudes increase coverage but reduce resolution
+    \item Lower elevation angles expand coverage but degrade link quality
+    \item Constellation design must balance satellite count against coverage needs
+    \item Modern mega-constellations (Starlink, OneWeb) use hundreds of LEO satellites for continuous global coverage with low latency
+\end{itemize}
+
+\section*{References}
+\begin{itemize}
+    \item Wertz, J. R., \& Larson, W. J. (1999). \textit{Space Mission Analysis and Design}. Microcosm Press.
+    \item Walker, J. G. (1984). Satellite constellations. Journal of the British Interplanetary Society.
+    \item Maral, G., \& Bousquet, M. (2009). \textit{Satellite Communications Systems}. Wiley.
+\end{itemize}
+
+\end{document}

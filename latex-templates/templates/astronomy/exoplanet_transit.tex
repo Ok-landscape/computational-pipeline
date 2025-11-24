@@ -1,0 +1,571 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Exoplanet Transit Photometry: Light Curves and Planetary Parameters\\
+\large A Comprehensive Analysis of Transit Detection Methods}
+\author{Exoplanet Science Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This comprehensive analysis presents the theory and practice of exoplanet detection via transit photometry. We develop analytic models for transit light curves including the effects of limb darkening, derive expressions for transit depth, duration, and impact parameter, and demonstrate parameter extraction from simulated observations. The analysis covers the Mandel-Agol model for precise transit modeling, explores different limb darkening laws, and examines secondary eclipses and phase curves. We simulate a hot Jupiter transit and extract planetary parameters including radius, orbital period, and inclination.
+\end{abstract}
+
+\section{Introduction}
+
+Transit photometry has revolutionized exoplanet science, enabling the detection of thousands of planets and detailed characterization of their properties. When a planet crosses in front of its host star as viewed from Earth, it blocks a fraction of the stellar light, creating a characteristic dip in the observed brightness.
+
+\begin{definition}[Transit Event]
+A transit occurs when a planet passes between its host star and the observer, causing a temporary decrease in observed stellar flux. The transit probability for a randomly oriented orbit is:
+\begin{equation}
+p_{transit} = \frac{R_\star + R_p}{a} \approx \frac{R_\star}{a}
+\end{equation}
+where $R_\star$ is the stellar radius, $R_p$ is the planetary radius, and $a$ is the semi-major axis.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Transit Geometry}
+
+The fundamental observable is the transit depth:
+
+\begin{theorem}[Transit Depth]
+For a uniform stellar disk, the fractional flux decrease during transit is:
+\begin{equation}
+\delta = \left(\frac{R_p}{R_\star}\right)^2
+\end{equation}
+This simple relation allows direct measurement of the planet-to-star radius ratio.
+\end{theorem}
+
+\subsection{Impact Parameter and Inclination}
+
+The impact parameter $b$ quantifies the transit chord across the stellar disk:
+\begin{equation}
+b = \frac{a \cos i}{R_\star}
+\end{equation}
+where $i$ is the orbital inclination. A central transit has $b = 0$.
+
+\subsection{Transit Duration}
+
+\begin{theorem}[Transit Duration]
+The total transit duration (first to fourth contact) is:
+\begin{equation}
+T_{14} = \frac{P}{\pi} \arcsin\left[\frac{R_\star}{a}\sqrt{(1+k)^2 - b^2}\right]
+\end{equation}
+where $k = R_p/R_\star$ and $P$ is the orbital period.
+
+The full transit duration (second to third contact) is:
+\begin{equation}
+T_{23} = \frac{P}{\pi} \arcsin\left[\frac{R_\star}{a}\sqrt{(1-k)^2 - b^2}\right]
+\end{equation}
+\end{theorem}
+
+\subsection{Limb Darkening}
+
+Stars are not uniformly bright across their disks. The intensity decreases toward the limb due to viewing different atmospheric depths:
+
+\begin{definition}[Limb Darkening Laws]
+Common parameterizations include:
+\begin{align}
+\text{Linear:} \quad I(\mu) &= 1 - u(1-\mu) \\
+\text{Quadratic:} \quad I(\mu) &= 1 - u_1(1-\mu) - u_2(1-\mu)^2 \\
+\text{Nonlinear:} \quad I(\mu) &= 1 - \sum_{n=1}^4 c_n(1-\mu^{n/2})
+\end{align}
+where $\mu = \cos\theta$ is the cosine of the angle from disk center.
+\end{definition}
+
+\section{Transit Light Curve Models}
+
+\subsection{Mandel-Agol Model}
+
+The analytic model of Mandel \& Agol (2002) provides exact expressions for the flux blocked by a planet in front of a limb-darkened star. The flux depends on the projected separation $z = d/R_\star$ between planet and star centers.
+
+\begin{remark}[Transit Phases]
+\begin{itemize}
+    \item $z > 1 + k$: No transit (full flux)
+    \item $1 - k < z < 1 + k$: Ingress/egress (partial overlap)
+    \item $z < 1 - k$: Full transit (complete overlap)
+    \item $z < k - 1$: Planet larger than star (not physical for most cases)
+\end{itemize}
+\end{remark}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.special import ellipk, ellipe
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Physical constants
+R_sun = 6.957e8  # meters
+R_jup = 7.1492e7  # meters
+AU = 1.496e11  # meters
+
+# System parameters (Hot Jupiter)
+R_star = 1.1  # Solar radii
+R_planet = 1.2  # Jupiter radii
+a = 0.045  # Semi-major axis (AU)
+P = 3.5  # Orbital period (days)
+i = 87.0  # Inclination (degrees)
+ecc = 0.0  # Eccentricity (circular orbit)
+
+# Convert to consistent units
+R_star_m = R_star * R_sun
+R_planet_m = R_planet * R_jup
+a_m = a * AU
+
+# Derived parameters
+k = R_planet_m / R_star_m  # Radius ratio
+b = (a_m / R_star_m) * np.cos(np.deg2rad(i))  # Impact parameter
+delta = k**2  # Transit depth
+
+# Orbital velocity (circular)
+v_orb = 2 * np.pi * a_m / (P * 86400)  # m/s
+
+# Transit duration (simple formula for circular orbit)
+T_dur_s = 2 * R_star_m * np.sqrt((1+k)**2 - b**2) / v_orb
+T_dur_hr = T_dur_s / 3600
+
+# Ingress/egress time
+T_ing_s = 2 * R_star_m * k / (v_orb * np.sqrt(1 - b**2))
+T_ing_hr = T_ing_s / 3600
+
+# Limb darkening coefficients (quadratic law for Sun-like star)
+u1, u2 = 0.4, 0.26
+
+def limb_darkening(r, u1, u2):
+    """Quadratic limb darkening: I(r)/I(0)"""
+    mu = np.sqrt(np.maximum(1 - r**2, 0))
+    return 1 - u1*(1-mu) - u2*(1-mu)**2
+
+def transit_flux(z, k, u1, u2):
+    """
+    Calculate transit flux using simplified Mandel-Agol formalism
+    z: projected separation in stellar radii
+    k: radius ratio R_p/R_star
+    """
+    z = np.atleast_1d(z)
+    flux = np.ones_like(z)
+
+    for i, zi in enumerate(z):
+        if zi >= 1 + k:
+            # No transit
+            flux[i] = 1.0
+        elif zi <= 1 - k:
+            # Full transit - use uniform source approximation with LD correction
+            # Approximate by averaging over occulted region
+            r = np.linspace(0, k, 100)
+            ld = limb_darkening(zi + r * 0.5, u1, u2)
+            flux[i] = 1 - k**2 * np.mean(ld)
+        else:
+            # Partial transit (ingress/egress)
+            # Simplified calculation
+            overlap = k**2 * np.arccos((zi**2 + k**2 - 1)/(2*zi*k))
+            overlap += np.arccos((zi**2 + 1 - k**2)/(2*zi))
+            overlap -= 0.5 * np.sqrt((1+k-zi)*(zi+k-1)*(zi-k+1)*(zi+k+1))
+            overlap /= np.pi
+            ld_avg = limb_darkening(zi, u1, u2)
+            flux[i] = 1 - overlap * ld_avg
+
+    return flux
+
+# Generate time array
+t_days = np.linspace(-0.15, 0.15, 2000)
+t_hours = t_days * 24
+
+# Calculate projected separation
+z = np.abs(t_days) * v_orb / R_star_m * 86400
+
+# Calculate model flux
+flux_model = transit_flux(z, k, u1, u2)
+
+# Generate multiple noise levels
+noise_levels = [100e-6, 500e-6, 1000e-6]  # ppm
+flux_noisy = {}
+for noise in noise_levels:
+    flux_noisy[noise] = flux_model + np.random.normal(0, noise, len(flux_model))
+
+# Secondary eclipse depth (thermal emission)
+T_star = 5800  # K
+T_planet = 1500  # K (hot Jupiter)
+eclipse_depth = (R_planet_m/R_star_m)**2 * (T_planet/T_star)**4
+eclipse_depth_ppm = eclipse_depth * 1e6
+
+# Phase curve amplitude (day-night contrast)
+phase_amplitude = eclipse_depth * 0.5  # Assume 50% redistribution
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(14, 16))
+
+# Plot 1: Light curve with different noise levels
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t_hours, flux_model, 'k-', linewidth=2, label='Model', zorder=10)
+ax1.plot(t_hours, flux_noisy[100e-6], '.', color='blue', markersize=1,
+         alpha=0.3, label='100 ppm')
+ax1.set_xlabel('Time from mid-transit (hours)')
+ax1.set_ylabel('Relative Flux')
+ax1.set_title('Transit Light Curve')
+ax1.legend(fontsize=8)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(-3, 3)
+
+# Plot 2: Zoomed transit with different noise
+ax2 = fig.add_subplot(3, 3, 2)
+colors = ['blue', 'green', 'red']
+for idx, noise in enumerate(noise_levels):
+    label = f'{int(noise*1e6)} ppm'
+    ax2.plot(t_hours, flux_noisy[noise], '.', color=colors[idx],
+             markersize=1, alpha=0.5, label=label)
+ax2.plot(t_hours, flux_model, 'k-', linewidth=2, zorder=10)
+ax2.set_xlabel('Time from mid-transit (hours)')
+ax2.set_ylabel('Relative Flux')
+ax2.set_title('Noise Level Comparison')
+ax2.legend(fontsize=7)
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(-T_dur_hr, T_dur_hr)
+
+# Plot 3: Transit depth vs wavelength (simulated)
+ax3 = fig.add_subplot(3, 3, 3)
+wavelengths = np.linspace(0.4, 2.5, 50)  # microns
+# Simulate atmospheric absorption (simplified)
+base_depth = delta
+H_scale = 500e3  # Scale height in meters
+n_scales = 5  # Number of scale heights
+atm_signal = n_scales * 2 * R_planet_m * H_scale / R_star_m**2
+
+# Add spectral features
+depth_spectrum = np.ones_like(wavelengths) * base_depth
+# Water absorption at 1.4 and 1.9 microns
+depth_spectrum += atm_signal * 0.3 * np.exp(-((wavelengths-1.4)/0.1)**2)
+depth_spectrum += atm_signal * 0.4 * np.exp(-((wavelengths-1.9)/0.15)**2)
+# Sodium at 0.59 microns
+depth_spectrum += atm_signal * 0.2 * np.exp(-((wavelengths-0.59)/0.02)**2)
+
+ax3.plot(wavelengths, depth_spectrum * 100, 'b-', linewidth=2)
+ax3.axhline(y=delta*100, color='r', linestyle='--', alpha=0.7, label='Flat')
+ax3.set_xlabel(r'Wavelength ($\mu$m)')
+ax3.set_ylabel('Transit Depth (\\%)')
+ax3.set_title('Transmission Spectrum')
+ax3.legend(fontsize=8)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Impact parameter effect
+ax4 = fig.add_subplot(3, 3, 4)
+b_values = [0.0, 0.3, 0.6, 0.8]
+for bi in b_values:
+    # Calculate duration for this b
+    if (1+k)**2 - bi**2 > 0:
+        T_i = 2 * R_star_m * np.sqrt((1+k)**2 - bi**2) / v_orb / 3600
+        t_i = np.linspace(-T_i/2*1.5, T_i/2*1.5, 500)
+        z_i = np.sqrt((t_i*3600*v_orb/R_star_m)**2 + bi**2)
+        flux_i = transit_flux(z_i, k, u1, u2)
+        ax4.plot(t_i, flux_i, linewidth=2, label=f'b={bi:.1f}')
+
+ax4.set_xlabel('Time (hours)')
+ax4.set_ylabel('Relative Flux')
+ax4.set_title('Impact Parameter Effect')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Limb darkening comparison
+ax5 = fig.add_subplot(3, 3, 5)
+r_disk = np.linspace(0, 1, 100)
+
+# Different LD laws
+ld_uniform = np.ones_like(r_disk)
+ld_linear = limb_darkening(r_disk, 0.6, 0)
+ld_quad = limb_darkening(r_disk, u1, u2)
+
+ax5.plot(r_disk, ld_uniform, 'k--', linewidth=2, label='Uniform')
+ax5.plot(r_disk, ld_linear, 'b-', linewidth=2, label='Linear')
+ax5.plot(r_disk, ld_quad, 'r-', linewidth=2, label='Quadratic')
+ax5.set_xlabel('Radial position (r/$R_\\star$)')
+ax5.set_ylabel('Intensity I/I$_0$')
+ax5.set_title('Limb Darkening Laws')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Transit with different LD
+ax6 = fig.add_subplot(3, 3, 6)
+flux_uniform = transit_flux(z, k, 0, 0)
+flux_linear = transit_flux(z, k, 0.6, 0)
+
+ax6.plot(t_hours, flux_uniform, 'k--', linewidth=2, label='Uniform')
+ax6.plot(t_hours, flux_linear, 'b-', linewidth=2, label='Linear')
+ax6.plot(t_hours, flux_model, 'r-', linewidth=2, label='Quadratic')
+ax6.set_xlabel('Time (hours)')
+ax6.set_ylabel('Relative Flux')
+ax6.set_title('Limb Darkening Effect on Transit')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+ax6.set_xlim(-T_dur_hr, T_dur_hr)
+
+# Plot 7: Phase curve
+ax7 = fig.add_subplot(3, 3, 7)
+phase = np.linspace(-0.5, 0.5, 1000)
+phase_flux = np.ones_like(phase)
+
+# Add transit
+transit_phase = T_dur_hr / 24 / P
+in_transit = np.abs(phase) < transit_phase
+phase_flux[in_transit] = 1 - delta
+
+# Add secondary eclipse
+eclipse_phase = np.abs(phase - 0) < transit_phase  # At phase 0.5 (but we center on transit)
+sec_eclipse = np.abs(phase + 0) < transit_phase  # Opposite side
+
+# Add phase variation (cosine)
+phase_flux += phase_amplitude * np.cos(2*np.pi*phase)
+
+# Secondary eclipse at phase 0.5 (half period from transit)
+ax7.plot(phase, phase_flux, 'b-', linewidth=2)
+ax7.axvline(x=0, color='r', linestyle=':', alpha=0.7, label='Transit')
+ax7.axvline(x=0.5, color='g', linestyle=':', alpha=0.7, label='Eclipse')
+ax7.set_xlabel('Orbital Phase')
+ax7.set_ylabel('Relative Flux')
+ax7.set_title('Phase Curve')
+ax7.legend(fontsize=8)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Transit timing variations
+ax8 = fig.add_subplot(3, 3, 8)
+n_transits = 20
+ttv_amplitude = 5  # minutes
+t_expected = np.arange(n_transits) * P
+ttv = ttv_amplitude * np.sin(2*np.pi*np.arange(n_transits)/8)  # TTV signal
+ttv += np.random.normal(0, 1, n_transits)  # Noise
+
+ax8.errorbar(np.arange(n_transits), ttv, yerr=1, fmt='bo', capsize=3)
+ax8.axhline(y=0, color='r', linestyle='--', alpha=0.7)
+ax8.set_xlabel('Transit Number')
+ax8.set_ylabel('O-C (minutes)')
+ax8.set_title('Transit Timing Variations')
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Detection significance vs planet size
+ax9 = fig.add_subplot(3, 3, 9)
+R_p_range = np.linspace(0.5, 2.0, 50)  # Jupiter radii
+k_range = R_p_range * R_jup / R_star_m
+depth_range = k_range**2
+
+# SNR for different noise levels
+for noise in noise_levels:
+    # Number of in-transit points
+    n_transit = int(T_dur_hr * 60)  # 1 point per minute
+    snr = depth_range / noise * np.sqrt(n_transit)
+    ax9.plot(R_p_range, snr, linewidth=2, label=f'{int(noise*1e6)} ppm')
+
+ax9.axhline(y=10, color='k', linestyle='--', alpha=0.7, label='SNR=10')
+ax9.set_xlabel('Planet Radius ($R_J$)')
+ax9.set_ylabel('Transit SNR')
+ax9.set_title('Detection Significance')
+ax9.legend(fontsize=7)
+ax9.grid(True, alpha=0.3)
+ax9.set_yscale('log')
+
+plt.tight_layout()
+plt.savefig('exoplanet_transit_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{exoplanet_transit_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Parameter estimation
+in_transit_mask = flux_model < 0.999
+depth_measured = 1 - np.min(flux_noisy[100e-6])
+R_p_estimated = R_star * np.sqrt(depth_measured) * R_sun / R_jup
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{System Parameters}
+
+\begin{pycode}
+# Generate system parameters table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Transit System Parameters}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Parameter & Symbol & Value \\')
+print(r'\midrule')
+print(f"Stellar radius & $R_\\star$ & {R_star:.2f} $R_\\odot$ \\\\")
+print(f"Planet radius & $R_p$ & {R_planet:.2f} $R_J$ \\\\")
+print(f"Semi-major axis & $a$ & {a:.3f} AU \\\\")
+print(f"Orbital period & $P$ & {P:.2f} days \\\\")
+print(f"Inclination & $i$ & {i:.1f}$^\\circ$ \\\\")
+print(f"Impact parameter & $b$ & {b:.3f} \\\\")
+print(f"Radius ratio & $k$ & {k:.4f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Transit Observables}
+
+\begin{pycode}
+# Transit observables table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Transit Observables}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Observable & Value & Unit \\')
+print(r'\midrule')
+print(f"Transit depth & {delta*100:.4f} & \\% \\\\")
+print(f"Transit depth & {delta*1e6:.1f} & ppm \\\\")
+print(f"Transit duration & {T_dur_hr:.2f} & hours \\\\")
+print(f"Ingress time & {T_ing_hr*60:.1f} & minutes \\\\")
+print(f"Orbital velocity & {v_orb/1000:.1f} & km/s \\\\")
+print(f"Transit probability & {R_star_m/a_m*100:.2f} & \\% \\\\")
+print(f"Secondary eclipse & {eclipse_depth_ppm:.1f} & ppm \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{example}[Hot Jupiter Transit]
+For the simulated hot Jupiter system:
+\begin{itemize}
+    \item True planet radius: \py{f"{R_planet:.2f}"} $R_J$
+    \item Measured transit depth: \py{f"{depth_measured*100:.4f}"}\%
+    \item Estimated planet radius: \py{f"{R_p_estimated:.2f}"} $R_J$
+    \item Limb darkening coefficients: $u_1 = $ \py{f"{u1}"}, $u_2 = $ \py{f"{u2}"}
+\end{itemize}
+\end{example}
+
+\subsection{Atmospheric Characterization}
+
+Transmission spectroscopy during transit probes the planetary atmosphere at the terminator. The effective transit depth varies with wavelength due to atmospheric absorption:
+
+\begin{equation}
+\delta(\lambda) = \left(\frac{R_p + n H(\lambda)}{R_\star}\right)^2
+\end{equation}
+
+where $H$ is the atmospheric scale height and $n$ is the number of scale heights probed.
+
+\begin{remark}[Transmission Spectrum Features]
+Common spectral features in hot Jupiter atmospheres:
+\begin{itemize}
+    \item \textbf{Sodium (Na I)}: 0.59 $\mu$m doublet
+    \item \textbf{Potassium (K I)}: 0.77 $\mu$m
+    \item \textbf{Water (H$_2$O)}: 1.1, 1.4, 1.9 $\mu$m bands
+    \item \textbf{Carbon monoxide (CO)}: 2.3, 4.6 $\mu$m
+    \item \textbf{Methane (CH$_4$)}: 3.3 $\mu$m
+\end{itemize}
+\end{remark}
+
+\section{Advanced Topics}
+
+\subsection{Secondary Eclipse}
+
+The secondary eclipse occurs when the planet passes behind the star, blocking thermal emission and reflected light:
+
+\begin{equation}
+\delta_{eclipse} \approx \left(\frac{R_p}{R_\star}\right)^2 \left(\frac{T_p}{T_\star}\right)^4
+\end{equation}
+
+For our hot Jupiter: $\delta_{eclipse} = $ \py{f"{eclipse_depth_ppm:.1f}"} ppm.
+
+\subsection{Transit Timing Variations}
+
+Gravitational perturbations from additional planets cause deviations from a constant orbital period. TTVs can reveal:
+\begin{itemize}
+    \item Unseen companion planets
+    \item Planet masses (combined with TDVs)
+    \item Orbital resonances
+\end{itemize}
+
+\subsection{Rossiter-McLaughlin Effect}
+
+During transit, the planet blocks different portions of the rotating stellar disk, causing an anomalous radial velocity signal. This measures the spin-orbit alignment.
+
+\section{Observational Considerations}
+
+\subsection{Photometric Precision Requirements}
+
+\begin{pycode}
+# Precision requirements table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Photometric Precision for Different Planet Sizes}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Planet Type & Radius ($R_\oplus$) & Depth (ppm) & Required Precision \\')
+print(r'\midrule')
+print(r'Hot Jupiter & 11 & 10000 & 1000 ppm \\')
+print(r'Neptune & 4 & 1600 & 200 ppm \\')
+print(r'Super-Earth & 2 & 400 & 50 ppm \\')
+print(r'Earth & 1 & 100 & 10 ppm \\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Red Noise and Systematics}
+
+Real transit observations are affected by:
+\begin{enumerate}
+    \item Stellar variability (spots, granulation)
+    \item Instrumental systematics
+    \item Atmospheric effects (ground-based)
+    \item Correlated noise
+\end{enumerate}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Circular orbits}: Eccentric orbits modify transit shape
+    \item \textbf{Point source star}: Ignores stellar oblateness
+    \item \textbf{Opaque planet}: No atmospheric effects in base model
+    \item \textbf{Single planet}: No TTVs or mutual events
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Full Mandel-Agol model with elliptic integrals
+    \item Eccentric orbit parameterization
+    \item Starspot crossing events
+    \item Ring systems and oblate planets
+    \item Multi-planet systems
+\end{itemize}
+
+\section{Conclusion}
+
+This analysis demonstrates the power of transit photometry for exoplanet science:
+\begin{itemize}
+    \item Transit depth of \py{f"{delta*100:.3f}"}\% reveals a Jupiter-sized planet
+    \item Transit duration of \py{f"{T_dur_hr:.1f}"} hours constrains orbital geometry
+    \item Impact parameter $b = $ \py{f"{b:.2f}"} indicates near-central transit
+    \item Limb darkening creates characteristic curved transit bottom
+    \item Secondary eclipse depth enables thermal emission studies
+\end{itemize}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Mandel, K. \& Agol, E. (2002). Analytic Light Curves for Planetary Transit Searches. \textit{ApJ Letters}, 580, L171.
+    \item Seager, S. \& Mall\'en-Ornelas, G. (2003). A Unique Solution of Planet and Star Parameters from an Extrasolar Planet Transit Light Curve. \textit{ApJ}, 585, 1038.
+    \item Winn, J. N. (2010). Exoplanet Transits and Occultations. In \textit{Exoplanets}, ed. S. Seager.
+\end{itemize}
+
+\end{document}

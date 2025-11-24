@@ -1,0 +1,417 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{heat}{RGB}{231, 76, 60}
+\definecolor{wave}{RGB}{46, 204, 113}
+\definecolor{stable}{RGB}{52, 152, 219}
+\definecolor{unstable}{RGB}{241, 196, 15}
+
+\title{Partial Differential Equations:\\
+Finite Difference Methods and Stability Analysis}
+\author{Department of Computational Mathematics\\Technical Report NM-2024-002}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents finite difference methods for solving partial differential equations (PDEs). We implement explicit and implicit schemes for the heat equation and wave equation, analyze stability using von Neumann analysis, and demonstrate the CFL condition. Numerical examples illustrate the importance of stability constraints in time-stepping methods.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Partial differential equations describe physical phenomena involving multiple independent variables. We focus on two canonical PDEs:
+\begin{itemize}
+    \item \textbf{Heat equation} (parabolic): $\frac{\partial u}{\partial t} = \alpha \frac{\partial^2 u}{\partial x^2}$
+    \item \textbf{Wave equation} (hyperbolic): $\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}$
+\end{itemize}
+
+\section{Finite Difference Approximations}
+\begin{align}
+\frac{\partial u}{\partial t} &\approx \frac{u_i^{n+1} - u_i^n}{\Delta t} \\
+\frac{\partial^2 u}{\partial x^2} &\approx \frac{u_{i+1}^n - 2u_i^n + u_{i-1}^n}{(\Delta x)^2}
+\end{align}
+
+\chapter{Heat Equation}
+
+\section{Explicit (FTCS) Scheme}
+Forward Time, Centered Space:
+\begin{equation}
+u_i^{n+1} = u_i^n + r(u_{i+1}^n - 2u_i^n + u_{i-1}^n), \quad r = \frac{\alpha \Delta t}{(\Delta x)^2}
+\end{equation}
+
+Stability requires: $r \leq \frac{1}{2}$
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def heat_explicit(u0, alpha, dx, dt, num_steps):
+    r = alpha * dt / dx**2
+    u = u0.copy()
+    history = [u.copy()]
+
+    for _ in range(num_steps):
+        u_new = u.copy()
+        u_new[1:-1] = u[1:-1] + r * (u[2:] - 2*u[1:-1] + u[:-2])
+        u = u_new
+        history.append(u.copy())
+
+    return np.array(history), r
+
+def heat_implicit(u0, alpha, dx, dt, num_steps):
+    r = alpha * dt / dx**2
+    n = len(u0)
+    u = u0.copy()
+    history = [u.copy()]
+
+    # Tridiagonal matrix
+    A = np.diag([1 + 2*r] * (n-2)) + np.diag([-r] * (n-3), 1) + np.diag([-r] * (n-3), -1)
+
+    for _ in range(num_steps):
+        b = u[1:-1].copy()
+        b[0] += r * u[0]
+        b[-1] += r * u[-1]
+        u[1:-1] = np.linalg.solve(A, b)
+        history.append(u.copy())
+
+    return np.array(history), r
+
+def heat_crank_nicolson(u0, alpha, dx, dt, num_steps):
+    r = alpha * dt / (2 * dx**2)
+    n = len(u0)
+    u = u0.copy()
+    history = [u.copy()]
+
+    # Matrices for CN scheme
+    A = np.diag([1 + 2*r] * (n-2)) + np.diag([-r] * (n-3), 1) + np.diag([-r] * (n-3), -1)
+    B = np.diag([1 - 2*r] * (n-2)) + np.diag([r] * (n-3), 1) + np.diag([r] * (n-3), -1)
+
+    for _ in range(num_steps):
+        b = B @ u[1:-1]
+        b[0] += r * (u[0] + u[0])
+        b[-1] += r * (u[-1] + u[-1])
+        u[1:-1] = np.linalg.solve(A, b)
+        history.append(u.copy())
+
+    return np.array(history), r
+\end{pycode}
+
+\section{Numerical Results}
+
+\begin{pycode}
+# Setup
+L = 1.0
+nx = 51
+dx = L / (nx - 1)
+x = np.linspace(0, L, nx)
+alpha = 0.01
+
+# Initial condition: sine wave
+u0 = np.sin(np.pi * x)
+u0[0] = 0
+u0[-1] = 0
+
+# Stable explicit
+dt_stable = 0.4 * dx**2 / alpha
+num_steps = 200
+history_stable, r_stable = heat_explicit(u0, alpha, dx, dt_stable, num_steps)
+
+# Unstable explicit
+dt_unstable = 0.6 * dx**2 / alpha
+history_unstable, r_unstable = heat_explicit(u0, alpha, dx, dt_unstable, min(num_steps, 50))
+
+# Implicit (unconditionally stable)
+dt_implicit = 2 * dx**2 / alpha
+history_implicit, r_implicit = heat_implicit(u0, alpha, dx, dt_implicit, num_steps)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Stable explicit evolution
+ax = axes[0, 0]
+times_plot = [0, 50, 100, 150, 200]
+for t in times_plot:
+    if t < len(history_stable):
+        ax.plot(x, history_stable[t], label=f'$t = {t*dt_stable:.3f}$')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$u(x, t)$')
+ax.set_title(f'Explicit (Stable): $r = {r_stable:.3f}$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Unstable explicit
+ax = axes[0, 1]
+for i, t in enumerate([0, 10, 20, 30, 40]):
+    if t < len(history_unstable):
+        ax.plot(x, history_unstable[t], label=f'$t = {t*dt_unstable:.3f}$')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$u(x, t)$')
+ax.set_title(f'Explicit (Unstable): $r = {r_unstable:.3f}$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Implicit evolution
+ax = axes[1, 0]
+for t in times_plot:
+    if t < len(history_implicit):
+        ax.plot(x, history_implicit[t], label=f'$t = {t*dt_implicit:.3f}$')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$u(x, t)$')
+ax.set_title(f'Implicit: $r = {r_implicit:.3f}$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Comparison at final time
+ax = axes[1, 1]
+t_final = 0.1
+n_stable = int(t_final / dt_stable)
+n_implicit = int(t_final / dt_implicit)
+analytical = np.exp(-np.pi**2 * alpha * t_final) * np.sin(np.pi * x)
+
+ax.plot(x, history_stable[min(n_stable, len(history_stable)-1)], 'b-', label='Explicit')
+ax.plot(x, history_implicit[min(n_implicit, len(history_implicit)-1)], 'g--', label='Implicit')
+ax.plot(x, analytical, 'r:', linewidth=2, label='Analytical')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$u(x, t)$')
+ax.set_title(f'Comparison at $t = {t_final}$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('heat_equation.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{heat_equation.pdf}
+\caption{Heat equation solutions: (a) stable explicit, (b) unstable explicit showing oscillations, (c) implicit scheme, (d) comparison with analytical solution.}
+\end{figure}
+
+\chapter{Wave Equation}
+
+\section{Explicit Scheme}
+\begin{equation}
+u_i^{n+1} = 2u_i^n - u_i^{n-1} + s^2(u_{i+1}^n - 2u_i^n + u_{i-1}^n), \quad s = \frac{c \Delta t}{\Delta x}
+\end{equation}
+
+CFL condition: $s = \frac{c \Delta t}{\Delta x} \leq 1$
+
+\begin{pycode}
+def wave_explicit(u0, v0, c, dx, dt, num_steps):
+    s = c * dt / dx
+    n = len(u0)
+
+    u_prev = u0.copy()
+    # First time step using initial velocity
+    u_curr = u0.copy()
+    u_curr[1:-1] = (u0[1:-1] + dt * v0[1:-1] +
+                    0.5 * s**2 * (u0[2:] - 2*u0[1:-1] + u0[:-2]))
+
+    history = [u_prev.copy(), u_curr.copy()]
+
+    for _ in range(num_steps - 1):
+        u_next = np.zeros(n)
+        u_next[1:-1] = (2*u_curr[1:-1] - u_prev[1:-1] +
+                        s**2 * (u_curr[2:] - 2*u_curr[1:-1] + u_curr[:-2]))
+        u_prev = u_curr.copy()
+        u_curr = u_next.copy()
+        history.append(u_curr.copy())
+
+    return np.array(history), s
+
+# Wave equation setup
+c = 1.0
+nx = 101
+L = 2.0
+dx = L / (nx - 1)
+x = np.linspace(0, L, nx)
+
+# Initial condition: Gaussian pulse
+u0_wave = np.exp(-100 * (x - 0.5)**2)
+u0_wave[0] = 0
+u0_wave[-1] = 0
+v0_wave = np.zeros(nx)
+
+# Stable CFL
+dt_cfl_stable = 0.8 * dx / c
+num_steps_wave = 300
+history_wave_stable, s_stable = wave_explicit(u0_wave, v0_wave, c, dx, dt_cfl_stable, num_steps_wave)
+
+# Unstable CFL
+dt_cfl_unstable = 1.2 * dx / c
+history_wave_unstable, s_unstable = wave_explicit(u0_wave, v0_wave, c, dx, dt_cfl_unstable, min(num_steps_wave, 100))
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Stable wave propagation
+ax = axes[0, 0]
+times_wave = [0, 75, 150, 225, 299]
+for t in times_wave:
+    if t < len(history_wave_stable):
+        ax.plot(x, history_wave_stable[t], label=f'$t = {t*dt_cfl_stable:.3f}$')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$u(x, t)$')
+ax.set_title(f'Wave Equation (Stable): $s = {s_stable:.2f}$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Unstable wave
+ax = axes[0, 1]
+for t in [0, 20, 40, 60, 80]:
+    if t < len(history_wave_unstable):
+        ax.plot(x, history_wave_unstable[t], label=f'$t = {t*dt_cfl_unstable:.3f}$')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$u(x, t)$')
+ax.set_title(f'Wave Equation (Unstable): $s = {s_unstable:.2f}$')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Space-time plot (stable)
+ax = axes[1, 0]
+t_arr = np.arange(len(history_wave_stable)) * dt_cfl_stable
+X, T = np.meshgrid(x, t_arr[:200])
+im = ax.pcolormesh(X, T, history_wave_stable[:200], cmap='RdBu', shading='auto')
+ax.set_xlabel('$x$')
+ax.set_ylabel('$t$')
+ax.set_title('Space-Time Evolution')
+plt.colorbar(im, ax=ax, label='$u(x, t)$')
+
+# Energy conservation
+ax = axes[1, 1]
+energy = []
+for i in range(len(history_wave_stable) - 1):
+    u = history_wave_stable[i]
+    u_next = history_wave_stable[i + 1]
+    kinetic = 0.5 * np.sum(((u_next[1:-1] - u[1:-1]) / dt_cfl_stable)**2) * dx
+    potential = 0.5 * c**2 * np.sum(((u[2:] - u[:-2]) / (2*dx))**2) * dx
+    energy.append(kinetic + potential)
+
+ax.plot(np.arange(len(energy)) * dt_cfl_stable, energy, 'b-')
+ax.set_xlabel('Time $t$')
+ax.set_ylabel('Total Energy')
+ax.set_title('Energy Conservation')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('wave_equation.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{wave_equation.pdf}
+\caption{Wave equation: (a) stable propagation, (b) unstable CFL violation, (c) space-time diagram, (d) energy conservation.}
+\end{figure}
+
+\chapter{Stability Analysis}
+
+\section{Von Neumann Analysis}
+Assume solution of form $u_j^n = G^n e^{ik j \Delta x}$
+
+\textbf{Heat equation (explicit)}:
+\begin{equation}
+G = 1 - 4r\sin^2\left(\frac{k\Delta x}{2}\right)
+\end{equation}
+Stability: $|G| \leq 1 \Rightarrow r \leq \frac{1}{2}$
+
+\textbf{Wave equation}:
+\begin{equation}
+G = 1 - 2s^2\sin^2\left(\frac{k\Delta x}{2}\right) \pm is\sin(k\Delta x)\sqrt{1 - s^2\sin^2\left(\frac{k\Delta x}{2}\right)}
+\end{equation}
+Stability: $|G| = 1$ when $s \leq 1$
+
+\begin{pycode}
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+# Heat equation amplification factor
+ax = axes[0]
+k_dx = np.linspace(0, np.pi, 100)
+for r in [0.25, 0.5, 0.6, 0.75]:
+    G = 1 - 4*r*np.sin(k_dx/2)**2
+    ax.plot(k_dx, np.abs(G), label=f'$r = {r}$')
+ax.axhline(1, color='black', linestyle='--', alpha=0.5)
+ax.set_xlabel('$k \\Delta x$')
+ax.set_ylabel('$|G|$')
+ax.set_title('Heat Equation Amplification Factor')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim(-0.5, 2)
+
+# Wave equation amplification factor
+ax = axes[1]
+for s in [0.5, 0.8, 1.0, 1.2]:
+    sin2 = np.sin(k_dx/2)**2
+    # For wave equation |G| = 1 when stable
+    G_mag = np.sqrt((1 - 2*s**2*sin2)**2 + s**2*np.sin(k_dx)**2*(1 - s**2*sin2))
+    ax.plot(k_dx, G_mag, label=f'$s = {s}$')
+ax.axhline(1, color='black', linestyle='--', alpha=0.5)
+ax.set_xlabel('$k \\Delta x$')
+ax.set_ylabel('$|G|$')
+ax.set_title('Wave Equation Amplification Factor')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('stability_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{stability_analysis.pdf}
+\caption{Von Neumann stability analysis: amplification factors for heat (left) and wave (right) equations.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+stability_data = [
+    ('Heat Explicit', '$r \\leq 0.5$', 'Conditional'),
+    ('Heat Implicit', 'None', 'Unconditional'),
+    ('Heat Crank-Nicolson', 'None', 'Unconditional'),
+    ('Wave Explicit', '$s \\leq 1$', 'Conditional (CFL)'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Stability conditions for finite difference schemes}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Scheme & Stability Condition & Type \\
+\midrule
+\py{stability_data[0][0]} & \py{stability_data[0][1]} & \py{stability_data[0][2]} \\
+\py{stability_data[1][0]} & \py{stability_data[1][1]} & \py{stability_data[1][2]} \\
+\py{stability_data[2][0]} & \py{stability_data[2][1]} & \py{stability_data[2][2]} \\
+\py{stability_data[3][0]} & \py{stability_data[3][1]} & \py{stability_data[3][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Explicit schemes are simple but require stability constraints
+    \item Implicit schemes are unconditionally stable but require solving linear systems
+    \item CFL condition is essential for hyperbolic PDEs
+    \item Von Neumann analysis provides stability criteria
+    \item Choice of method depends on problem type and accuracy requirements
+\end{enumerate}
+
+\end{document}

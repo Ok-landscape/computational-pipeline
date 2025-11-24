@@ -1,0 +1,473 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Text Analysis: TF-IDF Vectorization and Document Similarity}
+\author{Natural Language Processing Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+This template explores fundamental text analysis techniques including Term Frequency-Inverse Document Frequency (TF-IDF) vectorization, document similarity computation, topic modeling concepts, and word frequency analysis.
+
+\section{Mathematical Framework}
+
+\subsection{Term Frequency (TF)}
+Raw term frequency and its normalized variants:
+\begin{equation}
+\text{TF}(t, d) = \frac{f_{t,d}}{\sum_{t' \in d} f_{t',d}}
+\end{equation}
+where $f_{t,d}$ is the count of term $t$ in document $d$.
+
+\subsection{Inverse Document Frequency (IDF)}
+IDF measures the importance of a term across the corpus:
+\begin{equation}
+\text{IDF}(t, D) = \log\left(\frac{|D|}{|\{d \in D : t \in d\}|}\right)
+\end{equation}
+where $|D|$ is the total number of documents.
+
+\subsection{TF-IDF Score}
+The combined TF-IDF weight:
+\begin{equation}
+\text{TF-IDF}(t, d, D) = \text{TF}(t, d) \times \text{IDF}(t, D)
+\end{equation}
+
+\subsection{Cosine Similarity}
+Document similarity in vector space:
+\begin{equation}
+\text{sim}(\mathbf{d}_1, \mathbf{d}_2) = \frac{\mathbf{d}_1 \cdot \mathbf{d}_2}{\|\mathbf{d}_1\| \|\mathbf{d}_2\|}
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter, defaultdict
+import re
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{TF-IDF Implementation}
+
+\begin{pycode}
+class TFIDFVectorizer:
+    def __init__(self, min_df=1, max_df=1.0):
+        self.min_df = min_df
+        self.max_df = max_df
+        self.vocabulary_ = {}
+        self.idf_ = None
+
+    def tokenize(self, text):
+        words = re.findall(r'\b\w+\b', text.lower())
+        stopwords = {'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been',
+                    'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
+                    'would', 'could', 'should', 'may', 'might', 'must', 'shall',
+                    'can', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by',
+                    'from', 'as', 'into', 'through', 'and', 'but', 'or', 'nor',
+                    'so', 'yet', 'both', 'either', 'neither', 'not', 'only',
+                    'that', 'this', 'these', 'those', 'it', 'its'}
+        return [w for w in words if w not in stopwords and len(w) > 2]
+
+    def fit(self, documents):
+        doc_freq = defaultdict(int)
+        all_terms = set()
+        n_docs = len(documents)
+
+        for doc in documents:
+            terms = set(self.tokenize(doc))
+            for term in terms:
+                doc_freq[term] += 1
+                all_terms.add(term)
+
+        min_count = self.min_df if isinstance(self.min_df, int) else int(self.min_df * n_docs)
+        max_count = int(self.max_df * n_docs) if isinstance(self.max_df, float) else self.max_df
+
+        filtered_terms = [t for t in all_terms if min_count <= doc_freq[t] <= max_count]
+        self.vocabulary_ = {term: idx for idx, term in enumerate(sorted(filtered_terms))}
+
+        self.idf_ = np.zeros(len(self.vocabulary_))
+        for term, idx in self.vocabulary_.items():
+            self.idf_[idx] = np.log(n_docs / (doc_freq[term] + 1)) + 1
+
+        return self
+
+    def transform(self, documents):
+        n_docs = len(documents)
+        n_terms = len(self.vocabulary_)
+        tfidf_matrix = np.zeros((n_docs, n_terms))
+
+        for doc_idx, doc in enumerate(documents):
+            terms = self.tokenize(doc)
+            term_counts = Counter(terms)
+            total_terms = len(terms)
+
+            for term, count in term_counts.items():
+                if term in self.vocabulary_:
+                    term_idx = self.vocabulary_[term]
+                    tf = count / total_terms if total_terms > 0 else 0
+                    tfidf_matrix[doc_idx, term_idx] = tf * self.idf_[term_idx]
+
+        norms = np.linalg.norm(tfidf_matrix, axis=1, keepdims=True)
+        norms[norms == 0] = 1
+        return tfidf_matrix / norms
+
+    def fit_transform(self, documents):
+        self.fit(documents)
+        return self.transform(documents)
+
+    def get_feature_names(self):
+        return sorted(self.vocabulary_.keys(), key=lambda x: self.vocabulary_[x])
+
+corpus = [
+    "Machine learning algorithms can analyze large datasets efficiently.",
+    "Deep learning neural networks excel at image recognition tasks.",
+    "Natural language processing enables computers to understand text.",
+    "Data science combines statistics and programming for insights.",
+    "Computer vision uses deep learning for object detection.",
+    "Text mining extracts information from unstructured documents.",
+    "Artificial intelligence transforms healthcare diagnostics.",
+    "Big data analytics requires distributed computing systems.",
+    "Supervised learning needs labeled training data.",
+    "Unsupervised learning discovers patterns without labels."
+]
+
+vectorizer = TFIDFVectorizer(min_df=1, max_df=0.9)
+tfidf_matrix = vectorizer.fit_transform(corpus)
+vocab_size = len(vectorizer.vocabulary_)
+feature_names = vectorizer.get_feature_names()
+\end{pycode}
+
+\section{TF-IDF Analysis Visualization}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+top_terms_idx = np.argsort(np.sum(tfidf_matrix, axis=0))[-15:]
+subset_matrix = tfidf_matrix[:, top_terms_idx]
+top_terms = [feature_names[i] for i in top_terms_idx]
+
+im = axes[0, 0].imshow(subset_matrix, aspect='auto', cmap='YlOrRd')
+axes[0, 0].set_xlabel('Terms')
+axes[0, 0].set_ylabel('Documents')
+axes[0, 0].set_title('TF-IDF Heatmap (Top 15 Terms)')
+axes[0, 0].set_xticks(range(len(top_terms)))
+axes[0, 0].set_xticklabels(top_terms, rotation=45, ha='right', fontsize=7)
+plt.colorbar(im, ax=axes[0, 0], shrink=0.8)
+
+idf_values = vectorizer.idf_[top_terms_idx]
+y_pos = np.arange(len(top_terms))
+axes[0, 1].barh(y_pos, idf_values, color='steelblue', alpha=0.7)
+axes[0, 1].set_yticks(y_pos)
+axes[0, 1].set_yticklabels(top_terms, fontsize=7)
+axes[0, 1].set_xlabel('IDF Score')
+axes[0, 1].set_title('Inverse Document Frequency')
+
+all_terms = []
+for doc in corpus:
+    all_terms.extend(vectorizer.tokenize(doc))
+term_counts = Counter(all_terms)
+most_common = term_counts.most_common(15)
+terms, counts = zip(*most_common)
+
+y_pos = np.arange(len(terms))
+axes[1, 0].barh(y_pos, counts, color='green', alpha=0.7)
+axes[1, 0].set_yticks(y_pos)
+axes[1, 0].set_yticklabels(terms, fontsize=7)
+axes[1, 0].set_xlabel('Frequency')
+axes[1, 0].set_title('Term Frequency Distribution')
+
+doc_nonzero = np.sum(tfidf_matrix > 0, axis=1)
+axes[1, 1].bar(range(1, len(corpus)+1), doc_nonzero, color='purple', alpha=0.7)
+axes[1, 1].set_xlabel('Document')
+axes[1, 1].set_ylabel('Unique Terms')
+axes[1, 1].set_title('Document Term Coverage')
+
+plt.tight_layout()
+save_plot('tfidf_analysis.pdf', 'TF-IDF vectorization analysis')
+\end{pycode}
+
+\section{Document Similarity}
+
+\begin{pycode}
+def cosine_similarity(matrix):
+    return np.dot(matrix, matrix.T)
+
+similarity_matrix = cosine_similarity(tfidf_matrix)
+
+n_docs = len(corpus)
+similar_pairs = []
+for i in range(n_docs):
+    for j in range(i+1, n_docs):
+        similar_pairs.append((i, j, similarity_matrix[i, j]))
+
+similar_pairs.sort(key=lambda x: x[2], reverse=True)
+top_pairs = similar_pairs[:5]
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+im = axes[0, 0].imshow(similarity_matrix, cmap='coolwarm', vmin=0, vmax=1)
+axes[0, 0].set_xlabel('Document')
+axes[0, 0].set_ylabel('Document')
+axes[0, 0].set_title('Document Similarity Matrix')
+axes[0, 0].set_xticks(range(n_docs))
+axes[0, 0].set_yticks(range(n_docs))
+axes[0, 0].set_xticklabels([f'D{i+1}' for i in range(n_docs)], fontsize=8)
+axes[0, 0].set_yticklabels([f'D{i+1}' for i in range(n_docs)], fontsize=8)
+plt.colorbar(im, ax=axes[0, 0], shrink=0.8)
+
+upper_tri = similarity_matrix[np.triu_indices(n_docs, k=1)]
+axes[0, 1].hist(upper_tri, bins=20, color='purple', alpha=0.7, edgecolor='black')
+axes[0, 1].axvline(x=np.mean(upper_tri), color='red', linestyle='--',
+                   label=f'Mean: {np.mean(upper_tri):.3f}')
+axes[0, 1].set_xlabel('Cosine Similarity')
+axes[0, 1].set_ylabel('Frequency')
+axes[0, 1].set_title('Similarity Distribution')
+axes[0, 1].legend()
+
+pair_labels = [f'D{p[0]+1}-D{p[1]+1}' for p in top_pairs]
+pair_sims = [p[2] for p in top_pairs]
+y_pos = np.arange(len(top_pairs))
+axes[1, 0].barh(y_pos, pair_sims, color='orange', alpha=0.7)
+axes[1, 0].set_yticks(y_pos)
+axes[1, 0].set_yticklabels(pair_labels)
+axes[1, 0].set_xlabel('Cosine Similarity')
+axes[1, 0].set_title('Top 5 Most Similar Document Pairs')
+axes[1, 0].set_xlim(0, 1)
+
+def mds_projection(sim_matrix, n_components=2):
+    n = sim_matrix.shape[0]
+    dist_matrix = 1 - sim_matrix
+    J = np.eye(n) - np.ones((n, n)) / n
+    B = -0.5 * J @ (dist_matrix ** 2) @ J
+    eigenvalues, eigenvectors = np.linalg.eigh(B)
+    idx = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+    coords = eigenvectors[:, :n_components] * np.sqrt(np.abs(eigenvalues[:n_components]))
+    return coords
+
+coords = mds_projection(similarity_matrix)
+axes[1, 1].scatter(coords[:, 0], coords[:, 1], s=100, alpha=0.7,
+                   c=range(n_docs), cmap='tab10', edgecolors='black')
+for i in range(n_docs):
+    axes[1, 1].annotate(f'D{i+1}', (coords[i, 0], coords[i, 1]),
+                        xytext=(5, 5), textcoords='offset points', fontsize=9)
+axes[1, 1].set_xlabel('Component 1')
+axes[1, 1].set_ylabel('Component 2')
+axes[1, 1].set_title('Document Clustering (MDS)')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('similarity_analysis.pdf', 'Document similarity analysis')
+\end{pycode}
+
+\section{Topic Modeling with NMF}
+
+\begin{pycode}
+def simple_nmf(V, n_topics=3, max_iter=100, tol=1e-4):
+    n_docs, n_terms = V.shape
+    W = np.random.rand(n_docs, n_topics) + 0.1
+    H = np.random.rand(n_topics, n_terms) + 0.1
+
+    for iteration in range(max_iter):
+        H = H * (W.T @ V) / (W.T @ W @ H + 1e-10)
+        W = W * (V @ H.T) / (W @ H @ H.T + 1e-10)
+        error = np.linalg.norm(V - W @ H, 'fro')
+        if iteration > 0 and abs(prev_error - error) < tol:
+            break
+        prev_error = error
+
+    return W, H
+
+n_topics = 3
+W, H = simple_nmf(tfidf_matrix, n_topics=n_topics)
+
+def get_top_terms(H, feature_names, n_top=8):
+    topics = []
+    for topic_idx in range(H.shape[0]):
+        top_indices = H[topic_idx].argsort()[::-1][:n_top]
+        top_terms = [(feature_names[i], H[topic_idx, i]) for i in top_indices]
+        topics.append(top_terms)
+    return topics
+
+topics = get_top_terms(H, feature_names)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+doc_topics = W / W.sum(axis=1, keepdims=True)
+im = axes[0, 0].imshow(doc_topics, aspect='auto', cmap='Blues')
+axes[0, 0].set_xlabel('Topic')
+axes[0, 0].set_ylabel('Document')
+axes[0, 0].set_title('Document-Topic Distribution')
+axes[0, 0].set_xticks(range(n_topics))
+axes[0, 0].set_xticklabels([f'Topic {i+1}' for i in range(n_topics)])
+plt.colorbar(im, ax=axes[0, 0], shrink=0.8)
+
+for topic_idx in range(n_topics):
+    ax = axes[(topic_idx + 1) // 2, (topic_idx + 1) % 2]
+    terms, weights = zip(*topics[topic_idx])
+    y_pos = np.arange(len(terms))
+    colors = plt.cm.Set2(topic_idx / n_topics)
+    ax.barh(y_pos, weights, color=colors, alpha=0.7)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(terms, fontsize=8)
+    ax.set_xlabel('Weight')
+    ax.set_title(f'Topic {topic_idx + 1} Top Terms')
+    ax.invert_yaxis()
+
+plt.tight_layout()
+save_plot('topic_modeling.pdf', 'Topic modeling using NMF')
+\end{pycode}
+
+\section{Word Frequency Analysis}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+sorted_counts = sorted(total_freq.values(), reverse=True) if 'total_freq' in dir() else sorted(term_counts.values(), reverse=True)
+ranks = np.arange(1, len(sorted_counts) + 1)
+axes[0, 0].loglog(ranks, sorted_counts, 'b-', marker='o', markersize=4)
+log_ranks = np.log(ranks)
+log_counts = np.log(sorted_counts)
+slope, intercept = np.polyfit(log_ranks, log_counts, 1)
+fit_line = np.exp(intercept) * ranks ** slope
+axes[0, 0].loglog(ranks, fit_line, 'r--', label=f'Slope: {slope:.2f}')
+axes[0, 0].set_xlabel('Rank')
+axes[0, 0].set_ylabel('Frequency')
+axes[0, 0].set_title("Zipf's Law Analysis")
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+term_df = defaultdict(int)
+for doc in corpus:
+    for term in set(vectorizer.tokenize(doc)):
+        term_df[term] += 1
+
+tf_vals = [term_counts[t] for t in term_counts.keys()]
+df_vals = [term_df[t] for t in term_counts.keys()]
+
+axes[0, 1].scatter(tf_vals, df_vals, alpha=0.6, s=50)
+axes[0, 1].set_xlabel('Term Frequency')
+axes[0, 1].set_ylabel('Document Frequency')
+axes[0, 1].set_title('TF vs DF')
+axes[0, 1].grid(True, alpha=0.3)
+
+vocab_growth = []
+seen_terms = set()
+for i, doc in enumerate(corpus):
+    terms = vectorizer.tokenize(doc)
+    seen_terms.update(terms)
+    vocab_growth.append(len(seen_terms))
+
+axes[1, 0].plot(range(1, len(corpus)+1), vocab_growth, 'g-', marker='o', linewidth=2)
+axes[1, 0].set_xlabel('Number of Documents')
+axes[1, 0].set_ylabel('Vocabulary Size')
+axes[1, 0].set_title('Vocabulary Growth Curve')
+axes[1, 0].grid(True, alpha=0.3)
+
+doc_lengths = [len(vectorizer.tokenize(doc)) for doc in corpus]
+axes[1, 1].bar(range(1, len(corpus)+1), doc_lengths, color='purple', alpha=0.7)
+axes[1, 1].axhline(y=np.mean(doc_lengths), color='red', linestyle='--',
+                   label=f'Mean: {np.mean(doc_lengths):.1f}')
+axes[1, 1].set_xlabel('Document')
+axes[1, 1].set_ylabel('Number of Terms')
+axes[1, 1].set_title('Document Length Distribution')
+axes[1, 1].legend()
+
+plt.tight_layout()
+save_plot('word_frequency.pdf', 'Word frequency analysis')
+
+reconstruction_error = np.linalg.norm(tfidf_matrix - W @ H, 'fro')
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Vectorization Statistics}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{TF-IDF Vectorization Statistics}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Metric & Value \\')
+print(r'\midrule')
+print(f"Number of documents & {len(corpus)} \\\\")
+print(f"Vocabulary size & {vocab_size} \\\\")
+print(f"Total terms in corpus & {len(all_terms)} \\\\")
+print(f"Mean document length & {np.mean(doc_lengths):.1f} \\\\")
+print(f"Sparsity & {100 * (1 - np.count_nonzero(tfidf_matrix) / tfidf_matrix.size):.1f}\\% \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Top Similar Document Pairs}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Most similar document pairs by cosine similarity}')
+print(r'\begin{tabular}{cc}')
+print(r'\toprule')
+print(r'Document Pair & Similarity \\')
+print(r'\midrule')
+
+for d1, d2, sim in top_pairs:
+    print(f"D{d1+1} -- D{d2+1} & {sim:.3f} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Topic Summary}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Extracted topics and top terms}')
+print(r'\begin{tabular}{cl}')
+print(r'\toprule')
+print(r'Topic & Top Terms \\')
+print(r'\midrule')
+
+for i, topic_terms in enumerate(topics):
+    terms_str = ', '.join([t[0] for t in topic_terms[:5]])
+    print(f"Topic {i+1} & {terms_str} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Statistical Summary}
+\begin{itemize}
+    \item Mean similarity score: \py{f"{np.mean(upper_tri):.3f}"}
+    \item Max similarity score: \py{f"{np.max(upper_tri):.3f}"}
+    \item Zipf's law exponent: \py{f"{abs(slope):.2f}"}
+    \item NMF reconstruction error: \py{f"{reconstruction_error:.3f}"}
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates core text analysis techniques. TF-IDF vectorization transforms text into numerical representations suitable for similarity computation and topic modeling. The analysis reveals document clusters based on semantic content, while the NMF-based topic extraction identifies latent themes. Word frequency analysis confirms Zipf's law with an exponent of \py{f"{abs(slope):.2f}"}.
+
+\end{document}

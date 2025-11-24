@@ -1,0 +1,499 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Protein Structure Analysis: From Backbone Geometry to Fold Recognition\\
+\large Ramachandran Analysis, Secondary Structure, and Structural Comparison}
+\author{Structural Bioinformatics Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This comprehensive analysis presents methods for analyzing protein three-dimensional structure. We cover backbone dihedral angle analysis through Ramachandran plots, secondary structure prediction using propensity scales, structural comparison using RMSD and TM-score, and contact map analysis for fold topology. The analysis includes the geometric principles underlying protein conformation, statistical analysis of allowed regions in $\phi$-$\psi$ space, and methods for comparing protein structures to identify homologs and predict function.
+\end{abstract}
+
+\section{Introduction}
+
+Protein structure determines function. Understanding the three-dimensional arrangement of amino acids reveals how proteins catalyze reactions, bind ligands, and interact with other molecules. Structural bioinformatics provides computational tools to analyze, compare, and predict protein structures.
+
+\begin{definition}[Protein Structure Hierarchy]
+\begin{itemize}
+    \item \textbf{Primary}: Amino acid sequence
+    \item \textbf{Secondary}: Local structure ($\alpha$-helix, $\beta$-sheet, loops)
+    \item \textbf{Tertiary}: Complete 3D fold of a single chain
+    \item \textbf{Quaternary}: Multi-chain assembly
+\end{itemize}
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Backbone Dihedral Angles}
+
+The protein backbone is defined by three repeating atoms: N-C$_\alpha$-C. Conformation is specified by dihedral angles:
+
+\begin{definition}[Backbone Dihedrals]
+\begin{align}
+\phi &: C_{i-1} - N_i - C_\alpha^i - C_i \\
+\psi &: N_i - C_\alpha^i - C_i - N_{i+1} \\
+\omega &: C_\alpha^i - C_i - N_{i+1} - C_\alpha^{i+1}
+\end{align}
+The peptide bond angle $\omega$ is typically $180^\circ$ (trans) or $0^\circ$ (cis, rare).
+\end{definition}
+
+\subsection{Allowed Conformations}
+
+Steric clashes restrict $\phi$ and $\psi$ to specific regions:
+
+\begin{remark}[Ramachandran Regions]
+\begin{itemize}
+    \item $\alpha$-helix: $\phi \approx -60^\circ$, $\psi \approx -45^\circ$
+    \item $\beta$-sheet: $\phi \approx -120^\circ$, $\psi \approx +130^\circ$
+    \item Left-handed helix: $\phi \approx +60^\circ$, $\psi \approx +45^\circ$ (glycine only)
+    \item Polyproline II: $\phi \approx -75^\circ$, $\psi \approx +145^\circ$
+\end{itemize}
+\end{remark}
+
+\subsection{Structural Comparison}
+
+\begin{theorem}[Root Mean Square Deviation]
+RMSD measures structural similarity after optimal superposition:
+\begin{equation}
+\text{RMSD} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}|\mathbf{r}_i^A - \mathbf{r}_i^B|^2}
+\end{equation}
+where $\mathbf{r}_i$ are atomic coordinates after alignment.
+\end{theorem}
+
+\begin{definition}[TM-score]
+A length-independent measure of structural similarity:
+\begin{equation}
+\text{TM-score} = \frac{1}{L_N}\sum_{i=1}^{L_{ali}}\frac{1}{1+(d_i/d_0)^2}
+\end{equation}
+where $d_0 = 1.24\sqrt[3]{L_N - 15} - 1.8$ \AA{} and $L_N$ is the target length.
+\end{definition}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Simulate realistic Ramachandran plot data
+n_residues = 1000
+
+# Secondary structure populations based on PDB statistics
+structures = {
+    'alpha': {'phi': (-63, 12), 'psi': (-42, 12), 'n': 400},
+    'beta': {'phi': (-119, 15), 'psi': (135, 18), 'n': 300},
+    '310': {'phi': (-60, 10), 'psi': (-26, 10), 'n': 50},
+    'pi': {'phi': (-57, 8), 'psi': (-70, 8), 'n': 20},
+    'ppII': {'phi': (-75, 10), 'psi': (145, 12), 'n': 80},
+    'left': {'phi': (60, 12), 'psi': (40, 12), 'n': 30},
+    'coil': {'phi': (0, 60), 'psi': (0, 60), 'n': 120}
+}
+
+phi_all = []
+psi_all = []
+labels = []
+
+for struct, params in structures.items():
+    phi = np.random.normal(params['phi'][0], params['phi'][1], params['n'])
+    psi = np.random.normal(params['psi'][0], params['psi'][1], params['n'])
+
+    # Wrap to [-180, 180]
+    phi = ((phi + 180) % 360) - 180
+    psi = ((psi + 180) % 360) - 180
+
+    phi_all.extend(phi)
+    psi_all.extend(psi)
+    labels.extend([struct] * params['n'])
+
+phi_all = np.array(phi_all)
+psi_all = np.array(psi_all)
+
+# Chou-Fasman propensity parameters
+amino_acids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I',
+               'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V']
+
+aa_names = ['Ala', 'Arg', 'Asn', 'Asp', 'Cys', 'Gln', 'Glu', 'Gly', 'His', 'Ile',
+            'Leu', 'Lys', 'Met', 'Phe', 'Pro', 'Ser', 'Thr', 'Trp', 'Tyr', 'Val']
+
+helix_prop = [1.42, 0.98, 0.67, 1.01, 0.70, 1.11, 1.51, 0.57,
+              1.00, 1.08, 1.21, 1.16, 1.45, 1.13, 0.57, 0.77,
+              0.83, 1.08, 0.69, 1.06]
+
+sheet_prop = [0.83, 0.93, 0.89, 0.54, 1.19, 1.10, 0.37, 0.75,
+              0.87, 1.60, 1.30, 0.74, 1.05, 1.38, 0.55, 0.75,
+              1.19, 1.37, 1.47, 1.70]
+
+turn_prop = [0.66, 0.95, 1.56, 1.46, 1.19, 0.98, 0.74, 1.56,
+             0.95, 0.47, 0.59, 1.01, 0.60, 0.60, 1.52, 1.43,
+             0.96, 0.96, 1.14, 0.50]
+
+# RMSD distribution simulation
+def calculate_rmsd(coords1, coords2):
+    """Calculate RMSD between two coordinate sets"""
+    return np.sqrt(np.mean(np.sum((coords1 - coords2)**2, axis=1)))
+
+def kabsch_rmsd(P, Q):
+    """RMSD after optimal superposition (Kabsch algorithm)"""
+    # Center both structures
+    P_centered = P - np.mean(P, axis=0)
+    Q_centered = Q - np.mean(Q, axis=0)
+
+    # Compute covariance matrix
+    H = P_centered.T @ Q_centered
+
+    # SVD
+    U, S, Vt = np.linalg.svd(H)
+
+    # Optimal rotation
+    R = Vt.T @ U.T
+
+    # Handle reflection
+    if np.linalg.det(R) < 0:
+        Vt[-1, :] *= -1
+        R = Vt.T @ U.T
+
+    # Apply rotation
+    Q_rotated = Q_centered @ R
+
+    return np.sqrt(np.mean(np.sum((P_centered - Q_rotated)**2, axis=1)))
+
+# Generate RMSD distribution
+n_comparisons = 500
+rmsds = []
+tm_scores = []
+
+for _ in range(n_comparisons):
+    n_atoms = np.random.randint(50, 200)
+    coords1 = np.random.randn(n_atoms, 3) * 20
+    perturbation = np.random.randn(n_atoms, 3) * np.random.uniform(0.5, 5)
+    coords2 = coords1 + perturbation
+    rmsds.append(kabsch_rmsd(coords1, coords2))
+
+    # Approximate TM-score
+    d0 = 1.24 * (n_atoms - 15)**(1/3) - 1.8
+    d_i = np.sqrt(np.sum((coords1 - coords2)**2, axis=1))
+    tm = np.mean(1 / (1 + (d_i/d0)**2))
+    tm_scores.append(tm)
+
+# Contact map simulation
+def generate_contact_map(n_residues, secondary_structure='mixed'):
+    """Generate realistic contact map"""
+    contacts = np.zeros((n_residues, n_residues))
+
+    # Local contacts (sequence neighbors)
+    for i in range(n_residues - 1):
+        contacts[i, i+1] = 1
+        contacts[i+1, i] = 1
+
+    # Helical pattern (i, i+3/4)
+    for i in range(0, n_residues - 4, 5):
+        for j in range(min(20, n_residues - i)):
+            if j in [3, 4]:
+                contacts[i, i+j] = 1
+                contacts[i+j, i] = 1
+
+    # Antiparallel beta sheet pattern
+    for i in range(0, n_residues//2):
+        j = n_residues - 1 - i
+        if j > i + 10:
+            contacts[i, j] = 1
+            contacts[j, i] = 1
+
+    # Random long-range contacts
+    for _ in range(n_residues // 5):
+        i, j = np.random.randint(0, n_residues, 2)
+        if abs(i - j) > 8:
+            contacts[i, j] = 1
+            contacts[j, i] = 1
+
+    return contacts
+
+n_res_map = 80
+contact_map = generate_contact_map(n_res_map)
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(14, 16))
+
+# Plot 1: Ramachandran plot with density
+ax1 = fig.add_subplot(3, 3, 1)
+
+# 2D histogram for density
+H, xedges, yedges = np.histogram2d(phi_all, psi_all, bins=60, range=[[-180, 180], [-180, 180]])
+extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+ax1.imshow(H.T, extent=extent, origin='lower', cmap='YlOrRd', aspect='auto')
+
+ax1.set_xlabel('$\\phi$ (degrees)')
+ax1.set_ylabel('$\\psi$ (degrees)')
+ax1.set_title('Ramachandran Plot')
+ax1.set_xlim([-180, 180])
+ax1.set_ylim([-180, 180])
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Ramachandran with scatter colored by structure
+ax2 = fig.add_subplot(3, 3, 2)
+colors = {'alpha': 'red', 'beta': 'blue', '310': 'orange', 'pi': 'purple',
+          'ppII': 'cyan', 'left': 'green', 'coil': 'gray'}
+
+for struct in structures.keys():
+    mask = [l == struct for l in labels]
+    ax2.scatter(phi_all[mask], psi_all[mask], c=colors[struct], s=5, alpha=0.5, label=struct)
+
+ax2.set_xlabel('$\\phi$ (degrees)')
+ax2.set_ylabel('$\\psi$ (degrees)')
+ax2.set_title('Secondary Structure Classification')
+ax2.legend(fontsize=6, ncol=2, loc='upper right')
+ax2.set_xlim([-180, 180])
+ax2.set_ylim([-180, 180])
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Propensity comparison
+ax3 = fig.add_subplot(3, 3, 3)
+x = np.arange(len(amino_acids))
+width = 0.25
+
+ax3.bar(x - width, helix_prop, width, label='$\\alpha$-helix', color='red', alpha=0.7)
+ax3.bar(x, sheet_prop, width, label='$\\beta$-sheet', color='blue', alpha=0.7)
+ax3.bar(x + width, turn_prop, width, label='Turn', color='green', alpha=0.7)
+ax3.axhline(y=1.0, color='black', linestyle='--', alpha=0.5)
+
+ax3.set_xlabel('Amino Acid')
+ax3.set_ylabel('Propensity')
+ax3.set_title('Chou-Fasman Propensities')
+ax3.set_xticks(x)
+ax3.set_xticklabels(amino_acids, fontsize=6)
+ax3.legend(fontsize=7)
+ax3.grid(True, alpha=0.3, axis='y')
+
+# Plot 4: RMSD distribution
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.hist(rmsds, bins=30, alpha=0.7, color='steelblue', edgecolor='black')
+ax4.axvline(x=np.mean(rmsds), color='red', linestyle='--', linewidth=2, label=f'Mean: {np.mean(rmsds):.1f}')
+ax4.set_xlabel('RMSD (\\AA)')
+ax4.set_ylabel('Frequency')
+ax4.set_title('RMSD Distribution')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: TM-score distribution
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.hist(tm_scores, bins=30, alpha=0.7, color='green', edgecolor='black')
+ax5.axvline(x=0.5, color='red', linestyle='--', linewidth=2, label='Fold threshold')
+ax5.axvline(x=0.17, color='orange', linestyle='--', linewidth=2, label='Random')
+ax5.set_xlabel('TM-score')
+ax5.set_ylabel('Frequency')
+ax5.set_title('TM-score Distribution')
+ax5.legend(fontsize=7)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Contact map
+ax6 = fig.add_subplot(3, 3, 6)
+ax6.imshow(contact_map, cmap='binary', origin='lower', aspect='equal')
+ax6.set_xlabel('Residue $i$')
+ax6.set_ylabel('Residue $j$')
+ax6.set_title('Contact Map')
+
+# Plot 7: Contact density by distance
+ax7 = fig.add_subplot(3, 3, 7)
+distances = []
+contact_fracs = []
+for d in range(1, 40):
+    mask = np.abs(np.arange(n_res_map)[:, None] - np.arange(n_res_map)) == d
+    contacts_at_d = contact_map[mask]
+    distances.append(d)
+    contact_fracs.append(np.mean(contacts_at_d))
+
+ax7.bar(distances, contact_fracs, color='purple', alpha=0.7)
+ax7.set_xlabel('Sequence Separation')
+ax7.set_ylabel('Contact Frequency')
+ax7.set_title('Contact vs. Sequence Distance')
+ax7.grid(True, alpha=0.3, axis='y')
+
+# Plot 8: Helix formers vs breakers
+ax8 = fig.add_subplot(3, 3, 8)
+sorted_idx = np.argsort(helix_prop)[::-1]
+colors_bar = ['red' if helix_prop[i] > 1.1 else 'blue' if helix_prop[i] < 0.9 else 'gray'
+              for i in sorted_idx]
+ax8.barh([amino_acids[i] for i in sorted_idx],
+         [helix_prop[i] for i in sorted_idx], color=colors_bar, alpha=0.7)
+ax8.axvline(x=1.0, color='black', linestyle='--', alpha=0.7)
+ax8.set_xlabel('Helix Propensity')
+ax8.set_title('Helix Formers and Breakers')
+ax8.grid(True, alpha=0.3, axis='x')
+
+# Plot 9: Phi-psi outlier detection
+ax9 = fig.add_subplot(3, 3, 9)
+# Calculate Z-scores for detection of outliers
+core_phi = phi_all[(labels == 'alpha') | (np.array(labels) == 'beta')]
+core_psi = psi_all[(np.array(labels) == 'alpha') | (np.array(labels) == 'beta')]
+
+# Distance from nearest cluster center
+helix_center = (-63, -42)
+sheet_center = (-119, 135)
+
+dist_helix = np.sqrt((phi_all - helix_center[0])**2 + (psi_all - helix_center[1])**2)
+dist_sheet = np.sqrt((phi_all - sheet_center[0])**2 + (psi_all - sheet_center[1])**2)
+min_dist = np.minimum(dist_helix, dist_sheet)
+
+outliers = min_dist > 50
+ax9.scatter(phi_all[~outliers], psi_all[~outliers], c='blue', s=3, alpha=0.3, label='Core')
+ax9.scatter(phi_all[outliers], psi_all[outliers], c='red', s=10, alpha=0.7, label='Outlier')
+ax9.set_xlabel('$\\phi$ (degrees)')
+ax9.set_ylabel('$\\psi$ (degrees)')
+ax9.set_title('Outlier Detection')
+ax9.legend(fontsize=8)
+ax9.set_xlim([-180, 180])
+ax9.set_ylim([-180, 180])
+ax9.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('protein_structure_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{protein_structure_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Statistics
+mean_rmsd = np.mean(rmsds)
+mean_tm = np.mean(tm_scores)
+helix_fraction = structures['alpha']['n'] / len(phi_all) * 100
+sheet_fraction = structures['beta']['n'] / len(phi_all) * 100
+n_outliers = np.sum(outliers)
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Ramachandran Statistics}
+
+\begin{pycode}
+# Structure statistics table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Secondary Structure Distribution}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Structure & Count & Fraction (\\%) & $\phi$ & $\psi$ \\')
+print(r'\midrule')
+for struct, params in structures.items():
+    frac = params['n'] / len(phi_all) * 100
+    print(f"{struct.capitalize()} & {params['n']} & {frac:.1f} & {params['phi'][0]}$^\\circ$ & {params['psi'][0]}$^\\circ$ \\\\")
+print(r'\midrule')
+print(f"Total & {len(phi_all)} & 100 & -- & -- \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Structural Comparison}
+
+\begin{example}[RMSD Analysis]
+From \py{f"{n_comparisons}"} structural comparisons:
+\begin{itemize}
+    \item Mean RMSD: \py{f"{mean_rmsd:.2f}"} \AA
+    \item Mean TM-score: \py{f"{mean_tm:.3f}"}
+    \item RMSD $<$ 2 \AA: typically same fold
+    \item TM-score $>$ 0.5: same fold (normalized)
+\end{itemize}
+\end{example}
+
+\subsection{Quality Assessment}
+
+\begin{pycode}
+# Quality metrics
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Structure Quality Indicators}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Metric & Value \\')
+print(r'\midrule')
+core_frac = 100 - n_outliers/len(phi_all)*100
+print(f"Core region residues & {core_frac:.1f}\\% \\\\")
+print(f"Allowed region residues & {100-n_outliers/len(phi_all)*100:.1f}\\% \\\\")
+print(f"Outliers (generously allowed) & {n_outliers} \\\\")
+print(f"Total contacts & {int(np.sum(contact_map)/2)} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Secondary Structure Prediction}
+
+\subsection{Chou-Fasman Algorithm}
+
+\begin{remark}[Prediction Steps]
+\begin{enumerate}
+    \item Calculate propensity for each residue
+    \item Identify nucleation sites (consecutive high-propensity residues)
+    \item Extend regions until breaker residues
+    \item Resolve overlapping predictions
+\end{enumerate}
+Accuracy: $\sim$60-65\% (3-state)
+\end{remark}
+
+\subsection{Modern Methods}
+
+Machine learning methods achieve higher accuracy:
+\begin{itemize}
+    \item Neural networks: $\sim$75-80\%
+    \item PSIPRED (profile-based): $\sim$80\%
+    \item AlphaFold (end-to-end): $>$90\%
+\end{itemize}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Static view}: No dynamics/flexibility
+    \item \textbf{Local propensity}: Ignores long-range interactions
+    \item \textbf{Simplified contacts}: Binary rather than distance-based
+    \item \textbf{No side chains}: Backbone-only analysis
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Side chain rotamer libraries
+    \item Molecular dynamics analysis
+    \item AlphaFold structure prediction
+    \item Protein-ligand docking
+\end{itemize}
+
+\section{Conclusion}
+
+This analysis demonstrates protein structural bioinformatics:
+\begin{itemize}
+    \item Ramachandran plot validates backbone geometry
+    \item \py{f"{helix_fraction:.0f}"}\% $\alpha$-helix, \py{f"{sheet_fraction:.0f}"}\% $\beta$-sheet
+    \item RMSD and TM-score quantify structural similarity
+    \item Contact maps reveal fold topology
+    \item Propensity scales enable structure prediction
+\end{itemize}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Branden, C. \& Tooze, J. (1999). \textit{Introduction to Protein Structure}. Garland Science.
+    \item Lesk, A. M. (2010). \textit{Introduction to Protein Science}. Oxford University Press.
+    \item Zhang, Y. \& Skolnick, J. (2004). Scoring function for automated assessment of protein structure template quality. \textit{Proteins}, 57, 702-710.
+\end{itemize}
+
+\end{document}

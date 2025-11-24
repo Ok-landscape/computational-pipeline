@@ -1,0 +1,254 @@
+% Galaxy Dynamics
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Galaxy Dynamics\\Rotation Curves and Dark Matter}
+\author{Extragalactic Astronomy Group}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analysis of galaxy dynamics including rotation curves, dark matter profiles, and scaling relations.
+\end{abstract}
+
+\section{Introduction}
+
+Galaxy rotation curves provide evidence for dark matter.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+G = 4.302e-6  # kpc (km/s)^2 / M_sun
+\end{pycode}
+
+\section{Rotation Curve Components}
+
+\begin{pycode}
+r = np.linspace(0.1, 30, 200)  # kpc
+
+# Bulge (Hernquist profile)
+M_b = 1e10
+a_b = 0.5
+v_bulge = np.sqrt(G * M_b * r / (r + a_b)**2)
+
+# Disk (exponential)
+M_d = 5e10
+R_d = 3.5
+y = r / (2 * R_d)
+v_disk = np.sqrt(G * M_d * r**2 / R_d**3 * (0.5 - y + y**2 * np.exp(-2*y)))
+
+# Dark matter halo (NFW)
+M_h = 1e12
+c = 10
+r_s = 20
+x = r / r_s
+v_halo = np.sqrt(G * M_h * (np.log(1 + x) - x/(1 + x)) / (r * (np.log(1 + c) - c/(1 + c))))
+
+# Total
+v_total = np.sqrt(v_bulge**2 + v_disk**2 + v_halo**2)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(r, v_bulge, '--', label='Bulge', linewidth=1.5)
+ax.plot(r, v_disk, '--', label='Disk', linewidth=1.5)
+ax.plot(r, v_halo, '--', label='Dark Matter Halo', linewidth=1.5)
+ax.plot(r, v_total, 'k-', label='Total', linewidth=2)
+ax.set_xlabel('Radius (kpc)')
+ax.set_ylabel('Rotation Velocity (km/s)')
+ax.set_title('Galaxy Rotation Curve Decomposition')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim([0, 30])
+ax.set_ylim([0, 300])
+plt.tight_layout()
+plt.savefig('rotation_curve.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{rotation_curve.pdf}
+\caption{Rotation curve decomposition showing different components.}
+\end{figure}
+
+\section{NFW Profile}
+
+$\rho(r) = \frac{\rho_s}{(r/r_s)(1+r/r_s)^2}$
+
+\begin{pycode}
+r_nfw = np.logspace(-1, 2, 100)
+rho_s = 1e7  # M_sun / kpc^3
+
+for c in [5, 10, 20]:
+    r_s = 20 / c * 10
+    x = r_nfw / r_s
+    rho = rho_s / (x * (1 + x)**2)
+    plt.loglog(r_nfw, rho, label=f'c = {c}')
+
+plt.xlabel('Radius (kpc)')
+plt.ylabel('Density ($M_\\odot$/kpc$^3$)')
+plt.title('NFW Dark Matter Density Profile')
+plt.legend()
+plt.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('nfw_profile.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{nfw_profile.pdf}
+\caption{NFW density profiles for different concentrations.}
+\end{figure}
+
+\section{Tully-Fisher Relation}
+
+$M_B = a \log_{10} V_{max} + b$
+
+\begin{pycode}
+# Generate mock data
+np.random.seed(42)
+V_max = np.random.uniform(100, 300, 50)
+M_B = -7.5 * np.log10(V_max) + 3.5 + np.random.normal(0, 0.3, 50)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.scatter(np.log10(V_max), M_B, alpha=0.7)
+# Fit line
+coeffs = np.polyfit(np.log10(V_max), M_B, 1)
+V_fit = np.linspace(100, 300, 100)
+ax.plot(np.log10(V_fit), np.polyval(coeffs, np.log10(V_fit)), 'r-', linewidth=2)
+ax.set_xlabel('log$_{10}$ $V_{max}$ (km/s)')
+ax.set_ylabel('$M_B$ (mag)')
+ax.set_title('Tully-Fisher Relation')
+ax.invert_yaxis()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('tully_fisher.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{tully_fisher.pdf}
+\caption{Tully-Fisher relation for spiral galaxies.}
+\end{figure}
+
+\section{Dark Matter Fraction}
+
+\begin{pycode}
+r_frac = np.linspace(0.1, 30, 100)
+M_baryon = M_b * r_frac**2 / (r_frac + a_b)**2 + M_d * (1 - (1 + r_frac/R_d) * np.exp(-r_frac/R_d))
+x_frac = r_frac / r_s
+M_dm = M_h * (np.log(1 + x_frac) - x_frac/(1 + x_frac)) / (np.log(1 + c) - c/(1 + c))
+f_dm = M_dm / (M_dm + M_baryon)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(r_frac, f_dm, 'b-', linewidth=2)
+ax.axhline(y=0.5, color='r', linestyle='--')
+ax.set_xlabel('Radius (kpc)')
+ax.set_ylabel('Dark Matter Fraction')
+ax.set_title('Enclosed Dark Matter Fraction')
+ax.grid(True, alpha=0.3)
+ax.set_xlim([0, 30])
+ax.set_ylim([0, 1])
+plt.tight_layout()
+plt.savefig('dm_fraction.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{dm_fraction.pdf}
+\caption{Dark matter fraction vs radius.}
+\end{figure}
+
+\section{Velocity Dispersion}
+
+\begin{pycode}
+# Stellar velocity dispersion profile
+r_sigma = np.linspace(0.1, 10, 100)
+sigma_0 = 200  # km/s
+r_e = 2  # Effective radius
+sigma = sigma_0 * (1 + r_sigma / r_e)**(-0.5)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(r_sigma, sigma, 'b-', linewidth=2)
+ax.set_xlabel('Radius (kpc)')
+ax.set_ylabel('Velocity Dispersion (km/s)')
+ax.set_title('Stellar Velocity Dispersion Profile')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('velocity_dispersion.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{velocity_dispersion.pdf}
+\caption{Velocity dispersion profile.}
+\end{figure}
+
+\section{Mass Modeling}
+
+\begin{pycode}
+# Enclosed mass
+M_enc = (v_total * r)**2 / (G * r) * r
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.semilogy(r, M_enc, 'b-', linewidth=2)
+ax.set_xlabel('Radius (kpc)')
+ax.set_ylabel('Enclosed Mass ($M_\\odot$)')
+ax.set_title('Enclosed Mass Profile')
+ax.grid(True, alpha=0.3, which='both')
+plt.tight_layout()
+plt.savefig('enclosed_mass.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{enclosed_mass.pdf}
+\caption{Enclosed mass profile.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+v_max = np.max(v_total)
+r_max = r[np.argmax(v_total)]
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Galaxy Model Parameters}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Property & Value \\')
+print(r'\midrule')
+print(f'Maximum velocity & {v_max:.0f} km/s \\\\')
+print(f'Radius at $V_{{max}}$ & {r_max:.1f} kpc \\\\')
+print(f'Bulge mass & {M_b:.1e} $M_\\odot$ \\\\')
+print(f'Disk mass & {M_d:.1e} $M_\\odot$ \\\\')
+print(f'Halo mass & {M_h:.1e} $M_\\odot$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+Galaxy rotation curves require dark matter halos to explain observations.
+
+\end{document}

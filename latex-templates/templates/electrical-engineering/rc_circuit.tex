@@ -1,0 +1,824 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\title{RC Circuit Analysis: Transient Response, Frequency Domain,\\and Filter Design Laboratory Report}
+\author{Electrical Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This laboratory report presents a comprehensive analysis of RC circuits, covering transient response characteristics, Laplace transform methods, frequency domain analysis, and filter design applications. Through computational analysis with Python, we demonstrate charging and discharging dynamics, time constant determination, Bode plot interpretation, and the design of low-pass, high-pass, and band-pass filter configurations. All numerical results are dynamically computed, ensuring reproducibility.
+\end{abstract}
+
+\section{Introduction}
+
+RC circuits form the foundation of analog signal processing and filtering. The combination of resistance (R) and capacitance (C) creates a frequency-dependent impedance that enables selective signal attenuation and phase shifting.
+
+\begin{definition}[Time Constant]
+The time constant $\tau$ of an RC circuit is the time required for the voltage to reach approximately 63.2\% of its final value during charging or decay to 36.8\% during discharging:
+\begin{equation}
+\tau = RC
+\end{equation}
+\end{definition}
+
+\section{Laplace Domain Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.integrate import odeint
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=9)
+np.random.seed(42)
+
+# Circuit parameters
+R = 1000  # Resistance (Ohm)
+C = 1e-6  # Capacitance (F)
+tau = R * C  # Time constant (s)
+V0 = 5.0  # Source voltage (V)
+
+# Derived parameters
+f_cutoff = 1 / (2 * np.pi * R * C)  # Cutoff frequency (Hz)
+omega_cutoff = 2 * np.pi * f_cutoff  # Angular cutoff frequency (rad/s)
+
+# Time vector for transient analysis
+t = np.linspace(0, 5*tau, 1000)
+\end{pycode}
+
+The transfer function of an RC low-pass filter in the Laplace domain is:
+\begin{equation}
+H(s) = \frac{V_{out}(s)}{V_{in}(s)} = \frac{1}{1 + sRC} = \frac{1}{1 + s\tau}
+\end{equation}
+
+\begin{theorem}[Voltage Equations via Laplace Transform]
+For a step input of magnitude $V_0$, the capacitor voltage during charging is:
+\begin{equation}
+v_C(t) = V_0\left(1 - e^{-t/\tau}\right)u(t)
+\end{equation}
+where $u(t)$ is the unit step function.
+\end{theorem}
+
+\noindent\textbf{Circuit Parameters:}
+\begin{itemize}
+    \item Resistance: $R = \py{R}$ $\Omega$
+    \item Capacitance: $C = \py{C*1e6:.1f}$ $\mu$F
+    \item Time Constant: $\tau = \py{f"{tau*1000:.3f}"}$ ms
+    \item Cutoff Frequency: $f_c = \py{f"{f_cutoff:.1f}"}$ Hz
+\end{itemize}
+
+\section{Transient Response Analysis}
+
+\subsection{Charging and Discharging Dynamics}
+
+\begin{pycode}
+# Transient responses
+v_charge = V0 * (1 - np.exp(-t/tau))
+v_discharge = V0 * np.exp(-t/tau)
+
+# Current during charging
+i_charge = (V0/R) * np.exp(-t/tau)
+i_discharge = -(V0/R) * np.exp(-t/tau)
+
+# Power calculations
+p_charge = v_charge * i_charge
+p_resistor = i_charge**2 * R
+
+# Energy stored in capacitor
+energy_cap = 0.5 * C * v_charge**2
+energy_max = 0.5 * C * V0**2
+
+# Key time points
+t_1tau = tau
+t_3tau = 3 * tau
+t_5tau = 5 * tau
+
+v_at_1tau = V0 * (1 - np.exp(-1))  # ~63.2%
+v_at_3tau = V0 * (1 - np.exp(-3))  # ~95.0%
+v_at_5tau = V0 * (1 - np.exp(-5))  # ~99.3%
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Voltage responses
+axes[0, 0].plot(t*1000, v_charge, 'b-', linewidth=1.5, label='Charging')
+axes[0, 0].plot(t*1000, v_discharge, 'r--', linewidth=1.5, label='Discharging')
+axes[0, 0].axhline(y=V0*0.632, color='gray', linestyle=':', alpha=0.7)
+axes[0, 0].axvline(x=tau*1000, color='g', linestyle=':', alpha=0.7, label=r'$\tau$')
+axes[0, 0].axvline(x=3*tau*1000, color='orange', linestyle=':', alpha=0.5, label=r'$3\tau$')
+axes[0, 0].axvline(x=5*tau*1000, color='purple', linestyle=':', alpha=0.5, label=r'$5\tau$')
+axes[0, 0].plot([tau*1000], [v_at_1tau], 'go', markersize=6)
+axes[0, 0].set_xlabel('Time (ms)')
+axes[0, 0].set_ylabel('Voltage (V)')
+axes[0, 0].set_title('Capacitor Voltage')
+axes[0, 0].legend(loc='center right', fontsize=7)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Current responses
+axes[0, 1].plot(t*1000, i_charge*1000, 'b-', linewidth=1.5, label='Charging')
+axes[0, 1].plot(t*1000, i_discharge*1000, 'r--', linewidth=1.5, label='Discharging')
+axes[0, 1].axhline(y=0, color='gray', linestyle='-', alpha=0.3)
+axes[0, 1].axvline(x=tau*1000, color='g', linestyle=':', alpha=0.7)
+axes[0, 1].set_xlabel('Time (ms)')
+axes[0, 1].set_ylabel('Current (mA)')
+axes[0, 1].set_title('Circuit Current')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Power dissipation
+axes[1, 0].plot(t*1000, p_resistor*1000, 'r-', linewidth=1.5, label='Resistor')
+axes[1, 0].plot(t*1000, p_charge*1000, 'b--', linewidth=1.5, label='Capacitor Input')
+axes[1, 0].axvline(x=tau*1000, color='g', linestyle=':', alpha=0.7)
+axes[1, 0].set_xlabel('Time (ms)')
+axes[1, 0].set_ylabel('Power (mW)')
+axes[1, 0].set_title('Power Distribution')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Energy storage
+axes[1, 1].plot(t*1000, energy_cap*1e6, 'b-', linewidth=1.5)
+axes[1, 1].axhline(y=energy_max*1e6, color='r', linestyle='--', alpha=0.7, label='Max Energy')
+axes[1, 1].axvline(x=tau*1000, color='g', linestyle=':', alpha=0.7)
+axes[1, 1].set_xlabel('Time (ms)')
+axes[1, 1].set_ylabel(r'Energy ($\mu$J)')
+axes[1, 1].set_title('Capacitor Energy Storage')
+axes[1, 1].legend(loc='lower right', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot1.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot1.pdf}
+\caption{Transient response characteristics: voltage, current, power, and energy.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Charging Voltage at Key Time Constants}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Time} & \textbf{Voltage (V)} & \textbf{Percentage of $V_0$} \\
+\midrule
+$\tau$ & \py{f"{v_at_1tau:.3f}"} & 63.2\% \\
+$3\tau$ & \py{f"{v_at_3tau:.3f}"} & 95.0\% \\
+$5\tau$ & \py{f"{v_at_5tau:.3f}"} & 99.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pulse Response and Duty Cycle Effects}
+
+\begin{pycode}
+# Pulse response with different duty cycles
+t_pulse = np.linspace(0, 10*tau, 2000)
+dt = t_pulse[1] - t_pulse[0]
+
+# Generate pulse trains
+def generate_pulse_response(t, tau, period_factor, duty_cycle):
+    period = period_factor * tau
+    v_out = np.zeros_like(t)
+    v_cap = 0  # Initial capacitor voltage
+
+    for i in range(len(t)):
+        t_in_cycle = t[i] % period
+        if t_in_cycle < period * duty_cycle:
+            v_in = V0
+        else:
+            v_in = 0
+
+        # RC circuit differential equation
+        dv = (v_in - v_cap) / tau
+        v_cap = v_cap + dv * dt
+        v_out[i] = v_cap
+
+    return v_out
+
+# Different cases
+v_slow_50 = generate_pulse_response(t_pulse, tau, 10, 0.5)  # Period = 10*tau
+v_fast_50 = generate_pulse_response(t_pulse, tau, 2, 0.5)   # Period = 2*tau
+v_fast_20 = generate_pulse_response(t_pulse, tau, 2, 0.2)   # 20% duty cycle
+
+# Square wave input for comparison
+def square_wave(t, period, duty):
+    return V0 * ((t % period) < (period * duty)).astype(float)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Slow pulse (period = 10*tau)
+period_slow = 10 * tau
+axes[0, 0].plot(t_pulse*1000, square_wave(t_pulse, period_slow, 0.5), 'gray', alpha=0.5, label='Input')
+axes[0, 0].plot(t_pulse*1000, v_slow_50, 'b-', linewidth=1.5, label='Output')
+axes[0, 0].set_xlabel('Time (ms)')
+axes[0, 0].set_ylabel('Voltage (V)')
+axes[0, 0].set_title(f'Slow Pulse: Period = 10$\\tau$, 50\\% Duty')
+axes[0, 0].legend(loc='upper right', fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Fast pulse (period = 2*tau)
+period_fast = 2 * tau
+axes[0, 1].plot(t_pulse*1000, square_wave(t_pulse, period_fast, 0.5), 'gray', alpha=0.5, label='Input')
+axes[0, 1].plot(t_pulse*1000, v_fast_50, 'r-', linewidth=1.5, label='Output')
+axes[0, 1].set_xlabel('Time (ms)')
+axes[0, 1].set_ylabel('Voltage (V)')
+axes[0, 1].set_title(f'Fast Pulse: Period = 2$\\tau$, 50\\% Duty')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Low duty cycle
+axes[1, 0].plot(t_pulse*1000, square_wave(t_pulse, period_fast, 0.2), 'gray', alpha=0.5, label='Input')
+axes[1, 0].plot(t_pulse*1000, v_fast_20, 'g-', linewidth=1.5, label='Output')
+axes[1, 0].set_xlabel('Time (ms)')
+axes[1, 0].set_ylabel('Voltage (V)')
+axes[1, 0].set_title(f'Low Duty Cycle: 20\\%')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# DC component extraction (averaging)
+dc_values = []
+duty_cycles = np.linspace(0.1, 0.9, 9)
+for dc in duty_cycles:
+    v_resp = generate_pulse_response(t_pulse, tau, 2, dc)
+    dc_values.append(np.mean(v_resp[-500:]))  # Steady-state average
+
+axes[1, 1].plot(duty_cycles*100, dc_values, 'bo-', linewidth=1.5, markersize=6)
+axes[1, 1].plot(duty_cycles*100, duty_cycles*V0, 'r--', alpha=0.7, label='Ideal: $D \\cdot V_0$')
+axes[1, 1].set_xlabel('Duty Cycle (\\%)')
+axes[1, 1].set_ylabel('DC Output (V)')
+axes[1, 1].set_title('DC Component vs Duty Cycle')
+axes[1, 1].legend(loc='upper left', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot2.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot2.pdf}
+\caption{Pulse response showing the effect of pulse period and duty cycle on output waveform.}
+\end{figure}
+
+\section{Frequency Response Analysis}
+
+\subsection{Bode Plot Characterization}
+
+\begin{pycode}
+# Frequency response analysis
+f = np.logspace(1, 7, 1000)  # 10 Hz to 10 MHz
+omega = 2 * np.pi * f
+
+# Transfer function magnitude and phase
+H = 1 / (1 + 1j * omega * R * C)
+H_mag = np.abs(H)
+H_phase = np.angle(H, deg=True)
+H_mag_dB = 20 * np.log10(H_mag)
+
+# Key points
+idx_fc = np.argmin(np.abs(f - f_cutoff))
+mag_at_fc = H_mag_dB[idx_fc]
+phase_at_fc = H_phase[idx_fc]
+
+# Roll-off calculation
+f_decade_above = 10 * f_cutoff
+idx_decade = np.argmin(np.abs(f - f_decade_above))
+rolloff = H_mag_dB[idx_fc] - H_mag_dB[idx_decade]
+
+# Phase delay
+phase_delay = -H_phase / (360 * f)  # in seconds
+group_delay = -np.gradient(np.unwrap(np.angle(H))) / np.gradient(omega)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Magnitude response
+axes[0, 0].semilogx(f, H_mag_dB, 'b-', linewidth=1.5)
+axes[0, 0].axhline(y=-3, color='r', linestyle='--', alpha=0.7, label='-3 dB')
+axes[0, 0].axhline(y=-20, color='gray', linestyle=':', alpha=0.5)
+axes[0, 0].axvline(x=f_cutoff, color='g', linestyle='--', alpha=0.7, label='$f_c$')
+axes[0, 0].plot(f_cutoff, mag_at_fc, 'go', markersize=6)
+axes[0, 0].set_xlabel('Frequency (Hz)')
+axes[0, 0].set_ylabel('Magnitude (dB)')
+axes[0, 0].set_title('Bode Plot - Magnitude')
+axes[0, 0].legend(loc='lower left', fontsize=8)
+axes[0, 0].grid(True, which='both', alpha=0.3)
+axes[0, 0].set_ylim([-60, 5])
+
+# Phase response
+axes[0, 1].semilogx(f, H_phase, 'b-', linewidth=1.5)
+axes[0, 1].axhline(y=-45, color='r', linestyle='--', alpha=0.7, label='-45°')
+axes[0, 1].axhline(y=-90, color='gray', linestyle=':', alpha=0.5)
+axes[0, 1].axvline(x=f_cutoff, color='g', linestyle='--', alpha=0.7)
+axes[0, 1].plot(f_cutoff, phase_at_fc, 'go', markersize=6)
+axes[0, 1].set_xlabel('Frequency (Hz)')
+axes[0, 1].set_ylabel('Phase (degrees)')
+axes[0, 1].set_title('Bode Plot - Phase')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+axes[0, 1].grid(True, which='both', alpha=0.3)
+
+# Nyquist plot
+axes[1, 0].plot(np.real(H), np.imag(H), 'b-', linewidth=1.5)
+axes[1, 0].plot(1, 0, 'go', markersize=8, label='DC (0 Hz)')
+axes[1, 0].plot(0.5, -0.5, 'ro', markersize=8, label='$f_c$')
+axes[1, 0].plot(0, 0, 'ko', markersize=8, label=r'$\infty$')
+axes[1, 0].set_xlabel('Real')
+axes[1, 0].set_ylabel('Imaginary')
+axes[1, 0].set_title('Nyquist Plot')
+axes[1, 0].legend(loc='lower left', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].axis('equal')
+axes[1, 0].set_xlim([-0.1, 1.1])
+
+# Group delay
+axes[1, 1].semilogx(f, group_delay*1e6, 'b-', linewidth=1.5)
+axes[1, 1].axhline(y=tau*1e6, color='r', linestyle='--', alpha=0.7, label=r'$\tau$')
+axes[1, 1].axvline(x=f_cutoff, color='g', linestyle='--', alpha=0.7)
+axes[1, 1].set_xlabel('Frequency (Hz)')
+axes[1, 1].set_ylabel(r'Group Delay ($\mu$s)')
+axes[1, 1].set_title('Group Delay')
+axes[1, 1].legend(loc='upper right', fontsize=8)
+axes[1, 1].grid(True, which='both', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot3.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot3.pdf}
+\caption{Frequency response characteristics: Bode plots, Nyquist diagram, and group delay.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Frequency Response Characteristics}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Cutoff Frequency & \py{f"{f_cutoff:.1f}"} & Hz \\
+Magnitude at $f_c$ & \py{f"{mag_at_fc:.1f}"} & dB \\
+Phase at $f_c$ & \py{f"{phase_at_fc:.1f}"} & degrees \\
+Roll-off per Decade & \py{f"{rolloff:.1f}"} & dB \\
+DC Group Delay & \py{f"{tau*1e6:.1f}"} & $\mu$s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Filter Design Applications}
+
+\subsection{Low-Pass and High-Pass Configurations}
+
+\begin{pycode}
+# Compare low-pass and high-pass configurations
+# Low-pass: H_LP = 1/(1 + jwRC)
+# High-pass: H_HP = jwRC/(1 + jwRC)
+
+H_lp = 1 / (1 + 1j * omega * R * C)
+H_hp = (1j * omega * R * C) / (1 + 1j * omega * R * C)
+
+H_lp_dB = 20 * np.log10(np.abs(H_lp))
+H_hp_dB = 20 * np.log10(np.abs(H_hp))
+
+phase_lp = np.angle(H_lp, deg=True)
+phase_hp = np.angle(H_hp, deg=True)
+
+# Second-order filters (two RC stages cascaded)
+H_lp2 = H_lp**2
+H_hp2 = H_hp**2
+
+H_lp2_dB = 20 * np.log10(np.abs(H_lp2))
+H_hp2_dB = 20 * np.log10(np.abs(H_hp2))
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# First-order magnitude comparison
+axes[0, 0].semilogx(f, H_lp_dB, 'b-', linewidth=1.5, label='Low-Pass')
+axes[0, 0].semilogx(f, H_hp_dB, 'r-', linewidth=1.5, label='High-Pass')
+axes[0, 0].axhline(y=-3, color='gray', linestyle='--', alpha=0.7)
+axes[0, 0].axvline(x=f_cutoff, color='g', linestyle=':', alpha=0.7)
+axes[0, 0].set_xlabel('Frequency (Hz)')
+axes[0, 0].set_ylabel('Magnitude (dB)')
+axes[0, 0].set_title('First-Order Filter Comparison')
+axes[0, 0].legend(loc='center left', fontsize=8)
+axes[0, 0].grid(True, which='both', alpha=0.3)
+axes[0, 0].set_ylim([-40, 5])
+
+# Phase comparison
+axes[0, 1].semilogx(f, phase_lp, 'b-', linewidth=1.5, label='Low-Pass')
+axes[0, 1].semilogx(f, phase_hp, 'r-', linewidth=1.5, label='High-Pass')
+axes[0, 1].axhline(y=-45, color='gray', linestyle='--', alpha=0.7)
+axes[0, 1].axhline(y=45, color='gray', linestyle='--', alpha=0.7)
+axes[0, 1].axvline(x=f_cutoff, color='g', linestyle=':', alpha=0.7)
+axes[0, 1].set_xlabel('Frequency (Hz)')
+axes[0, 1].set_ylabel('Phase (degrees)')
+axes[0, 1].set_title('Phase Response Comparison')
+axes[0, 1].legend(loc='center right', fontsize=8)
+axes[0, 1].grid(True, which='both', alpha=0.3)
+
+# Second-order comparison
+axes[1, 0].semilogx(f, H_lp_dB, 'b--', linewidth=1, alpha=0.7, label='1st Order LP')
+axes[1, 0].semilogx(f, H_lp2_dB, 'b-', linewidth=1.5, label='2nd Order LP')
+axes[1, 0].semilogx(f, H_hp_dB, 'r--', linewidth=1, alpha=0.7, label='1st Order HP')
+axes[1, 0].semilogx(f, H_hp2_dB, 'r-', linewidth=1.5, label='2nd Order HP')
+axes[1, 0].axhline(y=-3, color='gray', linestyle='--', alpha=0.5)
+axes[1, 0].axvline(x=f_cutoff, color='g', linestyle=':', alpha=0.7)
+axes[1, 0].set_xlabel('Frequency (Hz)')
+axes[1, 0].set_ylabel('Magnitude (dB)')
+axes[1, 0].set_title('Order Comparison')
+axes[1, 0].legend(loc='lower left', fontsize=7)
+axes[1, 0].grid(True, which='both', alpha=0.3)
+axes[1, 0].set_ylim([-60, 5])
+
+# Selectivity (Q-factor) for different filter orders
+orders = [1, 2, 3, 4]
+colors = ['b', 'r', 'g', 'orange']
+for n, color in zip(orders, colors):
+    H_n = H_lp**n
+    axes[1, 1].semilogx(f, 20*np.log10(np.abs(H_n)), color=color,
+                         linewidth=1.5, label=f'n={n}')
+
+axes[1, 1].axhline(y=-3, color='gray', linestyle='--', alpha=0.5)
+axes[1, 1].axvline(x=f_cutoff, color='k', linestyle=':', alpha=0.7)
+axes[1, 1].set_xlabel('Frequency (Hz)')
+axes[1, 1].set_ylabel('Magnitude (dB)')
+axes[1, 1].set_title('Low-Pass Filter Order Effects')
+axes[1, 1].legend(loc='lower left', fontsize=8)
+axes[1, 1].grid(True, which='both', alpha=0.3)
+axes[1, 1].set_ylim([-80, 5])
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot4.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot4.pdf}
+\caption{Filter configurations: low-pass and high-pass comparison with order effects.}
+\end{figure}
+
+\subsection{Band-Pass Filter Design}
+
+\begin{pycode}
+# Band-pass filter: cascaded HP and LP
+# Different cutoff frequencies for HP and LP
+R_hp = 10000  # Higher R for lower cutoff
+R_lp = 1000   # Lower R for higher cutoff
+C_common = 100e-9  # 100 nF
+
+f_low = 1 / (2 * np.pi * R_hp * C_common)   # Lower cutoff
+f_high = 1 / (2 * np.pi * R_lp * C_common)  # Upper cutoff
+f_center = np.sqrt(f_low * f_high)
+bandwidth = f_high - f_low
+Q_factor = f_center / bandwidth
+
+# Transfer functions
+H_hp_bp = (1j * omega * R_hp * C_common) / (1 + 1j * omega * R_hp * C_common)
+H_lp_bp = 1 / (1 + 1j * omega * R_lp * C_common)
+H_bp = H_hp_bp * H_lp_bp
+
+H_bp_dB = 20 * np.log10(np.abs(H_bp))
+phase_bp = np.angle(H_bp, deg=True)
+
+# Find -3dB bandwidth
+max_gain = np.max(H_bp_dB)
+idx_3db_low = np.where(H_bp_dB[:np.argmax(H_bp_dB)] < max_gain - 3)[0][-1]
+idx_3db_high = np.argmax(H_bp_dB) + np.where(H_bp_dB[np.argmax(H_bp_dB):] < max_gain - 3)[0][0]
+f_3db_low = f[idx_3db_low]
+f_3db_high = f[idx_3db_high]
+measured_bw = f_3db_high - f_3db_low
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Band-pass magnitude
+axes[0, 0].semilogx(f, H_bp_dB, 'b-', linewidth=1.5)
+axes[0, 0].axhline(y=max_gain-3, color='r', linestyle='--', alpha=0.7, label='-3 dB')
+axes[0, 0].axvline(x=f_low, color='g', linestyle=':', alpha=0.7, label='$f_L$')
+axes[0, 0].axvline(x=f_high, color='orange', linestyle=':', alpha=0.7, label='$f_H$')
+axes[0, 0].axvline(x=f_center, color='purple', linestyle='--', alpha=0.7, label='$f_0$')
+axes[0, 0].set_xlabel('Frequency (Hz)')
+axes[0, 0].set_ylabel('Magnitude (dB)')
+axes[0, 0].set_title('Band-Pass Filter Response')
+axes[0, 0].legend(loc='lower right', fontsize=7)
+axes[0, 0].grid(True, which='both', alpha=0.3)
+axes[0, 0].set_ylim([-40, 5])
+
+# Band-pass phase
+axes[0, 1].semilogx(f, phase_bp, 'b-', linewidth=1.5)
+axes[0, 1].axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+axes[0, 1].axvline(x=f_center, color='purple', linestyle='--', alpha=0.7)
+axes[0, 1].set_xlabel('Frequency (Hz)')
+axes[0, 1].set_ylabel('Phase (degrees)')
+axes[0, 1].set_title('Band-Pass Phase Response')
+axes[0, 1].grid(True, which='both', alpha=0.3)
+
+# Component contributions
+axes[1, 0].semilogx(f, 20*np.log10(np.abs(H_hp_bp)), 'r--', linewidth=1, label='HP Section')
+axes[1, 0].semilogx(f, 20*np.log10(np.abs(H_lp_bp)), 'b--', linewidth=1, label='LP Section')
+axes[1, 0].semilogx(f, H_bp_dB, 'g-', linewidth=1.5, label='Combined')
+axes[1, 0].axvline(x=f_low, color='r', linestyle=':', alpha=0.5)
+axes[1, 0].axvline(x=f_high, color='b', linestyle=':', alpha=0.5)
+axes[1, 0].set_xlabel('Frequency (Hz)')
+axes[1, 0].set_ylabel('Magnitude (dB)')
+axes[1, 0].set_title('Filter Section Contributions')
+axes[1, 0].legend(loc='lower left', fontsize=8)
+axes[1, 0].grid(True, which='both', alpha=0.3)
+axes[1, 0].set_ylim([-40, 5])
+
+# Impulse response of band-pass
+num_bp = [R_hp * C_common, 0]
+den_bp = np.convolve([R_hp * C_common, 1], [R_lp * C_common, 1])
+bp_sys = signal.TransferFunction(num_bp, den_bp)
+t_imp = np.linspace(0, 0.01, 1000)
+t_i, y_imp = signal.impulse(bp_sys, T=t_imp)
+
+axes[1, 1].plot(t_i*1000, y_imp, 'b-', linewidth=1.5)
+axes[1, 1].set_xlabel('Time (ms)')
+axes[1, 1].set_ylabel('Amplitude')
+axes[1, 1].set_title('Band-Pass Impulse Response')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot5.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot5.pdf}
+\caption{Band-pass filter design and frequency response analysis.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Band-Pass Filter Parameters}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Lower Cutoff $f_L$ & \py{f"{f_low:.1f}"} & Hz \\
+Upper Cutoff $f_H$ & \py{f"{f_high:.1f}"} & Hz \\
+Center Frequency $f_0$ & \py{f"{f_center:.1f}"} & Hz \\
+Bandwidth & \py{f"{bandwidth:.1f}"} & Hz \\
+Quality Factor Q & \py{f"{Q_factor:.2f}"} & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Signal Processing Applications}
+
+\subsection{Noise Filtering and Signal Conditioning}
+
+\begin{pycode}
+# Signal processing demonstration
+np.random.seed(42)
+t_sig = np.linspace(0, 0.01, 2000)
+dt_sig = t_sig[1] - t_sig[0]
+fs = 1 / dt_sig
+
+# Create signal with noise
+f_signal = 100  # 100 Hz signal
+signal_clean = np.sin(2 * np.pi * f_signal * t_sig)
+noise = 0.5 * np.random.randn(len(t_sig))
+noise += 0.3 * np.sin(2 * np.pi * 5000 * t_sig)  # High-frequency interference
+signal_noisy = signal_clean + noise
+
+# Apply RC low-pass filter using convolution
+# Impulse response of RC filter: h(t) = (1/tau) * exp(-t/tau)
+tau_filter = 1 / (2 * np.pi * 500)  # fc = 500 Hz
+t_ir = np.arange(0, 5*tau_filter, dt_sig)
+h_ir = (1/tau_filter) * np.exp(-t_ir/tau_filter) * dt_sig
+
+signal_filtered = np.convolve(signal_noisy, h_ir, mode='same')
+
+# FFT analysis
+n_fft = len(t_sig)
+freqs_fft = np.fft.fftfreq(n_fft, dt_sig)[:n_fft//2]
+fft_noisy = np.abs(np.fft.fft(signal_noisy))[:n_fft//2] * 2/n_fft
+fft_filtered = np.abs(np.fft.fft(signal_filtered))[:n_fft//2] * 2/n_fft
+fft_clean = np.abs(np.fft.fft(signal_clean))[:n_fft//2] * 2/n_fft
+
+# SNR calculation
+noise_power_before = np.var(signal_noisy - signal_clean)
+noise_power_after = np.var(signal_filtered - signal_clean)
+snr_before = 10 * np.log10(np.var(signal_clean) / noise_power_before)
+snr_after = 10 * np.log10(np.var(signal_clean) / noise_power_after)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Time domain signals
+axes[0, 0].plot(t_sig*1000, signal_noisy, 'gray', alpha=0.5, linewidth=0.5, label='Noisy')
+axes[0, 0].plot(t_sig*1000, signal_filtered, 'b-', linewidth=1.5, label='Filtered')
+axes[0, 0].plot(t_sig*1000, signal_clean, 'r--', linewidth=1, label='Original')
+axes[0, 0].set_xlabel('Time (ms)')
+axes[0, 0].set_ylabel('Amplitude')
+axes[0, 0].set_title('Time Domain Filtering')
+axes[0, 0].legend(loc='upper right', fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].set_xlim([0, 5])
+
+# Frequency spectrum
+axes[0, 1].semilogy(freqs_fft, fft_noisy, 'gray', alpha=0.5, linewidth=0.5, label='Noisy')
+axes[0, 1].semilogy(freqs_fft, fft_filtered, 'b-', linewidth=1.5, label='Filtered')
+axes[0, 1].axvline(x=500, color='r', linestyle='--', alpha=0.7, label='$f_c$')
+axes[0, 1].set_xlabel('Frequency (Hz)')
+axes[0, 1].set_ylabel('Magnitude')
+axes[0, 1].set_title('Frequency Spectrum')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+axes[0, 1].grid(True, which='both', alpha=0.3)
+axes[0, 1].set_xlim([0, 10000])
+
+# Filter impulse response
+axes[1, 0].plot(t_ir*1000, h_ir/dt_sig, 'b-', linewidth=1.5)
+axes[1, 0].axvline(x=tau_filter*1000, color='r', linestyle='--', alpha=0.7, label=r'$\tau$')
+axes[1, 0].set_xlabel('Time (ms)')
+axes[1, 0].set_ylabel('Amplitude')
+axes[1, 0].set_title('Filter Impulse Response')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# SNR comparison
+bars = axes[1, 1].bar(['Before', 'After'], [snr_before, snr_after],
+                       color=['gray', 'blue'], alpha=0.7)
+axes[1, 1].set_ylabel('SNR (dB)')
+axes[1, 1].set_title('Signal-to-Noise Ratio Improvement')
+axes[1, 1].grid(True, alpha=0.3, axis='y')
+
+# Add value labels on bars
+for bar, val in zip(bars, [snr_before, snr_after]):
+    axes[1, 1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
+                    f'{val:.1f} dB', ha='center', fontsize=9)
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot6.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+
+snr_improvement = snr_after - snr_before
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot6.pdf}
+\caption{Signal processing application: noise filtering with RC low-pass filter.}
+\end{figure}
+
+\noindent\textbf{Signal Processing Results:}
+\begin{itemize}
+    \item SNR Before Filtering: \py{f"{snr_before:.1f}"} dB
+    \item SNR After Filtering: \py{f"{snr_after:.1f}"} dB
+    \item SNR Improvement: \py{f"{snr_improvement:.1f}"} dB
+\end{itemize}
+
+\section{Component Sensitivity Analysis}
+
+\begin{pycode}
+# Sensitivity analysis: effect of component variations
+R_nom = 1000
+C_nom = 1e-6
+
+# Tolerance ranges
+tolerances = [1, 5, 10, 20]  # percent
+
+# Monte Carlo simulation for cutoff frequency variation
+n_samples = 1000
+f_c_samples = []
+tolerance_labels = []
+
+for tol in tolerances:
+    R_samples = R_nom * (1 + (np.random.rand(n_samples) - 0.5) * 2 * tol/100)
+    C_samples = C_nom * (1 + (np.random.rand(n_samples) - 0.5) * 2 * tol/100)
+    f_c_samples.append(1 / (2 * np.pi * R_samples * C_samples))
+    tolerance_labels.append(f'{tol}%')
+
+# Nominal cutoff
+f_c_nom = 1 / (2 * np.pi * R_nom * C_nom)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Histogram of cutoff frequencies
+for i, (fc, label) in enumerate(zip(f_c_samples, tolerance_labels)):
+    axes[0, 0].hist(fc, bins=30, alpha=0.5, label=label)
+
+axes[0, 0].axvline(x=f_c_nom, color='r', linestyle='--', linewidth=2, label='Nominal')
+axes[0, 0].set_xlabel('Cutoff Frequency (Hz)')
+axes[0, 0].set_ylabel('Count')
+axes[0, 0].set_title('Cutoff Frequency Distribution')
+axes[0, 0].legend(loc='upper right', fontsize=8)
+
+# Standard deviation vs tolerance
+stds = [np.std(fc) for fc in f_c_samples]
+axes[0, 1].plot(tolerances, stds, 'bo-', linewidth=1.5, markersize=8)
+axes[0, 1].set_xlabel('Component Tolerance (%)')
+axes[0, 1].set_ylabel('Std Dev of $f_c$ (Hz)')
+axes[0, 1].set_title('Cutoff Frequency Variability')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Frequency response with tolerance bands (5%)
+R_min, R_max = R_nom * 0.95, R_nom * 1.05
+C_min, C_max = C_nom * 0.95, C_nom * 1.05
+
+# Worst cases
+H_nom = 1 / (1 + 1j * omega * R_nom * C_nom)
+H_low_fc = 1 / (1 + 1j * omega * R_max * C_max)  # Lowest cutoff
+H_high_fc = 1 / (1 + 1j * omega * R_min * C_min)  # Highest cutoff
+
+axes[1, 0].semilogx(f, 20*np.log10(np.abs(H_nom)), 'b-', linewidth=1.5, label='Nominal')
+axes[1, 0].fill_between(f, 20*np.log10(np.abs(H_low_fc)),
+                         20*np.log10(np.abs(H_high_fc)),
+                         alpha=0.3, color='blue', label='5% Tolerance')
+axes[1, 0].axhline(y=-3, color='r', linestyle='--', alpha=0.7)
+axes[1, 0].set_xlabel('Frequency (Hz)')
+axes[1, 0].set_ylabel('Magnitude (dB)')
+axes[1, 0].set_title('Frequency Response with Tolerance')
+axes[1, 0].legend(loc='lower left', fontsize=8)
+axes[1, 0].grid(True, which='both', alpha=0.3)
+axes[1, 0].set_ylim([-40, 5])
+
+# Temperature coefficient effects
+temps = np.linspace(-40, 85, 100)  # Temperature range (C)
+# Typical temperature coefficients
+tc_r = 100e-6  # 100 ppm/C for metal film
+tc_c = -750e-6  # -750 ppm/C for ceramic capacitor (X7R)
+
+R_temp = R_nom * (1 + tc_r * (temps - 25))
+C_temp = C_nom * (1 + tc_c * (temps - 25))
+f_c_temp = 1 / (2 * np.pi * R_temp * C_temp)
+
+axes[1, 1].plot(temps, f_c_temp, 'b-', linewidth=1.5)
+axes[1, 1].axhline(y=f_c_nom, color='r', linestyle='--', alpha=0.7, label='Nominal')
+axes[1, 1].axvline(x=25, color='g', linestyle=':', alpha=0.7, label='25°C')
+axes[1, 1].set_xlabel('Temperature (°C)')
+axes[1, 1].set_ylabel('Cutoff Frequency (Hz)')
+axes[1, 1].set_title('Temperature Dependence')
+axes[1, 1].legend(loc='upper right', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('rc_circuit_plot7.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+
+# Calculate statistics
+fc_5pct_std = stds[1]  # 5% tolerance
+fc_temp_range = np.max(f_c_temp) - np.min(f_c_temp)
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{rc_circuit_plot7.pdf}
+\caption{Component sensitivity analysis: tolerance and temperature effects.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Sensitivity Analysis Summary}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Nominal $f_c$ & \py{f"{f_c_nom:.1f}"} & Hz \\
+Std Dev (5\% tolerance) & \py{f"{fc_5pct_std:.1f}"} & Hz \\
+$f_c$ Range (-40 to 85°C) & \py{f"{fc_temp_range:.1f}"} & Hz \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusions}
+
+This laboratory analysis of RC circuits demonstrated:
+
+\begin{enumerate}
+    \item \textbf{Transient Response}: The time constant $\tau = \py{f"{tau*1000:.3f}"}$ ms governs charging/discharging dynamics, with the circuit reaching 99.3\% of final value in $5\tau$.
+
+    \item \textbf{Frequency Response}: The first-order RC filter exhibits a cutoff frequency of $f_c = \py{f"{f_cutoff:.1f}"}$ Hz with -20 dB/decade roll-off and -45° phase shift at cutoff.
+
+    \item \textbf{Filter Design}: Low-pass, high-pass, and band-pass configurations were analyzed, showing how cascaded stages increase selectivity with -20n dB/decade roll-off for n stages.
+
+    \item \textbf{Signal Processing}: RC filtering improved SNR by \py{f"{snr_improvement:.1f}"} dB for the test signal with high-frequency noise.
+
+    \item \textbf{Sensitivity}: Component tolerances of 5\% result in cutoff frequency standard deviation of \py{f"{fc_5pct_std:.1f}"} Hz, requiring careful component selection for precision applications.
+\end{enumerate}
+
+The computational analysis ensures all results are reproducible and can be easily modified for different circuit parameters.
+
+\end{document}

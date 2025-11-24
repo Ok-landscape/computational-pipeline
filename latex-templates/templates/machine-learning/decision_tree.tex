@@ -1,0 +1,475 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+\title{Decision Trees: Theory and Implementation}
+\author{Machine Learning Foundations}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive analysis of decision tree algorithms for classification and regression. We explore information gain, Gini impurity, and variance reduction as splitting criteria, implement tree construction from scratch, examine pruning techniques, and analyze feature importance measures.
+\end{abstract}
+
+\section{Introduction}
+Decision trees partition the feature space recursively using axis-aligned splits. For classification, a node's impurity can be measured using:
+
+\textbf{Entropy:}
+\begin{equation}
+H(S) = -\sum_{c=1}^{C} p_c \log_2 p_c
+\end{equation}
+
+\textbf{Gini Impurity:}
+\begin{equation}
+G(S) = 1 - \sum_{c=1}^{C} p_c^2
+\end{equation}
+
+where $p_c$ is the proportion of class $c$ in set $S$.
+
+\textbf{Information Gain:}
+\begin{equation}
+IG(S, A) = H(S) - \sum_{v \in \text{values}(A)} \frac{|S_v|}{|S|} H(S_v)
+\end{equation}
+
+\section{Computational Environment}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[H]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.85\textwidth]{' + filename + '}')
+    print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Data Generation}
+\begin{pycode}
+# Generate classification dataset
+def make_classification_data(n_samples, n_features, n_classes, random_state=42):
+    np.random.seed(random_state)
+    X = np.random.randn(n_samples, n_features)
+    # Create class structure
+    y = np.zeros(n_samples, dtype=int)
+    for i in range(n_classes):
+        mask = (i * n_samples // n_classes <= np.arange(n_samples)) & \
+               (np.arange(n_samples) < (i+1) * n_samples // n_classes)
+        y[mask] = i
+        X[mask] += np.random.randn(n_features) * 0.5
+    # Shuffle
+    idx = np.random.permutation(n_samples)
+    return X[idx], y[idx]
+
+def make_moons_data(n_samples, noise=0.1, random_state=42):
+    np.random.seed(random_state)
+    n_samples_out = n_samples // 2
+    n_samples_in = n_samples - n_samples_out
+    outer_circ_x = np.cos(np.linspace(0, np.pi, n_samples_out))
+    outer_circ_y = np.sin(np.linspace(0, np.pi, n_samples_out))
+    inner_circ_x = 1 - np.cos(np.linspace(0, np.pi, n_samples_in))
+    inner_circ_y = 1 - np.sin(np.linspace(0, np.pi, n_samples_in)) - 0.5
+    X = np.vstack([np.append(outer_circ_x, inner_circ_x),
+                   np.append(outer_circ_y, inner_circ_y)]).T
+    y = np.hstack([np.zeros(n_samples_out), np.ones(n_samples_in)]).astype(int)
+    X += np.random.randn(*X.shape) * noise
+    return X, y
+
+# Multi-class classification
+X, y = make_classification_data(500, 10, 3)
+# Split data
+n_train = 400
+X_train, X_test = X[:n_train], X[n_train:]
+y_train, y_test = y[:n_train], y[n_train:]
+
+n_samples = len(X)
+n_features = X.shape[1]
+n_classes = len(np.unique(y))
+
+# 2D dataset for visualization
+X_2d, y_2d = make_moons_data(300, noise=0.25)
+X_2d_train, X_2d_test = X_2d[:240], X_2d[240:]
+y_2d_train, y_2d_test = y_2d[:240], y_2d[240:]
+
+# Plot 2D data
+fig, ax = plt.subplots(figsize=(8, 6))
+scatter = ax.scatter(X_2d[:, 0], X_2d[:, 1], c=y_2d, cmap='RdYlBu',
+                     alpha=0.7, edgecolors='black', s=50)
+ax.set_xlabel('Feature 1')
+ax.set_ylabel('Feature 2')
+ax.set_title('Two Moons Classification Dataset')
+ax.grid(True, alpha=0.3)
+plt.colorbar(scatter, label='Class')
+save_plot('dt_data.pdf', 'Two-dimensional classification dataset for decision tree visualization.')
+\end{pycode}
+
+Dataset characteristics: $n = \py{n_samples}$ samples, $p = \py{n_features}$ features, $C = \py{n_classes}$ classes.
+
+\section{Impurity Measures}
+\begin{pycode}
+def entropy(y):
+    """Calculate entropy of a label array."""
+    if len(y) == 0:
+        return 0
+    counts = np.bincount(y.astype(int))
+    probs = counts[counts > 0] / len(y)
+    return -np.sum(probs * np.log2(probs))
+
+def gini(y):
+    """Calculate Gini impurity of a label array."""
+    if len(y) == 0:
+        return 0
+    counts = np.bincount(y.astype(int))
+    probs = counts[counts > 0] / len(y)
+    return 1 - np.sum(probs**2)
+
+def misclassification(y):
+    """Calculate misclassification error."""
+    if len(y) == 0:
+        return 0
+    counts = np.bincount(y.astype(int))
+    return 1 - np.max(counts) / len(y)
+
+# Compare impurity measures
+p = np.linspace(0.01, 0.99, 100)
+entropy_vals = -p * np.log2(p) - (1-p) * np.log2(1-p)
+gini_vals = 2 * p * (1 - p)
+misc_vals = 1 - np.maximum(p, 1-p)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(p, entropy_vals, 'b-', linewidth=2, label='Entropy')
+ax.plot(p, gini_vals, 'r--', linewidth=2, label='Gini Impurity')
+ax.plot(p, misc_vals, 'g:', linewidth=2, label='Misclassification')
+ax.set_xlabel('Probability of Class 1')
+ax.set_ylabel('Impurity Measure')
+ax.set_title('Comparison of Impurity Measures (Binary Classification)')
+ax.legend()
+ax.grid(True, alpha=0.3)
+save_plot('dt_impurity.pdf', 'Comparison of entropy, Gini impurity, and misclassification error.')
+\end{pycode}
+
+\section{Decision Tree Implementation}
+\begin{pycode}
+class DecisionTreeNode:
+    def __init__(self, depth=0):
+        self.depth = depth
+        self.feature_idx = None
+        self.threshold = None
+        self.left = None
+        self.right = None
+        self.is_leaf = False
+        self.prediction = None
+        self.samples = 0
+        self.impurity = 0
+
+class DecisionTreeClassifier:
+    def __init__(self, max_depth=5, min_samples_split=2, criterion='gini'):
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.criterion = criterion
+        self.root = None
+        self.n_classes = None
+        self.feature_importances_ = None
+
+    def _impurity(self, y):
+        if self.criterion == 'gini':
+            return gini(y)
+        else:
+            return entropy(y)
+
+    def _best_split(self, X, y):
+        best_gain = -1
+        best_feature = None
+        best_threshold = None
+
+        n_samples, n_features = X.shape
+        parent_impurity = self._impurity(y)
+
+        for feature_idx in range(n_features):
+            thresholds = np.unique(X[:, feature_idx])
+
+            for threshold in thresholds:
+                left_mask = X[:, feature_idx] <= threshold
+                right_mask = ~left_mask
+
+                if np.sum(left_mask) < 1 or np.sum(right_mask) < 1:
+                    continue
+
+                left_impurity = self._impurity(y[left_mask])
+                right_impurity = self._impurity(y[right_mask])
+
+                n_left = np.sum(left_mask)
+                n_right = np.sum(right_mask)
+
+                weighted_impurity = (n_left * left_impurity +
+                                     n_right * right_impurity) / n_samples
+                gain = parent_impurity - weighted_impurity
+
+                if gain > best_gain:
+                    best_gain = gain
+                    best_feature = feature_idx
+                    best_threshold = threshold
+
+        return best_feature, best_threshold, best_gain
+
+    def _build_tree(self, X, y, depth=0):
+        node = DecisionTreeNode(depth)
+        node.samples = len(y)
+        node.impurity = self._impurity(y)
+
+        # Check stopping criteria
+        if (depth >= self.max_depth or
+            len(y) < self.min_samples_split or
+            len(np.unique(y)) == 1):
+            node.is_leaf = True
+            node.prediction = Counter(y.astype(int)).most_common(1)[0][0]
+            return node
+
+        # Find best split
+        feature_idx, threshold, gain = self._best_split(X, y)
+
+        if feature_idx is None or gain <= 0:
+            node.is_leaf = True
+            node.prediction = Counter(y.astype(int)).most_common(1)[0][0]
+            return node
+
+        # Split data
+        left_mask = X[:, feature_idx] <= threshold
+        right_mask = ~left_mask
+
+        node.feature_idx = feature_idx
+        node.threshold = threshold
+
+        # Update feature importance
+        if self.feature_importances_ is not None:
+            self.feature_importances_[feature_idx] += gain * len(y)
+
+        # Recursively build children
+        node.left = self._build_tree(X[left_mask], y[left_mask], depth + 1)
+        node.right = self._build_tree(X[right_mask], y[right_mask], depth + 1)
+
+        return node
+
+    def fit(self, X, y):
+        self.n_classes = len(np.unique(y))
+        self.feature_importances_ = np.zeros(X.shape[1])
+        self.root = self._build_tree(X, y)
+        # Normalize feature importances
+        if np.sum(self.feature_importances_) > 0:
+            self.feature_importances_ /= np.sum(self.feature_importances_)
+        return self
+
+    def _predict_sample(self, x, node):
+        if node.is_leaf:
+            return node.prediction
+        if x[node.feature_idx] <= node.threshold:
+            return self._predict_sample(x, node.left)
+        else:
+            return self._predict_sample(x, node.right)
+
+    def predict(self, X):
+        return np.array([self._predict_sample(x, self.root) for x in X])
+
+    def score(self, X, y):
+        return np.mean(self.predict(X) == y)
+
+# Train tree on 2D data
+tree = DecisionTreeClassifier(max_depth=5, criterion='gini')
+tree.fit(X_2d_train, y_2d_train)
+
+train_acc = tree.score(X_2d_train, y_2d_train)
+test_acc = tree.score(X_2d_test, y_2d_test)
+\end{pycode}
+
+\section{Decision Boundary Visualization}
+\begin{pycode}
+def plot_decision_boundary(model, X, y, ax, title):
+    """Plot decision boundary for 2D data."""
+    h = 0.02
+    x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
+    y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    ax.contourf(xx, yy, Z, alpha=0.4, cmap='RdYlBu')
+    ax.scatter(X[:, 0], X[:, 1], c=y, cmap='RdYlBu',
+               edgecolors='black', s=50, alpha=0.8)
+    ax.set_xlabel('Feature 1')
+    ax.set_ylabel('Feature 2')
+    ax.set_title(title)
+
+# Compare different depths
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+depths = [1, 3, 5, 10]
+
+for ax, depth in zip(axes.flat, depths):
+    tree_temp = DecisionTreeClassifier(max_depth=depth, criterion='gini')
+    tree_temp.fit(X_2d_train, y_2d_train)
+    acc = tree_temp.score(X_2d_test, y_2d_test)
+    plot_decision_boundary(tree_temp, X_2d, y_2d, ax,
+                          f'Depth = {depth}, Accuracy = {acc:.2f}')
+
+plt.tight_layout()
+save_plot('dt_boundaries.pdf', 'Decision boundaries for different tree depths showing overfitting.')
+\end{pycode}
+
+Training accuracy: \py{f"{train_acc:.3f}"}, Test accuracy: \py{f"{test_acc:.3f}"}.
+
+\section{Pruning Analysis}
+\begin{pycode}
+# Analyze effect of max_depth
+depths = range(1, 16)
+train_scores = []
+test_scores = []
+
+for depth in depths:
+    tree_temp = DecisionTreeClassifier(max_depth=depth, criterion='gini')
+    tree_temp.fit(X_train, y_train)
+    train_scores.append(tree_temp.score(X_train, y_train))
+    test_scores.append(tree_temp.score(X_test, y_test))
+
+# Find optimal depth
+best_depth = list(depths)[np.argmax(test_scores)]
+best_test_acc = max(test_scores)
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(list(depths), train_scores, 'b-o', label='Training', linewidth=2, markersize=6)
+ax.plot(list(depths), test_scores, 'r-s', label='Test', linewidth=2, markersize=6)
+ax.axvline(best_depth, color='gray', linestyle='--', alpha=0.7,
+           label=f'Best depth = {best_depth}')
+ax.set_xlabel('Maximum Depth')
+ax.set_ylabel('Accuracy')
+ax.set_title('Effect of Tree Depth on Performance')
+ax.legend()
+ax.grid(True, alpha=0.3)
+save_plot('dt_pruning.pdf', 'Training and test accuracy as function of tree depth.')
+\end{pycode}
+
+Optimal depth: \py{best_depth} with test accuracy \py{f"{best_test_acc:.3f}"}.
+
+\section{Feature Importance}
+\begin{pycode}
+# Train final model with optimal depth
+final_tree = DecisionTreeClassifier(max_depth=best_depth, criterion='gini')
+final_tree.fit(X_train, y_train)
+
+# Get feature importances
+importances = final_tree.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.bar(range(len(importances)), importances[indices],
+       color='steelblue', alpha=0.8)
+ax.set_xticks(range(len(importances)))
+ax.set_xticklabels([f'F{i}' for i in indices])
+ax.set_xlabel('Feature')
+ax.set_ylabel('Importance')
+ax.set_title('Feature Importance (Information Gain)')
+ax.grid(True, alpha=0.3, axis='y')
+save_plot('dt_importance.pdf', 'Feature importance scores based on total information gain.')
+
+# Top 3 features
+top_features = indices[:3]
+top_importances = importances[top_features]
+\end{pycode}
+
+Top 3 features: \py{f"F{top_features[0]}"} (\py{f"{top_importances[0]:.3f}"}), \py{f"F{top_features[1]}"} (\py{f"{top_importances[1]:.3f}"}), \py{f"F{top_features[2]}"} (\py{f"{top_importances[2]:.3f}"}).
+
+\section{Gini vs Entropy Comparison}
+\begin{pycode}
+# Compare splitting criteria
+gini_scores = []
+entropy_scores = []
+
+for depth in depths:
+    tree_gini = DecisionTreeClassifier(max_depth=depth, criterion='gini')
+    tree_gini.fit(X_train, y_train)
+    gini_scores.append(tree_gini.score(X_test, y_test))
+
+    tree_entropy = DecisionTreeClassifier(max_depth=depth, criterion='entropy')
+    tree_entropy.fit(X_train, y_train)
+    entropy_scores.append(tree_entropy.score(X_test, y_test))
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot(list(depths), gini_scores, 'b-o', label='Gini', linewidth=2, markersize=6)
+ax.plot(list(depths), entropy_scores, 'r-s', label='Entropy', linewidth=2, markersize=6)
+ax.set_xlabel('Maximum Depth')
+ax.set_ylabel('Test Accuracy')
+ax.set_title('Comparison of Splitting Criteria')
+ax.legend()
+ax.grid(True, alpha=0.3)
+save_plot('dt_criteria.pdf', 'Test accuracy comparison between Gini impurity and entropy.')
+
+# Best scores for each criterion
+best_gini = max(gini_scores)
+best_entropy = max(entropy_scores)
+\end{pycode}
+
+\section{Results Summary}
+\begin{table}[H]
+\centering
+\caption{Decision Tree Performance Summary}
+\begin{tabular}{lr}
+\toprule
+Metric & Value \\
+\midrule
+Dataset Size & \py{n_samples} \\
+Number of Features & \py{n_features} \\
+Number of Classes & \py{n_classes} \\
+Optimal Tree Depth & \py{best_depth} \\
+Best Test Accuracy (Gini) & \py{f"{best_gini:.3f}"} \\
+Best Test Accuracy (Entropy) & \py{f"{best_entropy:.3f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Feature Importance Ranking}')
+print(r'\begin{tabular}{ccc}')
+print(r'\toprule')
+print(r'Rank & Feature & Importance \\')
+print(r'\midrule')
+for i in range(min(5, len(indices))):
+    print(f'{i+1} & F{indices[i]} & {importances[indices[i]]:.4f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusion}
+This analysis demonstrated:
+\begin{itemize}
+    \item Decision tree construction using Gini impurity and entropy
+    \item The bias-variance tradeoff controlled by tree depth
+    \item Feature importance computation via information gain
+    \item Hyperparameter tuning (max depth, min samples split)
+    \item Visualization of decision boundaries in 2D
+\end{itemize}
+
+The optimal tree depth of \py{best_depth} balances model complexity with generalization, achieving \py{f"{best_test_acc:.1%}"} test accuracy.
+
+\end{document}

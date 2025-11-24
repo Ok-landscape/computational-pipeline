@@ -1,0 +1,391 @@
+% Reaction Kinetics Template
+% Topics: Rate laws, Arrhenius equation, reaction mechanisms, catalysis
+% Style: Research article with experimental data analysis
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Chemical Reaction Kinetics: Rate Laws, Mechanisms, and Catalysis}
+\author{Physical Chemistry Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This study presents a comprehensive analysis of chemical reaction kinetics, examining
+rate laws for reactions of different orders, temperature dependence through the
+Arrhenius equation, and the effects of catalysis on reaction rates. We analyze
+experimental concentration-time data to determine rate constants, activation energies,
+and pre-exponential factors. Computational analysis demonstrates the integrated rate
+laws, half-life relationships, and mechanistic interpretation of kinetic data.
+\end{abstract}
+
+\section{Introduction}
+
+Chemical kinetics describes the rates of chemical reactions and the factors that affect
+them. Understanding reaction kinetics is essential for reaction mechanism elucidation,
+industrial process optimization, and pharmaceutical drug stability studies.
+
+\begin{definition}[Rate Law]
+For a reaction $aA + bB \rightarrow$ products, the rate law has the general form:
+\begin{equation}
+\text{Rate} = -\frac{1}{a}\frac{d[A]}{dt} = k[A]^m[B]^n
+\end{equation}
+where $k$ is the rate constant, and $m$, $n$ are the reaction orders.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Integrated Rate Laws}
+
+\begin{theorem}[Integrated Rate Laws]
+For a reaction $A \rightarrow$ products with initial concentration $[A]_0$:
+\begin{itemize}
+\item \textbf{Zero-order}: $[A] = [A]_0 - kt$, \quad $t_{1/2} = \frac{[A]_0}{2k}$
+\item \textbf{First-order}: $\ln[A] = \ln[A]_0 - kt$, \quad $t_{1/2} = \frac{\ln 2}{k}$
+\item \textbf{Second-order}: $\frac{1}{[A]} = \frac{1}{[A]_0} + kt$, \quad $t_{1/2} = \frac{1}{k[A]_0}$
+\end{itemize}
+\end{theorem}
+
+\subsection{Temperature Dependence}
+
+\begin{definition}[Arrhenius Equation]
+The temperature dependence of rate constants is described by:
+\begin{equation}
+k = A e^{-E_a/RT}
+\end{equation}
+where $A$ is the pre-exponential factor, $E_a$ is the activation energy, $R$ is the gas
+constant, and $T$ is absolute temperature. The linearized form is:
+\begin{equation}
+\ln k = \ln A - \frac{E_a}{R} \cdot \frac{1}{T}
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Eyring Equation]
+Transition state theory gives:
+\begin{equation}
+k = \frac{k_B T}{h} e^{-\Delta G^\ddagger/RT} = \frac{k_B T}{h} e^{\Delta S^\ddagger/R} e^{-\Delta H^\ddagger/RT}
+\end{equation}
+where $\Delta G^\ddagger$, $\Delta H^\ddagger$, and $\Delta S^\ddagger$ are the activation parameters.
+\end{theorem}
+
+\subsection{Catalysis}
+
+\begin{definition}[Catalytic Effect]
+A catalyst provides an alternative reaction pathway with lower activation energy $E_a^{cat} < E_a^{uncat}$.
+The rate enhancement factor is:
+\begin{equation}
+\frac{k_{cat}}{k_{uncat}} = e^{(E_a^{uncat} - E_a^{cat})/RT}
+\end{equation}
+\end{definition}
+
+\begin{remark}[Enzyme Catalysis]
+Enzymes are biological catalysts that follow Michaelis-Menten kinetics:
+\begin{equation}
+v = \frac{V_{max}[S]}{K_m + [S]}
+\end{equation}
+\end{remark}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from scipy.stats import linregress
+
+np.random.seed(42)
+
+# Integrated rate laws
+def zero_order(t, A0, k):
+    return np.maximum(A0 - k * t, 0)
+
+def first_order(t, A0, k):
+    return A0 * np.exp(-k * t)
+
+def second_order(t, A0, k):
+    return A0 / (1 + A0 * k * t)
+
+# True parameters
+A0_true = 1.0  # mol/L
+k_zero = 0.02  # mol/(L·s)
+k_first = 0.05  # 1/s
+k_second = 0.1  # L/(mol·s)
+
+# Time array
+t = np.linspace(0, 50, 100)
+
+# Generate concentration data with noise
+noise = 0.02
+conc_zero = zero_order(t, A0_true, k_zero) * (1 + noise * np.random.randn(len(t)))
+conc_first = first_order(t, A0_true, k_first) * (1 + noise * np.random.randn(len(t)))
+conc_second = second_order(t, A0_true, k_second) * (1 + noise * np.random.randn(len(t)))
+conc_zero = np.maximum(conc_zero, 0.01)
+conc_first = np.maximum(conc_first, 0.01)
+conc_second = np.maximum(conc_second, 0.01)
+
+# Fit first-order data
+ln_conc = np.log(conc_first)
+slope_first, intercept_first, r_first, _, _ = linregress(t, ln_conc)
+k_first_fit = -slope_first
+A0_first_fit = np.exp(intercept_first)
+
+# Fit second-order data
+inv_conc = 1 / conc_second
+slope_second, intercept_second, r_second, _, _ = linregress(t, inv_conc)
+k_second_fit = slope_second
+A0_second_fit = 1 / intercept_second
+
+# Arrhenius analysis
+T = np.array([280, 290, 300, 310, 320, 330, 340])  # K
+Ea_true = 50000  # J/mol
+A_true = 1e10  # 1/s
+R = 8.314  # J/(mol·K)
+k_arr = A_true * np.exp(-Ea_true / (R * T))
+k_arr_exp = k_arr * (1 + 0.05 * np.random.randn(len(T)))
+
+# Arrhenius fit
+inv_T = 1 / T
+ln_k = np.log(k_arr_exp)
+slope_arr, intercept_arr, r_arr, _, _ = linregress(inv_T, ln_k)
+Ea_fit = -slope_arr * R
+A_fit = np.exp(intercept_arr)
+
+# Catalysis comparison
+Ea_uncat = 75000  # J/mol
+Ea_cat = 45000  # J/mol
+T_cat = np.linspace(250, 400, 100)
+k_uncat = 1e13 * np.exp(-Ea_uncat / (R * T_cat))
+k_cat = 1e13 * np.exp(-Ea_cat / (R * T_cat))
+enhancement = k_cat / k_uncat
+
+# Half-life comparison
+t_range = np.linspace(0, 100, 500)
+half_lives = []
+for order, k in [(0, k_zero), (1, k_first), (2, k_second)]:
+    if order == 0:
+        t_half = A0_true / (2 * k)
+    elif order == 1:
+        t_half = np.log(2) / k
+    else:
+        t_half = 1 / (k * A0_true)
+    half_lives.append(t_half)
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Concentration vs time for different orders
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t, conc_zero, 'b-', linewidth=2, label='Zero-order')
+ax1.plot(t, conc_first, 'g-', linewidth=2, label='First-order')
+ax1.plot(t, conc_second, 'r-', linewidth=2, label='Second-order')
+ax1.set_xlabel('Time (s)')
+ax1.set_ylabel('[A] (mol/L)')
+ax1.set_title('Concentration vs Time')
+ax1.legend(fontsize=8)
+ax1.set_ylim([0, 1.2])
+
+# Plot 2: First-order linearization
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.scatter(t, ln_conc, s=20, c='green', edgecolor='black', alpha=0.7)
+ax2.plot(t, slope_first * t + intercept_first, 'r-', linewidth=2)
+ax2.set_xlabel('Time (s)')
+ax2.set_ylabel('ln[A]')
+ax2.set_title(f'First-Order Plot ($R^2 = {r_first**2:.4f}$)')
+
+# Plot 3: Second-order linearization
+ax3 = fig.add_subplot(3, 3, 3)
+ax3.scatter(t, inv_conc, s=20, c='red', edgecolor='black', alpha=0.7)
+ax3.plot(t, slope_second * t + intercept_second, 'b-', linewidth=2)
+ax3.set_xlabel('Time (s)')
+ax3.set_ylabel('1/[A] (L/mol)')
+ax3.set_title(f'Second-Order Plot ($R^2 = {r_second**2:.4f}$)')
+
+# Plot 4: Arrhenius plot
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.scatter(1000/T, ln_k, s=60, c='blue', edgecolor='black')
+inv_T_fine = np.linspace(1000/350, 1000/270, 100)
+ax4.plot(inv_T_fine, slope_arr * inv_T_fine/1000 + intercept_arr, 'r-', linewidth=2)
+ax4.set_xlabel('1000/T (K$^{-1}$)')
+ax4.set_ylabel('ln k')
+ax4.set_title('Arrhenius Plot')
+
+# Plot 5: Rate constant vs temperature
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.semilogy(T, k_arr_exp, 'bo', markersize=8)
+T_fine = np.linspace(275, 345, 100)
+ax5.semilogy(T_fine, A_fit * np.exp(-Ea_fit / (R * T_fine)), 'r-', linewidth=2)
+ax5.set_xlabel('Temperature (K)')
+ax5.set_ylabel('k (s$^{-1}$)')
+ax5.set_title('Rate Constant vs Temperature')
+
+# Plot 6: Catalysis effect
+ax6 = fig.add_subplot(3, 3, 6)
+ax6.semilogy(T_cat, k_uncat, 'b-', linewidth=2, label='Uncatalyzed')
+ax6.semilogy(T_cat, k_cat, 'r-', linewidth=2, label='Catalyzed')
+ax6.set_xlabel('Temperature (K)')
+ax6.set_ylabel('k (s$^{-1}$)')
+ax6.set_title('Effect of Catalysis')
+ax6.legend(fontsize=8)
+
+# Plot 7: Rate enhancement factor
+ax7 = fig.add_subplot(3, 3, 7)
+ax7.semilogy(T_cat, enhancement, 'purple', linewidth=2)
+ax7.set_xlabel('Temperature (K)')
+ax7.set_ylabel('$k_{cat}/k_{uncat}$')
+ax7.set_title('Rate Enhancement Factor')
+
+# Plot 8: Half-life comparison
+ax8 = fig.add_subplot(3, 3, 8)
+A0_range = np.linspace(0.1, 2.0, 100)
+t_half_zero = A0_range / (2 * k_zero)
+t_half_first = np.log(2) / k_first * np.ones_like(A0_range)
+t_half_second = 1 / (k_second * A0_range)
+ax8.plot(A0_range, t_half_zero, 'b-', linewidth=2, label='Zero-order')
+ax8.plot(A0_range, t_half_first, 'g-', linewidth=2, label='First-order')
+ax8.plot(A0_range, t_half_second, 'r-', linewidth=2, label='Second-order')
+ax8.set_xlabel('$[A]_0$ (mol/L)')
+ax8.set_ylabel('$t_{1/2}$ (s)')
+ax8.set_title('Half-Life vs Initial Concentration')
+ax8.legend(fontsize=8)
+ax8.set_ylim([0, 50])
+
+# Plot 9: Energy diagram
+ax9 = fig.add_subplot(3, 3, 9)
+reaction_coord = np.linspace(0, 1, 100)
+# Gaussian-like barrier
+E_react = 0
+E_prod = -30
+E_ts_uncat = 50
+E_ts_cat = 30
+E_uncat = E_react + (E_ts_uncat - E_react) * np.exp(-((reaction_coord - 0.4)**2) / 0.02)
+E_uncat[reaction_coord > 0.5] = E_ts_uncat - (E_ts_uncat - E_prod) * (reaction_coord[reaction_coord > 0.5] - 0.4) / 0.6
+E_cat = E_react + (E_ts_cat - E_react) * np.exp(-((reaction_coord - 0.4)**2) / 0.02)
+E_cat[reaction_coord > 0.5] = E_ts_cat - (E_ts_cat - E_prod) * (reaction_coord[reaction_coord > 0.5] - 0.4) / 0.6
+ax9.plot(reaction_coord, E_uncat, 'b-', linewidth=2, label='Uncatalyzed')
+ax9.plot(reaction_coord, E_cat, 'r--', linewidth=2, label='Catalyzed')
+ax9.axhline(y=0, color='gray', linestyle=':', alpha=0.5)
+ax9.set_xlabel('Reaction Coordinate')
+ax9.set_ylabel('Energy (kJ/mol)')
+ax9.set_title('Energy Diagram')
+ax9.legend(fontsize=8)
+
+plt.tight_layout()
+plt.savefig('reaction_kinetics_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{reaction_kinetics_analysis.pdf}
+\caption{Reaction kinetics analysis: (a) Concentration decay for different reaction orders;
+(b-c) Linearization plots for first and second-order reactions; (d-e) Arrhenius analysis
+for temperature dependence; (f-g) Catalysis effects on rate constants; (h) Half-life
+dependence on initial concentration; (i) Potential energy diagram with and without catalyst.}
+\label{fig:kinetics}
+\end{figure}
+
+\section{Results}
+
+\subsection{Kinetic Parameters}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Fitted Rate Constants and Kinetic Parameters}")
+print(r"\begin{tabular}{lccc}")
+print(r"\toprule")
+print(r"Parameter & True Value & Fitted Value & Units \\")
+print(r"\midrule")
+print(f"$k_{{first}}$ & {k_first} & {k_first_fit:.4f} & s$^{{-1}}$ \\\\")
+print(f"$k_{{second}}$ & {k_second} & {k_second_fit:.4f} & L mol$^{{-1}}$ s$^{{-1}}$ \\\\")
+print(f"$E_a$ & {Ea_true/1000:.1f} & {Ea_fit/1000:.1f} & kJ/mol \\\\")
+print(f"$A$ & {A_true:.2e} & {A_fit:.2e} & s$^{{-1}}$ \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:parameters}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Half-Lives}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Half-Lives for Different Reaction Orders}")
+print(r"\begin{tabular}{lccc}")
+print(r"\toprule")
+print(r"Order & Formula & Value (s) & Dependence on $[A]_0$ \\")
+print(r"\midrule")
+print(f"Zero & $[A]_0/(2k)$ & {half_lives[0]:.1f} & Proportional \\\\")
+print(f"First & $\\ln 2/k$ & {half_lives[1]:.1f} & Independent \\\\")
+print(f"Second & $1/(k[A]_0)$ & {half_lives[2]:.1f} & Inversely proportional \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:halflives}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Determining Reaction Order]
+The reaction order is determined by finding which linearization plot gives the best fit:
+\begin{itemize}
+\item Zero-order: $[A]$ vs $t$ is linear
+\item First-order: $\ln[A]$ vs $t$ is linear
+\item Second-order: $1/[A]$ vs $t$ is linear
+\end{itemize}
+The first-order plot has $R^2 = \py{f"{r_first**2:.4f}"}$ for the first-order data.
+\end{example}
+
+\begin{remark}[Activation Energy Interpretation]
+The fitted activation energy of $\py{f"{Ea_fit/1000:.1f}"}$ kJ/mol indicates:
+\begin{itemize}
+\item $E_a < 40$ kJ/mol: Diffusion-controlled reaction
+\item $40 < E_a < 120$ kJ/mol: Typical chemical reaction
+\item $E_a > 120$ kJ/mol: High barrier, slow reaction
+\end{itemize}
+\end{remark}
+
+\begin{example}[Catalytic Enhancement]
+At 300 K, the rate enhancement due to catalysis is:
+\begin{equation}
+\frac{k_{cat}}{k_{uncat}} = e^{(75000 - 45000)/(8.314 \times 300)} = \py{f"{np.exp(30000/(8.314*300)):.0f}"}
+\end{equation}
+This enormous enhancement explains the importance of catalysts in industrial chemistry.
+\end{example}
+
+\section{Conclusions}
+
+This analysis demonstrates the fundamental principles of chemical kinetics:
+\begin{enumerate}
+\item First-order rate constant: $k = \py{f"{k_first_fit:.4f}"}$ s$^{-1}$ with $t_{1/2} = \py{f"{half_lives[1]:.1f}"}$ s
+\item Activation energy from Arrhenius plot: $E_a = \py{f"{Ea_fit/1000:.1f}"}$ kJ/mol
+\item Catalysis reduces activation energy by $\py{f"{(Ea_uncat-Ea_cat)/1000:.0f}"}$ kJ/mol
+\item Half-life dependence on $[A]_0$ distinguishes reaction orders
+\item Linearization methods enable determination of rate laws from experimental data
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Atkins, P. \& de Paula, J. \textit{Physical Chemistry}, 11th ed. Oxford, 2018.
+\item Houston, P.L. \textit{Chemical Kinetics and Reaction Dynamics}. Dover, 2006.
+\item Steinfeld, J.I. et al. \textit{Chemical Kinetics and Dynamics}, 2nd ed. Prentice Hall, 1998.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,798 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{property}[theorem]{Property}
+
+\title{Control Systems Analysis: A Comprehensive Tutorial on\\Classical Feedback Control Design}
+\author{Control Systems Engineering Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This tutorial provides a comprehensive analysis of classical control system design techniques. We examine transfer function modeling, frequency response analysis through Bode and Nyquist plots, root locus methods for stability analysis, and PID controller tuning strategies. All computations are performed dynamically using Python's control systems toolbox, demonstrating reproducible engineering analysis workflows.
+\end{abstract}
+
+\section{Introduction to Feedback Control}
+
+Feedback control systems are ubiquitous in modern engineering, from industrial process control to aerospace guidance systems. The fundamental objective is to maintain a desired output despite disturbances and uncertainties.
+
+\begin{definition}[Closed-Loop Transfer Function]
+For a unity feedback system with plant $G(s)$ and controller $C(s)$, the closed-loop transfer function is:
+\begin{equation}
+T(s) = \frac{C(s)G(s)}{1 + C(s)G(s)} = \frac{L(s)}{1 + L(s)}
+\end{equation}
+where $L(s) = C(s)G(s)$ is the loop transfer function.
+\end{definition}
+
+\section{System Modeling and Transfer Functions}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.optimize import brentq
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=9)
+np.random.seed(42)
+
+# Define the plant: Second-order system with delay approximation
+# G(s) = K / (s^2 + 2*zeta*wn*s + wn^2)
+K_plant = 10.0
+wn = 5.0  # Natural frequency (rad/s)
+zeta = 0.3  # Damping ratio
+
+num_plant = [K_plant * wn**2]
+den_plant = [1, 2*zeta*wn, wn**2]
+plant = signal.TransferFunction(num_plant, den_plant)
+
+# Plant characteristics
+poles_plant = np.roots(den_plant)
+dc_gain_plant = K_plant
+
+# Time vector for simulations
+t = np.linspace(0, 4, 1000)
+\end{pycode}
+
+We consider a second-order plant with transfer function:
+\begin{equation}
+G(s) = \frac{K\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}
+\end{equation}
+
+\noindent\textbf{Plant Parameters:}
+\begin{itemize}
+    \item DC Gain: $K = \py{K_plant}$
+    \item Natural Frequency: $\omega_n = \py{wn}$ rad/s
+    \item Damping Ratio: $\zeta = \py{zeta}$
+    \item Plant Poles: $s = \py{f"{poles_plant[0]:.2f}"}$, $\py{f"{poles_plant[1]:.2f}"}$
+\end{itemize}
+
+\section{Open-Loop Step Response Analysis}
+
+\begin{pycode}
+# Open-loop step response
+t_ol, y_ol = signal.step(plant, T=t)
+
+# Calculate open-loop characteristics
+peak_idx = np.argmax(y_ol)
+peak_time = t_ol[peak_idx]
+peak_val = y_ol[peak_idx]
+overshoot_ol = (peak_val / K_plant - 1) * 100
+
+# Settling time (2% criterion)
+steady_state = K_plant
+tolerance = 0.02 * steady_state
+settled_indices = np.where(np.abs(y_ol - steady_state) <= tolerance)[0]
+if len(settled_indices) > 0:
+    # Find first time it stays within tolerance
+    for i in range(len(settled_indices)):
+        if np.all(np.abs(y_ol[settled_indices[i]:] - steady_state) <= tolerance):
+            settling_time_ol = t_ol[settled_indices[i]]
+            break
+    else:
+        settling_time_ol = t_ol[-1]
+else:
+    settling_time_ol = t_ol[-1]
+
+# Rise time (10% to 90%)
+y_10 = 0.1 * steady_state
+y_90 = 0.9 * steady_state
+t_10 = t_ol[np.where(y_ol >= y_10)[0][0]]
+t_90 = t_ol[np.where(y_ol >= y_90)[0][0]]
+rise_time_ol = t_90 - t_10
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Step response
+axes[0].plot(t_ol, y_ol, 'b-', linewidth=1.5, label='Response')
+axes[0].axhline(y=K_plant, color='r', linestyle='--', alpha=0.7, label='Steady State')
+axes[0].axhline(y=K_plant*1.02, color='gray', linestyle=':', alpha=0.5)
+axes[0].axhline(y=K_plant*0.98, color='gray', linestyle=':', alpha=0.5)
+axes[0].plot(peak_time, peak_val, 'ro', markersize=6)
+axes[0].annotate(f'Peak: {peak_val:.2f}', xy=(peak_time, peak_val),
+                 xytext=(peak_time+0.3, peak_val+0.5), fontsize=8,
+                 arrowprops=dict(arrowstyle='->', color='black', lw=0.5))
+axes[0].set_xlabel('Time (s)')
+axes[0].set_ylabel('Output')
+axes[0].set_title('Open-Loop Step Response')
+axes[0].legend(loc='right')
+axes[0].grid(True, alpha=0.3)
+
+# Impulse response
+t_imp, y_imp = signal.impulse(plant, T=t)
+axes[1].plot(t_imp, y_imp, 'g-', linewidth=1.5)
+axes[1].set_xlabel('Time (s)')
+axes[1].set_ylabel('Output')
+axes[1].set_title('Open-Loop Impulse Response')
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot1.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot1.pdf}
+\caption{Open-loop time domain responses of the plant.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Open-Loop Performance Metrics}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Value} & \textbf{Unit} \\
+\midrule
+Peak Time & \py{f"{peak_time:.3f}"} & s \\
+Peak Overshoot & \py{f"{overshoot_ol:.1f}"} & \% \\
+Rise Time (10-90\%) & \py{f"{rise_time_ol:.3f}"} & s \\
+Settling Time (2\%) & \py{f"{settling_time_ol:.3f}"} & s \\
+DC Gain & \py{f"{dc_gain_plant:.1f}"} & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Frequency Response Analysis}
+
+\subsection{Bode Plot Analysis}
+
+\begin{theorem}[Bode Gain-Phase Relationship]
+For minimum-phase systems, the phase is uniquely determined by the magnitude characteristic through the Hilbert transform relationship.
+\end{theorem}
+
+\begin{pycode}
+# Frequency response analysis
+w = np.logspace(-1, 2, 1000)
+w_bode, mag_plant, phase_plant = signal.bode(plant, w)
+
+# Find key frequencies
+idx_wn = np.argmin(np.abs(w_bode - wn))
+mag_at_wn = mag_plant[idx_wn]
+phase_at_wn = phase_plant[idx_wn]
+
+# Bandwidth (-3dB point)
+mag_3db = 20*np.log10(K_plant) - 3
+bandwidth_idx = np.where(mag_plant < mag_3db)[0]
+if len(bandwidth_idx) > 0:
+    bandwidth = w_bode[bandwidth_idx[0]]
+else:
+    bandwidth = w_bode[-1]
+
+# Resonant peak
+resonant_idx = np.argmax(mag_plant)
+resonant_freq = w_bode[resonant_idx]
+resonant_peak = mag_plant[resonant_idx]
+
+fig, axes = plt.subplots(2, 1, figsize=(10, 6))
+
+# Magnitude plot
+axes[0].semilogx(w_bode, mag_plant, 'b-', linewidth=1.5)
+axes[0].axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+axes[0].axhline(y=mag_3db, color='r', linestyle=':', alpha=0.7, label='-3dB')
+axes[0].axvline(x=wn, color='g', linestyle=':', alpha=0.7, label=r'$\omega_n$')
+axes[0].axvline(x=bandwidth, color='orange', linestyle='--', alpha=0.7, label='Bandwidth')
+axes[0].plot(resonant_freq, resonant_peak, 'ro', markersize=5)
+axes[0].set_ylabel('Magnitude (dB)')
+axes[0].set_title('Bode Plot - Plant $G(s)$')
+axes[0].legend(loc='lower left', fontsize=8)
+axes[0].grid(True, which='both', alpha=0.3)
+
+# Phase plot
+axes[1].semilogx(w_bode, phase_plant, 'b-', linewidth=1.5)
+axes[1].axhline(y=-90, color='gray', linestyle='--', alpha=0.5)
+axes[1].axhline(y=-180, color='r', linestyle='--', alpha=0.5)
+axes[1].axvline(x=wn, color='g', linestyle=':', alpha=0.7)
+axes[1].set_xlabel('Frequency (rad/s)')
+axes[1].set_ylabel('Phase (degrees)')
+axes[1].grid(True, which='both', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot2.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot2.pdf}
+\caption{Bode plot of the plant transfer function showing magnitude and phase response.}
+\end{figure}
+
+\noindent\textbf{Frequency Domain Characteristics:}
+\begin{itemize}
+    \item Bandwidth: $\omega_{BW} = \py{f"{bandwidth:.2f}"}$ rad/s
+    \item Resonant Frequency: $\omega_r = \py{f"{resonant_freq:.2f}"}$ rad/s
+    \item Resonant Peak: $M_r = \py{f"{resonant_peak:.1f}"}$ dB
+\end{itemize}
+
+\subsection{Nyquist Plot and Stability Analysis}
+
+\begin{definition}[Nyquist Stability Criterion]
+A closed-loop system is stable if and only if the Nyquist contour of $L(j\omega)$ encircles the point $-1$ exactly $P$ times counter-clockwise, where $P$ is the number of unstable open-loop poles.
+\end{definition}
+
+\begin{pycode}
+# Nyquist plot
+w_nyq = np.concatenate([np.linspace(0.01, 100, 5000)])
+_, H = signal.freqs(num_plant, den_plant, w_nyq)
+
+# Calculate gain and phase margins for the open-loop plant
+# For phase margin: find frequency where |G| = 1 (0 dB)
+mag_linear = 10**(mag_plant/20)
+crossover_indices = np.where(np.diff(np.sign(mag_linear - 1)))[0]
+if len(crossover_indices) > 0:
+    gc_freq = w_bode[crossover_indices[0]]
+    gc_phase = phase_plant[crossover_indices[0]]
+    phase_margin = 180 + gc_phase
+else:
+    gc_freq = 0
+    phase_margin = np.inf
+
+# For gain margin: find frequency where phase = -180
+phase_crossover_indices = np.where(np.diff(np.sign(phase_plant + 180)))[0]
+if len(phase_crossover_indices) > 0:
+    pc_freq = w_bode[phase_crossover_indices[0]]
+    pc_mag = mag_plant[phase_crossover_indices[0]]
+    gain_margin = -pc_mag
+else:
+    pc_freq = np.inf
+    gain_margin = np.inf
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Nyquist plot
+axes[0].plot(np.real(H), np.imag(H), 'b-', linewidth=1.5, label=r'$\omega > 0$')
+axes[0].plot(np.real(H), -np.imag(H), 'b--', linewidth=1, alpha=0.7, label=r'$\omega < 0$')
+axes[0].plot(-1, 0, 'rx', markersize=10, markeredgewidth=2, label='Critical Point')
+axes[0].set_xlabel('Real')
+axes[0].set_ylabel('Imaginary')
+axes[0].set_title('Nyquist Plot')
+axes[0].legend(loc='lower left', fontsize=8)
+axes[0].grid(True, alpha=0.3)
+axes[0].axis('equal')
+axes[0].set_xlim([-15, 15])
+axes[0].set_ylim([-15, 15])
+
+# Nichols chart (Magnitude vs Phase)
+axes[1].plot(phase_plant, mag_plant, 'b-', linewidth=1.5)
+axes[1].axvline(x=-180, color='r', linestyle='--', alpha=0.7)
+axes[1].axhline(y=0, color='r', linestyle='--', alpha=0.7)
+axes[1].plot(-180, 0, 'rx', markersize=10, markeredgewidth=2)
+axes[1].set_xlabel('Phase (degrees)')
+axes[1].set_ylabel('Magnitude (dB)')
+axes[1].set_title('Nichols Chart')
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot3.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot3.pdf}
+\caption{Nyquist plot and Nichols chart for stability analysis.}
+\end{figure}
+
+\section{Root Locus Analysis}
+
+The root locus shows how closed-loop poles migrate as a gain parameter varies.
+
+\begin{property}[Root Locus Rules]
+\begin{enumerate}
+    \item The root locus has $n$ branches, where $n$ is the number of open-loop poles
+    \item Branches start at open-loop poles ($K=0$) and end at zeros ($K=\infty$)
+    \item The locus is symmetric about the real axis
+\end{enumerate}
+\end{property}
+
+\begin{pycode}
+# Root locus computation
+K_range = np.linspace(0.01, 100, 500)
+poles_rl = []
+
+for K in K_range:
+    # Closed-loop characteristic equation: 1 + K*G(s) = 0
+    # den_plant + K*num_plant = 0
+    char_poly = np.polyadd(den_plant, K * np.array(num_plant))
+    roots = np.roots(char_poly)
+    poles_rl.append(roots)
+
+poles_rl = np.array(poles_rl)
+
+# Find critical gain for marginal stability
+critical_K = None
+for i, K in enumerate(K_range):
+    if np.any(np.real(poles_rl[i]) > 0):
+        critical_K = K_range[i-1] if i > 0 else K
+        break
+
+# Find gain for specific damping ratio (zeta = 0.5)
+target_zeta = 0.5
+K_for_zeta = None
+for i, K in enumerate(K_range):
+    poles = poles_rl[i]
+    complex_poles = poles[np.iscomplex(poles)]
+    if len(complex_poles) > 0:
+        actual_zeta = -np.real(complex_poles[0]) / np.abs(complex_poles[0])
+        if actual_zeta <= target_zeta:
+            K_for_zeta = K
+            break
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Root locus plot
+for i in range(poles_rl.shape[1]):
+    axes[0].plot(np.real(poles_rl[:, i]), np.imag(poles_rl[:, i]),
+                'b-', linewidth=1)
+axes[0].plot(np.real(poles_plant), np.imag(poles_plant), 'rx',
+            markersize=10, markeredgewidth=2, label='Open-loop Poles')
+axes[0].axvline(x=0, color='gray', linestyle='-', alpha=0.3)
+axes[0].axhline(y=0, color='gray', linestyle='-', alpha=0.3)
+
+# Draw damping ratio lines
+for z in [0.3, 0.5, 0.7]:
+    theta = np.arccos(z)
+    r = np.linspace(0, 20, 100)
+    axes[0].plot(-r*np.cos(theta), r*np.sin(theta), 'g:', alpha=0.5)
+    axes[0].plot(-r*np.cos(theta), -r*np.sin(theta), 'g:', alpha=0.5)
+
+axes[0].set_xlabel('Real')
+axes[0].set_ylabel('Imaginary')
+axes[0].set_title('Root Locus')
+axes[0].legend(loc='lower left', fontsize=8)
+axes[0].grid(True, alpha=0.3)
+axes[0].set_xlim([-15, 5])
+axes[0].set_ylim([-10, 10])
+
+# Damping ratio vs Gain
+damping_ratios = []
+for i, K in enumerate(K_range):
+    poles = poles_rl[i]
+    complex_poles = poles[np.abs(np.imag(poles)) > 0.01]
+    if len(complex_poles) > 0:
+        zeta = -np.real(complex_poles[0]) / np.abs(complex_poles[0])
+        damping_ratios.append(zeta)
+    else:
+        damping_ratios.append(1.0)
+
+axes[1].plot(K_range, damping_ratios, 'b-', linewidth=1.5)
+axes[1].axhline(y=0.5, color='r', linestyle='--', alpha=0.7, label=r'$\zeta = 0.5$')
+axes[1].axhline(y=0.707, color='g', linestyle='--', alpha=0.7, label=r'$\zeta = 0.707$')
+axes[1].set_xlabel('Gain $K$')
+axes[1].set_ylabel('Damping Ratio $\\zeta$')
+axes[1].set_title('Damping Ratio vs Gain')
+axes[1].legend(loc='upper right', fontsize=8)
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot4.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot4.pdf}
+\caption{Root locus plot showing pole migration with gain and corresponding damping ratio variation.}
+\end{figure}
+
+\section{PID Controller Design}
+
+\subsection{PID Transfer Function}
+
+The PID controller transfer function is:
+\begin{equation}
+C(s) = K_p + \frac{K_i}{s} + K_d s = \frac{K_d s^2 + K_p s + K_i}{s}
+\end{equation}
+
+\begin{pycode}
+# PID controller design using Ziegler-Nichols tuning
+# First, find ultimate gain and period
+
+# Ultimate gain: gain at which system becomes marginally stable
+# For our system, we'll use the ultimate gain method
+Ku = 2 * zeta * wn**2 / K_plant  # Approximate ultimate gain
+Tu = 2 * np.pi / wn  # Ultimate period
+
+# Ziegler-Nichols PID tuning rules
+Kp_zn = 0.6 * Ku
+Ki_zn = 2 * Kp_zn / Tu
+Kd_zn = Kp_zn * Tu / 8
+
+# Alternative tuning: Cohen-Coon
+Kp_cc = 0.5 * Ku
+Ki_cc = 1.5 * Kp_cc / Tu
+Kd_cc = Kp_cc * Tu / 6
+
+# Construct PID transfer functions
+def create_closed_loop(Kp, Ki, Kd, num_plant, den_plant):
+    # PID: (Kd*s^2 + Kp*s + Ki) / s
+    num_pid = [Kd, Kp, Ki]
+    den_pid = [1, 0]
+
+    # Open loop: PID * Plant
+    num_ol = np.convolve(num_pid, num_plant)
+    den_ol = np.convolve(den_pid, den_plant)
+
+    # Closed loop: num_ol / (den_ol + num_ol)
+    num_cl = num_ol
+    den_cl = np.polyadd(den_ol, num_ol)
+
+    return signal.TransferFunction(num_cl, den_cl)
+
+# Create closed-loop systems
+cl_zn = create_closed_loop(Kp_zn, Ki_zn, Kd_zn, num_plant, den_plant)
+cl_cc = create_closed_loop(Kp_cc, Ki_cc, Kd_cc, num_plant, den_plant)
+
+# Step responses
+t_cl = np.linspace(0, 3, 1000)
+t_zn, y_zn = signal.step(cl_zn, T=t_cl)
+t_cc, y_cc = signal.step(cl_cc, T=t_cl)
+\end{pycode}
+
+\begin{table}[H]
+\centering
+\caption{PID Tuning Parameters}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & $K_p$ & $K_i$ & $K_d$ \\
+\midrule
+Ziegler-Nichols & \py{f"{Kp_zn:.3f}"} & \py{f"{Ki_zn:.3f}"} & \py{f"{Kd_zn:.4f}"} \\
+Cohen-Coon & \py{f"{Kp_cc:.3f}"} & \py{f"{Ki_cc:.3f}"} & \py{f"{Kd_cc:.4f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Closed-Loop Performance Comparison}
+
+\begin{pycode}
+# Performance metrics calculation
+def calc_metrics(t, y):
+    steady_state = 1.0
+    # Overshoot
+    overshoot = (np.max(y) - steady_state) / steady_state * 100
+    # Settling time
+    tolerance = 0.02
+    settled = np.where(np.abs(y - steady_state) <= tolerance)[0]
+    if len(settled) > 0:
+        for i in range(len(settled)):
+            if np.all(np.abs(y[settled[i]:] - steady_state) <= tolerance):
+                settling = t[settled[i]]
+                break
+        else:
+            settling = t[-1]
+    else:
+        settling = t[-1]
+    # Rise time
+    idx_10 = np.where(y >= 0.1)[0]
+    idx_90 = np.where(y >= 0.9)[0]
+    if len(idx_10) > 0 and len(idx_90) > 0:
+        rise = t[idx_90[0]] - t[idx_10[0]]
+    else:
+        rise = 0
+    return overshoot, settling, rise
+
+os_zn, st_zn, rt_zn = calc_metrics(t_zn, y_zn)
+os_cc, st_cc, rt_cc = calc_metrics(t_cc, y_cc)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Step response comparison
+axes[0, 0].plot(t_zn, y_zn, 'b-', linewidth=1.5, label='Ziegler-Nichols')
+axes[0, 0].plot(t_cc, y_cc, 'r--', linewidth=1.5, label='Cohen-Coon')
+axes[0, 0].axhline(y=1.0, color='gray', linestyle='--', alpha=0.5)
+axes[0, 0].axhline(y=1.02, color='gray', linestyle=':', alpha=0.3)
+axes[0, 0].axhline(y=0.98, color='gray', linestyle=':', alpha=0.3)
+axes[0, 0].set_xlabel('Time (s)')
+axes[0, 0].set_ylabel('Output')
+axes[0, 0].set_title('Closed-Loop Step Response')
+axes[0, 0].legend(loc='lower right', fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Control effort
+# Approximate control signal: u = Kp*e + Ki*int(e) + Kd*de/dt
+e_zn = 1 - y_zn
+u_zn = Kp_zn * e_zn + Kd_zn * np.gradient(e_zn, t_zn)
+
+e_cc = 1 - y_cc
+u_cc = Kp_cc * e_cc + Kd_cc * np.gradient(e_cc, t_cc)
+
+axes[0, 1].plot(t_zn, u_zn, 'b-', linewidth=1.5, label='Ziegler-Nichols')
+axes[0, 1].plot(t_cc, u_cc, 'r--', linewidth=1.5, label='Cohen-Coon')
+axes[0, 1].set_xlabel('Time (s)')
+axes[0, 1].set_ylabel('Control Signal')
+axes[0, 1].set_title('Control Effort')
+axes[0, 1].legend(loc='upper right', fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+
+# Bode plot of closed-loop
+w_cl = np.logspace(-1, 2, 500)
+w_cl_zn, mag_cl_zn, phase_cl_zn = signal.bode(cl_zn, w_cl)
+w_cl_cc, mag_cl_cc, phase_cl_cc = signal.bode(cl_cc, w_cl)
+
+axes[1, 0].semilogx(w_cl_zn, mag_cl_zn, 'b-', linewidth=1.5, label='Ziegler-Nichols')
+axes[1, 0].semilogx(w_cl_cc, mag_cl_cc, 'r--', linewidth=1.5, label='Cohen-Coon')
+axes[1, 0].axhline(y=-3, color='gray', linestyle=':', alpha=0.5)
+axes[1, 0].set_xlabel('Frequency (rad/s)')
+axes[1, 0].set_ylabel('Magnitude (dB)')
+axes[1, 0].set_title('Closed-Loop Frequency Response')
+axes[1, 0].legend(loc='lower left', fontsize=8)
+axes[1, 0].grid(True, which='both', alpha=0.3)
+
+# Sensitivity function S = 1/(1+L)
+num_ol_zn = np.convolve([Kd_zn, Kp_zn, Ki_zn], num_plant)
+den_ol_zn = np.convolve([1, 0], den_plant)
+sensitivity_den = np.polyadd(den_ol_zn, num_ol_zn)
+sens_tf = signal.TransferFunction(den_ol_zn, sensitivity_den)
+w_s, mag_s, _ = signal.bode(sens_tf, w_cl)
+
+axes[1, 1].semilogx(w_s, mag_s, 'b-', linewidth=1.5)
+axes[1, 1].axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Frequency (rad/s)')
+axes[1, 1].set_ylabel('Magnitude (dB)')
+axes[1, 1].set_title('Sensitivity Function $S(j\\omega)$')
+axes[1, 1].grid(True, which='both', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot5.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot5.pdf}
+\caption{Closed-loop performance comparison between Ziegler-Nichols and Cohen-Coon tuning methods.}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Closed-Loop Performance Metrics}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Overshoot (\%)} & \textbf{Settling Time (s)} & \textbf{Rise Time (s)} \\
+\midrule
+Ziegler-Nichols & \py{f"{os_zn:.1f}"} & \py{f"{st_zn:.3f}"} & \py{f"{rt_zn:.3f}"} \\
+Cohen-Coon & \py{f"{os_cc:.1f}"} & \py{f"{st_cc:.3f}"} & \py{f"{rt_cc:.3f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Stability Margins and Robustness}
+
+\begin{pycode}
+# Calculate stability margins for the compensated system
+# Open-loop with ZN controller
+num_ol_comp = np.convolve([Kd_zn, Kp_zn, Ki_zn], num_plant)
+den_ol_comp = np.convolve([1, 0], den_plant)
+
+w_margin = np.logspace(-2, 3, 2000)
+w_m, mag_m, phase_m = signal.bode((num_ol_comp, den_ol_comp), w_margin)
+
+# Gain margin
+mag_lin = 10**(mag_m/20)
+phase_cross_idx = np.where(np.diff(np.sign(phase_m + 180)))[0]
+if len(phase_cross_idx) > 0:
+    pc_freq_comp = w_m[phase_cross_idx[0]]
+    gm_db = -mag_m[phase_cross_idx[0]]
+else:
+    pc_freq_comp = np.inf
+    gm_db = np.inf
+
+# Phase margin
+gain_cross_idx = np.where(np.diff(np.sign(mag_lin - 1)))[0]
+if len(gain_cross_idx) > 0:
+    gc_freq_comp = w_m[gain_cross_idx[0]]
+    pm_deg = 180 + phase_m[gain_cross_idx[0]]
+else:
+    gc_freq_comp = 0
+    pm_deg = np.inf
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Open-loop Bode with margins marked
+axes[0, 0].semilogx(w_m, mag_m, 'b-', linewidth=1.5)
+axes[0, 0].axhline(y=0, color='r', linestyle='--', alpha=0.7)
+if pc_freq_comp < np.inf:
+    axes[0, 0].axvline(x=pc_freq_comp, color='g', linestyle=':', alpha=0.7)
+    axes[0, 0].annotate(f'GM = {gm_db:.1f} dB',
+                        xy=(pc_freq_comp, -gm_db), xytext=(pc_freq_comp*2, -gm_db+10),
+                        fontsize=8, arrowprops=dict(arrowstyle='->', color='green', lw=0.5))
+axes[0, 0].set_ylabel('Magnitude (dB)')
+axes[0, 0].set_title('Open-Loop Bode (Compensated)')
+axes[0, 0].grid(True, which='both', alpha=0.3)
+
+axes[0, 1].semilogx(w_m, phase_m, 'b-', linewidth=1.5)
+axes[0, 1].axhline(y=-180, color='r', linestyle='--', alpha=0.7)
+if gc_freq_comp > 0:
+    axes[0, 1].axvline(x=gc_freq_comp, color='orange', linestyle=':', alpha=0.7)
+    axes[0, 1].annotate(f'PM = {pm_deg:.1f}°',
+                        xy=(gc_freq_comp, -180+pm_deg), xytext=(gc_freq_comp*2, -180+pm_deg+20),
+                        fontsize=8, arrowprops=dict(arrowstyle='->', color='orange', lw=0.5))
+axes[0, 1].set_xlabel('Frequency (rad/s)')
+axes[0, 1].set_ylabel('Phase (degrees)')
+axes[0, 1].grid(True, which='both', alpha=0.3)
+
+# Gain and phase margin vs Kp variation
+Kp_var = np.linspace(0.1, 2.0, 50) * Kp_zn
+gm_var = []
+pm_var = []
+
+for kp in Kp_var:
+    num_ol_var = np.convolve([Kd_zn, kp, Ki_zn], num_plant)
+    w_v, mag_v, phase_v = signal.bode((num_ol_var, den_ol_comp), w_margin)
+
+    mag_lin_v = 10**(mag_v/20)
+    gc_idx = np.where(np.diff(np.sign(mag_lin_v - 1)))[0]
+    if len(gc_idx) > 0:
+        pm_var.append(180 + phase_v[gc_idx[0]])
+    else:
+        pm_var.append(np.nan)
+
+    pc_idx = np.where(np.diff(np.sign(phase_v + 180)))[0]
+    if len(pc_idx) > 0:
+        gm_var.append(-mag_v[pc_idx[0]])
+    else:
+        gm_var.append(np.nan)
+
+axes[1, 0].plot(Kp_var/Kp_zn, gm_var, 'b-', linewidth=1.5)
+axes[1, 0].axhline(y=6, color='r', linestyle='--', alpha=0.7, label='Min GM = 6 dB')
+axes[1, 0].set_xlabel('$K_p / K_{p,ZN}$')
+axes[1, 0].set_ylabel('Gain Margin (dB)')
+axes[1, 0].set_title('Gain Margin Sensitivity')
+axes[1, 0].legend(loc='upper right', fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+axes[1, 1].plot(Kp_var/Kp_zn, pm_var, 'r-', linewidth=1.5)
+axes[1, 1].axhline(y=45, color='b', linestyle='--', alpha=0.7, label='Min PM = 45°')
+axes[1, 1].set_xlabel('$K_p / K_{p,ZN}$')
+axes[1, 1].set_ylabel('Phase Margin (degrees)')
+axes[1, 1].set_title('Phase Margin Sensitivity')
+axes[1, 1].legend(loc='upper right', fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot6.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot6.pdf}
+\caption{Stability margins for the PID-compensated system and sensitivity to gain variations.}
+\end{figure}
+
+\noindent\textbf{Stability Margins (Ziegler-Nichols Tuning):}
+\begin{itemize}
+    \item Gain Margin: \py{f"{gm_db:.1f}"} dB at $\omega = \py{f"{pc_freq_comp:.2f}"}$ rad/s
+    \item Phase Margin: \py{f"{pm_deg:.1f}"}$^\circ$ at $\omega = \py{f"{gc_freq_comp:.2f}"}$ rad/s
+\end{itemize}
+
+\section{Disturbance Rejection Analysis}
+
+\begin{pycode}
+# Disturbance rejection: apply step disturbance at plant input
+# Output due to disturbance: Y_d = G/(1+CG) * D
+
+# Disturbance transfer function
+dist_num = num_plant
+dist_den = np.polyadd(den_ol_comp, num_ol_comp)
+dist_tf = signal.TransferFunction(dist_num, dist_den)
+
+t_dist = np.linspace(0, 5, 1000)
+t_d, y_d = signal.step(dist_tf, T=t_dist)
+
+# Apply disturbance at t=2s during step response
+t_full = np.linspace(0, 5, 1000)
+y_full = np.zeros_like(t_full)
+
+# Get step response
+_, y_step_full = signal.step(cl_zn, T=t_full)
+
+# Add disturbance effect starting at t=2
+dist_start_idx = np.where(t_full >= 2)[0][0]
+dist_response = np.zeros_like(t_full)
+t_shifted = t_full[dist_start_idx:] - 2
+_, y_dist_shifted = signal.step(dist_tf, T=t_shifted)
+dist_response[dist_start_idx:] = 0.5 * y_dist_shifted  # 50% disturbance magnitude
+
+y_with_dist = y_step_full + dist_response
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Disturbance response
+axes[0].plot(t_d, y_d, 'b-', linewidth=1.5)
+axes[0].axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+axes[0].set_xlabel('Time (s)')
+axes[0].set_ylabel('Output')
+axes[0].set_title('Unit Step Disturbance Response')
+axes[0].grid(True, alpha=0.3)
+
+# Combined response with disturbance
+axes[1].plot(t_full, y_step_full, 'b--', linewidth=1, alpha=0.7, label='Without Disturbance')
+axes[1].plot(t_full, y_with_dist, 'r-', linewidth=1.5, label='With Disturbance at $t=2$s')
+axes[1].axhline(y=1, color='gray', linestyle='--', alpha=0.5)
+axes[1].axvline(x=2, color='g', linestyle=':', alpha=0.7)
+axes[1].set_xlabel('Time (s)')
+axes[1].set_ylabel('Output')
+axes[1].set_title('Step Response with Input Disturbance')
+axes[1].legend(loc='lower right', fontsize=8)
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('control_systems_plot7.pdf', bbox_inches='tight', dpi=150)
+plt.close()
+
+# Calculate disturbance rejection metrics
+max_deviation = np.max(np.abs(y_with_dist[dist_start_idx:] - 1))
+recovery_idx = np.where(np.abs(y_with_dist[dist_start_idx:] - 1) < 0.02)[0]
+if len(recovery_idx) > 0:
+    recovery_time = t_full[dist_start_idx + recovery_idx[0]] - 2
+else:
+    recovery_time = t_full[-1] - 2
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{control_systems_plot7.pdf}
+\caption{Disturbance rejection capability of the PID controller.}
+\end{figure}
+
+\noindent\textbf{Disturbance Rejection Metrics:}
+\begin{itemize}
+    \item Maximum Deviation: \py{f"{max_deviation:.3f}"}
+    \item Recovery Time (2\% band): \py{f"{recovery_time:.2f}"} s
+\end{itemize}
+
+\section{Conclusions}
+
+This tutorial demonstrated comprehensive control system analysis techniques:
+
+\begin{enumerate}
+    \item \textbf{Transfer Function Modeling}: The second-order plant exhibits underdamped behavior with $\zeta = \py{zeta}$ and natural frequency $\omega_n = \py{wn}$ rad/s.
+
+    \item \textbf{Frequency Response}: Bode and Nyquist analysis revealed a bandwidth of \py{f"{bandwidth:.2f}"} rad/s and resonant peak at \py{f"{resonant_freq:.2f}"} rad/s.
+
+    \item \textbf{Root Locus}: Pole migration with gain showed stability boundaries and damping ratio constraints.
+
+    \item \textbf{PID Tuning}: Ziegler-Nichols tuning ($K_p = \py{f"{Kp_zn:.3f}"}$, $K_i = \py{f"{Ki_zn:.3f}"}$, $K_d = \py{f"{Kd_zn:.4f}"}$) provided acceptable performance with \py{f"{os_zn:.1f}"}\% overshoot.
+
+    \item \textbf{Robustness}: The compensated system achieves \py{f"{gm_db:.1f}"} dB gain margin and \py{f"{pm_deg:.1f}"}$^\circ$ phase margin, meeting typical design specifications.
+\end{enumerate}
+
+The computational approach ensures all results are reproducible and automatically update when system parameters change.
+
+\end{document}

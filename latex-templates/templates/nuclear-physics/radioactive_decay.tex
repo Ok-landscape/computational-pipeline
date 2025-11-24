@@ -1,0 +1,442 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Radioactive Decay Chains: Bateman Equations and Activity Calculations}
+\author{Nuclear Physics Computation Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of radioactive decay chains using the Bateman equations. We implement solutions for sequential decay series, compute activities as functions of time, and analyze equilibrium conditions including secular and transient equilibrium. Applications include medical isotope production, nuclear waste management, radiometric dating, and radiation dosimetry.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Radioactive Decay Law]
+The decay of radioactive nuclei follows first-order kinetics:
+\begin{equation}
+\frac{dN}{dt} = -\lambda N
+\end{equation}
+where $\lambda = \ln(2)/t_{1/2}$ is the decay constant and $t_{1/2}$ is the half-life.
+\end{definition}
+
+\begin{theorem}[Bateman Equations]
+For a decay chain $N_1 \to N_2 \to N_3 \to \cdots$, the populations evolve as:
+\begin{align}
+\frac{dN_1}{dt} &= -\lambda_1 N_1 \\
+\frac{dN_2}{dt} &= \lambda_1 N_1 - \lambda_2 N_2 \\
+\frac{dN_n}{dt} &= \lambda_{n-1} N_{n-1} - \lambda_n N_n
+\end{align}
+with solution:
+\begin{equation}
+N_n(t) = N_1(0) \prod_{i=1}^{n-1} \lambda_i \sum_{i=1}^{n} \frac{e^{-\lambda_i t}}{\prod_{j \neq i}(\lambda_j - \lambda_i)}
+\end{equation}
+\end{theorem}
+
+\subsection{Activity and Equilibrium}
+
+\begin{definition}[Activity]
+The activity $A = \lambda N$ is the number of decays per unit time, measured in Becquerels (Bq = decays/s) or Curies (1 Ci = $3.7 \times 10^{10}$ Bq).
+\end{definition}
+
+\begin{example}[Equilibrium Conditions]
+For a two-member chain with $\lambda_1 \ll \lambda_2$:
+\begin{itemize}
+    \item \textbf{Secular equilibrium}: $A_2 \approx A_1$ (daughter activity equals parent)
+    \item \textbf{Transient equilibrium}: $A_2/A_1 = \lambda_2/(\lambda_2 - \lambda_1)$
+\end{itemize}
+\end{example}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.integrate import odeint, solve_ivp
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# Time unit conversions
+sec_per_hour = 3600
+sec_per_day = 86400
+sec_per_year = 365.25 * sec_per_day
+
+# Decay chain class
+class DecayChain:
+    def __init__(self, half_lives, names):
+        self.names = names
+        self.half_lives = np.array(half_lives)
+        self.lambdas = np.log(2) / self.half_lives
+        self.n = len(half_lives)
+
+    def equations(self, N, t):
+        dNdt = np.zeros(self.n)
+        dNdt[0] = -self.lambdas[0] * N[0]
+        for i in range(1, self.n):
+            if self.lambdas[i] > 0:  # Not stable
+                dNdt[i] = self.lambdas[i-1] * N[i-1] - self.lambdas[i] * N[i]
+            else:
+                dNdt[i] = self.lambdas[i-1] * N[i-1]
+        return dNdt
+
+    def solve(self, N0, t):
+        return odeint(self.equations, N0, t)
+
+    def activity(self, N):
+        return N * self.lambdas
+
+# Mo-99/Tc-99m generator (medical isotopes)
+mo_tc_chain = DecayChain(
+    half_lives=[66.0 * sec_per_hour, 6.0 * sec_per_hour, 1e20],
+    names=['Mo-99', 'Tc-99m', 'Tc-99']
+)
+
+# Initial conditions (pure Mo-99)
+N0_mo = [1.0, 0.0, 0.0]
+t_mo = np.linspace(0, 200 * sec_per_hour, 1000)
+sol_mo = mo_tc_chain.solve(N0_mo, t_mo)
+A_mo = mo_tc_chain.activity(sol_mo)
+
+# Find optimal milking time
+tc99m_activity = A_mo[:, 1]
+max_idx = np.argmax(tc99m_activity)
+t_max_tc = t_mo[max_idx] / sec_per_hour
+A_max_tc = tc99m_activity[max_idx]
+
+# Equilibrium ratio
+lambda_1, lambda_2 = mo_tc_chain.lambdas[0], mo_tc_chain.lambdas[1]
+equilibrium_ratio = lambda_2 / (lambda_2 - lambda_1)
+
+# Uranium-238 decay series (simplified)
+# U-238 -> Th-234 -> Pa-234 -> U-234 -> ...
+u238_chain = DecayChain(
+    half_lives=[4.47e9 * sec_per_year, 24.1 * sec_per_day,
+                1.17 / 60 * sec_per_hour, 2.45e5 * sec_per_year],
+    names=['U-238', 'Th-234', 'Pa-234', 'U-234']
+)
+
+N0_u = [1.0, 0.0, 0.0, 0.0]
+t_u = np.linspace(0, 365 * sec_per_day, 1000)  # 1 year
+sol_u = u238_chain.solve(N0_u, t_u)
+A_u = u238_chain.activity(sol_u)
+
+# Branching decay example: Bi-212
+# Bi-212 -> Po-212 (64%) or Tl-208 (36%)
+bi212_hl = 60.6 * 60  # seconds
+po212_hl = 0.3e-6     # microseconds
+tl208_hl = 3.05 * 60  # seconds
+
+branch_alpha = 0.64
+branch_beta = 0.36
+
+# Radon-222 and daughters for dosimetry
+rn_chain = DecayChain(
+    half_lives=[3.8 * sec_per_day, 3.05 * 60, 26.8 * 60,
+                1e-4, 22.3 * sec_per_year],
+    names=['Rn-222', 'Po-218', 'Pb-214', 'Bi-214', 'Pb-210']
+)
+
+# Carbon-14 dating
+c14_half_life = 5730 * sec_per_year
+lambda_c14 = np.log(2) / c14_half_life
+
+def carbon_dating_age(ratio):
+    """Calculate age from C-14/C-12 ratio relative to modern."""
+    return -np.log(ratio) / lambda_c14 / sec_per_year
+
+# Medical isotopes table
+medical_isotopes = [
+    ('Mo-99/Tc-99m', 66.0, 6.0, 'Imaging'),
+    ('I-131', 8.02 * 24, np.inf, 'Thyroid'),
+    ('F-18', 1.83, np.inf, 'PET'),
+    ('Co-60', 5.27 * 365 * 24, np.inf, 'Therapy'),
+    ('Cs-137', 30.17 * 365 * 24, np.inf, 'Calibration')
+]
+
+# Multi-stage decay with numerical solution
+def bateman_analytical_2stage(t, lambda1, lambda2, N10):
+    """Analytical Bateman solution for 2-stage decay."""
+    N1 = N10 * np.exp(-lambda1 * t)
+    if abs(lambda2 - lambda1) > 1e-10:
+        N2 = N10 * lambda1 / (lambda2 - lambda1) * (np.exp(-lambda1 * t) - np.exp(-lambda2 * t))
+    else:
+        N2 = N10 * lambda1 * t * np.exp(-lambda1 * t)
+    return N1, N2
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Mo-99/Tc-99m populations
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(t_mo / sec_per_hour, sol_mo[:, 0], 'b-', lw=2, label='Mo-99')
+ax1.plot(t_mo / sec_per_hour, sol_mo[:, 1], 'r-', lw=2, label='Tc-99m')
+ax1.plot(t_mo / sec_per_hour, sol_mo[:, 2], 'g--', lw=1.5, label='Tc-99')
+ax1.set_xlabel('Time (hours)')
+ax1.set_ylabel('Relative Population')
+ax1.set_title('Mo-99/Tc-99m Generator')
+ax1.legend(fontsize=7)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Activities
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(t_mo / sec_per_hour, A_mo[:, 0] / A_mo[0, 0], 'b-', lw=2, label='$A_1$ (Mo-99)')
+ax2.plot(t_mo / sec_per_hour, A_mo[:, 1] / A_mo[0, 0], 'r-', lw=2, label='$A_2$ (Tc-99m)')
+ax2.axvline(x=t_max_tc, color='gray', ls='--', alpha=0.5)
+ax2.set_xlabel('Time (hours)')
+ax2.set_ylabel('Relative Activity')
+ax2.set_title('Decay Activities')
+ax2.legend(fontsize=7)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Activity ratio (transient equilibrium)
+ax3 = fig.add_subplot(gs[0, 2])
+ratio = A_mo[:, 1] / (A_mo[:, 0] + 1e-20)
+ax3.plot(t_mo / sec_per_hour, ratio, 'purple', lw=2)
+ax3.axhline(y=equilibrium_ratio, color='r', ls='--',
+            label=f'Equilibrium: {equilibrium_ratio:.3f}')
+ax3.set_xlabel('Time (hours)')
+ax3.set_ylabel('$A_2/A_1$')
+ax3.set_title('Activity Ratio')
+ax3.legend(fontsize=7)
+ax3.grid(True, alpha=0.3)
+ax3.set_ylim([0, equilibrium_ratio * 1.2])
+
+# Plot 4: U-238 daughters approach secular equilibrium
+ax4 = fig.add_subplot(gs[1, 0])
+for i in range(1, 4):
+    ax4.plot(t_u / sec_per_day, A_u[:, i] / (A_u[0, 0] + 1e-20),
+             lw=1.5, label=u238_chain.names[i])
+ax4.set_xlabel('Time (days)')
+ax4.set_ylabel('Activity / Initial $A_0$')
+ax4.set_title('U-238 Daughters (Secular Equil.)')
+ax4.legend(fontsize=7)
+ax4.grid(True, alpha=0.3)
+ax4.set_yscale('log')
+
+# Plot 5: Decay curve fitting
+ax5 = fig.add_subplot(gs[1, 1])
+t_decay = np.linspace(0, 5, 100)  # In half-lives
+y_decay = np.exp(-np.log(2) * t_decay)
+
+# Add noise for fitting demonstration
+np.random.seed(42)
+t_data = np.array([0, 0.5, 1, 1.5, 2, 3, 4])
+y_data = np.exp(-np.log(2) * t_data) + np.random.normal(0, 0.02, len(t_data))
+
+ax5.plot(t_decay, y_decay, 'b-', lw=2, label='Theory')
+ax5.scatter(t_data, y_data, color='red', s=50, zorder=5, label='Data')
+ax5.axhline(y=0.5, color='gray', ls='--', alpha=0.5)
+ax5.axvline(x=1, color='gray', ls='--', alpha=0.5)
+ax5.set_xlabel('Time / $t_{1/2}$')
+ax5.set_ylabel('$N/N_0$')
+ax5.set_title('Radioactive Decay Curve')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Carbon-14 dating
+ax6 = fig.add_subplot(gs[1, 2])
+ratios = np.linspace(0.01, 1.0, 100)
+ages = np.array([carbon_dating_age(r) for r in ratios])
+
+ax6.plot(ages / 1000, ratios, 'g-', lw=2)
+ax6.axhline(y=0.5, color='gray', ls='--', alpha=0.5)
+ax6.axvline(x=5.73, color='gray', ls='--', alpha=0.5)
+ax6.set_xlabel('Age (kyr)')
+ax6.set_ylabel('$^{14}$C / $^{14}$C$_0$')
+ax6.set_title('Carbon-14 Dating')
+ax6.grid(True, alpha=0.3)
+ax6.set_xlim([0, 50])
+
+# Plot 7: Half-lives comparison
+ax7 = fig.add_subplot(gs[2, 0])
+isotope_names = [m[0].split('/')[0] if '/' in m[0] else m[0] for m in medical_isotopes]
+half_lives_hr = [m[1] for m in medical_isotopes]
+colors = ['blue', 'red', 'green', 'orange', 'purple']
+
+ax7.barh(isotope_names, np.log10(half_lives_hr), color=colors, alpha=0.7)
+ax7.set_xlabel('$\\log_{10}(t_{1/2} / \\mathrm{hours})$')
+ax7.set_title('Medical Isotope Half-Lives')
+ax7.grid(True, alpha=0.3, axis='x')
+
+# Plot 8: Generator elution cycles
+ax8 = fig.add_subplot(gs[2, 1])
+t_cycle = np.linspace(0, 100, 1000)
+elution_times = [0, 24, 48, 72]
+
+# Simulate multiple elutions
+N_mo = np.ones_like(t_cycle)
+N_tc = np.zeros_like(t_cycle)
+
+for i, t in enumerate(t_cycle):
+    # Decay between elutions
+    hours = t
+    N_mo[i] = np.exp(-lambda_1 * hours * sec_per_hour)
+
+    # Tc-99m builds up
+    N_tc[i] = (lambda_1 / (lambda_2 - lambda_1)) * N_mo[i] * \
+              (1 - np.exp(-(lambda_2 - lambda_1) * (hours % 24) * sec_per_hour))
+
+ax8.plot(t_cycle, N_tc * lambda_2 / lambda_1, 'r-', lw=2)
+for et in elution_times[1:]:
+    ax8.axvline(x=et, color='blue', ls='--', alpha=0.5)
+ax8.set_xlabel('Time (hours)')
+ax8.set_ylabel('Tc-99m Activity')
+ax8.set_title('Generator Elution Cycles')
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Specific activity
+ax9 = fig.add_subplot(gs[2, 2])
+A_range = np.logspace(0, 3, 100)  # Mass numbers
+
+# Specific activity = lambda * N_A / A
+N_A = 6.022e23  # Avogadro's number
+t_half_1yr = sec_per_year
+
+specific_act = np.log(2) / t_half_1yr * N_A / A_range / 1e12  # TBq/g
+
+ax9.loglog(A_range, specific_act, 'b-', lw=2)
+ax9.set_xlabel('Mass Number $A$')
+ax9.set_ylabel('Specific Activity (TBq/g)')
+ax9.set_title('Specific Activity ($t_{1/2}$ = 1 yr)')
+ax9.grid(True, alpha=0.3, which='both')
+
+plt.savefig('radioactive_decay_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{radioactive_decay_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Summary calculations
+N_A_value = 6.022e23
+specific_mo99 = np.log(2) / (66 * sec_per_hour) * N_A_value / 99 / 1e12
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Mo-99/Tc-99m Generator}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Mo-99/Tc-99m Generator Characteristics}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Parameter & Value & Units \\')
+print(r'\midrule')
+print(f'Mo-99 half-life & {66.0:.1f} & hours \\\\')
+print(f'Tc-99m half-life & {6.0:.1f} & hours \\\\')
+print(f'Optimal elution time & {t_max_tc:.1f} & hours \\\\')
+print(f'Equilibrium ratio $A_2/A_1$ & {equilibrium_ratio:.3f} & -- \\\\')
+print(f'Time to 90\\% equilibrium & {-np.log(0.1)/lambda_2/sec_per_hour:.1f} & hours \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{remark}
+The Mo-99/Tc-99m generator reaches transient equilibrium because $\lambda_2 > \lambda_1$. The daughter activity exceeds the parent activity by the factor $\lambda_2/(\lambda_2 - \lambda_1) = \py{f"{equilibrium_ratio:.2f}"}$.
+\end{remark}
+
+\subsection{Medical Isotopes}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Medical Radioisotopes}')
+print(r'\begin{tabular}{lccl}')
+print(r'\toprule')
+print(r'Isotope & $t_{1/2}$ & Production & Application \\')
+print(r'\midrule')
+print(r'Tc-99m & 6.0 hr & Generator & SPECT imaging \\')
+print(r'F-18 & 110 min & Cyclotron & PET imaging \\')
+print(r'I-131 & 8.0 days & Reactor & Thyroid therapy \\')
+print(r'Co-60 & 5.3 yr & Reactor & External beam therapy \\')
+print(r'Ir-192 & 74 days & Reactor & Brachytherapy \\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Equilibrium Types}
+
+\begin{theorem}[Secular Equilibrium]
+When $\lambda_1 \ll \lambda_2$ (parent half-life much longer than daughter):
+\begin{equation}
+A_2 \approx A_1 \quad \text{for } t \gg t_{1/2,2}
+\end{equation}
+Example: U-238 series where U-238 ($t_{1/2} = 4.5 \times 10^9$ yr) decays to short-lived daughters.
+\end{theorem}
+
+\begin{theorem}[Transient Equilibrium]
+When $\lambda_1 < \lambda_2$ but comparable:
+\begin{equation}
+\frac{A_2}{A_1} = \frac{\lambda_2}{\lambda_2 - \lambda_1}
+\end{equation}
+Example: Mo-99/Tc-99m where ratio $= \py{f"{equilibrium_ratio:.2f}"}$.
+\end{theorem}
+
+\section{Applications}
+
+\begin{example}[Radiometric Dating]
+Carbon-14 dating uses the decay:
+\begin{equation}
+^{14}\text{C} \to ^{14}\text{N} + \beta^- + \bar{\nu}_e
+\end{equation}
+with $t_{1/2} = 5730$ years. Measurable ages range from $\sim$300 to 50,000 years.
+\end{example}
+
+\begin{example}[Nuclear Waste Management]
+The activity of fission products decreases as:
+\begin{itemize}
+    \item Short-term (1-100 yr): dominated by Cs-137, Sr-90
+    \item Intermediate (100-1000 yr): Sm-151, Tc-99
+    \item Long-term ($>$1000 yr): actinides (Pu, Am, Cm)
+\end{itemize}
+\end{example}
+
+\section{Discussion}
+
+The Bateman equations provide a complete description of radioactive decay chains:
+
+\begin{enumerate}
+    \item \textbf{Generator design}: Optimal elution times maximize daughter activity while balancing parent depletion.
+    \item \textbf{Diagnostic imaging}: Short-lived isotopes minimize patient dose while providing adequate counts.
+    \item \textbf{Dose calculations}: Activity profiles determine internal dosimetry for therapy planning.
+    \item \textbf{Environmental monitoring}: Equilibrium assumptions simplify radon progeny measurements.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis demonstrates:
+\begin{itemize}
+    \item Tc-99m maximum activity at $t = \py{f"{t_max_tc:.1f}"}$ hours
+    \item Transient equilibrium ratio: \py{f"{equilibrium_ratio:.3f}"}
+    \item Specific activity of Mo-99: \py{f"{specific_mo99:.0f}"} TBq/g
+    \item C-14 dating range: 300 -- 50,000 years
+\end{itemize}
+
+The Bateman equations enable precise prediction of radionuclide behavior for medical, industrial, and research applications.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Magill, J., Galy, J., \textit{Radioactivity Radionuclides Radiation}, Springer, 2005
+    \item Loveland, W.D., Morrissey, D.J., Seaborg, G.T., \textit{Modern Nuclear Chemistry}, 2nd Ed., Wiley, 2017
+    \item Cherry, S.R., Sorenson, J.A., Phelps, M.E., \textit{Physics in Nuclear Medicine}, 4th Ed., Elsevier, 2012
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,650 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Word Embeddings: Skip-gram Model and Vector Semantics}
+\author{Natural Language Processing Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Word embeddings map words to dense vector representations where semantic relationships are captured through geometric properties. This template implements a simplified Word2Vec skip-gram model, demonstrates cosine similarity for word relationships, and visualizes embeddings using t-SNE dimensionality reduction.
+
+\section{Mathematical Framework}
+
+\subsection{Skip-gram Objective}
+The skip-gram model maximizes the probability of context words given a target word:
+\begin{equation}
+J(\theta) = \frac{1}{T} \sum_{t=1}^{T} \sum_{-c \leq j \leq c, j \neq 0} \log P(w_{t+j} | w_t)
+\end{equation}
+where $c$ is the context window size.
+
+\subsection{Softmax Probability}
+The probability is computed using softmax over dot products:
+\begin{equation}
+P(w_O | w_I) = \frac{\exp(\mathbf{v}'_{w_O} \cdot \mathbf{v}_{w_I})}{\sum_{w=1}^{V} \exp(\mathbf{v}'_w \cdot \mathbf{v}_{w_I})}
+\end{equation}
+
+\subsection{Negative Sampling}
+For efficiency, negative sampling approximates the full softmax:
+\begin{equation}
+\log \sigma(\mathbf{v}'_{w_O} \cdot \mathbf{v}_{w_I}) + \sum_{i=1}^{k} \mathbb{E}_{w_i \sim P_n(w)} \left[ \log \sigma(-\mathbf{v}'_{w_i} \cdot \mathbf{v}_{w_I}) \right]
+\end{equation}
+
+\subsection{Cosine Similarity}
+Word similarity is measured by cosine of the angle between vectors:
+\begin{equation}
+\text{sim}(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \|\mathbf{v}\|}
+\end{equation}
+
+\subsection{Word Analogy}
+Analogies are solved by vector arithmetic:
+\begin{equation}
+\mathbf{v}_{\text{king}} - \mathbf{v}_{\text{man}} + \mathbf{v}_{\text{woman}} \approx \mathbf{v}_{\text{queen}}
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter, defaultdict
+import re
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Skip-gram Implementation}
+
+\begin{pycode}
+class Word2VecSkipGram:
+    def __init__(self, embedding_dim=50, window_size=2, learning_rate=0.025,
+                 negative_samples=5, min_count=1):
+        self.embedding_dim = embedding_dim
+        self.window_size = window_size
+        self.lr = learning_rate
+        self.neg_samples = negative_samples
+        self.min_count = min_count
+
+    def tokenize(self, text):
+        return re.findall(r'\b\w+\b', text.lower())
+
+    def build_vocab(self, corpus):
+        word_counts = Counter()
+        for sentence in corpus:
+            word_counts.update(self.tokenize(sentence))
+
+        self.vocab = {w: i for i, (w, c) in enumerate(word_counts.items())
+                     if c >= self.min_count}
+        self.inv_vocab = {i: w for w, i in self.vocab.items()}
+        self.vocab_size = len(self.vocab)
+
+        # Compute sampling distribution for negative sampling
+        counts = np.array([word_counts[self.inv_vocab[i]] for i in range(self.vocab_size)])
+        self.sample_probs = (counts ** 0.75) / np.sum(counts ** 0.75)
+
+    def init_embeddings(self):
+        self.W_in = np.random.randn(self.vocab_size, self.embedding_dim) * 0.01
+        self.W_out = np.random.randn(self.vocab_size, self.embedding_dim) * 0.01
+
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
+
+    def get_context_pairs(self, corpus):
+        pairs = []
+        for sentence in corpus:
+            words = self.tokenize(sentence)
+            indices = [self.vocab[w] for w in words if w in self.vocab]
+
+            for i, center in enumerate(indices):
+                start = max(0, i - self.window_size)
+                end = min(len(indices), i + self.window_size + 1)
+
+                for j in range(start, end):
+                    if i != j:
+                        pairs.append((center, indices[j]))
+        return pairs
+
+    def train_pair(self, center_idx, context_idx):
+        # Positive sample
+        center_vec = self.W_in[center_idx]
+        context_vec = self.W_out[context_idx]
+
+        score = np.dot(center_vec, context_vec)
+        pred = self.sigmoid(score)
+        error = pred - 1
+
+        grad_out = error * center_vec
+        grad_in = error * context_vec
+
+        # Negative samples
+        neg_indices = np.random.choice(self.vocab_size, size=self.neg_samples,
+                                       p=self.sample_probs)
+
+        for neg_idx in neg_indices:
+            if neg_idx == context_idx:
+                continue
+            neg_vec = self.W_out[neg_idx]
+            score = np.dot(center_vec, neg_vec)
+            pred = self.sigmoid(score)
+
+            grad_out_neg = pred * center_vec
+            grad_in += pred * neg_vec
+
+            self.W_out[neg_idx] -= self.lr * grad_out_neg
+
+        self.W_out[context_idx] -= self.lr * grad_out
+        self.W_in[center_idx] -= self.lr * grad_in
+
+    def train(self, corpus, epochs=5):
+        self.build_vocab(corpus)
+        self.init_embeddings()
+
+        pairs = self.get_context_pairs(corpus)
+        n_pairs = len(pairs)
+
+        self.losses = []
+        for epoch in range(epochs):
+            np.random.shuffle(pairs)
+            epoch_loss = 0
+
+            for center_idx, context_idx in pairs:
+                self.train_pair(center_idx, context_idx)
+
+                # Compute loss for monitoring
+                score = np.dot(self.W_in[center_idx], self.W_out[context_idx])
+                epoch_loss -= np.log(self.sigmoid(score) + 1e-10)
+
+            self.losses.append(epoch_loss / n_pairs)
+
+        # Final embeddings: average of input and output
+        self.embeddings = (self.W_in + self.W_out) / 2
+
+    def get_embedding(self, word):
+        if word in self.vocab:
+            return self.embeddings[self.vocab[word]]
+        return None
+
+    def most_similar(self, word, n=5):
+        if word not in self.vocab:
+            return []
+
+        vec = self.get_embedding(word)
+        vec = vec / np.linalg.norm(vec)
+
+        similarities = []
+        for w, idx in self.vocab.items():
+            if w == word:
+                continue
+            other_vec = self.embeddings[idx]
+            other_vec = other_vec / np.linalg.norm(other_vec)
+            sim = np.dot(vec, other_vec)
+            similarities.append((w, sim))
+
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        return similarities[:n]
+
+    def analogy(self, a, b, c, n=5):
+        if a not in self.vocab or b not in self.vocab or c not in self.vocab:
+            return []
+
+        vec = self.get_embedding(b) - self.get_embedding(a) + self.get_embedding(c)
+        vec = vec / np.linalg.norm(vec)
+
+        similarities = []
+        exclude = {a, b, c}
+        for w, idx in self.vocab.items():
+            if w in exclude:
+                continue
+            other_vec = self.embeddings[idx]
+            other_vec = other_vec / np.linalg.norm(other_vec)
+            sim = np.dot(vec, other_vec)
+            similarities.append((w, sim))
+
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        return similarities[:n]
+
+# Training corpus with semantic relationships
+corpus = [
+    "the king rules the kingdom with power",
+    "the queen rules beside the king",
+    "the prince is son of the king and queen",
+    "the princess is daughter of the king",
+    "man and woman are different",
+    "boy grows into man",
+    "girl grows into woman",
+    "python is a programming language",
+    "java is a programming language",
+    "code written in python",
+    "code written in java",
+    "machine learning uses data",
+    "deep learning is machine learning",
+    "neural networks learn patterns",
+    "data science analyzes data",
+    "the cat sits on the mat",
+    "the dog runs in the park",
+    "cats and dogs are pets",
+    "paris is capital of france",
+    "london is capital of england",
+    "berlin is capital of germany",
+    "france is in europe",
+    "england is in europe",
+    "germany is in europe"
+]
+
+# Train model
+model = Word2VecSkipGram(embedding_dim=30, window_size=2, learning_rate=0.05,
+                         negative_samples=5)
+model.train(corpus, epochs=100)
+\end{pycode}
+
+\section{Training Visualization}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Training loss
+axes[0, 0].plot(model.losses, 'b-', linewidth=2)
+axes[0, 0].set_xlabel('Epoch')
+axes[0, 0].set_ylabel('Loss')
+axes[0, 0].set_title('Training Loss')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Embedding norms
+norms = np.linalg.norm(model.embeddings, axis=1)
+axes[0, 1].hist(norms, bins=20, color='green', alpha=0.7, edgecolor='black')
+axes[0, 1].set_xlabel('Vector Norm')
+axes[0, 1].set_ylabel('Frequency')
+axes[0, 1].set_title('Embedding Norm Distribution')
+axes[0, 1].axvline(x=np.mean(norms), color='red', linestyle='--',
+                   label=f'Mean: {np.mean(norms):.2f}')
+axes[0, 1].legend()
+
+# Plot 3: Similarity matrix for selected words
+selected_words = ['king', 'queen', 'man', 'woman', 'python', 'java', 'cat', 'dog']
+selected_words = [w for w in selected_words if w in model.vocab]
+n_selected = len(selected_words)
+
+sim_matrix = np.zeros((n_selected, n_selected))
+for i, w1 in enumerate(selected_words):
+    v1 = model.get_embedding(w1)
+    v1 = v1 / np.linalg.norm(v1)
+    for j, w2 in enumerate(selected_words):
+        v2 = model.get_embedding(w2)
+        v2 = v2 / np.linalg.norm(v2)
+        sim_matrix[i, j] = np.dot(v1, v2)
+
+im = axes[1, 0].imshow(sim_matrix, cmap='RdYlBu', vmin=-1, vmax=1)
+axes[1, 0].set_xticks(range(n_selected))
+axes[1, 0].set_yticks(range(n_selected))
+axes[1, 0].set_xticklabels(selected_words, rotation=45, ha='right', fontsize=8)
+axes[1, 0].set_yticklabels(selected_words, fontsize=8)
+axes[1, 0].set_title('Word Similarity Matrix')
+plt.colorbar(im, ax=axes[1, 0], shrink=0.8)
+
+# Plot 4: Vocabulary frequency
+word_counts = Counter()
+for sentence in corpus:
+    word_counts.update(model.tokenize(sentence))
+common = word_counts.most_common(15)
+words, counts = zip(*common)
+y_pos = np.arange(len(words))
+axes[1, 1].barh(y_pos, counts, color='purple', alpha=0.7)
+axes[1, 1].set_yticks(y_pos)
+axes[1, 1].set_yticklabels(words, fontsize=8)
+axes[1, 1].set_xlabel('Frequency')
+axes[1, 1].set_title('Top Words by Frequency')
+axes[1, 1].invert_yaxis()
+
+plt.tight_layout()
+save_plot('embeddings_training.pdf', 'Word embedding training analysis')
+\end{pycode}
+
+\section{Cosine Similarity Analysis}
+
+\begin{pycode}
+# Compute most similar words for key terms
+test_words = ['king', 'python', 'data', 'cat', 'france']
+similarity_results = {}
+
+for word in test_words:
+    if word in model.vocab:
+        similar = model.most_similar(word, n=5)
+        similarity_results[word] = similar
+
+# Visualize similarities
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+for idx, word in enumerate(test_words):
+    if word not in similarity_results:
+        continue
+    ax = axes[idx // 3, idx % 3]
+    similar = similarity_results[word]
+    if similar:
+        words, sims = zip(*similar)
+        y_pos = np.arange(len(words))
+        colors = plt.cm.viridis(np.array(sims))
+        ax.barh(y_pos, sims, color=colors, alpha=0.8)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(words, fontsize=9)
+        ax.set_xlabel('Cosine Similarity')
+        ax.set_title(f'Similar to "{word}"')
+        ax.set_xlim(0, 1)
+        ax.invert_yaxis()
+
+# Remove empty subplot
+axes[1, 2].axis('off')
+
+plt.tight_layout()
+save_plot('similarity_analysis.pdf', 'Cosine similarity analysis for key words')
+\end{pycode}
+
+\section{Word Analogy Tasks}
+
+\begin{pycode}
+# Test analogies
+analogies = [
+    ('king', 'queen', 'man', 'woman'),  # king:queen :: man:?
+    ('france', 'paris', 'england', 'london'),  # france:paris :: england:?
+    ('python', 'code', 'java', 'code'),  # python:code :: java:?
+]
+
+analogy_results = []
+for a, b, c, expected in analogies:
+    if all(w in model.vocab for w in [a, b, c]):
+        results = model.analogy(a, b, c, n=3)
+        analogy_results.append((a, b, c, expected, results))
+
+# Visualize analogy computation
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Vector arithmetic visualization
+if len(analogy_results) > 0:
+    a, b, c, expected, results = analogy_results[0]
+    words = [a, b, c] + [r[0] for r in results[:2]]
+    vecs = [model.get_embedding(w) for w in words]
+
+    # Simple 2D projection using first two principal components
+    if len(vecs) > 0:
+        vecs_matrix = np.array(vecs)
+        mean_vec = np.mean(vecs_matrix, axis=0)
+        centered = vecs_matrix - mean_vec
+        cov = np.cov(centered.T)
+        eigenvalues, eigenvectors = np.linalg.eigh(cov)
+        idx = np.argsort(eigenvalues)[::-1]
+        proj_matrix = eigenvectors[:, idx[:2]]
+        projected = centered @ proj_matrix
+
+        axes[0, 0].scatter(projected[:, 0], projected[:, 1], s=100, alpha=0.7)
+        for i, word in enumerate(words):
+            axes[0, 0].annotate(word, (projected[i, 0], projected[i, 1]),
+                               xytext=(5, 5), textcoords='offset points', fontsize=10)
+
+        # Draw analogy vectors
+        if len(projected) >= 3:
+            # a -> b vector
+            axes[0, 0].arrow(projected[0, 0], projected[0, 1],
+                            projected[1, 0] - projected[0, 0],
+                            projected[1, 1] - projected[0, 1],
+                            head_width=0.05, head_length=0.02, fc='blue', ec='blue', alpha=0.5)
+            # c -> result vector
+            axes[0, 0].arrow(projected[2, 0], projected[2, 1],
+                            projected[3, 0] - projected[2, 0],
+                            projected[3, 1] - projected[2, 1],
+                            head_width=0.05, head_length=0.02, fc='red', ec='red', alpha=0.5)
+
+        axes[0, 0].set_xlabel('PC1')
+        axes[0, 0].set_ylabel('PC2')
+        axes[0, 0].set_title(f'Analogy: {a}:{b} :: {c}:?')
+        axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Analogy results bar chart
+if analogy_results:
+    a, b, c, expected, results = analogy_results[0]
+    words = [r[0] for r in results]
+    sims = [r[1] for r in results]
+    y_pos = np.arange(len(words))
+    axes[0, 1].barh(y_pos, sims, color='orange', alpha=0.7)
+    axes[0, 1].set_yticks(y_pos)
+    axes[0, 1].set_yticklabels(words)
+    axes[0, 1].set_xlabel('Similarity Score')
+    axes[0, 1].set_title(f'{a} - {b} + {c} = ?')
+    axes[0, 1].invert_yaxis()
+
+# Plot 3: Embedding space visualization (t-SNE-like using PCA)
+# Select subset of words for visualization
+viz_words = list(model.vocab.keys())[:30]
+viz_vecs = np.array([model.get_embedding(w) for w in viz_words])
+
+# PCA projection
+mean_vec = np.mean(viz_vecs, axis=0)
+centered = viz_vecs - mean_vec
+cov = np.cov(centered.T)
+eigenvalues, eigenvectors = np.linalg.eigh(cov)
+idx = np.argsort(eigenvalues)[::-1]
+proj = centered @ eigenvectors[:, idx[:2]]
+
+scatter = axes[1, 0].scatter(proj[:, 0], proj[:, 1], c=range(len(viz_words)),
+                             cmap='tab20', s=60, alpha=0.7)
+for i, word in enumerate(viz_words):
+    axes[1, 0].annotate(word, (proj[i, 0], proj[i, 1]),
+                       xytext=(3, 3), textcoords='offset points', fontsize=7)
+axes[1, 0].set_xlabel('Component 1')
+axes[1, 0].set_ylabel('Component 2')
+axes[1, 0].set_title('Word Embedding Space (PCA Projection)')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Pairwise similarity distribution
+all_sims = []
+for i in range(model.vocab_size):
+    v1 = model.embeddings[i] / np.linalg.norm(model.embeddings[i])
+    for j in range(i+1, model.vocab_size):
+        v2 = model.embeddings[j] / np.linalg.norm(model.embeddings[j])
+        all_sims.append(np.dot(v1, v2))
+
+axes[1, 1].hist(all_sims, bins=30, color='steelblue', alpha=0.7, edgecolor='black')
+axes[1, 1].axvline(x=np.mean(all_sims), color='red', linestyle='--',
+                   label=f'Mean: {np.mean(all_sims):.3f}')
+axes[1, 1].set_xlabel('Cosine Similarity')
+axes[1, 1].set_ylabel('Frequency')
+axes[1, 1].set_title('Pairwise Similarity Distribution')
+axes[1, 1].legend()
+
+plt.tight_layout()
+save_plot('analogy_visualization.pdf', 'Word analogy and embedding space visualization')
+\end{pycode}
+
+\section{t-SNE Visualization}
+
+\begin{pycode}
+def tsne(X, n_components=2, perplexity=5.0, n_iter=500, learning_rate=100.0):
+    """Simplified t-SNE implementation"""
+    n_samples = X.shape[0]
+
+    # Compute pairwise distances
+    sum_X = np.sum(X ** 2, axis=1)
+    D = sum_X[:, np.newaxis] + sum_X[np.newaxis, :] - 2 * X @ X.T
+    D = np.maximum(D, 0)
+
+    # Compute conditional probabilities
+    P = np.zeros((n_samples, n_samples))
+    for i in range(n_samples):
+        Di = D[i, np.concatenate([np.arange(i), np.arange(i+1, n_samples)])]
+        Pi = np.exp(-Di / (2 * perplexity))
+        Pi = Pi / np.sum(Pi)
+        P[i, np.concatenate([np.arange(i), np.arange(i+1, n_samples)])] = Pi
+
+    # Symmetrize
+    P = (P + P.T) / (2 * n_samples)
+    P = np.maximum(P, 1e-12)
+
+    # Initialize embedding
+    Y = np.random.randn(n_samples, n_components) * 0.01
+
+    # Gradient descent
+    for iteration in range(n_iter):
+        # Compute Q
+        sum_Y = np.sum(Y ** 2, axis=1)
+        num = 1 / (1 + sum_Y[:, np.newaxis] + sum_Y[np.newaxis, :] - 2 * Y @ Y.T)
+        np.fill_diagonal(num, 0)
+        Q = num / np.sum(num)
+        Q = np.maximum(Q, 1e-12)
+
+        # Compute gradient
+        PQ_diff = P - Q
+        grad = np.zeros_like(Y)
+        for i in range(n_samples):
+            diff = Y[i] - Y
+            grad[i] = 4 * np.sum((PQ_diff[i] * num[i])[:, np.newaxis] * diff, axis=0)
+
+        Y -= learning_rate * grad
+
+    return Y
+
+# Apply t-SNE to embeddings
+tsne_result = tsne(model.embeddings, perplexity=5.0, n_iter=300)
+
+# Visualize t-SNE result
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Color by word frequency
+word_freqs = [word_counts[model.inv_vocab[i]] for i in range(model.vocab_size)]
+scatter = axes[0].scatter(tsne_result[:, 0], tsne_result[:, 1],
+                         c=word_freqs, cmap='viridis', s=60, alpha=0.7)
+for i in range(model.vocab_size):
+    axes[0].annotate(model.inv_vocab[i], (tsne_result[i, 0], tsne_result[i, 1]),
+                    xytext=(3, 3), textcoords='offset points', fontsize=7)
+axes[0].set_xlabel('t-SNE 1')
+axes[0].set_ylabel('t-SNE 2')
+axes[0].set_title('t-SNE Visualization (colored by frequency)')
+plt.colorbar(scatter, ax=axes[0], label='Frequency')
+
+# Highlight semantic clusters
+cluster_words = {
+    'royalty': ['king', 'queen', 'prince', 'princess'],
+    'gender': ['man', 'woman', 'boy', 'girl'],
+    'programming': ['python', 'java', 'code'],
+    'places': ['france', 'england', 'germany', 'paris', 'london', 'berlin']
+}
+
+colors = {'royalty': 'red', 'gender': 'blue', 'programming': 'green', 'places': 'orange'}
+
+axes[1].scatter(tsne_result[:, 0], tsne_result[:, 1], c='lightgray', s=40, alpha=0.3)
+
+for cluster_name, cluster_words_list in cluster_words.items():
+    for word in cluster_words_list:
+        if word in model.vocab:
+            idx = model.vocab[word]
+            axes[1].scatter(tsne_result[idx, 0], tsne_result[idx, 1],
+                           c=colors[cluster_name], s=100, alpha=0.8, label=cluster_name)
+            axes[1].annotate(word, (tsne_result[idx, 0], tsne_result[idx, 1]),
+                            xytext=(5, 5), textcoords='offset points', fontsize=9)
+
+# Custom legend
+from matplotlib.lines import Line2D
+legend_elements = [Line2D([0], [0], marker='o', color='w',
+                         markerfacecolor=c, markersize=10, label=n)
+                  for n, c in colors.items()]
+axes[1].legend(handles=legend_elements, loc='best')
+axes[1].set_xlabel('t-SNE 1')
+axes[1].set_ylabel('t-SNE 2')
+axes[1].set_title('t-SNE with Semantic Clusters')
+
+plt.tight_layout()
+save_plot('tsne_visualization.pdf', 't-SNE visualization of word embeddings')
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Model Statistics}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Word2Vec Model Statistics}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Metric & Value \\')
+print(r'\midrule')
+print(f"Vocabulary size & {model.vocab_size} \\\\")
+print(f"Embedding dimension & {model.embedding_dim} \\\\")
+print(f"Window size & {model.window_size} \\\\")
+print(f"Negative samples & {model.neg_samples} \\\\")
+print(f"Final loss & {model.losses[-1]:.4f} \\\\")
+print(f"Mean vector norm & {np.mean(norms):.3f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Word Similarity Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Top similar words for selected queries}')
+print(r'\begin{tabular}{lll}')
+print(r'\toprule')
+print(r'Query & Similar Words & Scores \\')
+print(r'\midrule')
+
+for word, results in similarity_results.items():
+    if results:
+        similar_str = ', '.join([f"{w}" for w, s in results[:3]])
+        scores_str = ', '.join([f"{s:.2f}" for w, s in results[:3]])
+        print(f"{word} & {similar_str} & {scores_str} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Analogy Results}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Word analogy task results}')
+print(r'\begin{tabular}{llll}')
+print(r'\toprule')
+print(r'Analogy & Expected & Top Result & Score \\')
+print(r'\midrule')
+
+for a, b, c, expected, results in analogy_results:
+    if results:
+        top_word, top_score = results[0]
+        print(f"{a}:{b}::{c}:? & {expected} & {top_word} & {top_score:.3f} \\\\")
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Statistical Summary}
+\begin{itemize}
+    \item Mean pairwise similarity: \py{f"{np.mean(all_sims):.3f}"}
+    \item Similarity std deviation: \py{f"{np.std(all_sims):.3f}"}
+    \item Training epochs: \py{f"{len(model.losses)}"}
+    \item Loss reduction: \py{f"{(model.losses[0] - model.losses[-1]) / model.losses[0] * 100:.1f}"}\\%
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates word embedding concepts through a simplified Word2Vec skip-gram implementation. The model learns semantic relationships from co-occurrence patterns, enabling similarity search and analogy tasks. The t-SNE visualization reveals clustering of semantically related words, validating the quality of learned representations. With vocabulary size of \py{f"{model.vocab_size}"} words and embedding dimension of \py{f"{model.embedding_dim}"}, the model achieves meaningful word relationships despite the limited training corpus.
+
+\end{document}

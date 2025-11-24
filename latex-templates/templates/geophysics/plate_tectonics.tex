@@ -1,0 +1,424 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Plate Tectonics: Thermal Evolution, Plate Motion, and Mantle Convection}
+\author{Computational Geophysics Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of plate tectonic processes including lithospheric cooling, seafloor subsidence, heat flow evolution, and plate kinematics. We implement the half-space and plate cooling models, analyze Euler pole rotation kinematics, and model mantle convection using Rayleigh-Benard theory. The analysis quantifies lithospheric thickness, thermal age relationships, and driving forces of plate motion.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Thermal Diffusion]
+Heat conduction in the lithosphere follows the diffusion equation:
+\begin{equation}
+\frac{\partial T}{\partial t} = \kappa \nabla^2 T
+\end{equation}
+where $\kappa = k/(\rho c_p)$ is thermal diffusivity ($\sim 10^{-6}$ m$^2$/s).
+\end{definition}
+
+\begin{theorem}[Half-Space Cooling Model]
+For lithosphere cooling from initial mantle temperature $T_m$, the temperature profile is:
+\begin{equation}
+T(z, t) = T_s + (T_m - T_s) \text{erf}\left(\frac{z}{2\sqrt{\kappa t}}\right)
+\end{equation}
+where $\text{erf}$ is the error function and $T_s$ is surface temperature.
+\end{theorem}
+
+\subsection{Seafloor Subsidence}
+
+Thermal contraction causes seafloor deepening with age:
+\begin{equation}
+d(t) = d_r + \frac{2\rho_m \alpha_V (T_m - T_s)}{\rho_m - \rho_w} \sqrt{\frac{\kappa t}{\pi}}
+\end{equation}
+
+where $d_r$ is ridge depth, $\alpha_V$ is volumetric thermal expansion, and $\rho_m$, $\rho_w$ are mantle and water densities.
+
+\begin{example}[Heat Flow]
+Surface heat flow decreases with age:
+\begin{equation}
+q(t) = \frac{k(T_m - T_s)}{\sqrt{\pi \kappa t}}
+\end{equation}
+Typical values range from $>$200 mW/m$^2$ at ridges to $<$50 mW/m$^2$ on old oceanic crust.
+\end{example}
+
+\subsection{Plate Kinematics}
+
+Plate motion on a sphere follows Euler's theorem---rotation about a fixed pole:
+\begin{equation}
+\mathbf{v} = \boldsymbol{\omega} \times \mathbf{r}
+\end{equation}
+where $\boldsymbol{\omega}$ is the angular velocity vector and $\mathbf{r}$ is the position vector.
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+from scipy.special import erf, erfc
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# Physical parameters
+kappa = 1e-6      # Thermal diffusivity (m^2/s)
+k = 3.3           # Thermal conductivity (W/m/K)
+Tm = 1350         # Mantle temperature (C)
+Ts = 0            # Surface temperature (C)
+alpha_V = 3e-5    # Thermal expansion (1/K)
+rho_m = 3300      # Mantle density (kg/m^3)
+rho_w = 1030      # Seawater density (kg/m^3)
+rho_a = 3200      # Asthenosphere density (kg/m^3)
+dr = 2500         # Ridge depth (m)
+g = 9.81          # Gravity (m/s^2)
+
+# Time conversion
+Ma_to_s = 1e6 * 365.25 * 24 * 3600
+
+# Age range
+age_Ma = np.linspace(0.1, 200, 200)
+age_s = age_Ma * Ma_to_s
+
+# Half-space cooling model
+def halfspace_depth(age_s):
+    """Seafloor depth from half-space model (m)."""
+    return dr + 2 * rho_m * alpha_V * (Tm - Ts) / (rho_m - rho_w) * np.sqrt(kappa * age_s / np.pi)
+
+def halfspace_heatflow(age_s):
+    """Surface heat flow from half-space model (mW/m^2)."""
+    return k * (Tm - Ts) / np.sqrt(np.pi * kappa * age_s) * 1000
+
+def lithosphere_thickness(age_s, T_threshold=1100):
+    """Thermal lithosphere thickness (m)."""
+    return 2.32 * np.sqrt(kappa * age_s)  # Depth to T = 0.9*Tm
+
+# Plate model parameters
+a_plate = 125000  # Plate thickness (m)
+tau = a_plate**2 / (np.pi**2 * kappa)  # Thermal time constant
+
+def plate_depth(age_s):
+    """Seafloor depth from plate model (m)."""
+    d_inf = dr + rho_m * alpha_V * (Tm - Ts) * a_plate / (rho_m - rho_w)
+    return d_inf - (d_inf - dr) * (8/np.pi**2) * np.exp(-age_s/tau)
+
+# Temperature profiles at different ages
+ages_profile = [10, 50, 100, 150]  # Ma
+z = np.linspace(0, 150000, 300)  # Depth in m
+
+# Plate velocities (mm/yr) - major plates
+plates = {
+    'Pacific': 75,
+    'Australian': 60,
+    'Nazca': 55,
+    'Cocos': 52,
+    'Philippine': 45,
+    'N American': 23,
+    'S American': 17,
+    'Eurasian': 21,
+    'African': 22,
+    'Antarctic': 17
+}
+
+# Euler pole example (Pacific-North American)
+euler_lat = 48.7
+euler_lon = -78.2
+omega = 0.78  # deg/Ma
+
+# Driving forces (relative magnitudes)
+forces = {
+    'Ridge Push': 2.5,
+    'Slab Pull': 10,
+    'Basal Drag': 3,
+    'Mantle Suction': 1.5
+}
+
+# Rayleigh number for mantle convection
+Ra_crit = 1000  # Critical Rayleigh number
+deltaT = 2500   # Temperature difference (K)
+d_mantle = 2900e3  # Mantle thickness (m)
+nu = 1e21       # Viscosity (Pa*s)
+alpha = 3e-5    # Thermal expansion
+
+Ra = rho_m * g * alpha * deltaT * d_mantle**3 / (kappa * nu)
+
+# Calculate depths and heat flow
+depth_halfspace = halfspace_depth(age_s)
+depth_plate = plate_depth(age_s)
+heatflow = halfspace_heatflow(age_s)
+lith_thickness = lithosphere_thickness(age_s)
+
+# Subsidence rate
+subsidence_rate = np.gradient(depth_halfspace, age_Ma) / 1000  # km/Ma
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Seafloor depth vs age
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(age_Ma, depth_halfspace/1000, 'b-', lw=2, label='Half-space')
+ax1.plot(age_Ma, depth_plate/1000, 'r--', lw=2, label='Plate')
+ax1.plot(np.sqrt(age_Ma), depth_halfspace/1000, 'g:', lw=1, alpha=0)  # Hidden
+ax1.set_xlabel('Age (Ma)')
+ax1.set_ylabel('Depth (km)')
+ax1.set_title('Seafloor Subsidence')
+ax1.legend(fontsize=8)
+ax1.invert_yaxis()
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Heat flow vs age
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(age_Ma, heatflow, 'r-', lw=2)
+ax2.axhline(y=65, color='gray', ls='--', alpha=0.5, label='Continental avg')
+ax2.set_xlabel('Age (Ma)')
+ax2.set_ylabel('Heat Flow (mW/m$^2$)')
+ax2.set_title('Surface Heat Flow')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+ax2.set_ylim([0, 500])
+
+# Plot 3: Temperature profiles
+ax3 = fig.add_subplot(gs[0, 2])
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, len(ages_profile)))
+for age, color in zip(ages_profile, colors):
+    age_sec = age * Ma_to_s
+    T = Ts + (Tm - Ts) * erf(z / (2 * np.sqrt(kappa * age_sec)))
+    ax3.plot(T, z/1000, color=color, lw=2, label=f'{age} Ma')
+
+ax3.axhline(y=lith_thickness[np.argmin(np.abs(age_Ma - 100))]/1000,
+            color='gray', ls='--', alpha=0.5)
+ax3.set_xlabel('Temperature ($^\\circ$C)')
+ax3.set_ylabel('Depth (km)')
+ax3.set_title('Geotherm Evolution')
+ax3.legend(fontsize=7)
+ax3.invert_yaxis()
+ax3.grid(True, alpha=0.3)
+ax3.set_xlim([0, 1400])
+
+# Plot 4: Lithosphere thickness
+ax4 = fig.add_subplot(gs[1, 0])
+ax4.plot(age_Ma, lith_thickness/1000, 'b-', lw=2)
+ax4.plot(age_Ma, np.sqrt(age_Ma) * 10, 'r--', lw=1.5, alpha=0.7,
+         label='$\\propto \\sqrt{t}$')
+ax4.set_xlabel('Age (Ma)')
+ax4.set_ylabel('Thickness (km)')
+ax4.set_title('Thermal Lithosphere Thickness')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Plate velocities
+ax5 = fig.add_subplot(gs[1, 1])
+names = list(plates.keys())
+velocities = list(plates.values())
+colors = plt.cm.plasma(np.linspace(0.2, 0.8, len(plates)))
+y_pos = range(len(names))
+ax5.barh(y_pos, velocities, color=colors, alpha=0.8)
+ax5.set_yticks(y_pos)
+ax5.set_yticklabels(names, fontsize=8)
+ax5.set_xlabel('Velocity (mm/yr)')
+ax5.set_title('Major Plate Velocities')
+ax5.grid(True, alpha=0.3, axis='x')
+
+# Plot 6: Depth vs sqrt(age)
+ax6 = fig.add_subplot(gs[1, 2])
+sqrt_age = np.sqrt(age_Ma)
+ax6.plot(sqrt_age, depth_halfspace/1000, 'b-', lw=2)
+# Linear fit
+coeffs = np.polyfit(sqrt_age[10:], depth_halfspace[10:]/1000, 1)
+ax6.plot(sqrt_age, np.polyval(coeffs, sqrt_age), 'r--', lw=1.5,
+         label=f'Slope = {coeffs[0]:.0f} m/Ma$^{{1/2}}$')
+ax6.set_xlabel('$\\sqrt{\\mathrm{Age}}$ (Ma$^{1/2}$)')
+ax6.set_ylabel('Depth (km)')
+ax6.set_title('Depth vs $\\sqrt{t}$ (Parsons-Sclater)')
+ax6.legend(fontsize=8)
+ax6.invert_yaxis()
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Driving forces
+ax7 = fig.add_subplot(gs[2, 0])
+force_names = list(forces.keys())
+force_vals = list(forces.values())
+colors = ['blue', 'red', 'green', 'orange']
+ax7.bar(range(len(forces)), force_vals, color=colors, alpha=0.7)
+ax7.set_xticks(range(len(forces)))
+ax7.set_xticklabels(force_names, fontsize=8, rotation=15)
+ax7.set_ylabel('Relative Magnitude')
+ax7.set_title('Plate Driving Forces')
+ax7.grid(True, alpha=0.3, axis='y')
+
+# Plot 8: Subsidence rate
+ax8 = fig.add_subplot(gs[2, 1])
+ax8.plot(age_Ma[1:], -subsidence_rate[1:] * 1000, 'purple', lw=2)
+ax8.set_xlabel('Age (Ma)')
+ax8.set_ylabel('Subsidence Rate (m/Ma)')
+ax8.set_title('Subsidence Rate vs Age')
+ax8.grid(True, alpha=0.3)
+ax8.set_xlim([0, 200])
+
+# Plot 9: Rayleigh-Benard stability
+ax9 = fig.add_subplot(gs[2, 2])
+Ra_range = np.logspace(2, 8, 100)
+Nu = np.ones_like(Ra_range)
+Nu[Ra_range > Ra_crit] = 0.28 * Ra_range[Ra_range > Ra_crit]**0.21
+
+ax9.loglog(Ra_range, Nu, 'b-', lw=2)
+ax9.axvline(x=Ra_crit, color='r', ls='--', label=f'Ra$_c$ = {Ra_crit}')
+ax9.axvline(x=Ra, color='g', ls='--', alpha=0.7, label=f'Mantle Ra')
+ax9.set_xlabel('Rayleigh Number')
+ax9.set_ylabel('Nusselt Number')
+ax9.set_title('Convection Heat Transfer')
+ax9.legend(fontsize=8)
+ax9.grid(True, alpha=0.3, which='both')
+
+plt.savefig('plate_tectonics_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{plate_tectonics_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Summary calculations
+depth_100Ma = halfspace_depth(100 * Ma_to_s)
+heatflow_10Ma = halfspace_heatflow(10 * Ma_to_s)
+lith_100Ma = lithosphere_thickness(100 * Ma_to_s)
+max_velocity = max(velocities)
+parsons_slope = coeffs[0]
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Thermal Evolution}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Oceanic Lithosphere Properties vs Age}')
+print(r'\begin{tabular}{ccccc}')
+print(r'\toprule')
+print(r'Age (Ma) & Depth (km) & Heat Flow (mW/m$^2$) & Lith. Thick. (km) & Subsidence (m/Ma) \\')
+print(r'\midrule')
+
+ages_table = [1, 10, 25, 50, 100, 150, 200]
+for age in ages_table:
+    idx = np.argmin(np.abs(age_Ma - age))
+    d = depth_halfspace[idx]/1000
+    q = heatflow[idx]
+    l = lith_thickness[idx]/1000
+    s = -subsidence_rate[idx] * 1000 if idx > 0 else np.nan
+    s_str = f'{s:.0f}' if not np.isnan(s) else '--'
+    print(f'{age} & {d:.2f} & {q:.0f} & {l:.0f} & {s_str} \\\\')
+
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Model Comparison}
+
+The half-space and plate models diverge for old lithosphere:
+\begin{itemize}
+    \item Half-space predicts continuous deepening: $d \propto \sqrt{t}$
+    \item Plate model predicts asymptotic depth for $t > \py{f"{tau/Ma_to_s:.0f}"}$ Ma
+    \item Observed data favor plate model for ages $>$ 80 Ma
+    \item Parsons-Sclater slope: \py{f"{parsons_slope:.0f}"} m/Ma$^{1/2}$
+\end{itemize}
+
+\begin{remark}
+The $\sqrt{t}$ dependence of seafloor depth is a diagnostic signature of conductive cooling. Deviations indicate convective or compositional effects.
+\end{remark}
+
+\subsection{Plate Kinematics}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Plate Motion Statistics}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Statistic & Value & Units \\')
+print(r'\midrule')
+print(f'Maximum plate velocity & {max_velocity} & mm/yr \\\\')
+print(f'Mean velocity & {np.mean(velocities):.1f} & mm/yr \\\\')
+print(f'Fastest plate & Pacific & -- \\\\')
+print(f'Slowest plate & Antarctic & -- \\\\')
+print(f'Euler pole (Pac-NAm) & ({euler_lat}$^\\circ$N, {euler_lon}$^\\circ$E) & -- \\\\')
+print(f'Angular velocity & {omega} & deg/Ma \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Physical Processes}
+
+\begin{example}[Ridge Push Force]
+The elevation of mid-ocean ridges creates a gravitational driving force:
+\begin{equation}
+F_{RP} = g\rho_m \alpha_V (T_m - T_s) \kappa t \approx 2-3 \times 10^{12} \text{ N/m}
+\end{equation}
+This force acts throughout the lithosphere volume.
+\end{example}
+
+\begin{example}[Slab Pull Force]
+Subducting lithosphere is denser than surrounding mantle:
+\begin{equation}
+F_{SP} = \Delta\rho \cdot g \cdot L \cdot h \approx 10^{13} \text{ N/m}
+\end{equation}
+where $L$ is slab length and $h$ is thickness. This is the dominant driving force.
+\end{example}
+
+\begin{theorem}[Mantle Convection]
+Convection occurs when the Rayleigh number exceeds the critical value:
+\begin{equation}
+Ra = \frac{\rho g \alpha \Delta T d^3}{\kappa \nu} > Ra_c \approx 1000
+\end{equation}
+For Earth's mantle, $Ra \approx \py{f"{Ra:.1e}"}$, indicating vigorous convection.
+\end{theorem}
+
+\section{Discussion}
+
+The analysis reveals several key features of plate tectonics:
+
+\begin{enumerate}
+    \item \textbf{Thermal control}: Lithospheric properties are primarily controlled by conductive cooling from the mantle.
+    \item \textbf{Depth-age relationship}: The $\sqrt{t}$ subsidence law holds for ages $<$ 80 Ma; older lithosphere approaches thermal equilibrium.
+    \item \textbf{Velocity distribution}: Oceanic plates with attached slabs move faster than continental plates.
+    \item \textbf{Force balance}: Slab pull dominates over ridge push by a factor of $\sim$4.
+    \item \textbf{Vigorous convection}: The mantle Rayleigh number far exceeds critical, enabling plate recycling.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis demonstrates:
+\begin{itemize}
+    \item Seafloor depth at 100 Ma: \py{f"{depth_100Ma/1000:.2f}"} km
+    \item Heat flow at 10 Ma: \py{f"{heatflow_10Ma:.0f}"} mW/m$^2$
+    \item Lithosphere thickness at 100 Ma: \py{f"{lith_100Ma/1000:.0f}"} km
+    \item Maximum plate velocity: \py{f"{max_velocity}"} mm/yr (Pacific)
+    \item Mantle Rayleigh number: \py{f"{Ra:.1e}"}
+\end{itemize}
+
+The thermal evolution of oceanic lithosphere provides fundamental constraints on mantle convection and the driving forces of plate tectonics.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Turcotte, D.L., Schubert, G., \textit{Geodynamics}, 3rd Edition, Cambridge University Press, 2014
+    \item Fowler, C.M.R., \textit{The Solid Earth}, 2nd Edition, Cambridge University Press, 2004
+    \item Parsons, B., Sclater, J.G., An analysis of the variation of ocean floor bathymetry and heat flow with age, \textit{J. Geophys. Res.}, 1977
+\end{itemize}
+
+\end{document}

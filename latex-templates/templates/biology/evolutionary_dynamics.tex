@@ -1,0 +1,387 @@
+% Evolutionary Dynamics Template
+% Topics: Fitness landscapes, natural selection, genetic drift, mutation-selection balance
+% Style: Textbook chapter with theoretical foundations
+
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Evolutionary Dynamics: Selection, Drift, and Fitness Landscapes}
+\author{Theoretical Population Genetics}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This chapter explores the fundamental forces driving evolutionary change in populations.
+We analyze natural selection under various fitness schemes, examine the stochastic effects
+of genetic drift in finite populations, and investigate the interplay between mutation
+and selection. Computational simulations illustrate fitness landscapes, fixation
+probabilities, and the dynamics of allele frequency change under different evolutionary
+scenarios.
+\end{abstract}
+
+\section{Introduction}
+
+Evolution operates through the interplay of deterministic forces (selection, mutation) and
+stochastic processes (genetic drift). Understanding these dynamics requires both analytical
+theory and computational simulation.
+
+\begin{definition}[Fitness]
+The fitness $w$ of a genotype is its relative reproductive success. For a diploid organism
+with alleles $A$ and $a$, genotype fitnesses are denoted $w_{AA}$, $w_{Aa}$, and $w_{aa}$.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Natural Selection}
+
+\begin{theorem}[Change in Allele Frequency Under Selection]
+For a population with allele frequency $p$ (for allele $A$) and genotype fitnesses
+$w_{AA}$, $w_{Aa}$, $w_{aa}$, the change in one generation is:
+\begin{equation}
+\Delta p = \frac{p q [p(w_{AA} - w_{Aa}) + q(w_{Aa} - w_{aa})]}{\bar{w}}
+\end{equation}
+where $q = 1 - p$ and $\bar{w} = p^2 w_{AA} + 2pq w_{Aa} + q^2 w_{aa}$ is the mean fitness.
+\end{theorem}
+
+\subsection{Selection Schemes}
+
+\begin{definition}[Types of Selection]
+Different selection regimes produce distinct dynamics:
+\begin{itemize}
+\item \textbf{Directional}: One homozygote has highest fitness; allele goes to fixation
+\item \textbf{Overdominance}: Heterozygote advantage; stable polymorphism
+\item \textbf{Underdominance}: Heterozygote disadvantage; unstable equilibrium
+\item \textbf{Frequency-dependent}: Fitness depends on allele frequency
+\end{itemize}
+\end{definition}
+
+\subsection{Genetic Drift}
+
+\begin{theorem}[Wright-Fisher Model]
+In a finite population of size $N$, allele frequencies change stochastically. The
+variance in allele frequency change per generation is:
+\begin{equation}
+\text{Var}(\Delta p) = \frac{p(1-p)}{2N}
+\end{equation}
+The probability of eventual fixation for a neutral allele at initial frequency $p_0$ is $p_0$.
+\end{theorem}
+
+\begin{remark}[Effective Population Size]
+Real populations often have $N_e < N$ due to variance in reproductive success, unequal
+sex ratios, and population fluctuations.
+\end{remark}
+
+\subsection{Mutation-Selection Balance}
+
+\begin{theorem}[Equilibrium Frequency]
+For a deleterious recessive allele with mutation rate $\mu$ and selection coefficient $s$:
+\begin{equation}
+\hat{q} \approx \sqrt{\frac{\mu}{s}}
+\end{equation}
+For a deleterious dominant allele: $\hat{q} \approx \mu/s$.
+\end{theorem}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+np.random.seed(42)
+
+def selection_dynamics(p, t, w_AA, w_Aa, w_aa):
+    """Continuous-time selection dynamics."""
+    if p <= 0 or p >= 1:
+        return 0
+    q = 1 - p
+    w_bar = p**2 * w_AA + 2*p*q * w_Aa + q**2 * w_aa
+    dp = p * q * (p*(w_AA - w_Aa) + q*(w_Aa - w_aa)) / w_bar
+    return dp
+
+def wright_fisher(p0, N, generations):
+    """Wright-Fisher genetic drift simulation."""
+    p = np.zeros(generations)
+    p[0] = p0
+    for i in range(1, generations):
+        if p[i-1] <= 0 or p[i-1] >= 1:
+            p[i] = p[i-1]
+        else:
+            n_A = np.random.binomial(2*N, p[i-1])
+            p[i] = n_A / (2*N)
+    return p
+
+def fixation_probability_simulation(p0, N, s, n_sims=1000):
+    """Estimate fixation probability by simulation."""
+    fixed = 0
+    for _ in range(n_sims):
+        p = p0
+        while 0 < p < 1:
+            # Selection
+            w_bar = (1 + s) * p**2 + p*(1-p) + (1-p)**2
+            p_sel = ((1 + s) * p**2 + p*(1-p)) / w_bar
+            # Drift
+            n_A = np.random.binomial(2*N, p_sel)
+            p = n_A / (2*N)
+        if p >= 1:
+            fixed += 1
+    return fixed / n_sims
+
+# Parameters
+generations = 200
+t = np.linspace(0, generations, 1000)
+
+# Selection scenarios
+# Directional selection
+p_dir = odeint(selection_dynamics, 0.1, t, args=(1.0, 0.95, 0.8))
+# Overdominance
+p_over = odeint(selection_dynamics, 0.1, t, args=(0.8, 1.0, 0.9))
+# Underdominance (two initial conditions)
+p_under1 = odeint(selection_dynamics, 0.4, t, args=(1.0, 0.8, 1.0))
+p_under2 = odeint(selection_dynamics, 0.6, t, args=(1.0, 0.8, 1.0))
+# Frequency-dependent (simplified)
+p_freq = odeint(selection_dynamics, 0.3, t, args=(0.9, 1.0, 0.9))
+
+# Genetic drift simulations
+N_values = [20, 100, 500]
+n_reps = 20
+drift_results = {}
+for N in N_values:
+    drift_results[N] = [wright_fisher(0.5, N, generations) for _ in range(n_reps)]
+
+# Fitness landscape
+p_range = np.linspace(0.001, 0.999, 200)
+w_bar_dir = p_range**2 * 1.0 + 2*p_range*(1-p_range) * 0.95 + (1-p_range)**2 * 0.8
+w_bar_over = p_range**2 * 0.8 + 2*p_range*(1-p_range) * 1.0 + (1-p_range)**2 * 0.9
+w_bar_under = p_range**2 * 1.0 + 2*p_range*(1-p_range) * 0.8 + (1-p_range)**2 * 1.0
+
+# Mutation-selection balance
+mu = 1e-5
+s_values = np.logspace(-4, -1, 50)
+q_eq_recessive = np.sqrt(mu / s_values)
+q_eq_dominant = mu / s_values
+
+# Fixation probability (theoretical)
+N_fix = 100
+s_fix = np.linspace(-0.1, 0.1, 50)
+# Kimura's formula: P_fix = (1 - exp(-4Ns*p0)) / (1 - exp(-4Ns))
+p0_fix = 1 / (2 * N_fix)  # New mutation
+P_fix_theory = np.zeros_like(s_fix)
+for i, s in enumerate(s_fix):
+    if abs(s) < 1e-6:
+        P_fix_theory[i] = p0_fix
+    else:
+        P_fix_theory[i] = (1 - np.exp(-4*N_fix*s*p0_fix)) / (1 - np.exp(-4*N_fix*s))
+
+# Create figure
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Selection dynamics
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(t, p_dir, 'b-', linewidth=2, label='Directional')
+ax1.plot(t, p_over, 'g-', linewidth=2, label='Overdominance')
+ax1.plot(t, p_under1, 'r-', linewidth=1.5, label='Underdominance')
+ax1.plot(t, p_under2, 'r--', linewidth=1.5)
+ax1.set_xlabel('Generation')
+ax1.set_ylabel('Allele frequency $p$')
+ax1.set_title('Selection Dynamics')
+ax1.legend(fontsize=8)
+ax1.set_ylim([0, 1])
+
+# Plot 2: Fitness landscape
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.plot(p_range, w_bar_dir, 'b-', linewidth=2, label='Directional')
+ax2.plot(p_range, w_bar_over, 'g-', linewidth=2, label='Overdominance')
+ax2.plot(p_range, w_bar_under, 'r-', linewidth=2, label='Underdominance')
+ax2.set_xlabel('Allele frequency $p$')
+ax2.set_ylabel('Mean fitness $\\bar{w}$')
+ax2.set_title('Fitness Landscape')
+ax2.legend(fontsize=8)
+
+# Plot 3: Genetic drift (small N)
+ax3 = fig.add_subplot(3, 3, 3)
+gen = np.arange(generations)
+for traj in drift_results[20]:
+    ax3.plot(gen, traj, linewidth=0.8, alpha=0.5)
+ax3.set_xlabel('Generation')
+ax3.set_ylabel('Allele frequency $p$')
+ax3.set_title(f'Genetic Drift (N = 20)')
+ax3.set_ylim([0, 1])
+
+# Plot 4: Genetic drift (medium N)
+ax4 = fig.add_subplot(3, 3, 4)
+for traj in drift_results[100]:
+    ax4.plot(gen, traj, linewidth=0.8, alpha=0.5)
+ax4.set_xlabel('Generation')
+ax4.set_ylabel('Allele frequency $p$')
+ax4.set_title(f'Genetic Drift (N = 100)')
+ax4.set_ylim([0, 1])
+
+# Plot 5: Genetic drift (large N)
+ax5 = fig.add_subplot(3, 3, 5)
+for traj in drift_results[500]:
+    ax5.plot(gen, traj, linewidth=0.8, alpha=0.5)
+ax5.set_xlabel('Generation')
+ax5.set_ylabel('Allele frequency $p$')
+ax5.set_title(f'Genetic Drift (N = 500)')
+ax5.set_ylim([0, 1])
+
+# Plot 6: Mutation-selection balance
+ax6 = fig.add_subplot(3, 3, 6)
+ax6.loglog(s_values, q_eq_recessive, 'b-', linewidth=2, label='Recessive')
+ax6.loglog(s_values, q_eq_dominant, 'r-', linewidth=2, label='Dominant')
+ax6.set_xlabel('Selection coefficient $s$')
+ax6.set_ylabel('Equilibrium frequency $\\hat{q}$')
+ax6.set_title(f'Mutation-Selection Balance ($\\mu = {mu}$)')
+ax6.legend()
+
+# Plot 7: Fixation probability
+ax7 = fig.add_subplot(3, 3, 7)
+ax7.plot(s_fix, P_fix_theory, 'b-', linewidth=2)
+ax7.axhline(y=p0_fix, color='gray', linestyle='--', alpha=0.7, label='Neutral')
+ax7.axvline(x=0, color='gray', linestyle=':', alpha=0.5)
+ax7.set_xlabel('Selection coefficient $s$')
+ax7.set_ylabel('Fixation probability')
+ax7.set_title(f'Fixation Probability (N = {N_fix})')
+ax7.legend(fontsize=8)
+
+# Plot 8: Hardy-Weinberg frequencies
+ax8 = fig.add_subplot(3, 3, 8)
+ax8.plot(p_range, p_range**2, 'b-', linewidth=2, label='$p^2$ (AA)')
+ax8.plot(p_range, 2*p_range*(1-p_range), 'g-', linewidth=2, label='$2pq$ (Aa)')
+ax8.plot(p_range, (1-p_range)**2, 'r-', linewidth=2, label='$q^2$ (aa)')
+ax8.set_xlabel('Allele frequency $p$')
+ax8.set_ylabel('Genotype frequency')
+ax8.set_title('Hardy-Weinberg Equilibrium')
+ax8.legend(fontsize=8)
+
+# Plot 9: Variance in allele frequency
+ax9 = fig.add_subplot(3, 3, 9)
+N_range = np.logspace(1, 4, 100)
+p_test = 0.5
+var_deltap = p_test * (1 - p_test) / (2 * N_range)
+ax9.loglog(N_range, var_deltap, 'b-', linewidth=2)
+ax9.set_xlabel('Population size $N$')
+ax9.set_ylabel('Var($\\Delta p$)')
+ax9.set_title('Drift Variance vs Population Size')
+
+plt.tight_layout()
+plt.savefig('evolutionary_dynamics_analysis.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Calculate equilibrium for overdominance
+p_eq_over = (1.0 - 0.9) / (2*1.0 - 0.8 - 0.9)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{evolutionary_dynamics_analysis.pdf}
+\caption{Evolutionary dynamics analysis: (a) Selection dynamics under different fitness
+schemes; (b) Fitness landscapes showing mean fitness as function of allele frequency;
+(c-e) Genetic drift in populations of different sizes; (f) Mutation-selection balance;
+(g) Fixation probability as function of selection coefficient; (h) Hardy-Weinberg
+genotype frequencies; (i) Drift variance versus population size.}
+\label{fig:evolution}
+\end{figure}
+
+\section{Results}
+
+\subsection{Selection Equilibria}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Selection Equilibria for Different Fitness Schemes}")
+print(r"\begin{tabular}{lcccc}")
+print(r"\toprule")
+print(r"Selection Type & $w_{AA}$ & $w_{Aa}$ & $w_{aa}$ & Equilibrium $\hat{p}$ \\")
+print(r"\midrule")
+print(r"Directional & 1.00 & 0.95 & 0.80 & 1.00 (fixation) \\")
+print(f"Overdominance & 0.80 & 1.00 & 0.90 & {p_eq_over:.2f} \\\\")
+print(r"Underdominance & 1.00 & 0.80 & 1.00 & 0.00 or 1.00 \\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:equilibria}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Drift Statistics}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Genetic Drift Statistics After " + str(generations) + r" Generations}")
+print(r"\begin{tabular}{cccc}")
+print(r"\toprule")
+print(r"$N$ & Fixed & Lost & Polymorphic \\")
+print(r"\midrule")
+
+for N in N_values:
+    fixed = sum(1 for traj in drift_results[N] if traj[-1] >= 0.99)
+    lost = sum(1 for traj in drift_results[N] if traj[-1] <= 0.01)
+    poly = n_reps - fixed - lost
+    print(f"{N} & {fixed} & {lost} & {poly} \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:drift}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Overdominance and Stable Polymorphism]
+Heterozygote advantage (overdominance) maintains genetic variation in populations.
+The equilibrium allele frequency for our example is:
+\begin{equation}
+\hat{p} = \frac{w_{Aa} - w_{aa}}{2w_{Aa} - w_{AA} - w_{aa}} = \frac{1.0 - 0.9}{2(1.0) - 0.8 - 0.9} = \py{f"{p_eq_over:.2f}"}
+\end{equation}
+Classic examples include sickle-cell anemia and MHC diversity.
+\end{example}
+
+\begin{remark}[Effective Population Size]
+The variance in allele frequency change is $\text{Var}(\Delta p) = pq/(2N_e)$. Factors
+reducing $N_e$ below census size include:
+\begin{itemize}
+\item Unequal sex ratios
+\item Variance in reproductive success
+\item Population bottlenecks
+\item Overlapping generations
+\end{itemize}
+\end{remark}
+
+\section{Conclusions}
+
+This analysis demonstrates the fundamental forces of evolutionary change:
+\begin{enumerate}
+\item Selection drives systematic allele frequency change toward fitness peaks
+\item Overdominance equilibrium at $\hat{p} = \py{f"{p_eq_over:.2f}"}$ maintains polymorphism
+\item Genetic drift is stronger in small populations, with variance $\propto 1/N$
+\item Mutation-selection balance maintains deleterious alleles at low frequencies
+\item Fixation probability depends on both selection and population size
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Hartl, D.L. \& Clark, A.G. \textit{Principles of Population Genetics}, 4th ed. Sinauer, 2007.
+\item Gillespie, J.H. \textit{Population Genetics: A Concise Guide}, 2nd ed. Johns Hopkins, 2004.
+\item Nowak, M.A. \textit{Evolutionary Dynamics}. Harvard University Press, 2006.
+\end{itemize}
+
+\end{document}

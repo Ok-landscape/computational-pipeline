@@ -1,0 +1,588 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage[makestderr]{pythontex}
+
+\title{Ocean Wave Dynamics: Dispersion, Spectra, and Coastal Processes}
+\author{Physical Oceanography Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Ocean surface waves transport energy across vast distances and undergo transformations as they approach coastlines. This template covers wave dispersion relations, spectral representations, shoaling, and refraction processes.
+
+\section{Mathematical Framework}
+
+\subsection{Linear Wave Theory}
+The surface elevation for a monochromatic wave:
+\begin{equation}
+\eta(x, t) = a \cos(kx - \omega t)
+\end{equation}
+
+\subsection{Dispersion Relation}
+Deep water waves satisfy:
+\begin{equation}
+\omega^2 = gk \tanh(kh)
+\end{equation}
+In deep water ($kh \gg 1$): $\omega^2 = gk$, giving phase speed $c = \sqrt{g/k}$.
+
+In shallow water ($kh \ll 1$): $\omega^2 = gk^2h$, giving $c = \sqrt{gh}$.
+
+\subsection{Group Velocity}
+Energy propagates at the group velocity:
+\begin{equation}
+c_g = \frac{\partial \omega}{\partial k} = \frac{c}{2}\left(1 + \frac{2kh}{\sinh(2kh)}\right)
+\end{equation}
+
+\subsection{Pierson-Moskowitz Spectrum}
+Fully developed sea spectrum:
+\begin{equation}
+S(\omega) = \frac{\alpha g^2}{\omega^5} \exp\left[-\beta\left(\frac{\omega_0}{\omega}\right)^4\right]
+\end{equation}
+where $\alpha = 8.1 \times 10^{-3}$, $\beta = 0.74$, and $\omega_0 = g/U_{19.5}$.
+
+\subsection{JONSWAP Spectrum}
+Fetch-limited spectrum with peak enhancement:
+\begin{equation}
+S_J(\omega) = S_{PM}(\omega) \cdot \gamma^{\exp\left[-\frac{(\omega - \omega_p)^2}{2\sigma^2\omega_p^2}\right]}
+\end{equation}
+
+\subsection{Shoaling and Refraction}
+Wave height transformation during shoaling:
+\begin{equation}
+\frac{H}{H_0} = \sqrt{\frac{c_{g0}}{c_g}} = K_s
+\end{equation}
+
+Snell's law for wave refraction:
+\begin{equation}
+\frac{\sin\theta}{c} = \frac{\sin\theta_0}{c_0}
+\end{equation}
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.9\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+
+# Physical constants
+g = 9.81  # Gravity (m/s^2)
+\end{pycode}
+
+\section{Dispersion Relation Analysis}
+
+\begin{pycode}
+def dispersion(omega, h):
+    """Solve dispersion relation for wavenumber k"""
+    def equation(k):
+        return omega**2 - g * k * np.tanh(k * h)
+
+    k_deep = omega**2 / g  # Deep water approximation
+    k = fsolve(equation, k_deep)[0]
+    return k
+
+def phase_speed(k, h):
+    """Phase speed from wavenumber and depth"""
+    return np.sqrt(g / k * np.tanh(k * h))
+
+def group_speed(k, h):
+    """Group velocity"""
+    c = phase_speed(k, h)
+    n = 0.5 * (1 + 2*k*h / np.sinh(2*k*h))
+    return n * c
+
+# Calculate dispersion for various periods
+periods = np.array([4, 6, 8, 10, 12, 15, 20])  # seconds
+omega_vals = 2 * np.pi / periods
+depths = np.linspace(5, 500, 100)  # meters
+
+# Store results
+wavelengths = np.zeros((len(periods), len(depths)))
+phase_speeds = np.zeros((len(periods), len(depths)))
+group_speeds = np.zeros((len(periods), len(depths)))
+
+for i, omega in enumerate(omega_vals):
+    for j, h in enumerate(depths):
+        k = dispersion(omega, h)
+        wavelengths[i, j] = 2 * np.pi / k
+        phase_speeds[i, j] = phase_speed(k, h)
+        group_speeds[i, j] = group_speed(k, h)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Wavelength vs depth
+for i, T in enumerate(periods):
+    axes[0, 0].plot(depths, wavelengths[i, :], label=f'T={T}s')
+axes[0, 0].set_xlabel('Water Depth (m)')
+axes[0, 0].set_ylabel('Wavelength (m)')
+axes[0, 0].set_title('Wavelength vs Depth')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].set_xscale('log')
+
+# Plot 2: Phase speed vs depth
+for i, T in enumerate(periods):
+    axes[0, 1].plot(depths, phase_speeds[i, :], label=f'T={T}s')
+# Deep water limit
+axes[0, 1].axhline(y=np.sqrt(g * wavelengths[-1, -1] / (2*np.pi)),
+                   color='k', linestyle='--', alpha=0.5)
+axes[0, 1].set_xlabel('Water Depth (m)')
+axes[0, 1].set_ylabel('Phase Speed (m/s)')
+axes[0, 1].set_title('Phase Speed vs Depth')
+axes[0, 1].legend(fontsize=8)
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].set_xscale('log')
+
+# Plot 3: Group speed / Phase speed ratio
+for i, T in enumerate(periods):
+    ratio = group_speeds[i, :] / phase_speeds[i, :]
+    axes[1, 0].plot(depths, ratio, label=f'T={T}s')
+axes[1, 0].axhline(y=0.5, color='k', linestyle='--', alpha=0.5, label='Deep water')
+axes[1, 0].axhline(y=1.0, color='k', linestyle=':', alpha=0.5, label='Shallow water')
+axes[1, 0].set_xlabel('Water Depth (m)')
+axes[1, 0].set_ylabel('$c_g / c$')
+axes[1, 0].set_title('Group Speed / Phase Speed Ratio')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_xscale('log')
+
+# Plot 4: Relative depth parameter kh
+for i, T in enumerate(periods):
+    k = 2 * np.pi / wavelengths[i, :]
+    kh = k * depths
+    axes[1, 1].plot(depths, kh, label=f'T={T}s')
+axes[1, 1].axhline(y=np.pi, color='k', linestyle='--', alpha=0.5, label='Deep water limit')
+axes[1, 1].axhline(y=0.3, color='k', linestyle=':', alpha=0.5, label='Shallow water limit')
+axes[1, 1].set_xlabel('Water Depth (m)')
+axes[1, 1].set_ylabel('kh')
+axes[1, 1].set_title('Relative Depth Parameter')
+axes[1, 1].legend(fontsize=8)
+axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].set_xscale('log')
+axes[1, 1].set_yscale('log')
+
+plt.tight_layout()
+save_plot('dispersion_relations.pdf', 'Wave dispersion characteristics')
+\end{pycode}
+
+\section{Wave Spectra}
+
+\begin{pycode}
+def pierson_moskowitz(omega, U):
+    """Pierson-Moskowitz spectrum"""
+    alpha = 8.1e-3
+    beta = 0.74
+    omega_0 = g / U
+    S = (alpha * g**2 / omega**5) * np.exp(-beta * (omega_0 / omega)**4)
+    return S
+
+def jonswap(omega, U, fetch, gamma=3.3):
+    """JONSWAP spectrum"""
+    # Peak frequency
+    omega_p = 22 * (g**2 / (U * fetch))**0.333
+
+    # PM base spectrum
+    alpha = 0.076 * (U**2 / (fetch * g))**0.22
+    S_pm = (alpha * g**2 / omega**5) * np.exp(-1.25 * (omega_p / omega)**4)
+
+    # Peak enhancement
+    sigma = np.where(omega <= omega_p, 0.07, 0.09)
+    r = np.exp(-(omega - omega_p)**2 / (2 * sigma**2 * omega_p**2))
+    S_j = S_pm * gamma**r
+
+    return S_j, omega_p
+
+# Wave conditions
+U = 15  # Wind speed (m/s)
+fetch_values = [100e3, 300e3, 1000e3]  # Fetch distances (m)
+
+omega = np.linspace(0.2, 2.5, 200)  # Frequency range (rad/s)
+
+# Calculate spectra
+S_pm = pierson_moskowitz(omega, U)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Pierson-Moskowitz spectrum
+axes[0, 0].plot(omega, S_pm, 'b-', linewidth=2)
+axes[0, 0].fill_between(omega, 0, S_pm, alpha=0.3)
+axes[0, 0].set_xlabel('$\\omega$ (rad/s)')
+axes[0, 0].set_ylabel('$S(\\omega)$ (m$^2$s/rad)')
+axes[0, 0].set_title(f'Pierson-Moskowitz Spectrum (U={U} m/s)')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: JONSWAP spectra for different fetches
+colors = ['blue', 'green', 'red']
+for i, fetch in enumerate(fetch_values):
+    S_j, omega_p = jonswap(omega, U, fetch)
+    label = f'Fetch = {fetch/1e3:.0f} km'
+    axes[0, 1].plot(omega, S_j, color=colors[i], linewidth=2, label=label)
+
+axes[0, 1].set_xlabel('$\\omega$ (rad/s)')
+axes[0, 1].set_ylabel('$S(\\omega)$ (m$^2$s/rad)')
+axes[0, 1].set_title('JONSWAP Spectra')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Significant wave height vs fetch
+fetches = np.linspace(50e3, 1000e3, 50)
+Hs_values = []
+Tp_values = []
+
+for fetch in fetches:
+    S_j, omega_p = jonswap(omega, U, fetch)
+    # Significant wave height: Hs = 4 * sqrt(m0)
+    m0 = np.trapz(S_j, omega)
+    Hs = 4 * np.sqrt(m0)
+    Tp = 2 * np.pi / omega_p
+    Hs_values.append(Hs)
+    Tp_values.append(Tp)
+
+axes[1, 0].plot(fetches/1e3, Hs_values, 'b-', linewidth=2)
+axes[1, 0].set_xlabel('Fetch (km)')
+axes[1, 0].set_ylabel('$H_s$ (m)')
+axes[1, 0].set_title(f'Significant Wave Height Growth (U={U} m/s)')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Peak period vs fetch
+axes[1, 1].plot(fetches/1e3, Tp_values, 'r-', linewidth=2)
+axes[1, 1].set_xlabel('Fetch (km)')
+axes[1, 1].set_ylabel('$T_p$ (s)')
+axes[1, 1].set_title('Peak Period Growth')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('wave_spectra.pdf', 'Ocean wave spectra and wave growth')
+
+# Store for later use
+final_Hs = Hs_values[-1]
+final_Tp = Tp_values[-1]
+\end{pycode}
+
+\section{Random Sea Surface Simulation}
+
+\begin{pycode}
+# Generate random sea surface from spectrum
+def generate_sea_surface(S, omega, x, t):
+    """Generate sea surface elevation from spectrum"""
+    domega = omega[1] - omega[0]
+    amplitudes = np.sqrt(2 * S * domega)
+    phases = np.random.uniform(0, 2*np.pi, len(omega))
+
+    eta = np.zeros_like(x)
+    for i, om in enumerate(omega):
+        k = om**2 / g  # Deep water
+        eta += amplitudes[i] * np.cos(k * x - om * t + phases[i])
+
+    return eta
+
+# Generate surface
+x = np.linspace(0, 1000, 500)  # 1 km domain
+t_values = [0, 5, 10, 15]  # Time snapshots
+
+# Use JONSWAP spectrum
+S_j, omega_p = jonswap(omega, U, 300e3)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1-4: Sea surface at different times
+for idx, t in enumerate(t_values):
+    ax = axes[idx // 2, idx % 2]
+    eta = generate_sea_surface(S_j, omega, x, t)
+    ax.plot(x, eta, 'b-', linewidth=1)
+    ax.fill_between(x, 0, eta, where=(eta > 0), alpha=0.3, color='blue')
+    ax.fill_between(x, eta, 0, where=(eta < 0), alpha=0.3, color='blue')
+    ax.axhline(y=0, color='k', linestyle='-', linewidth=0.5)
+    ax.set_xlabel('x (m)')
+    ax.set_ylabel('$\\eta$ (m)')
+    ax.set_title(f't = {t} s')
+    ax.set_ylim(-5, 5)
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('sea_surface.pdf', 'Random sea surface time evolution')
+\end{pycode}
+
+\section{Wave Shoaling and Refraction}
+
+\begin{pycode}
+# Shoaling transformation
+h_deep = 100  # Deep water depth
+h_shallow = np.linspace(100, 2, 100)
+
+T = 10  # Wave period
+omega_wave = 2 * np.pi / T
+k_deep = omega_wave**2 / g
+L_deep = 2 * np.pi / k_deep
+H_deep = 2  # Deep water wave height (m)
+
+# Calculate shoaling coefficient
+Ks_values = []
+k_values = []
+c_values = []
+cg_values = []
+
+for h in h_shallow:
+    k = dispersion(omega_wave, h)
+    c = phase_speed(k, h)
+    cg = group_speed(k, h)
+    cg_deep = group_speed(k_deep, h_deep)
+
+    Ks = np.sqrt(cg_deep / cg)
+    Ks_values.append(Ks)
+    k_values.append(k)
+    c_values.append(c)
+    cg_values.append(cg)
+
+Ks_values = np.array(Ks_values)
+H_shoaled = H_deep * Ks_values
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Plot 1: Shoaling coefficient
+axes[0, 0].plot(h_shallow, Ks_values, 'b-', linewidth=2)
+axes[0, 0].set_xlabel('Water Depth (m)')
+axes[0, 0].set_ylabel('$K_s$')
+axes[0, 0].set_title('Shoaling Coefficient')
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].invert_xaxis()
+
+# Plot 2: Wave height transformation
+axes[0, 1].plot(h_shallow, H_shoaled, 'r-', linewidth=2)
+axes[0, 1].axhline(y=H_deep, color='k', linestyle='--', label=f'$H_0$ = {H_deep} m')
+axes[0, 1].set_xlabel('Water Depth (m)')
+axes[0, 1].set_ylabel('Wave Height (m)')
+axes[0, 1].set_title('Wave Height During Shoaling')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].invert_xaxis()
+
+# Plot 3: Wave refraction
+# Beach with varying depth
+nx, ny = 100, 50
+x_beach = np.linspace(0, 2000, nx)
+y_beach = np.linspace(-500, 500, ny)
+X_beach, Y_beach = np.meshgrid(x_beach, y_beach)
+
+# Depth decreases toward shore (linear beach)
+h_beach = 50 - 0.025 * X_beach
+h_beach = np.maximum(h_beach, 0.5)
+
+# Calculate wave crests (refraction)
+# Waves approaching at angle
+theta_deep = np.radians(30)  # 30 degree approach angle
+
+# Calculate local angle using Snell's law
+c_deep = np.sqrt(g * h_beach.max())
+c_local = np.sqrt(g * h_beach * np.tanh(k_deep * h_beach) / k_deep)
+theta_local = np.arcsin(np.clip(c_local / c_deep * np.sin(theta_deep), -1, 1))
+
+# Wave crest positions
+im = axes[1, 0].contourf(X_beach, Y_beach, h_beach, levels=20, cmap='Blues_r')
+axes[1, 0].contour(X_beach, Y_beach, h_beach, levels=10, colors='white', linewidths=0.5)
+axes[1, 0].set_xlabel('Distance offshore (m)')
+axes[1, 0].set_ylabel('Alongshore (m)')
+axes[1, 0].set_title('Bathymetry')
+plt.colorbar(im, ax=axes[1, 0], label='Depth (m)')
+
+# Plot 4: Refraction diagram
+# Draw wave rays
+for y0 in np.linspace(-400, 400, 9):
+    ray_x = [0]
+    ray_y = [y0]
+    x_curr = 0
+    y_curr = y0
+    theta_curr = theta_deep
+    ds = 20  # Step size
+
+    while x_curr < 1900:
+        # Get local depth
+        j = int(np.clip(x_curr / x_beach[-1] * (nx-1), 0, nx-1))
+        h_local = 50 - 0.025 * x_curr
+        h_local = max(h_local, 0.5)
+
+        # Local phase speed
+        c_loc = np.sqrt(g * h_local * np.tanh(k_deep * h_local) / k_deep)
+
+        # Update angle (Snell's law)
+        sin_theta = c_loc / c_deep * np.sin(theta_deep)
+        if abs(sin_theta) <= 1:
+            theta_curr = np.arcsin(sin_theta)
+        else:
+            break
+
+        # Step forward
+        x_curr += ds * np.cos(theta_curr)
+        y_curr += ds * np.sin(theta_curr)
+        ray_x.append(x_curr)
+        ray_y.append(y_curr)
+
+    axes[1, 1].plot(ray_x, ray_y, 'b-', linewidth=0.8, alpha=0.7)
+
+axes[1, 1].contour(X_beach, Y_beach, h_beach, levels=[5, 10, 20, 30, 40],
+                   colors='gray', linewidths=0.5)
+axes[1, 1].set_xlabel('Distance offshore (m)')
+axes[1, 1].set_ylabel('Alongshore (m)')
+axes[1, 1].set_title(f'Wave Refraction (approach angle = {np.degrees(theta_deep):.0f}$^\\circ$)')
+axes[1, 1].set_xlim(0, 2000)
+axes[1, 1].set_ylim(-500, 500)
+
+plt.tight_layout()
+save_plot('shoaling_refraction.pdf', 'Wave shoaling and refraction')
+
+max_Hs_shoaled = np.max(H_shoaled)
+\end{pycode}
+
+\section{Breaking Wave Criterion}
+
+\begin{pycode}
+# Wave breaking analysis
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# McCowan breaking criterion: H/h = 0.78
+# Miche breaking criterion: H/L = 0.142 tanh(kh)
+
+depths_break = np.linspace(1, 20, 100)
+
+# Maximum wave height before breaking
+Hb_mccowan = 0.78 * depths_break
+
+# Breaking wave height for different periods
+for T_break in [6, 8, 10, 12]:
+    omega_b = 2 * np.pi / T_break
+    Hb_miche = []
+    for h in depths_break:
+        k = dispersion(omega_b, h)
+        L = 2 * np.pi / k
+        H_max = 0.142 * L * np.tanh(k * h)
+        Hb_miche.append(H_max)
+    axes[0].plot(depths_break, Hb_miche, label=f'T={T_break}s')
+
+axes[0].plot(depths_break, Hb_mccowan, 'k--', linewidth=2, label='McCowan')
+axes[0].set_xlabel('Water Depth (m)')
+axes[0].set_ylabel('Breaking Wave Height (m)')
+axes[0].set_title('Breaking Wave Height Limits')
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+# Breaker type parameter
+# Surf similarity parameter: xi = tan(beta) / sqrt(H/L)
+slopes = np.linspace(0.01, 0.15, 100)
+H_break = 2  # m
+L_break = 100  # m (approx for T=8s)
+
+xi = slopes / np.sqrt(H_break / L_break)
+
+axes[1].plot(slopes, xi, 'b-', linewidth=2)
+axes[1].axhline(y=0.5, color='r', linestyle='--', label='Spilling (< 0.5)')
+axes[1].axhline(y=3.3, color='g', linestyle='--', label='Surging (> 3.3)')
+axes[1].fill_between(slopes, 0.5, 3.3, alpha=0.2, color='yellow', label='Plunging')
+axes[1].set_xlabel('Beach Slope')
+axes[1].set_ylabel('Surf Similarity $\\xi$')
+axes[1].set_title('Breaker Type Classification')
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('wave_breaking.pdf', 'Wave breaking criteria and breaker types')
+\end{pycode}
+
+\section{Results Summary}
+
+\subsection{Wave Properties}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Wave characteristics for T=10s}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Property & Deep Water & Shallow (10m) \\')
+print(r'\midrule')
+
+# Deep water values
+L_d = g * 10**2 / (2 * np.pi)
+c_d = g * 10 / (2 * np.pi)
+cg_d = c_d / 2
+
+# Shallow water values (h=10m)
+k_s = dispersion(omega_wave, 10)
+L_s = 2 * np.pi / k_s
+c_s = phase_speed(k_s, 10)
+cg_s = group_speed(k_s, 10)
+
+print(f"Wavelength (m) & {L_d:.1f} & {L_s:.1f} \\\\")
+print(f"Phase speed (m/s) & {c_d:.1f} & {c_s:.1f} \\\\")
+print(f"Group speed (m/s) & {cg_d:.1f} & {cg_s:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Spectral Parameters}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Wave spectrum characteristics}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f"Wind speed & {U} m/s \\\\")
+print(f"Significant wave height & {final_Hs:.2f} m \\\\")
+print(f"Peak period & {final_Tp:.1f} s \\\\")
+print(f"Maximum fetch & {fetches[-1]/1e3:.0f} km \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Coastal Transformation}
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Wave transformation during shoaling}')
+print(r'\begin{tabular}{lr}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
+print(f"Deep water height & {H_deep:.1f} m \\\\")
+print(f"Maximum shoaled height & {max_Hs_shoaled:.2f} m \\\\")
+print(f"Maximum shoaling coefficient & {np.max(Ks_values):.2f} \\\\")
+print(f"Refraction angle (deep) & {np.degrees(theta_deep):.0f}$^\\circ$ \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Physical Summary}
+\begin{itemize}
+    \item Deep water wavelength (T=10s): \py{f"{L_d:.1f}"} m
+    \item JONSWAP $H_s$: \py{f"{final_Hs:.2f}"} m
+    \item Maximum shoaling coefficient: \py{f"{np.max(Ks_values):.2f}"}
+    \item Approach angle: \py{f"{np.degrees(theta_deep):.0f}"} degrees
+\end{itemize}
+
+\section{Conclusion}
+This template demonstrates fundamental ocean wave dynamics. The dispersion relation governs how wave properties vary with depth, transitioning from deep to shallow water behavior. Spectral representations (Pierson-Moskowitz, JONSWAP) describe the energy distribution in random seas and wave growth with fetch. Shoaling causes wave height to increase as waves approach shore, while refraction bends wave crests to align with depth contours. These processes are essential for coastal engineering and understanding surf zone dynamics.
+
+\end{document}

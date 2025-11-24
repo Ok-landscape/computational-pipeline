@@ -1,0 +1,496 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{photon}{RGB}{52, 152, 219}
+\definecolor{electron}{RGB}{231, 76, 60}
+\definecolor{proton}{RGB}{46, 204, 113}
+
+\title{Radiation Dosimetry:\\
+Depth-Dose Distributions and Treatment Planning}
+\author{Department of Medical Physics\\Technical Report MP-2024-003}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of radiation dosimetry for external beam radiotherapy. We compute depth-dose distributions for photon, electron, and proton beams, analyze tissue inhomogeneity corrections, evaluate dose-volume histograms, and compare treatment planning techniques. All calculations use PythonTeX for reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+Radiation dosimetry quantifies energy deposition in tissue. The absorbed dose is defined as:
+\begin{equation}
+D = \frac{d\bar{\varepsilon}}{dm}
+\end{equation}
+where $d\bar{\varepsilon}$ is the mean energy imparted to matter of mass $dm$.
+
+\section{Dose Quantities}
+\begin{itemize}
+    \item Absorbed dose $D$ (Gy): Energy per unit mass
+    \item Kerma $K$ (Gy): Kinetic energy released per unit mass
+    \item Exposure $X$ (R): Ionization in air
+\end{itemize}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from scipy.integrate import cumtrapz
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Depth array (cm)
+depth = np.linspace(0, 35, 350)
+
+def photon_pdd(d, energy_MV, field_size=10):
+    """Model photon percent depth dose."""
+    # d_max increases with energy
+    d_max = 0.5 + energy_MV * 0.15
+    # Effective attenuation coefficient
+    mu_eff = 0.05 - 0.002 * energy_MV + 0.001 * (10 - field_size)
+
+    pdd = np.zeros_like(d)
+    buildup = d <= d_max
+    pdd[buildup] = 100 * (0.3 + 0.7 * (d[buildup] / d_max)**0.8)
+    falloff = d > d_max
+    pdd[falloff] = 100 * np.exp(-mu_eff * (d[falloff] - d_max))
+
+    return pdd
+
+def electron_pdd(d, energy_MeV):
+    """Model electron percent depth dose."""
+    R_50 = energy_MeV / 2.33  # Depth of 50% dose
+    R_p = energy_MeV / 2.0    # Practical range
+    d_max = 0.46 * energy_MeV**0.6
+
+    pdd = np.zeros_like(d)
+    # Surface dose
+    surface = d < d_max * 0.3
+    pdd[surface] = 75 + 80 * d[surface] / d_max
+    # Buildup
+    buildup = (d >= d_max * 0.3) & (d < d_max)
+    pdd[buildup] = 100 * (d[buildup] / d_max)**0.3
+    # Plateau and falloff
+    plateau = (d >= d_max) & (d < R_50)
+    pdd[plateau] = 100 * np.exp(-0.1 * (d[plateau] - d_max))
+    falloff = d >= R_50
+    pdd[falloff] = 100 * np.exp(-3 * (d[falloff] - R_50)**2 / (R_p - R_50 + 0.1)**2)
+    pdd[d > R_p * 1.1] = 0
+
+    return np.clip(pdd, 0, 100)
+
+def proton_pdd(d, energy_MeV, sigma=0.3):
+    """Model proton Bragg peak."""
+    R = 0.0022 * energy_MeV**1.77  # Range in water (cm)
+
+    # Entrance plateau
+    entrance = d < R * 0.8
+    pdd = np.ones_like(d) * 30
+    pdd[entrance] = 30 + 5 * d[entrance] / R
+
+    # Bragg peak
+    peak = (d >= R * 0.8) & (d <= R * 1.1)
+    pdd[peak] = 30 + 70 * np.exp(-((d[peak] - R)**2) / (2 * (sigma * R)**2))
+
+    # Distal falloff
+    distal = d > R * 1.1
+    pdd[distal] = 30 * np.exp(-10 * (d[distal] - R * 1.1) / R)
+
+    # Normalize
+    pdd = pdd / pdd.max() * 100
+    return np.clip(pdd, 0, 100)
+
+def tar(d, energy_MV, field_size=10, SSD=100):
+    """Calculate tissue-air ratio."""
+    pdd = photon_pdd(d, energy_MV, field_size)
+    d_max = 0.5 + energy_MV * 0.15
+    return pdd / 100 * ((SSD + d_max) / (SSD + d))**2 * 100
+
+def tpr(d, energy_MV):
+    """Calculate tissue-phantom ratio."""
+    d_ref = 10
+    return photon_pdd(d, energy_MV) / photon_pdd(d_ref * np.ones(1), energy_MV)[0] * 100
+\end{pycode}
+
+\chapter{Photon Beam Dosimetry}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# PDD for different energies
+ax = axes[0, 0]
+energies_MV = [4, 6, 10, 15, 18]
+colors = plt.cm.viridis(np.linspace(0, 0.8, len(energies_MV)))
+
+for E, color in zip(energies_MV, colors):
+    pdd = photon_pdd(depth, E)
+    ax.plot(depth, pdd, color=color, linewidth=2, label=f'{E} MV')
+
+ax.axhline(y=50, color='gray', linestyle='--', alpha=0.5)
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Percent Depth Dose (\\%)')
+ax.set_title('Photon PDD vs Energy')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim([0, 110])
+
+# Field size dependence
+ax = axes[0, 1]
+field_sizes = [5, 10, 20, 30]
+colors_fs = plt.cm.plasma(np.linspace(0.2, 0.8, len(field_sizes)))
+
+for fs, color in zip(field_sizes, colors_fs):
+    pdd = photon_pdd(depth, 6, fs)
+    ax.plot(depth, pdd, color=color, linewidth=2, label=f'{fs} cm')
+
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Percent Depth Dose (\\%)')
+ax.set_title('6 MV PDD vs Field Size')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim([0, 110])
+
+# TAR vs TPR
+ax = axes[0, 2]
+pdd_6 = photon_pdd(depth, 6)
+tar_6 = tar(depth, 6)
+
+ax.plot(depth, pdd_6, 'b-', linewidth=2, label='PDD')
+ax.plot(depth, tar_6, 'r--', linewidth=2, label='TAR')
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Relative Dose (\\%)')
+ax.set_title('PDD vs TAR (6 MV)')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Characteristic depths
+ax = axes[1, 0]
+d_max_vals = []
+d_80_vals = []
+d_50_vals = []
+
+for E in energies_MV:
+    pdd = photon_pdd(depth, E)
+    d_max = 0.5 + E * 0.15
+    d_80 = depth[np.argmin(np.abs(pdd - 80))]
+    d_50 = depth[np.argmin(np.abs(pdd - 50))]
+    d_max_vals.append(d_max)
+    d_80_vals.append(d_80)
+    d_50_vals.append(d_50)
+
+x = np.arange(len(energies_MV))
+width = 0.25
+ax.bar(x - width, d_max_vals, width, label='$d_{max}$', alpha=0.7, color='#3498db')
+ax.bar(x, d_80_vals, width, label='$d_{80}$', alpha=0.7, color='#2ecc71')
+ax.bar(x + width, d_50_vals, width, label='$d_{50}$', alpha=0.7, color='#e74c3c')
+ax.set_xlabel('Photon Energy (MV)')
+ax.set_ylabel('Depth (cm)')
+ax.set_title('Characteristic Depths')
+ax.set_xticks(x)
+ax.set_xticklabels([str(E) for E in energies_MV])
+ax.legend()
+ax.grid(True, alpha=0.3, axis='y')
+
+# Buildup region
+ax = axes[1, 1]
+depth_buildup = np.linspace(0, 5, 100)
+for E, color in zip([6, 10, 18], ['#3498db', '#2ecc71', '#e74c3c']):
+    pdd = photon_pdd(depth_buildup, E)
+    ax.plot(depth_buildup, pdd, color=color, linewidth=2, label=f'{E} MV')
+
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Percent Depth Dose (\\%)')
+ax.set_title('Buildup Region')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Surface dose vs energy
+ax = axes[1, 2]
+surface_doses = [photon_pdd(0, E)[0] if isinstance(photon_pdd(0, E), np.ndarray)
+                 else photon_pdd(np.array([0]), E)[0] for E in energies_MV]
+ax.bar(energies_MV, surface_doses, color='#f39c12', alpha=0.7)
+ax.set_xlabel('Energy (MV)')
+ax.set_ylabel('Surface Dose (\\%)')
+ax.set_title('Surface Dose vs Energy')
+ax.grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+plt.savefig('photon_dosimetry.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{photon_dosimetry.pdf}
+\caption{Photon dosimetry: (a) energy dependence, (b) field size, (c) PDD vs TAR, (d) characteristic depths, (e) buildup, (f) surface dose.}
+\end{figure}
+
+\chapter{Electron and Proton Beams}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Electron PDD
+ax = axes[0, 0]
+energies_MeV = [6, 9, 12, 16, 20]
+colors_e = plt.cm.Reds(np.linspace(0.4, 0.9, len(energies_MeV)))
+
+for E, color in zip(energies_MeV, colors_e):
+    pdd = electron_pdd(depth, E)
+    ax.plot(depth, pdd, color=color, linewidth=2, label=f'{E} MeV')
+
+ax.axhline(y=50, color='gray', linestyle='--', alpha=0.5)
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Percent Depth Dose (\\%)')
+ax.set_title('Electron PDD')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim([0, 15])
+ax.set_ylim([0, 110])
+
+# Proton Bragg peaks
+ax = axes[0, 1]
+proton_energies = [100, 150, 200, 230]
+colors_p = plt.cm.Greens(np.linspace(0.4, 0.9, len(proton_energies)))
+
+for E, color in zip(proton_energies, colors_p):
+    pdd = proton_pdd(depth, E)
+    ax.plot(depth, pdd, color=color, linewidth=2, label=f'{E} MeV')
+
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Percent Depth Dose (\\%)')
+ax.set_title('Proton Bragg Peaks')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim([0, 110])
+
+# SOBP (Spread-out Bragg peak)
+ax = axes[0, 2]
+depth_sobp = np.linspace(0, 25, 250)
+# Create SOBP from weighted sum
+sobp = np.zeros_like(depth_sobp)
+weights = [0.8, 0.9, 1.0, 1.1, 1.2]
+energies_sobp = [180, 190, 200, 210, 220]
+
+for w, E in zip(weights, energies_sobp):
+    sobp += w * proton_pdd(depth_sobp, E)
+sobp = sobp / sobp.max() * 100
+
+pristine = proton_pdd(depth_sobp, 200)
+ax.plot(depth_sobp, pristine, 'g--', linewidth=1.5, alpha=0.7, label='Pristine')
+ax.plot(depth_sobp, sobp, 'b-', linewidth=2, label='SOBP')
+ax.axhline(90, color='r', linestyle=':', alpha=0.5)
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Relative Dose (\\%)')
+ax.set_title('Spread-Out Bragg Peak')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Comparison at same range
+ax = axes[1, 0]
+# Match depths for comparison
+depth_comp = np.linspace(0, 20, 200)
+photon_15 = photon_pdd(depth_comp, 15)
+electron_20 = electron_pdd(depth_comp, 20)
+proton_170 = proton_pdd(depth_comp, 170)
+
+ax.plot(depth_comp, photon_15, 'b-', linewidth=2, label='15 MV photon')
+ax.plot(depth_comp, electron_20, 'r-', linewidth=2, label='20 MeV electron')
+ax.plot(depth_comp, proton_170, 'g-', linewidth=2, label='170 MeV proton')
+ax.set_xlabel('Depth (cm)')
+ax.set_ylabel('Percent Depth Dose (\\%)')
+ax.set_title('Beam Type Comparison')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_ylim([0, 110])
+
+# Electron ranges
+ax = axes[1, 1]
+R_50 = np.array(energies_MeV) / 2.33
+R_p = np.array(energies_MeV) / 2.0
+R_90 = []
+for E in energies_MeV:
+    pdd = electron_pdd(depth, E)
+    r90 = depth[np.argmin(np.abs(pdd - 90))]
+    R_90.append(r90)
+
+ax.plot(energies_MeV, R_90, 'bo-', markersize=8, label='$R_{90}$')
+ax.plot(energies_MeV, R_50, 'go-', markersize=8, label='$R_{50}$')
+ax.plot(energies_MeV, R_p, 'ro-', markersize=8, label='$R_p$')
+ax.set_xlabel('Electron Energy (MeV)')
+ax.set_ylabel('Depth (cm)')
+ax.set_title('Electron Range Parameters')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Proton range vs energy
+ax = axes[1, 2]
+proton_E = np.linspace(50, 250, 100)
+proton_range = 0.0022 * proton_E**1.77
+
+ax.plot(proton_E, proton_range, 'g-', linewidth=2)
+ax.set_xlabel('Proton Energy (MeV)')
+ax.set_ylabel('Range in Water (cm)')
+ax.set_title('Proton Range')
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('particle_dosimetry.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{particle_dosimetry.pdf}
+\caption{Particle dosimetry: (a) electron PDD, (b) proton Bragg peaks, (c) SOBP, (d) beam comparison, (e) electron ranges, (f) proton range.}
+\end{figure}
+
+\chapter{Dose-Volume Analysis}
+
+\begin{pycode}
+# Simulate DVH
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Create simulated dose distributions
+np.random.seed(42)
+n_voxels = 10000
+
+# Target (PTV)
+target_dose = 60 + 5 * np.random.randn(n_voxels)
+target_dose = np.clip(target_dose, 50, 70)
+
+# OAR 1 (close to target)
+oar1_dose = 40 + 15 * np.random.randn(n_voxels)
+oar1_dose = np.clip(oar1_dose, 0, 65)
+
+# OAR 2 (further from target)
+oar2_dose = 20 + 10 * np.random.randn(n_voxels)
+oar2_dose = np.clip(oar2_dose, 0, 45)
+
+# Cumulative DVH
+ax = axes[0]
+dose_bins = np.linspace(0, 75, 150)
+
+for doses, label, color in [(target_dose, 'PTV', '#e74c3c'),
+                             (oar1_dose, 'OAR 1', '#3498db'),
+                             (oar2_dose, 'OAR 2', '#2ecc71')]:
+    hist, _ = np.histogram(doses, bins=dose_bins)
+    cum_hist = np.cumsum(hist[::-1])[::-1] / len(doses) * 100
+    ax.plot(dose_bins[:-1], cum_hist, linewidth=2, label=label, color=color)
+
+ax.axhline(95, color='gray', linestyle='--', alpha=0.5)
+ax.axvline(60, color='gray', linestyle=':', alpha=0.5)
+ax.set_xlabel('Dose (Gy)')
+ax.set_ylabel('Volume (\\%)')
+ax.set_title('Cumulative DVH')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Differential DVH
+ax = axes[1]
+for doses, label, color in [(target_dose, 'PTV', '#e74c3c'),
+                             (oar1_dose, 'OAR 1', '#3498db'),
+                             (oar2_dose, 'OAR 2', '#2ecc71')]:
+    ax.hist(doses, bins=50, alpha=0.5, label=label, color=color, density=True)
+
+ax.set_xlabel('Dose (Gy)')
+ax.set_ylabel('Frequency')
+ax.set_title('Differential DVH')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# DVH metrics
+ax = axes[2]
+metrics = {
+    'D95 PTV': np.percentile(target_dose, 5),
+    'D50 PTV': np.percentile(target_dose, 50),
+    'D2 PTV': np.percentile(target_dose, 98),
+    'Dmax OAR1': np.max(oar1_dose),
+    'Dmean OAR1': np.mean(oar1_dose),
+    'Dmax OAR2': np.max(oar2_dose),
+}
+
+names = list(metrics.keys())
+values = list(metrics.values())
+colors_bar = ['#e74c3c']*3 + ['#3498db']*2 + ['#2ecc71']
+
+bars = ax.barh(names, values, color=colors_bar, alpha=0.7)
+ax.set_xlabel('Dose (Gy)')
+ax.set_title('DVH Metrics')
+ax.grid(True, alpha=0.3, axis='x')
+
+plt.tight_layout()
+plt.savefig('dose_volume.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Store metrics
+D95_PTV = metrics['D95 PTV']
+Dmax_OAR1 = metrics['Dmax OAR1']
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{dose_volume.pdf}
+\caption{Dose-volume analysis: (a) cumulative DVH, (b) differential DVH, (c) DVH metrics.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+# 6 MV reference values
+d_max_6 = 0.5 + 6 * 0.15
+pdd_6_ref = photon_pdd(depth, 6)
+d_50_6 = depth[np.argmin(np.abs(pdd_6_ref - 50))]
+d_80_6 = depth[np.argmin(np.abs(pdd_6_ref - 80))]
+
+results_table = [
+    ('6 MV $d_{max}$', f'{d_max_6:.1f}', 'cm'),
+    ('6 MV $d_{50}$', f'{d_50_6:.1f}', 'cm'),
+    ('6 MV $d_{80}$', f'{d_80_6:.1f}', 'cm'),
+    ('PTV D95', f'{D95_PTV:.1f}', 'Gy'),
+    ('OAR1 $D_{max}$', f'{Dmax_OAR1:.1f}', 'Gy'),
+    ('Prescribed dose', '60.0', 'Gy'),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Radiation dosimetry results}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parameter & Value & Units \\
+\midrule
+\py{results_table[0][0]} & \py{results_table[0][1]} & \py{results_table[0][2]} \\
+\py{results_table[1][0]} & \py{results_table[1][1]} & \py{results_table[1][2]} \\
+\py{results_table[2][0]} & \py{results_table[2][1]} & \py{results_table[2][2]} \\
+\py{results_table[3][0]} & \py{results_table[3][1]} & \py{results_table[3][2]} \\
+\py{results_table[4][0]} & \py{results_table[4][1]} & \py{results_table[4][2]} \\
+\py{results_table[5][0]} & \py{results_table[5][1]} & \py{results_table[5][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Higher photon energies penetrate deeper with skin sparing
+    \item Electrons have sharp dose falloff at their range
+    \item Protons offer superior dose conformity with Bragg peak
+    \item SOBP allows tumor coverage with proton therapy
+    \item DVH analysis quantifies target coverage and OAR sparing
+    \item Treatment planning optimizes therapeutic ratio
+\end{enumerate}
+
+\end{document}

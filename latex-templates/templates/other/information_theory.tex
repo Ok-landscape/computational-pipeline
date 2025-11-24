@@ -1,0 +1,620 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[makestderr]{pythontex}
+
+\title{Information Theory: Entropy, Coding, and Channel Capacity}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Information theory quantifies information content, compression limits, and communication channel capacity. Founded by Claude Shannon in 1948, it provides the mathematical framework for data compression (source coding) and error-correcting codes (channel coding). This analysis computes entropy for various probability distributions, demonstrates Huffman and arithmetic coding efficiency, explores mutual information, and examines channel capacity.
+
+\section{Mathematical Framework}
+
+\subsection{Shannon Entropy}
+The entropy of a discrete random variable $X$ with probability mass function $p(x)$:
+\begin{equation}
+H(X) = -\sum_{x \in \mathcal{X}} p(x) \log_2 p(x)
+\end{equation}
+
+\subsection{Conditional Entropy and Mutual Information}
+Conditional entropy and mutual information:
+\begin{align}
+H(X|Y) &= -\sum_{x,y} p(x,y) \log_2 p(x|y) \\
+I(X;Y) &= H(X) - H(X|Y) = H(X) + H(Y) - H(X,Y)
+\end{align}
+
+\subsection{Channel Capacity}
+For a discrete memoryless channel:
+\begin{equation}
+C = \max_{p(x)} I(X;Y)
+\end{equation}
+
+For the binary symmetric channel with crossover probability $p$:
+\begin{equation}
+C = 1 - H_b(p) = 1 + p\log_2 p + (1-p)\log_2(1-p)
+\end{equation}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import Counter
+import heapq
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+
+def entropy(p):
+    """Calculate Shannon entropy in bits."""
+    p = np.array(p)
+    p = p[p > 0]  # Remove zeros
+    return -np.sum(p * np.log2(p))
+
+def binary_entropy(p):
+    """Binary entropy function H_b(p)."""
+    if p <= 0 or p >= 1:
+        return 0
+    return -p * np.log2(p) - (1-p) * np.log2(1-p)
+\end{pycode}
+
+\section{Entropy and Information Content}
+\begin{pycode}
+# Binary entropy function
+p_range = np.linspace(0.001, 0.999, 200)
+H_binary = [binary_entropy(p) for p in p_range]
+
+# Entropy of different distributions
+distributions = {
+    'Uniform (8)': np.ones(8) / 8,
+    'Peaked': np.array([0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625, 0.0078125, 0.0078125]),
+    'Bimodal': np.array([0.3, 0.05, 0.05, 0.1, 0.1, 0.05, 0.05, 0.3]),
+    'Skewed': np.array([0.6, 0.2, 0.1, 0.05, 0.03, 0.01, 0.005, 0.005])
+}
+
+entropies = {name: entropy(p) for name, p in distributions.items()}
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Binary entropy function
+axes[0, 0].plot(p_range, H_binary, 'b-', linewidth=2)
+axes[0, 0].axvline(x=0.5, color='gray', linestyle='--', alpha=0.7)
+axes[0, 0].axhline(y=1, color='gray', linestyle='--', alpha=0.7)
+axes[0, 0].set_xlabel('Probability $p$')
+axes[0, 0].set_ylabel('Entropy $H_b(p)$ (bits)')
+axes[0, 0].set_title('Binary Entropy Function')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Different distributions
+x = np.arange(8)
+width = 0.2
+colors = plt.cm.viridis(np.linspace(0.2, 0.8, 4))
+
+for i, (name, p) in enumerate(distributions.items()):
+    axes[0, 1].bar(x + i * width, p, width, label=f'{name}: H={entropies[name]:.2f}',
+                   color=colors[i], alpha=0.8)
+
+axes[0, 1].set_xlabel('Symbol')
+axes[0, 1].set_ylabel('Probability')
+axes[0, 1].set_title('Probability Distributions and Entropy')
+axes[0, 1].legend(fontsize=7)
+axes[0, 1].grid(True, alpha=0.3, axis='y')
+
+# Plot 3: Entropy vs alphabet size (uniform distribution)
+alphabet_sizes = np.arange(2, 65)
+uniform_entropies = np.log2(alphabet_sizes)
+
+axes[1, 0].plot(alphabet_sizes, uniform_entropies, 'b-', linewidth=2)
+axes[1, 0].set_xlabel('Alphabet size $|\\mathcal{X}|$')
+axes[1, 0].set_ylabel('Entropy $H(X)$ (bits)')
+axes[1, 0].set_title('Maximum Entropy (Uniform Distribution)')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Information content of individual symbols
+probs = distributions['Peaked']
+information = -np.log2(probs)
+
+axes[1, 1].bar(x, information, color='steelblue', alpha=0.7)
+axes[1, 1].set_xlabel('Symbol')
+axes[1, 1].set_ylabel('Information content (bits)')
+axes[1, 1].set_title('Self-Information: $-\\log_2 p(x)$')
+axes[1, 1].grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+save_plot('entropy_basics.pdf', 'Entropy fundamentals: binary entropy, distributions, and information content.')
+\end{pycode}
+
+\section{Huffman Coding}
+\begin{pycode}
+# Huffman coding implementation
+class HuffmanNode:
+    def __init__(self, symbol=None, freq=0, left=None, right=None):
+        self.symbol = symbol
+        self.freq = freq
+        self.left = left
+        self.right = right
+
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+def huffman_codes(symbols, probs):
+    """Build Huffman codes for given symbols and probabilities."""
+    # Create leaf nodes
+    heap = [HuffmanNode(s, p) for s, p in zip(symbols, probs)]
+    heapq.heapify(heap)
+
+    # Build tree
+    while len(heap) > 1:
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+        merged = HuffmanNode(freq=left.freq + right.freq, left=left, right=right)
+        heapq.heappush(heap, merged)
+
+    # Generate codes
+    root = heap[0]
+    codes = {}
+
+    def generate_codes(node, code=""):
+        if node.symbol is not None:
+            codes[node.symbol] = code if code else "0"
+        else:
+            generate_codes(node.left, code + "0")
+            generate_codes(node.right, code + "1")
+
+    generate_codes(root)
+    return codes
+
+# Example source
+symbols = ['A', 'B', 'C', 'D', 'E', 'F']
+probs = np.array([0.35, 0.25, 0.18, 0.12, 0.07, 0.03])
+
+source_entropy = entropy(probs)
+codes = huffman_codes(symbols, probs)
+code_lengths = np.array([len(codes[s]) for s in symbols])
+avg_length = np.sum(probs * code_lengths)
+efficiency = source_entropy / avg_length * 100
+redundancy = avg_length - source_entropy
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Source distribution
+x_pos = np.arange(len(symbols))
+axes[0, 0].bar(x_pos, probs, color='steelblue', alpha=0.7)
+axes[0, 0].set_xticks(x_pos)
+axes[0, 0].set_xticklabels(symbols)
+axes[0, 0].set_xlabel('Symbol')
+axes[0, 0].set_ylabel('Probability')
+axes[0, 0].set_title(f'Source Distribution (H = {source_entropy:.3f} bits)')
+axes[0, 0].grid(True, alpha=0.3, axis='y')
+
+# Plot 2: Code lengths vs optimal
+optimal_lengths = -np.log2(probs)
+bar_width = 0.35
+
+axes[0, 1].bar(x_pos - bar_width/2, code_lengths, bar_width, label='Huffman', color='steelblue', alpha=0.7)
+axes[0, 1].bar(x_pos + bar_width/2, optimal_lengths, bar_width, label='Optimal $-\\log_2 p$', color='coral', alpha=0.7)
+axes[0, 1].set_xticks(x_pos)
+axes[0, 1].set_xticklabels(symbols)
+axes[0, 1].set_xlabel('Symbol')
+axes[0, 1].set_ylabel('Code length (bits)')
+axes[0, 1].set_title('Huffman vs Optimal Code Length')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3, axis='y')
+
+# Plot 3: Coding efficiency metrics
+metrics = ['Entropy', 'Avg Length', 'Redundancy']
+values = [source_entropy, avg_length, redundancy]
+colors_bar = ['blue', 'green', 'red']
+
+bars = axes[1, 0].bar(metrics, values, color=colors_bar, alpha=0.7)
+axes[1, 0].set_ylabel('Bits')
+axes[1, 0].set_title(f'Coding Performance (Efficiency: {efficiency:.1f}\\%)')
+axes[1, 0].grid(True, alpha=0.3, axis='y')
+
+# Add value labels
+for bar, val in zip(bars, values):
+    axes[1, 0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.05,
+                    f'{val:.3f}', ha='center', fontsize=9)
+
+# Plot 4: Compression ratio for different sources
+n_sources = 10
+compression_ratios = []
+entropies_random = []
+
+for _ in range(n_sources):
+    # Generate random probability distribution
+    p_random = np.random.dirichlet(np.ones(6))
+    H_random = entropy(p_random)
+    entropies_random.append(H_random)
+
+    codes_random = huffman_codes(symbols, p_random)
+    lengths_random = np.array([len(codes_random[s]) for s in symbols])
+    avg_len_random = np.sum(p_random * lengths_random)
+
+    # Fixed-length code would need ceil(log2(6)) = 3 bits
+    compression_ratios.append(3 / avg_len_random)
+
+axes[1, 1].scatter(entropies_random, compression_ratios, alpha=0.7)
+axes[1, 1].set_xlabel('Source Entropy (bits)')
+axes[1, 1].set_ylabel('Compression Ratio')
+axes[1, 1].set_title('Huffman Compression vs Source Entropy')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('huffman_coding.pdf', 'Huffman coding: source distribution, code lengths, and compression performance.')
+
+# Print Huffman code table
+\end{pycode}
+
+\section{Mutual Information and Joint Entropy}
+\begin{pycode}
+# Joint distribution example
+# X and Y are correlated binary random variables
+p_xy = np.array([[0.4, 0.1],   # X=0, Y=0,1
+                 [0.1, 0.4]])   # X=1, Y=0,1
+
+# Marginal distributions
+p_x = np.sum(p_xy, axis=1)
+p_y = np.sum(p_xy, axis=0)
+
+# Entropies
+H_X = entropy(p_x)
+H_Y = entropy(p_y)
+H_XY = entropy(p_xy.flatten())
+H_X_given_Y = H_XY - H_Y
+H_Y_given_X = H_XY - H_X
+I_XY = H_X - H_X_given_Y
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Joint distribution heatmap
+im = axes[0, 0].imshow(p_xy, cmap='Blues', aspect='equal')
+axes[0, 0].set_xticks([0, 1])
+axes[0, 0].set_yticks([0, 1])
+axes[0, 0].set_xlabel('Y')
+axes[0, 0].set_ylabel('X')
+axes[0, 0].set_title(f'Joint Distribution $p(x,y)$')
+for i in range(2):
+    for j in range(2):
+        axes[0, 0].text(j, i, f'{p_xy[i,j]:.2f}', ha='center', va='center', fontsize=12)
+plt.colorbar(im, ax=axes[0, 0])
+
+# Plot 2: Information measures as Venn diagram (simplified bar chart)
+measures = ['H(X)', 'H(Y)', 'H(X,Y)', 'H(X|Y)', 'H(Y|X)', 'I(X;Y)']
+values_info = [H_X, H_Y, H_XY, H_X_given_Y, H_Y_given_X, I_XY]
+colors_info = ['blue', 'green', 'purple', 'lightblue', 'lightgreen', 'red']
+
+axes[0, 1].bar(measures, values_info, color=colors_info, alpha=0.7)
+axes[0, 1].set_ylabel('Bits')
+axes[0, 1].set_title('Information Measures')
+axes[0, 1].tick_params(axis='x', rotation=45)
+axes[0, 1].grid(True, alpha=0.3, axis='y')
+
+# Plot 3: Mutual information vs correlation
+correlations = np.linspace(0, 0.49, 50)
+mi_values = []
+
+for c in correlations:
+    # Create joint distribution with correlation c
+    p = 0.5 + c  # Diagonal probability
+    q = 0.5 - c  # Off-diagonal probability
+    p_joint = np.array([[p/2, q/2], [q/2, p/2]])
+
+    # Marginals are uniform
+    p_marg = np.array([0.5, 0.5])
+    H_marg = entropy(p_marg)
+    H_joint = entropy(p_joint.flatten())
+    mi = 2 * H_marg - H_joint
+    mi_values.append(mi)
+
+axes[1, 0].plot(correlations * 2, mi_values, 'b-', linewidth=2)
+axes[1, 0].set_xlabel('Correlation strength')
+axes[1, 0].set_ylabel('Mutual Information $I(X;Y)$ (bits)')
+axes[1, 0].set_title('MI vs Correlation')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Conditional entropy visualization
+# H(X|Y=y) for different y
+y_values = [0, 1]
+H_X_given_y = []
+
+for y in y_values:
+    p_x_given_y = p_xy[:, y] / p_y[y]
+    H_X_given_y.append(entropy(p_x_given_y))
+
+axes[1, 1].bar(['Y=0', 'Y=1', 'Average'], H_X_given_y + [H_X_given_Y],
+               color=['steelblue', 'coral', 'green'], alpha=0.7)
+axes[1, 1].set_ylabel('$H(X|Y=y)$ (bits)')
+axes[1, 1].set_title('Conditional Entropy')
+axes[1, 1].grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+save_plot('mutual_information.pdf', 'Mutual information: joint distribution, information measures, and correlation.')
+\end{pycode}
+
+\section{Channel Capacity}
+\begin{pycode}
+# Binary Symmetric Channel (BSC)
+def bsc_capacity(p):
+    """Capacity of binary symmetric channel."""
+    return 1 - binary_entropy(p)
+
+# Binary Erasure Channel (BEC)
+def bec_capacity(epsilon):
+    """Capacity of binary erasure channel."""
+    return 1 - epsilon
+
+# AWGN channel capacity
+def awgn_capacity_snr(snr_db):
+    """Capacity of AWGN channel in bits per channel use."""
+    snr = 10 ** (snr_db / 10)
+    return 0.5 * np.log2(1 + snr)
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: BSC and BEC capacity
+p_range = np.linspace(0, 0.5, 100)
+C_bsc = [bsc_capacity(p) for p in p_range]
+C_bec = [bec_capacity(p) for p in p_range]
+
+axes[0, 0].plot(p_range, C_bsc, 'b-', linewidth=2, label='BSC')
+axes[0, 0].plot(p_range, C_bec, 'r--', linewidth=2, label='BEC')
+axes[0, 0].set_xlabel('Error/Erasure probability')
+axes[0, 0].set_ylabel('Channel capacity (bits/use)')
+axes[0, 0].set_title('Binary Channel Capacities')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: AWGN channel capacity
+snr_db = np.linspace(-10, 30, 100)
+C_awgn = [awgn_capacity_snr(s) for s in snr_db]
+
+axes[0, 1].plot(snr_db, C_awgn, 'b-', linewidth=2)
+axes[0, 1].set_xlabel('SNR (dB)')
+axes[0, 1].set_ylabel('Capacity (bits/channel use)')
+axes[0, 1].set_title('AWGN Channel Capacity')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: BSC transition diagram (simplified visualization)
+p_error = 0.1
+
+# Show error probability
+x_diag = [0, 1]
+y_diag = [0, 1]
+axes[1, 0].plot([0, 0], [0, 1], 'b-', linewidth=3, alpha=0.5)
+axes[1, 0].plot([1, 1], [0, 1], 'b-', linewidth=3, alpha=0.5)
+axes[1, 0].plot([0, 1], [0, 0], 'b-', linewidth=2 * (1-p_error), alpha=0.7)
+axes[1, 0].plot([0, 1], [1, 1], 'b-', linewidth=2 * (1-p_error), alpha=0.7)
+axes[1, 0].plot([0, 1], [0, 1], 'r-', linewidth=2 * p_error, alpha=0.7)
+axes[1, 0].plot([0, 1], [1, 0], 'r-', linewidth=2 * p_error, alpha=0.7)
+
+axes[1, 0].scatter([0, 0, 1, 1], [0, 1, 0, 1], s=200, c='steelblue', zorder=5)
+axes[1, 0].text(-0.15, 0, 'X=0', fontsize=10)
+axes[1, 0].text(-0.15, 1, 'X=1', fontsize=10)
+axes[1, 0].text(1.05, 0, 'Y=0', fontsize=10)
+axes[1, 0].text(1.05, 1, 'Y=1', fontsize=10)
+axes[1, 0].set_xlim([-0.3, 1.3])
+axes[1, 0].set_ylim([-0.2, 1.2])
+axes[1, 0].set_title(f'BSC ($p = {p_error}$, $C = {bsc_capacity(p_error):.3f}$ bits)')
+axes[1, 0].axis('off')
+
+# Plot 4: Achievable rates
+# Shannon's coding theorem: rates below capacity are achievable
+p_test = 0.1
+C_test = bsc_capacity(p_test)
+
+rates = np.linspace(0, 1, 100)
+# Probability of error for random coding (simplified)
+Pe_approx = np.exp(-len(rates) * (C_test - rates))
+Pe_approx[rates > C_test] = 1
+
+axes[1, 1].fill_between(rates, 0, 1, where=rates <= C_test, alpha=0.3, color='green', label='Achievable')
+axes[1, 1].fill_between(rates, 0, 1, where=rates > C_test, alpha=0.3, color='red', label='Not achievable')
+axes[1, 1].axvline(x=C_test, color='black', linestyle='--', linewidth=2, label=f'$C = {C_test:.3f}$')
+axes[1, 1].set_xlabel('Rate $R$ (bits/use)')
+axes[1, 1].set_ylabel('Region')
+axes[1, 1].set_title("Shannon's Coding Theorem")
+axes[1, 1].legend(loc='upper right')
+axes[1, 1].set_xlim([0, 1])
+axes[1, 1].set_ylim([0, 1])
+
+plt.tight_layout()
+save_plot('channel_capacity.pdf', 'Channel capacity: BSC, BEC, AWGN, and achievable rates.')
+\end{pycode}
+
+\section{Source Coding and Compression}
+\begin{pycode}
+# Lempel-Ziv-like compression demonstration
+def simple_lz_compress(text):
+    """Simple LZ-style compression."""
+    dictionary = {}
+    result = []
+    current = ""
+
+    for char in text:
+        extended = current + char
+        if extended in dictionary:
+            current = extended
+        else:
+            if current:
+                result.append(dictionary.get(current, current))
+            dictionary[extended] = len(dictionary)
+            current = char
+
+    if current:
+        result.append(dictionary.get(current, current))
+
+    return result, dictionary
+
+# Demonstration text
+text = "ABABABABABCABCABCABCDEFABCDEF"
+compressed, dictionary = simple_lz_compress(text)
+
+# Calculate compression metrics
+original_bits = len(text) * 8  # ASCII
+compressed_symbols = len(compressed)
+bits_per_symbol = np.ceil(np.log2(max(len(dictionary), 1) + 26))
+compressed_bits = compressed_symbols * bits_per_symbol
+compression_ratio = original_bits / compressed_bits
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Entropy rate for Markov source
+# First-order Markov chain
+P_transition = np.array([[0.7, 0.3],
+                         [0.4, 0.6]])
+
+# Stationary distribution
+eigenvalues, eigenvectors = np.linalg.eig(P_transition.T)
+stationary = eigenvectors[:, np.argmax(eigenvalues)]
+stationary = np.real(stationary / np.sum(stationary))
+
+# Entropy rate: H = sum_i pi_i * sum_j -p_ij * log2(p_ij)
+entropy_rate = 0
+for i in range(2):
+    for j in range(2):
+        if P_transition[i, j] > 0:
+            entropy_rate -= stationary[i] * P_transition[i, j] * np.log2(P_transition[i, j])
+
+# Show transition matrix
+im = axes[0, 0].imshow(P_transition, cmap='Blues', vmin=0, vmax=1)
+axes[0, 0].set_xticks([0, 1])
+axes[0, 0].set_yticks([0, 1])
+axes[0, 0].set_xlabel('Next state')
+axes[0, 0].set_ylabel('Current state')
+axes[0, 0].set_title(f'Markov Source (Entropy rate: {entropy_rate:.3f} bits)')
+for i in range(2):
+    for j in range(2):
+        axes[0, 0].text(j, i, f'{P_transition[i,j]:.1f}', ha='center', va='center', fontsize=12)
+plt.colorbar(im, ax=axes[0, 0])
+
+# Plot 2: Entropy rate vs iid entropy
+# Vary the off-diagonal transition probability
+off_diag = np.linspace(0.01, 0.5, 50)
+entropy_rates = []
+iid_entropies = []
+
+for p in off_diag:
+    P = np.array([[1-p, p], [p, 1-p]])
+    # Stationary is uniform for symmetric transition
+    pi = np.array([0.5, 0.5])
+    H_rate = -2 * pi[0] * (P[0,0] * np.log2(P[0,0]) + P[0,1] * np.log2(P[0,1]))
+    entropy_rates.append(H_rate)
+    iid_entropies.append(binary_entropy(0.5))  # IID entropy is 1 bit
+
+axes[0, 1].plot(off_diag, entropy_rates, 'b-', linewidth=2, label='Markov entropy rate')
+axes[0, 1].plot(off_diag, iid_entropies, 'r--', linewidth=2, label='IID entropy')
+axes[0, 1].set_xlabel('Transition probability $p$')
+axes[0, 1].set_ylabel('Entropy (bits)')
+axes[0, 1].set_title('Entropy Rate vs IID Entropy')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Compression ratio vs data length
+data_lengths = [10, 20, 50, 100, 200, 500, 1000]
+ratios = []
+
+for length in data_lengths:
+    # Generate text with some repetition
+    base = "ABCABC"
+    text_gen = (base * (length // len(base) + 1))[:length]
+    comp, _ = simple_lz_compress(text_gen)
+    ratio = len(text_gen) / len(comp) if len(comp) > 0 else 1
+    ratios.append(ratio)
+
+axes[1, 0].plot(data_lengths, ratios, 'bo-', linewidth=2, markersize=6)
+axes[1, 0].set_xlabel('Data length (symbols)')
+axes[1, 0].set_ylabel('Compression ratio')
+axes[1, 0].set_title('LZ Compression vs Data Length')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Typical sequences
+# For a binary source with p=0.3
+p_source = 0.3
+n_bits = 100
+n_sequences = 1000
+
+# Generate sequences and count ones
+fractions = []
+for _ in range(n_sequences):
+    seq = np.random.choice([0, 1], size=n_bits, p=[1-p_source, p_source])
+    fractions.append(np.mean(seq))
+
+axes[1, 1].hist(fractions, bins=30, density=True, alpha=0.7, edgecolor='black')
+axes[1, 1].axvline(x=p_source, color='red', linestyle='--', linewidth=2, label=f'$p = {p_source}$')
+axes[1, 1].set_xlabel('Fraction of ones')
+axes[1, 1].set_ylabel('Density')
+axes[1, 1].set_title(f'Typical Sequences ($n = {n_bits}$)')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('source_coding.pdf', 'Source coding: Markov entropy, compression ratio, and typical sequences.')
+\end{pycode}
+
+\section{Results Summary}
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of Information Theory Results}')
+print(r'\begin{tabular}{lll}')
+print(r'\toprule')
+print(r'Measure & Value & Description \\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Huffman Coding}} \\')
+print(f'Source entropy & {source_entropy:.3f} bits & $H(X)$ \\\\')
+print(f'Average code length & {avg_length:.3f} bits & $\\bar{{L}}$ \\\\')
+print(f'Coding efficiency & {efficiency:.1f}\\% & $H(X)/\\bar{{L}}$ \\\\')
+print(f'Redundancy & {redundancy:.3f} bits & $\\bar{{L}} - H(X)$ \\\\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Mutual Information}} \\')
+print(f'$H(X)$ & {H_X:.3f} bits & Marginal entropy \\\\')
+print(f'$H(Y)$ & {H_Y:.3f} bits & Marginal entropy \\\\')
+print(f'$H(X,Y)$ & {H_XY:.3f} bits & Joint entropy \\\\')
+print(f'$I(X;Y)$ & {I_XY:.3f} bits & Mutual information \\\\')
+print(r'\midrule')
+print(r'\multicolumn{3}{c}{\textit{Channel Capacity}} \\')
+print(f'BSC ($p = {p_error}$) & {bsc_capacity(p_error):.3f} bits/use & $1 - H_b(p)$ \\\\')
+print(f'BEC ($\\epsilon = 0.1$) & {bec_capacity(0.1):.3f} bits/use & $1 - \\epsilon$ \\\\')
+print(f'AWGN (10 dB) & {awgn_capacity_snr(10):.3f} bits/use & $\\frac{{1}}{{2}}\\log_2(1+SNR)$ \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+\begin{itemize}
+    \item \textbf{Source entropy}: \py{f"{source_entropy:.3f}"} bits
+    \item \textbf{Maximum entropy} ($|\mathcal{X}| = $ \py{f"{len(symbols)}"}): \py{f"{np.log2(len(symbols)):.3f}"} bits
+    \item \textbf{Average Huffman code length}: \py{f"{avg_length:.3f}"} bits
+    \item \textbf{Coding efficiency}: \py{f"{efficiency:.1f}"}\%
+    \item \textbf{Joint entropy} $H(X,Y)$: \py{f"{H_XY:.3f}"} bits
+    \item \textbf{Mutual information} $I(X;Y)$: \py{f"{I_XY:.3f}"} bits
+    \item \textbf{Markov entropy rate}: \py{f"{entropy_rate:.3f}"} bits
+    \item \textbf{BSC capacity} ($p = $ \py{f"{p_error}"}): \py{f"{bsc_capacity(p_error):.3f}"} bits/use
+\end{itemize}
+
+\section{Conclusion}
+Information theory provides fundamental limits for data compression and communication. Shannon entropy measures the average information content and sets the minimum average code length. Huffman coding achieves near-optimal compression for known probability distributions. Mutual information quantifies the shared information between random variables, critical for channel coding. The channel coding theorem guarantees error-free communication at rates below capacity, achieved by modern codes like turbo codes and LDPC codes. These principles underpin data compression (ZIP, JPEG), error-correcting codes (WiFi, 5G), and cryptography.
+
+\end{document}

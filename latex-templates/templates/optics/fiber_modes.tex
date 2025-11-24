@@ -1,0 +1,605 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[makestderr]{pythontex}
+
+\title{Optics: Optical Fiber Mode Analysis}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Optical fibers guide light through total internal reflection. The number and characteristics of guided modes depend on the fiber parameters including core radius, refractive indices, and wavelength. This analysis examines single-mode and multi-mode fiber behavior, mode field characteristics, dispersion properties, and bend loss effects.
+
+\section{Mathematical Framework}
+
+\subsection{Normalized Frequency (V-number)}
+The V-number determines the number of modes:
+\begin{equation}
+V = \frac{2\pi a}{\lambda}\sqrt{n_1^2 - n_2^2} = \frac{2\pi a}{\lambda} \cdot NA
+\end{equation}
+
+For step-index fiber, the number of modes is approximately:
+\begin{equation}
+N \approx \frac{V^2}{2}
+\end{equation}
+
+Single-mode condition: $V < 2.405$ (LP$_{01}$ mode only)
+
+\subsection{LP Mode Characteristic Equation}
+The characteristic equation for LP$_{lm}$ modes:
+\begin{equation}
+u \frac{J_{l\pm 1}(u)}{J_l(u)} = \pm w \frac{K_{l\pm 1}(w)}{K_l(w)}
+\end{equation}
+
+where $u = a\sqrt{k_0^2 n_1^2 - \beta^2}$, $w = a\sqrt{\beta^2 - k_0^2 n_2^2}$, and $u^2 + w^2 = V^2$.
+
+\subsection{Mode Field Diameter}
+The Marcuse approximation for mode field diameter:
+\begin{equation}
+\frac{w}{a} = 0.65 + \frac{1.619}{V^{3/2}} + \frac{2.879}{V^6}
+\end{equation}
+
+\subsection{Dispersion}
+Total dispersion in single-mode fiber:
+\begin{equation}
+D_{total} = D_M + D_W = -\frac{\lambda}{c}\frac{d^2 n}{d\lambda^2}
+\end{equation}
+
+\section{Environment Setup}
+\begin{pycode}
+import numpy as np
+from scipy.special import jv, kv, jn_zeros
+from scipy.optimize import brentq
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{V-Number and Mode Count Analysis}
+\begin{pycode}
+# Fiber parameters
+a = 4e-6  # Core radius (m) for single-mode
+a_mm = 25e-6  # Core radius (m) for multi-mode
+n1 = 1.48  # Core refractive index
+n2 = 1.46  # Cladding refractive index
+NA = np.sqrt(n1**2 - n2**2)
+delta = (n1 - n2) / n1  # Relative index difference
+
+# Wavelength range
+wavelengths = np.linspace(800e-9, 1700e-9, 200)
+
+# V-number calculation
+def V_number(a, wavelength, NA):
+    return 2 * np.pi * a * NA / wavelength
+
+# Calculate V for both fibers
+V_sm = V_number(a, wavelengths, NA)
+V_mm = V_number(a_mm, wavelengths, NA)
+
+# Number of modes (approximate)
+N_modes_mm = V_mm**2 / 2
+
+# Mode field diameter (Marcuse approximation)
+def MFD(a, V):
+    return 2 * a * (0.65 + 1.619/V**1.5 + 2.879/V**6)
+
+MFD_sm = MFD(a, V_sm)
+
+# Cutoff wavelength for single-mode operation
+lambda_cutoff = 2 * np.pi * a * NA / 2.405
+
+# Create plots
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: V-number vs wavelength
+axes[0, 0].plot(wavelengths*1e9, V_sm, 'b-', linewidth=2, label=f'Single-mode (a={a*1e6:.0f}$\\mu$m)')
+axes[0, 0].plot(wavelengths*1e9, V_mm/10, 'r-', linewidth=2, label=f'Multi-mode (a={a_mm*1e6:.0f}$\\mu$m, /10)')
+axes[0, 0].axhline(y=2.405, color='gray', linestyle='--', alpha=0.7, label='SM cutoff')
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('V-number')
+axes[0, 0].set_title('Normalized Frequency')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Number of modes
+axes[0, 1].semilogy(wavelengths*1e9, N_modes_mm, 'r-', linewidth=2)
+axes[0, 1].set_xlabel('Wavelength (nm)')
+axes[0, 1].set_ylabel('Number of Modes')
+axes[0, 1].set_title('Multi-mode Fiber Mode Count')
+axes[0, 1].grid(True, alpha=0.3, which='both')
+
+# Plot 3: Mode field diameter
+axes[1, 0].plot(wavelengths*1e9, MFD_sm*1e6, 'g-', linewidth=2)
+axes[1, 0].axhline(y=2*a*1e6, color='gray', linestyle='--', alpha=0.7, label='Core diameter')
+axes[1, 0].set_xlabel('Wavelength (nm)')
+axes[1, 0].set_ylabel('MFD ($\\mu$m)')
+axes[1, 0].set_title('Mode Field Diameter')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: NA vs wavelength (constant for step-index)
+wavelength_array = np.linspace(800, 1700, 100)
+NA_array = NA * np.ones_like(wavelength_array)
+acceptance_angle = np.arcsin(NA) * 180 / np.pi
+axes[1, 1].plot(wavelength_array, NA_array, 'purple', linewidth=2, label=f'NA = {NA:.3f}')
+axes[1, 1].axhline(y=NA, color='gray', linestyle='--', alpha=0.5)
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('Numerical Aperture')
+axes[1, 1].set_title(f'NA and Acceptance Angle ($\\theta_a = {acceptance_angle:.1f}^\\circ$)')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].set_ylim([0, 0.4])
+
+plt.tight_layout()
+save_plot('fiber_v_number.pdf', 'V-number, mode count, and MFD analysis for step-index fibers.')
+\end{pycode}
+
+\section{LP Mode Profiles and Characteristic Equation}
+\begin{pycode}
+# Solve LP mode characteristic equation
+def lp_characteristic(u, V, l):
+    """Characteristic equation for LP modes."""
+    if u <= 0 or u >= V:
+        return np.inf
+    w = np.sqrt(V**2 - u**2)
+    if w <= 0:
+        return np.inf
+
+    # Handle Bessel function edge cases
+    try:
+        if l == 0:
+            lhs = u * jv(1, u) / jv(0, u)
+        else:
+            lhs = u * jv(l-1, u) / jv(l, u) - l
+        rhs = -w * kv(l-1, w) / kv(l, w) - l
+        return lhs - rhs
+    except:
+        return np.inf
+
+# Find modes for V = 5
+V_test = 5.0
+modes_found = []
+
+for l in range(10):  # Azimuthal mode number
+    # Find zeros of Bessel function to bracket solutions
+    zeros = jn_zeros(l, 10)
+    u_brackets = [0.01] + list(zeros[zeros < V_test])
+
+    m = 1  # Radial mode number
+    for i in range(len(u_brackets) - 1):
+        try:
+            u_low, u_high = u_brackets[i], u_brackets[i+1]
+            if u_high > V_test - 0.01:
+                u_high = V_test - 0.01
+
+            # Check for sign change
+            f_low = lp_characteristic(u_low + 0.01, V_test, l)
+            f_high = lp_characteristic(u_high - 0.01, V_test, l)
+
+            if f_low * f_high < 0:
+                u_sol = brentq(lp_characteristic, u_low + 0.01, u_high - 0.01,
+                              args=(V_test, l))
+                w_sol = np.sqrt(V_test**2 - u_sol**2)
+                beta_norm = w_sol / V_test
+                modes_found.append((l, m, u_sol, w_sol, beta_norm))
+                m += 1
+        except:
+            pass
+
+# Generate mode profiles
+r = np.linspace(0, 3*a, 300)
+rho = r / a
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot selected LP mode intensity profiles
+mode_colors = ['blue', 'red', 'green', 'orange', 'purple']
+mode_names = ['LP$_{01}$', 'LP$_{11}$', 'LP$_{21}$', 'LP$_{02}$', 'LP$_{31}$']
+
+# Gaussian approximation for LP01
+w_mode = a * (0.65 + 1.619/V_test**1.5 + 2.879/V_test**6)
+E_01 = np.exp(-(r/w_mode)**2)
+
+# Higher order mode approximations
+E_11 = (r/a) * np.exp(-(r/(1.2*w_mode))**2)
+E_21 = (r/a)**2 * np.exp(-(r/(1.4*w_mode))**2)
+E_02 = (1 - 2*(r/w_mode)**2) * np.exp(-(r/w_mode)**2)
+E_31 = (r/a)**3 * np.exp(-(r/(1.6*w_mode))**2)
+
+mode_profiles = [E_01, E_11, E_21, E_02, E_31]
+
+# Plot 1: Intensity profiles
+for i, (E, name, color) in enumerate(zip(mode_profiles[:4], mode_names[:4], mode_colors[:4])):
+    I = np.abs(E)**2
+    I = I / np.max(I)
+    axes[0, 0].plot(r*1e6, I, color=color, linewidth=2, label=name)
+
+axes[0, 0].axvline(x=a*1e6, color='gray', linestyle='--', alpha=0.7, label='Core edge')
+axes[0, 0].set_xlabel('Radius ($\\mu$m)')
+axes[0, 0].set_ylabel('Intensity (normalized)')
+axes[0, 0].set_title(f'LP Mode Intensity Profiles (V = {V_test})')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: 2D mode pattern for LP11
+theta = np.linspace(0, 2*np.pi, 100)
+R, THETA = np.meshgrid(r[:100], theta)
+X = R * np.cos(THETA)
+Y = R * np.sin(THETA)
+
+# LP11 has cos(theta) angular dependence
+E_11_2d = (R/a) * np.exp(-(R/(1.2*w_mode))**2) * np.cos(THETA)
+I_11_2d = np.abs(E_11_2d)**2
+
+im = axes[0, 1].pcolormesh(X*1e6, Y*1e6, I_11_2d, cmap='hot', shading='auto')
+circle = plt.Circle((0, 0), a*1e6, fill=False, color='white', linestyle='--')
+axes[0, 1].add_patch(circle)
+axes[0, 1].set_xlabel('x ($\\mu$m)')
+axes[0, 1].set_ylabel('y ($\\mu$m)')
+axes[0, 1].set_title('LP$_{11}$ Mode 2D Pattern')
+axes[0, 1].set_aspect('equal')
+
+# Plot 3: b-V diagram (normalized propagation constant)
+V_range = np.linspace(0.5, 8, 200)
+b_values = {}
+
+# Approximate b-V curves for LP modes
+# b = (beta/k0 - n2)/(n1 - n2) = (1 - (u/V)^2)
+for V in V_range:
+    for l in range(4):
+        # Simple approximation: cutoff at V = 2.405 * sqrt(l+1)
+        V_cutoff = 2.405 * np.sqrt(l + 0.5) if l > 0 else 0
+        if V > V_cutoff:
+            # Approximate b value
+            if l == 0:
+                b = (1.1428 - 0.996/V)**2 if V > 1 else 0.1 * V**2
+            else:
+                x = (V - V_cutoff) / V_cutoff if V_cutoff > 0 else V
+                b = x**2 / (1 + x**2)
+
+            if l not in b_values:
+                b_values[l] = {'V': [], 'b': []}
+            b_values[l]['V'].append(V)
+            b_values[l]['b'].append(b)
+
+for l, data in b_values.items():
+    axes[1, 0].plot(data['V'], data['b'], linewidth=2, label=f'LP$_{{{l}m}}$')
+
+axes[1, 0].axvline(x=2.405, color='gray', linestyle='--', alpha=0.5, label='SM cutoff')
+axes[1, 0].set_xlabel('V-number')
+axes[1, 0].set_ylabel('Normalized propagation constant $b$')
+axes[1, 0].set_title('b-V Diagram')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+axes[1, 0].set_xlim([0, 8])
+axes[1, 0].set_ylim([0, 1])
+
+# Plot 4: Mode confinement factor
+V_conf = np.linspace(1, 6, 100)
+# Confinement factor: fraction of power in core
+Gamma = 1 - np.exp(-2 * (V_conf/2.405)**2)
+
+axes[1, 1].plot(V_conf, Gamma * 100, 'b-', linewidth=2)
+axes[1, 1].axhline(y=86.5, color='gray', linestyle='--', alpha=0.5, label='86.5\\% (Gaussian)')
+axes[1, 1].set_xlabel('V-number')
+axes[1, 1].set_ylabel('Confinement factor (\\%)')
+axes[1, 1].set_title('Power Confinement in Core')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('fiber_mode_profiles.pdf', 'LP mode profiles, b-V diagram, and confinement analysis.')
+\end{pycode}
+
+\section{Dispersion Analysis}
+\begin{pycode}
+# Material dispersion (Sellmeier equation for silica)
+def sellmeier_n(wavelength):
+    """Refractive index of fused silica using Sellmeier equation."""
+    lam = wavelength * 1e6  # Convert to microns
+    n_sq = 1 + 0.6961663 * lam**2 / (lam**2 - 0.0684043**2)
+    n_sq += 0.4079426 * lam**2 / (lam**2 - 0.1162414**2)
+    n_sq += 0.8974794 * lam**2 / (lam**2 - 9.896161**2)
+    return np.sqrt(n_sq)
+
+def material_dispersion(wavelength):
+    """Material dispersion D_M in ps/(nm*km)."""
+    lam = wavelength * 1e6  # microns
+    c = 3e8  # m/s
+
+    # Numerical second derivative
+    dlam = 1e-9
+    n_plus = sellmeier_n(wavelength + dlam)
+    n_minus = sellmeier_n(wavelength - dlam)
+    n_center = sellmeier_n(wavelength)
+
+    d2n_dlam2 = (n_plus - 2*n_center + n_minus) / (dlam**2)
+
+    # D_M = -(lambda/c) * d2n/dlambda2
+    D_M = -lam * 1e-6 / c * d2n_dlam2 * 1e6  # Convert to ps/(nm*km)
+    return D_M
+
+# Waveguide dispersion (approximate)
+def waveguide_dispersion(wavelength, a, n1, n2):
+    """Waveguide dispersion D_W in ps/(nm*km)."""
+    V = V_number(a, wavelength, np.sqrt(n1**2 - n2**2))
+
+    # Approximate second derivative of Vb
+    # D_W = -(n2 * delta / c * lambda) * V * d2(Vb)/dV2
+    delta = (n1 - n2) / n1
+    c = 3e8
+
+    # Simplified approximation
+    d2Vb_dV2 = 0.08 + 0.549 * (2.834 - V)**2
+    D_W = n2 * delta / c * wavelength * V * d2Vb_dV2 * 1e6
+
+    return D_W
+
+# Wavelength range for dispersion
+wavelengths_disp = np.linspace(1.0e-6, 1.7e-6, 200)
+
+# Calculate dispersions
+D_M = np.array([material_dispersion(lam) for lam in wavelengths_disp])
+D_W = np.array([waveguide_dispersion(lam, a, n1, n2) for lam in wavelengths_disp])
+D_total = D_M + D_W
+
+# Find zero-dispersion wavelength
+idx_zero = np.argmin(np.abs(D_total))
+lambda_zero = wavelengths_disp[idx_zero]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Material and waveguide dispersion
+axes[0, 0].plot(wavelengths_disp*1e9, D_M, 'b-', linewidth=2, label='Material $D_M$')
+axes[0, 0].plot(wavelengths_disp*1e9, D_W, 'r--', linewidth=2, label='Waveguide $D_W$')
+axes[0, 0].plot(wavelengths_disp*1e9, D_total, 'k-', linewidth=2.5, label='Total $D$')
+axes[0, 0].axhline(y=0, color='gray', linestyle='-', alpha=0.5)
+axes[0, 0].axvline(x=lambda_zero*1e9, color='green', linestyle='--', alpha=0.7,
+                   label=f'$\\lambda_0 = {lambda_zero*1e9:.0f}$ nm')
+axes[0, 0].set_xlabel('Wavelength (nm)')
+axes[0, 0].set_ylabel('Dispersion (ps/(nm$\\cdot$km))')
+axes[0, 0].set_title('Chromatic Dispersion')
+axes[0, 0].legend(fontsize=8)
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Pulse broadening vs fiber length
+fiber_lengths = np.array([1, 10, 50, 100])  # km
+delta_lambda = 0.1  # nm (source linewidth)
+D_at_1550 = D_total[np.argmin(np.abs(wavelengths_disp - 1550e-9))]
+
+pulse_broadening = np.abs(D_at_1550) * delta_lambda * fiber_lengths
+
+axes[0, 1].bar(range(len(fiber_lengths)), pulse_broadening, color='steelblue', alpha=0.7)
+axes[0, 1].set_xticks(range(len(fiber_lengths)))
+axes[0, 1].set_xticklabels([f'{L} km' for L in fiber_lengths])
+axes[0, 1].set_ylabel('Pulse broadening (ps)')
+axes[0, 1].set_title(f'Dispersion at 1550 nm ($\\Delta\\lambda = {delta_lambda}$ nm)')
+axes[0, 1].grid(True, alpha=0.3, axis='y')
+
+# Plot 3: Refractive index vs wavelength
+n_silica = np.array([sellmeier_n(lam) for lam in wavelengths_disp])
+dn_dlambda = np.gradient(n_silica, wavelengths_disp)
+
+ax3 = axes[1, 0]
+ax3.plot(wavelengths_disp*1e9, n_silica, 'b-', linewidth=2)
+ax3.set_xlabel('Wavelength (nm)')
+ax3.set_ylabel('Refractive index $n$', color='b')
+ax3.tick_params(axis='y', labelcolor='b')
+ax3.set_title('Silica Refractive Index (Sellmeier)')
+ax3.grid(True, alpha=0.3)
+
+ax3b = ax3.twinx()
+ax3b.plot(wavelengths_disp*1e9, dn_dlambda*1e9, 'r--', linewidth=2)
+ax3b.set_ylabel('$dn/d\\lambda$ (nm$^{-1}$)', color='r')
+ax3b.tick_params(axis='y', labelcolor='r')
+
+# Plot 4: Group velocity dispersion parameter beta2
+c = 3e8
+# beta_2 = D * lambda^2 / (2*pi*c)
+beta_2 = D_total * (wavelengths_disp * 1e9)**2 / (2 * np.pi * c) * 1e-3  # ps^2/km
+
+axes[1, 1].plot(wavelengths_disp*1e9, beta_2, 'purple', linewidth=2)
+axes[1, 1].axhline(y=0, color='gray', linestyle='-', alpha=0.5)
+axes[1, 1].set_xlabel('Wavelength (nm)')
+axes[1, 1].set_ylabel('$\\beta_2$ (ps$^2$/km)')
+axes[1, 1].set_title('Group Velocity Dispersion')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('fiber_dispersion.pdf', 'Chromatic dispersion analysis and pulse broadening effects.')
+\end{pycode}
+
+\section{Bend Loss and Attenuation}
+\begin{pycode}
+# Bend loss calculation
+def bend_loss_coefficient(wavelength, a, n1, n2, R_bend):
+    """
+    Calculate bend loss coefficient (dB/turn) for single-mode fiber.
+    Uses Marcuse formula.
+    """
+    V = V_number(a, wavelength, np.sqrt(n1**2 - n2**2))
+    w_mode = a * (0.65 + 1.619/V**1.5 + 2.879/V**6)
+
+    # Normalized parameters
+    delta = (n1 - n2) / n1
+    k0 = 2 * np.pi / wavelength
+
+    # Effective index approximation
+    n_eff = n1 * (1 - delta * (1.1428 - 0.996/V)**2)
+
+    # Bend loss coefficient (simplified)
+    gamma = np.sqrt(k0**2 * (n_eff**2 - n2**2))
+
+    # Marcuse formula (approximation)
+    alpha_bend = np.sqrt(np.pi / (2 * gamma * R_bend)) * np.exp(-4 * delta * gamma**3 * R_bend**2 / (3 * k0**2 * n_eff**2))
+
+    # Convert to dB per turn
+    loss_per_turn = 4.343 * 2 * np.pi * R_bend * alpha_bend
+
+    return loss_per_turn
+
+# Bend radii range
+R_bends = np.linspace(5e-3, 50e-3, 100)  # 5 mm to 50 mm
+
+# Calculate bend loss at different wavelengths
+wavelengths_bend = [1310e-9, 1550e-9, 1625e-9]
+colors_bend = ['blue', 'green', 'red']
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Bend loss vs bend radius
+for lam, color in zip(wavelengths_bend, colors_bend):
+    loss = []
+    for R in R_bends:
+        try:
+            l = bend_loss_coefficient(lam, a, n1, n2, R)
+            loss.append(min(l, 100))  # Cap at 100 dB
+        except:
+            loss.append(100)
+    axes[0, 0].semilogy(R_bends*1e3, loss, color=color, linewidth=2,
+                        label=f'$\\lambda = {lam*1e9:.0f}$ nm')
+
+axes[0, 0].set_xlabel('Bend radius (mm)')
+axes[0, 0].set_ylabel('Bend loss (dB/turn)')
+axes[0, 0].set_title('Bend Loss vs Radius')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3, which='both')
+axes[0, 0].set_ylim([1e-6, 100])
+
+# Plot 2: Fiber attenuation spectrum
+wavelengths_atten = np.linspace(800e-9, 1700e-9, 200)
+
+# Typical silica fiber attenuation (empirical model)
+def fiber_attenuation(wavelength):
+    """Attenuation in dB/km for standard silica fiber."""
+    lam = wavelength * 1e6  # microns
+
+    # Rayleigh scattering
+    alpha_R = 0.75 / lam**4
+
+    # OH absorption peak at 1383 nm
+    alpha_OH = 0.5 * np.exp(-((lam - 1.383)**2) / (0.02)**2)
+
+    # IR absorption
+    alpha_IR = 0.01 * np.exp(lam - 1.5)
+
+    return alpha_R + alpha_OH + alpha_IR
+
+attenuation = np.array([fiber_attenuation(lam) for lam in wavelengths_atten])
+
+axes[0, 1].plot(wavelengths_atten*1e9, attenuation, 'b-', linewidth=2)
+axes[0, 1].axvline(x=1310, color='green', linestyle='--', alpha=0.7, label='O-band')
+axes[0, 1].axvline(x=1550, color='red', linestyle='--', alpha=0.7, label='C-band')
+axes[0, 1].set_xlabel('Wavelength (nm)')
+axes[0, 1].set_ylabel('Attenuation (dB/km)')
+axes[0, 1].set_title('Fiber Attenuation Spectrum')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].set_ylim([0, 3])
+
+# Plot 3: Power budget calculation
+link_length = np.linspace(0, 100, 100)  # km
+P_launch = 0  # dBm
+alpha_1310 = fiber_attenuation(1310e-9)
+alpha_1550 = fiber_attenuation(1550e-9)
+
+P_1310 = P_launch - alpha_1310 * link_length
+P_1550 = P_launch - alpha_1550 * link_length
+
+axes[1, 0].plot(link_length, P_1310, 'g-', linewidth=2, label=f'1310 nm ($\\alpha = {alpha_1310:.2f}$ dB/km)')
+axes[1, 0].plot(link_length, P_1550, 'r-', linewidth=2, label=f'1550 nm ($\\alpha = {alpha_1550:.2f}$ dB/km)')
+axes[1, 0].axhline(y=-30, color='gray', linestyle='--', alpha=0.7, label='Receiver sensitivity')
+axes[1, 0].set_xlabel('Link length (km)')
+axes[1, 0].set_ylabel('Received power (dBm)')
+axes[1, 0].set_title('Optical Power Budget')
+axes[1, 0].legend(fontsize=8)
+axes[1, 0].grid(True, alpha=0.3)
+
+# Plot 4: Splice and connector loss budget
+components = ['Launch', 'Connector', 'Splice 1', '10 km fiber', 'Splice 2', 'Connector', 'Received']
+loss_values = [0, -0.5, -0.1, -2.0, -0.1, -0.5, 0]
+cumulative_power = np.cumsum([P_launch] + loss_values)
+
+axes[1, 1].bar(range(len(components)), cumulative_power[:-1], color='steelblue', alpha=0.7)
+axes[1, 1].step(range(len(components)), cumulative_power[:-1], 'r-', linewidth=2, where='mid')
+axes[1, 1].axhline(y=-30, color='gray', linestyle='--', alpha=0.7)
+axes[1, 1].set_xticks(range(len(components)))
+axes[1, 1].set_xticklabels(components, rotation=45, ha='right', fontsize=8)
+axes[1, 1].set_ylabel('Power (dBm)')
+axes[1, 1].set_title('Link Loss Budget')
+axes[1, 1].grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+save_plot('fiber_attenuation.pdf', 'Bend loss, attenuation spectrum, and link power budget.')
+\end{pycode}
+
+\section{Results Summary}
+\begin{pycode}
+# Calculate values at key wavelengths
+V_1310 = V_number(a, 1310e-9, NA)
+V_1550 = V_number(a, 1550e-9, NA)
+MFD_1310 = MFD(a, V_1310)
+MFD_1550 = MFD(a, V_1550)
+N_modes_mm_1550 = V_number(a_mm, 1550e-9, NA)**2 / 2
+
+# Dispersion at 1550 nm
+D_1550 = D_total[np.argmin(np.abs(wavelengths_disp - 1550e-9))]
+
+# Attenuation
+alpha_1310_val = fiber_attenuation(1310e-9)
+alpha_1550_val = fiber_attenuation(1550e-9)
+
+# Generate results table
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Summary of Optical Fiber Parameters}')
+print(r'\begin{tabular}{llcc}')
+print(r'\toprule')
+print(r'Parameter & Symbol & 1310 nm & 1550 nm \\')
+print(r'\midrule')
+print(f'V-number (SM) & $V$ & {V_1310:.2f} & {V_1550:.2f} \\\\')
+print(f'Mode field diameter & MFD & {MFD_1310*1e6:.1f} $\\mu$m & {MFD_1550*1e6:.1f} $\\mu$m \\\\')
+print(f'Attenuation & $\\alpha$ & {alpha_1310_val:.2f} dB/km & {alpha_1550_val:.2f} dB/km \\\\')
+print(f'Dispersion & $D$ & -- & {D_1550:.1f} ps/(nm$\\cdot$km) \\\\')
+print(r'\midrule')
+print(f'Numerical aperture & NA & \\multicolumn{{2}}{{c}}{{{NA:.3f}}} \\\\')
+print(f'Cutoff wavelength & $\\lambda_c$ & \\multicolumn{{2}}{{c}}{{{lambda_cutoff*1e9:.0f} nm}} \\\\')
+print(f'Zero-dispersion & $\\lambda_0$ & \\multicolumn{{2}}{{c}}{{{lambda_zero*1e9:.0f} nm}} \\\\')
+print(f'MM fiber modes & $N$ & \\multicolumn{{2}}{{c}}{{$\\approx$ {N_modes_mm_1550:.0f}}} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+\begin{itemize}
+    \item \textbf{Core refractive index}: $n_1 = $ \py{f"{n1:.2f}"}
+    \item \textbf{Cladding refractive index}: $n_2 = $ \py{f"{n2:.2f}"}
+    \item \textbf{Core radius (SM)}: $a = $ \py{f"{a*1e6:.0f}"} $\mu$m
+    \item \textbf{Core radius (MM)}: $a = $ \py{f"{a_mm*1e6:.0f}"} $\mu$m
+    \item \textbf{Relative index difference}: $\Delta = $ \py{f"{delta*100:.2f}"}\%
+    \item \textbf{Acceptance angle}: $\theta_a = $ \py{f"{np.arcsin(NA)*180/np.pi:.1f}"}$^\circ$
+    \item \textbf{Minimum attenuation at}: \py{f"{wavelengths_atten[np.argmin(attenuation)]*1e9:.0f}"} nm
+\end{itemize}
+
+\section{Conclusion}
+Single-mode fibers require $V < 2.405$, achieved through small core diameters around 8-10 $\mu$m. The mode field extends beyond the core into the cladding, with the MFD increasing with wavelength. Chromatic dispersion arises from both material and waveguide contributions, with a zero-dispersion wavelength around 1310 nm for standard fiber. Multi-mode fibers support many modes that travel different paths, causing modal dispersion. The 1550 nm C-band offers minimum attenuation (0.2 dB/km) and is preferred for long-haul telecommunications, while dispersion-shifted fibers move the zero-dispersion wavelength to 1550 nm for optimized performance.
+
+\end{document}

@@ -1,0 +1,328 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\title{FFT Spectral Analysis: Audio Signal Processing\\
+\large From Time Domain to Frequency Domain and Back}
+\author{Digital Signal Processing Lab\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This lab report demonstrates the application of the Fast Fourier Transform (FFT) for spectral analysis of audio signals. We synthesize a complex waveform containing multiple harmonic components, analyze its frequency content, design and apply digital filters, and investigate windowing effects on spectral leakage. The analysis includes spectrograms for time-frequency visualization and demonstrates practical signal processing techniques.
+\end{abstract}
+
+\section{Objectives}
+\begin{enumerate}
+    \item Understand the relationship between time and frequency domain representations
+    \item Apply the FFT to identify frequency components in a complex signal
+    \item Design and implement low-pass and band-pass filters
+    \item Analyze the effects of windowing on spectral resolution
+    \item Create spectrograms for time-varying frequency analysis
+\end{enumerate}
+
+\section{Theoretical Background}
+
+\subsection{Discrete Fourier Transform}
+The DFT of a sequence $x[n]$ of length $N$ is defined as:
+\begin{equation}
+X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
+\end{equation}
+
+The inverse DFT recovers the time-domain signal:
+\begin{equation}
+x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}
+\end{equation}
+
+\subsection{FFT Computational Efficiency}
+The FFT reduces complexity from $O(N^2)$ to $O(N \log N)$ by exploiting symmetry and periodicity of the complex exponentials.
+
+\subsection{Frequency Resolution}
+For a signal sampled at rate $f_s$:
+\begin{itemize}
+    \item Frequency bin spacing: $\Delta f = f_s / N$
+    \item Maximum resolvable frequency (Nyquist): $f_{max} = f_s / 2$
+\end{itemize}
+
+\section{Experimental Procedure}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+from scipy.fft import fft, fftfreq, ifft
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Sampling parameters
+fs = 8000  # Sampling rate (Hz)
+T = 1.0    # Duration (s)
+N = int(fs * T)  # Number of samples
+t = np.linspace(0, T, N, endpoint=False)
+
+# Synthesize complex audio signal
+# Fundamental with harmonics (like a musical instrument)
+f0 = 440  # A4 note
+harmonics = [1, 0.5, 0.25, 0.125, 0.0625]  # Harmonic amplitudes
+signal_clean = sum(a * np.sin(2*np.pi*f0*h*t) for h, a in enumerate(harmonics, 1))
+
+# Add interference tone
+f_interference = 1200  # Hz
+signal_with_interference = signal_clean + 0.3 * np.sin(2*np.pi*f_interference*t)
+
+# Add noise
+noise = 0.1 * np.random.randn(N)
+signal_noisy = signal_with_interference + noise
+
+# Compute FFT
+def compute_spectrum(x, fs, window='hann'):
+    N = len(x)
+    if window == 'hann':
+        w = np.hanning(N)
+    elif window == 'hamming':
+        w = np.hamming(N)
+    elif window == 'blackman':
+        w = np.blackman(N)
+    else:
+        w = np.ones(N)  # rectangular
+
+    X = fft(x * w)
+    freqs = fftfreq(N, 1/fs)
+
+    # Single-sided spectrum
+    pos_mask = freqs >= 0
+    freqs_pos = freqs[pos_mask]
+    magnitude = 2 * np.abs(X[pos_mask]) / N
+
+    return freqs_pos, magnitude
+
+# Analyze signals
+freqs, spec_clean = compute_spectrum(signal_clean, fs)
+_, spec_noisy = compute_spectrum(signal_noisy, fs)
+
+# Design low-pass filter to remove interference
+fc = 1000  # Cutoff frequency
+order = 5
+b, a = signal.butter(order, fc/(fs/2), btype='low')
+
+# Apply filter
+signal_filtered = signal.filtfilt(b, a, signal_noisy)
+_, spec_filtered = compute_spectrum(signal_filtered, fs)
+
+# Design band-pass filter for fundamental extraction
+f_low, f_high = 400, 500
+b_bp, a_bp = signal.butter(4, [f_low/(fs/2), f_high/(fs/2)], btype='band')
+signal_fundamental = signal.filtfilt(b_bp, a_bp, signal_noisy)
+
+# Windowing comparison
+windows = ['rectangular', 'hann', 'hamming', 'blackman']
+window_specs = {}
+for win in windows:
+    _, spec = compute_spectrum(signal_clean, fs, window=win)
+    window_specs[win] = spec
+
+# Short-Time Fourier Transform for spectrogram
+def compute_spectrogram(x, fs, nperseg=256, noverlap=128):
+    f, t_spec, Sxx = signal.spectrogram(x, fs, nperseg=nperseg,
+                                         noverlap=noverlap, window='hann')
+    return f, t_spec, 10*np.log10(Sxx + 1e-10)  # dB scale
+
+# Create chirp signal for spectrogram demonstration
+t_chirp = np.linspace(0, 2, 2*fs)
+chirp_signal = signal.chirp(t_chirp, f0=100, f1=2000, t1=2, method='linear')
+chirp_signal += 0.5 * np.sin(2*np.pi*500*t_chirp)  # Add constant tone
+f_spec, t_spec, Sxx = compute_spectrogram(chirp_signal, fs)
+
+# Calculate key metrics
+peak_freqs = []
+for i, h in enumerate([1, 2, 3], 1):
+    idx = np.argmin(np.abs(freqs - f0*h))
+    peak_freqs.append(freqs[idx])
+
+# Filter frequency response
+w_filt, h_filt = signal.freqz(b, a, fs=fs)
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(12, 12))
+
+# Plot 1: Time domain signals
+ax1 = fig.add_subplot(3, 2, 1)
+ax1.plot(t[:500]*1000, signal_noisy[:500], 'b-', linewidth=0.5, alpha=0.7, label='Noisy')
+ax1.plot(t[:500]*1000, signal_filtered[:500], 'r-', linewidth=1, label='Filtered')
+ax1.set_xlabel('Time (ms)')
+ax1.set_ylabel('Amplitude')
+ax1.set_title('Time Domain: Noisy vs Filtered Signal')
+ax1.legend(fontsize=8)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Frequency spectrum comparison
+ax2 = fig.add_subplot(3, 2, 2)
+ax2.semilogy(freqs[:N//4], spec_noisy[:N//4], 'b-', linewidth=0.5, alpha=0.5, label='Noisy')
+ax2.semilogy(freqs[:N//4], spec_filtered[:N//4], 'r-', linewidth=1, label='Filtered')
+ax2.axvline(fc, color='g', linestyle='--', alpha=0.7, label=f'Cutoff ({fc} Hz)')
+ax2.set_xlabel('Frequency (Hz)')
+ax2.set_ylabel('Magnitude')
+ax2.set_title('Frequency Spectrum: Effect of Low-Pass Filter')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim([0, 2000])
+
+# Plot 3: Filter frequency response
+ax3 = fig.add_subplot(3, 2, 3)
+ax3.plot(w_filt, 20*np.log10(np.abs(h_filt)), 'b-', linewidth=2)
+ax3.axvline(fc, color='r', linestyle='--', label=f'Cutoff = {fc} Hz')
+ax3.axhline(-3, color='g', linestyle=':', label='-3 dB point')
+ax3.set_xlabel('Frequency (Hz)')
+ax3.set_ylabel('Gain (dB)')
+ax3.set_title(f'Butterworth Low-Pass Filter (order={order})')
+ax3.legend(fontsize=8)
+ax3.grid(True, alpha=0.3)
+ax3.set_xlim([0, 2000])
+ax3.set_ylim([-60, 5])
+
+# Plot 4: Windowing effects
+ax4 = fig.add_subplot(3, 2, 4)
+colors = ['#e74c3c', '#3498db', '#2ecc71', '#9b59b6']
+for (win, spec), color in zip(window_specs.items(), colors):
+    ax4.plot(freqs[:N//8], 20*np.log10(spec[:N//8] + 1e-10),
+             linewidth=1, color=color, label=win.capitalize())
+ax4.set_xlabel('Frequency (Hz)')
+ax4.set_ylabel('Magnitude (dB)')
+ax4.set_title('Windowing Effects on Spectral Leakage')
+ax4.legend(fontsize=8)
+ax4.grid(True, alpha=0.3)
+ax4.set_xlim([0, 1000])
+ax4.set_ylim([-80, 10])
+
+# Plot 5: Spectrogram
+ax5 = fig.add_subplot(3, 2, 5)
+pcm = ax5.pcolormesh(t_spec, f_spec, Sxx, shading='gouraud', cmap='viridis', vmin=-60, vmax=0)
+ax5.set_xlabel('Time (s)')
+ax5.set_ylabel('Frequency (Hz)')
+ax5.set_title('Spectrogram: Chirp Signal with Constant Tone')
+plt.colorbar(pcm, ax=ax5, label='Power (dB)')
+ax5.set_ylim([0, 2500])
+
+# Plot 6: Harmonic analysis
+ax6 = fig.add_subplot(3, 2, 6)
+harmonic_freqs = [f0*h for h in range(1, 6)]
+harmonic_amps = []
+for hf in harmonic_freqs:
+    idx = np.argmin(np.abs(freqs - hf))
+    harmonic_amps.append(spec_clean[idx])
+
+bars = ax6.bar(range(1, 6), harmonic_amps, color='#3498db', alpha=0.8)
+ax6.set_xlabel('Harmonic Number')
+ax6.set_ylabel('Magnitude')
+ax6.set_title(f'Harmonic Analysis (Fundamental = {f0} Hz)')
+for i, (f, a) in enumerate(zip(harmonic_freqs, harmonic_amps)):
+    ax6.text(i+1, a + 0.02, f'{f} Hz', ha='center', fontsize=7)
+ax6.grid(True, alpha=0.3, axis='y')
+
+plt.tight_layout()
+plt.savefig('fft_analysis_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{fft_analysis_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Calculate metrics
+snr_before = 10*np.log10(np.var(signal_clean) / np.var(noise))
+snr_after = 10*np.log10(np.var(signal_filtered) / np.var(signal_filtered - signal_clean))
+freq_resolution = fs / N
+interference_attenuation = 20*np.log10(spec_noisy[np.argmin(np.abs(freqs-f_interference))] /
+                                        (spec_filtered[np.argmin(np.abs(freqs-f_interference))] + 1e-10))
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Signal Synthesis}
+The test signal consists of:
+\begin{itemize}
+    \item Fundamental frequency: \py{f"\\SI{{{f0}}}{{\\hertz}}"} (A4 musical note)
+    \item Harmonics: 5 components with decreasing amplitudes
+    \item Interference tone: \py{f"\\SI{{{f_interference}}}{{\\hertz}}"}
+    \item White Gaussian noise (SNR $\approx$ \py{f"{snr_before:.1f}"} dB)
+\end{itemize}
+
+\subsection{Spectral Analysis Results}
+
+\begin{pycode}
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Detected Harmonic Frequencies}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Harmonic & Expected (Hz) & Detected (Hz) & Magnitude \\')
+print(r'\midrule')
+for i, (expected, detected, mag) in enumerate(zip(harmonic_freqs[:4], peak_freqs + [harmonic_freqs[3]], harmonic_amps[:4]), 1):
+    print(f'{i} & {expected:.0f} & {freqs[np.argmin(np.abs(freqs - expected))]:.0f} & {mag:.3f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Filter Performance}
+The Butterworth low-pass filter with cutoff at \py{f"\\SI{{{fc}}}{{\\hertz}}"}:
+\begin{itemize}
+    \item Interference attenuation: \py{f"{interference_attenuation:.1f}"} dB
+    \item Preserved harmonics below cutoff
+    \item Smooth transition band characteristic of Butterworth design
+\end{itemize}
+
+\subsection{Windowing Analysis}
+Spectral leakage comparison:
+\begin{itemize}
+    \item \textbf{Rectangular}: Highest sidelobes, narrowest main lobe
+    \item \textbf{Hann}: Good balance of resolution and leakage
+    \item \textbf{Hamming}: Optimized for minimum sidelobe levels
+    \item \textbf{Blackman}: Lowest sidelobes, widest main lobe
+\end{itemize}
+
+\section{Discussion}
+
+\subsection{Frequency Resolution vs. Time Resolution}
+The uncertainty principle constrains simultaneous resolution:
+\begin{equation}
+\Delta t \cdot \Delta f \geq \frac{1}{4\pi}
+\end{equation}
+In this analysis:
+\begin{itemize}
+    \item Frequency resolution: $\Delta f = f_s / N = $ \py{f"{freq_resolution:.1f}"} Hz
+    \item Time resolution: $T = $ \py{T} s
+\end{itemize}
+
+\subsection{Practical Considerations}
+\begin{enumerate}
+    \item \textbf{Zero-padding}: Increases frequency sampling density but not true resolution
+    \item \textbf{Overlap-add}: Enables efficient convolution for filtering
+    \item \textbf{Power spectral density}: For stochastic signals, average periodograms
+\end{enumerate}
+
+\section{Conclusions}
+\begin{enumerate}
+    \item The FFT successfully identified all harmonic components of the synthesized signal
+    \item Low-pass filtering effectively removed high-frequency interference while preserving the fundamental
+    \item Window selection involves trade-offs between frequency resolution and spectral leakage
+    \item Spectrograms provide essential time-frequency visualization for non-stationary signals
+\end{enumerate}
+
+\section*{Further Exploration}
+\begin{itemize}
+    \item Implement adaptive filtering for noise cancellation
+    \item Explore wavelet transforms for better time-frequency localization
+    \item Apply to real audio files (speech, music)
+    \item Investigate effects of sampling rate on aliasing
+\end{itemize}
+
+\end{document}

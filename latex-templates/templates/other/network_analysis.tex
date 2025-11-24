@@ -1,0 +1,1037 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage[makestderr]{pythontex}
+
+\title{Network Science: Graph Metrics and Community Detection}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Network science provides tools for analyzing complex systems through graph theory. This document demonstrates computational methods for calculating centrality measures, detecting community structure, analyzing random graph models, and characterizing small-world and scale-free properties. Using PythonTeX, we implement algorithms for betweenness centrality, modularity optimization, Erdos-Renyi and Barabasi-Albert models, and compute characteristic path lengths and clustering coefficients.
+\end{abstract}
+
+\section{Introduction}
+Network analysis characterizes complex systems through graph metrics. Networks appear throughout science: social networks, biological networks (protein interactions, neural connections), infrastructure networks (power grids, transportation), and information networks (World Wide Web, citation graphs). This analysis computes centrality measures, identifies community structure, and compares random network models.
+
+\section{Mathematical Framework}
+
+\subsection{Centrality Measures}
+Degree centrality measures local connectivity:
+\begin{equation}
+C_D(v) = \frac{\deg(v)}{n-1}
+\end{equation}
+
+Betweenness centrality quantifies importance in shortest paths:
+\begin{equation}
+C_B(v) = \sum_{s \neq v \neq t} \frac{\sigma_{st}(v)}{\sigma_{st}}
+\end{equation}
+where $\sigma_{st}$ is the number of shortest paths from $s$ to $t$, and $\sigma_{st}(v)$ passes through $v$.
+
+Closeness centrality measures average distance to all nodes:
+\begin{equation}
+C_C(v) = \frac{n-1}{\sum_{u \neq v} d(v, u)}
+\end{equation}
+
+Eigenvector centrality assigns importance based on neighbor importance:
+\begin{equation}
+x_v = \frac{1}{\lambda} \sum_{u \in N(v)} x_u
+\end{equation}
+
+\subsection{Clustering and Transitivity}
+Local clustering coefficient:
+\begin{equation}
+C_i = \frac{2|e_{jk} : v_j, v_k \in N_i, e_{jk} \in E|}{k_i(k_i-1)}
+\end{equation}
+
+Global clustering coefficient (transitivity):
+\begin{equation}
+C = \frac{3 \times \text{number of triangles}}{\text{number of connected triples}}
+\end{equation}
+
+\subsection{Modularity}
+Modularity measures community quality:
+\begin{equation}
+Q = \frac{1}{2m} \sum_{ij} \left[ A_{ij} - \frac{k_i k_j}{2m} \right] \delta(c_i, c_j)
+\end{equation}
+where $A_{ij}$ is the adjacency matrix, $k_i$ is degree, and $\delta(c_i, c_j) = 1$ if nodes $i$ and $j$ are in the same community.
+
+\section{Environment Setup}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import sparse
+from collections import deque
+import warnings
+warnings.filterwarnings('ignore')
+
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+def save_plot(filename, caption=""):
+    plt.savefig(filename, bbox_inches='tight', dpi=150)
+    print(r'\begin{figure}[htbp]')
+    print(r'\centering')
+    print(r'\includegraphics[width=0.95\textwidth]{' + filename + '}')
+    if caption:
+        print(r'\caption{' + caption + '}')
+    print(r'\end{figure}')
+    plt.close()
+\end{pycode}
+
+\section{Network Generation and Basic Metrics}
+
+\begin{pycode}
+# Generate random network (Erdos-Renyi model)
+n = 50
+p = 0.1
+adj = np.zeros((n, n))
+for i in range(n):
+    for j in range(i+1, n):
+        if np.random.rand() < p:
+            adj[i, j] = adj[j, i] = 1
+
+# Compute degrees
+degrees = np.sum(adj, axis=1).astype(int)
+
+# Degree centrality
+degree_centrality = degrees / (n - 1)
+
+# Compute shortest paths using BFS
+def bfs_shortest_paths(adj, source):
+    n = adj.shape[0]
+    dist = np.full(n, np.inf)
+    dist[source] = 0
+    queue = deque([source])
+    while queue:
+        u = queue.popleft()
+        for v in range(n):
+            if adj[u, v] == 1 and dist[v] == np.inf:
+                dist[v] = dist[u] + 1
+                queue.append(v)
+    return dist
+
+# Compute all-pairs shortest paths
+all_distances = np.zeros((n, n))
+for i in range(n):
+    all_distances[i] = bfs_shortest_paths(adj, i)
+
+# Closeness centrality (only for reachable nodes)
+closeness_centrality = np.zeros(n)
+for i in range(n):
+    reachable = all_distances[i] < np.inf
+    n_reachable = np.sum(reachable) - 1
+    if n_reachable > 0:
+        closeness_centrality[i] = n_reachable / np.sum(all_distances[i][reachable])
+
+# Local clustering coefficient
+clustering = np.zeros(n)
+for i in range(n):
+    neighbors = np.where(adj[i] == 1)[0]
+    k = len(neighbors)
+    if k >= 2:
+        edges = 0
+        for j in range(len(neighbors)):
+            for l in range(j+1, len(neighbors)):
+                if adj[neighbors[j], neighbors[l]] == 1:
+                    edges += 1
+        clustering[i] = 2 * edges / (k * (k - 1))
+
+# Network statistics
+n_edges = int(np.sum(adj) / 2)
+avg_degree = np.mean(degrees)
+avg_clustering = np.mean(clustering)
+density = 2 * n_edges / (n * (n - 1))
+
+# Characteristic path length (average shortest path)
+finite_distances = all_distances[all_distances < np.inf]
+finite_distances = finite_distances[finite_distances > 0]
+char_path_length = np.mean(finite_distances) if len(finite_distances) > 0 else np.inf
+
+# Count triangles
+triangles = 0
+for i in range(n):
+    neighbors = np.where(adj[i] == 1)[0]
+    for j in range(len(neighbors)):
+        for k in range(j+1, len(neighbors)):
+            if adj[neighbors[j], neighbors[k]] == 1:
+                triangles += 1
+triangles = triangles // 3  # Each triangle counted 3 times
+
+# Global clustering coefficient
+connected_triples = sum(k*(k-1)//2 for k in degrees)
+global_clustering = 3 * triangles / connected_triples if connected_triples > 0 else 0
+\end{pycode}
+
+\section{Betweenness Centrality}
+
+\begin{pycode}
+# Compute betweenness centrality using Brandes algorithm
+def compute_betweenness(adj):
+    n = adj.shape[0]
+    betweenness = np.zeros(n)
+
+    for s in range(n):
+        # Single-source shortest paths
+        S = []  # Stack of vertices in order of non-increasing distance
+        P = [[] for _ in range(n)]  # Predecessors
+        sigma = np.zeros(n)  # Number of shortest paths
+        sigma[s] = 1
+        d = np.full(n, -1)  # Distance from source
+        d[s] = 0
+
+        Q = deque([s])
+        while Q:
+            v = Q.popleft()
+            S.append(v)
+            for w in range(n):
+                if adj[v, w] == 1:
+                    if d[w] < 0:
+                        Q.append(w)
+                        d[w] = d[v] + 1
+                    if d[w] == d[v] + 1:
+                        sigma[w] += sigma[v]
+                        P[w].append(v)
+
+        # Accumulation
+        delta = np.zeros(n)
+        while S:
+            w = S.pop()
+            for v in P[w]:
+                delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w])
+            if w != s:
+                betweenness[w] += delta[w]
+
+    # Normalize
+    betweenness = betweenness / ((n-1) * (n-2))
+    return betweenness
+
+betweenness_centrality = compute_betweenness(adj)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Network visualization with degree centrality
+theta = np.linspace(0, 2*np.pi, n, endpoint=False)
+pos = np.column_stack([np.cos(theta), np.sin(theta)])
+
+for i in range(n):
+    for j in range(i+1, n):
+        if adj[i, j] == 1:
+            axes[0, 0].plot([pos[i, 0], pos[j, 0]], [pos[i, 1], pos[j, 1]],
+                           'gray', linewidth=0.5, alpha=0.4)
+
+sizes = 50 + 400 * degree_centrality
+sc = axes[0, 0].scatter(pos[:, 0], pos[:, 1], s=sizes, c=degree_centrality,
+                        cmap='viridis', edgecolors='black', linewidth=0.5)
+plt.colorbar(sc, ax=axes[0, 0], label='Degree Centrality')
+axes[0, 0].set_title('Network (node size = degree)')
+axes[0, 0].set_aspect('equal')
+axes[0, 0].axis('off')
+
+# Degree distribution
+unique_degrees, degree_counts = np.unique(degrees, return_counts=True)
+axes[0, 1].bar(unique_degrees, degree_counts, alpha=0.7, edgecolor='black', color='steelblue')
+axes[0, 1].set_xlabel('Degree $k$')
+axes[0, 1].set_ylabel('Frequency')
+axes[0, 1].set_title('Degree Distribution')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Expected Poisson distribution for ER graph
+k_range = np.arange(0, max(degrees)+5)
+from scipy.stats import poisson
+expected_freq = n * poisson.pmf(k_range, avg_degree)
+axes[0, 1].plot(k_range, expected_freq, 'r--', linewidth=2, label='Poisson')
+axes[0, 1].legend()
+
+# Centrality comparison
+axes[1, 0].scatter(degree_centrality, betweenness_centrality, alpha=0.6)
+axes[1, 0].set_xlabel('Degree Centrality')
+axes[1, 0].set_ylabel('Betweenness Centrality')
+axes[1, 0].set_title('Degree vs Betweenness Centrality')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Correlation coefficient
+corr = np.corrcoef(degree_centrality, betweenness_centrality)[0, 1]
+axes[1, 0].text(0.05, 0.95, f'$r = {corr:.3f}$', transform=axes[1, 0].transAxes,
+               fontsize=10, verticalalignment='top')
+
+# Clustering vs degree
+axes[1, 1].scatter(degrees, clustering, alpha=0.6, color='green')
+axes[1, 1].set_xlabel('Degree $k$')
+axes[1, 1].set_ylabel('Local Clustering $C_i$')
+axes[1, 1].set_title('Degree vs Clustering Coefficient')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Expected clustering for ER graph
+axes[1, 1].axhline(y=p, color='r', linestyle='--', label=f'Expected (p={p})')
+axes[1, 1].legend()
+
+plt.tight_layout()
+save_plot('network_basic_metrics.pdf', 'Basic network metrics for Erdos-Renyi random graph')
+\end{pycode}
+
+\section{Eigenvector Centrality and PageRank}
+
+\begin{pycode}
+# Eigenvector centrality using power iteration
+def eigenvector_centrality(adj, max_iter=100, tol=1e-6):
+    n = adj.shape[0]
+    x = np.ones(n) / np.sqrt(n)
+
+    for _ in range(max_iter):
+        x_new = adj @ x
+        norm = np.linalg.norm(x_new)
+        if norm > 0:
+            x_new = x_new / norm
+        if np.linalg.norm(x_new - x) < tol:
+            break
+        x = x_new
+
+    return x_new
+
+# PageRank (random walk with damping)
+def pagerank(adj, damping=0.85, max_iter=100, tol=1e-6):
+    n = adj.shape[0]
+    out_degree = np.sum(adj, axis=1)
+
+    # Create transition matrix
+    M = np.zeros((n, n))
+    for i in range(n):
+        if out_degree[i] > 0:
+            M[:, i] = adj[:, i] / out_degree[i]
+        else:
+            M[:, i] = 1.0 / n  # Dangling nodes
+
+    # Power iteration
+    pr = np.ones(n) / n
+    for _ in range(max_iter):
+        pr_new = damping * M @ pr + (1 - damping) / n
+        if np.linalg.norm(pr_new - pr) < tol:
+            break
+        pr = pr_new
+
+    return pr_new
+
+eig_centrality = eigenvector_centrality(adj)
+pr = pagerank(adj)
+
+# Katz centrality
+def katz_centrality(adj, alpha=0.1, beta=1.0):
+    n = adj.shape[0]
+    I = np.eye(n)
+    ones = np.ones(n)
+    try:
+        centrality = np.linalg.solve(I - alpha * adj.T, beta * ones)
+    except:
+        centrality = np.zeros(n)
+    return centrality / np.max(centrality) if np.max(centrality) > 0 else centrality
+
+katz_cent = katz_centrality(adj, alpha=0.05)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Compare centrality measures
+centrality_measures = {
+    'Degree': degree_centrality,
+    'Betweenness': betweenness_centrality,
+    'Closeness': closeness_centrality,
+    'Eigenvector': eig_centrality
+}
+
+# Heatmap of centrality correlations
+names = list(centrality_measures.keys())
+measures = np.array([centrality_measures[name] for name in names])
+corr_matrix = np.corrcoef(measures)
+
+im = axes[0, 0].imshow(corr_matrix, cmap='RdYlBu_r', vmin=-1, vmax=1)
+axes[0, 0].set_xticks(range(len(names)))
+axes[0, 0].set_yticks(range(len(names)))
+axes[0, 0].set_xticklabels(names, rotation=45)
+axes[0, 0].set_yticklabels(names)
+for i in range(len(names)):
+    for j in range(len(names)):
+        axes[0, 0].text(j, i, f'{corr_matrix[i, j]:.2f}', ha='center', va='center')
+plt.colorbar(im, ax=axes[0, 0], label='Correlation')
+axes[0, 0].set_title('Centrality Measure Correlations')
+
+# Network with eigenvector centrality
+for i in range(n):
+    for j in range(i+1, n):
+        if adj[i, j] == 1:
+            axes[0, 1].plot([pos[i, 0], pos[j, 0]], [pos[i, 1], pos[j, 1]],
+                           'gray', linewidth=0.5, alpha=0.4)
+
+sizes = 50 + 400 * (eig_centrality / max(eig_centrality))
+sc = axes[0, 1].scatter(pos[:, 0], pos[:, 1], s=sizes, c=eig_centrality,
+                        cmap='plasma', edgecolors='black', linewidth=0.5)
+plt.colorbar(sc, ax=axes[0, 1], label='Eigenvector Centrality')
+axes[0, 1].set_title('Network (size = eigenvector centrality)')
+axes[0, 1].set_aspect('equal')
+axes[0, 1].axis('off')
+
+# PageRank distribution
+sorted_pr = np.sort(pr)[::-1]
+axes[1, 0].bar(range(n), sorted_pr, alpha=0.7, color='coral')
+axes[1, 0].set_xlabel('Node Rank')
+axes[1, 0].set_ylabel('PageRank')
+axes[1, 0].set_title('PageRank Distribution (sorted)')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Eigenvector vs PageRank
+axes[1, 1].scatter(eig_centrality, pr, alpha=0.6, color='purple')
+axes[1, 1].set_xlabel('Eigenvector Centrality')
+axes[1, 1].set_ylabel('PageRank')
+axes[1, 1].set_title('Eigenvector Centrality vs PageRank')
+axes[1, 1].grid(True, alpha=0.3)
+corr_pr = np.corrcoef(eig_centrality, pr)[0, 1]
+axes[1, 1].text(0.05, 0.95, f'$r = {corr_pr:.3f}$', transform=axes[1, 1].transAxes,
+               fontsize=10, verticalalignment='top')
+
+plt.tight_layout()
+save_plot('network_centrality_advanced.pdf', 'Advanced centrality measures')
+
+# Top nodes by centrality
+top_k = 5
+top_degree = np.argsort(degree_centrality)[-top_k:][::-1]
+top_between = np.argsort(betweenness_centrality)[-top_k:][::-1]
+top_eigen = np.argsort(eig_centrality)[-top_k:][::-1]
+\end{pycode}
+
+\section{Community Detection}
+
+\begin{pycode}
+# Simple community detection using label propagation
+def label_propagation(adj, max_iter=100):
+    n = adj.shape[0]
+    labels = np.arange(n)
+
+    for _ in range(max_iter):
+        order = np.random.permutation(n)
+        changed = False
+        for node in order:
+            neighbors = np.where(adj[node] == 1)[0]
+            if len(neighbors) > 0:
+                neighbor_labels = labels[neighbors]
+                unique, counts = np.unique(neighbor_labels, return_counts=True)
+                max_count = max(counts)
+                candidates = unique[counts == max_count]
+                new_label = np.random.choice(candidates)
+                if new_label != labels[node]:
+                    labels[node] = new_label
+                    changed = True
+        if not changed:
+            break
+
+    # Relabel communities to 0, 1, 2, ...
+    unique_labels = np.unique(labels)
+    label_map = {old: new for new, old in enumerate(unique_labels)}
+    return np.array([label_map[l] for l in labels])
+
+# Compute modularity
+def compute_modularity(adj, communities):
+    n = adj.shape[0]
+    m = np.sum(adj) / 2
+    degrees = np.sum(adj, axis=1)
+
+    Q = 0
+    for i in range(n):
+        for j in range(n):
+            if communities[i] == communities[j]:
+                Q += adj[i, j] - degrees[i] * degrees[j] / (2 * m)
+
+    return Q / (2 * m)
+
+# Spectral clustering for community detection
+def spectral_clustering(adj, k=3):
+    n = adj.shape[0]
+    degrees = np.sum(adj, axis=1)
+    D = np.diag(degrees)
+    L = D - adj  # Laplacian
+
+    # Normalized Laplacian
+    D_inv_sqrt = np.diag(1.0 / np.sqrt(degrees + 1e-10))
+    L_norm = D_inv_sqrt @ L @ D_inv_sqrt
+
+    # Eigendecomposition
+    eigenvalues, eigenvectors = np.linalg.eigh(L_norm)
+
+    # Use first k eigenvectors (after 0)
+    features = eigenvectors[:, 1:k+1]
+
+    # K-means clustering on eigenvector features
+    from scipy.cluster.vq import kmeans2
+    _, labels = kmeans2(features, k, minit='++')
+
+    return labels, eigenvalues
+
+# Detect communities
+communities_lp = label_propagation(adj)
+n_communities_lp = len(np.unique(communities_lp))
+
+# Spectral clustering
+k_communities = 4
+communities_spec, laplacian_eigenvalues = spectral_clustering(adj, k=k_communities)
+
+# Compute modularities
+mod_lp = compute_modularity(adj, communities_lp)
+mod_spec = compute_modularity(adj, communities_spec)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Label propagation communities
+colors_lp = plt.cm.Set1(communities_lp / (n_communities_lp - 1 + 0.01))
+for i in range(n):
+    for j in range(i+1, n):
+        if adj[i, j] == 1:
+            axes[0, 0].plot([pos[i, 0], pos[j, 0]], [pos[i, 1], pos[j, 1]],
+                           'gray', linewidth=0.5, alpha=0.3)
+
+axes[0, 0].scatter(pos[:, 0], pos[:, 1], s=100, c=communities_lp,
+                   cmap='Set1', edgecolors='black', linewidth=0.5)
+axes[0, 0].set_title(f'Label Propagation ({n_communities_lp} communities, Q={mod_lp:.3f})')
+axes[0, 0].set_aspect('equal')
+axes[0, 0].axis('off')
+
+# Spectral clustering communities
+for i in range(n):
+    for j in range(i+1, n):
+        if adj[i, j] == 1:
+            axes[0, 1].plot([pos[i, 0], pos[j, 0]], [pos[i, 1], pos[j, 1]],
+                           'gray', linewidth=0.5, alpha=0.3)
+
+axes[0, 1].scatter(pos[:, 0], pos[:, 1], s=100, c=communities_spec,
+                   cmap='Set2', edgecolors='black', linewidth=0.5)
+axes[0, 1].set_title(f'Spectral Clustering ({k_communities} communities, Q={mod_spec:.3f})')
+axes[0, 1].set_aspect('equal')
+axes[0, 1].axis('off')
+
+# Laplacian eigenvalues (spectral gap)
+axes[1, 0].plot(laplacian_eigenvalues[:15], 'o-', markersize=8)
+axes[1, 0].set_xlabel('Index')
+axes[1, 0].set_ylabel('Eigenvalue')
+axes[1, 0].set_title('Laplacian Eigenvalues (spectral gap)')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Community size distribution
+for i, (comm, name) in enumerate([(communities_lp, 'Label Prop'),
+                                   (communities_spec, 'Spectral')]):
+    unique, counts = np.unique(comm, return_counts=True)
+    x_pos = np.arange(len(counts)) + i*0.4
+    axes[1, 1].bar(x_pos, counts, width=0.35, alpha=0.7, label=name)
+
+axes[1, 1].set_xlabel('Community')
+axes[1, 1].set_ylabel('Size')
+axes[1, 1].set_title('Community Size Distribution')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('network_communities.pdf', 'Community detection using label propagation and spectral clustering')
+\end{pycode}
+
+\section{Random Graph Models}
+
+\begin{pycode}
+# Compare Erdos-Renyi and Barabasi-Albert models
+n_compare = 100
+
+# Erdos-Renyi G(n, p)
+p_er = 0.05
+adj_er = np.zeros((n_compare, n_compare))
+for i in range(n_compare):
+    for j in range(i+1, n_compare):
+        if np.random.rand() < p_er:
+            adj_er[i, j] = adj_er[j, i] = 1
+
+# Barabasi-Albert preferential attachment
+def barabasi_albert(n, m):
+    adj = np.zeros((n, n))
+    # Start with m+1 fully connected nodes
+    for i in range(m+1):
+        for j in range(i+1, m+1):
+            adj[i, j] = adj[j, i] = 1
+
+    degrees = np.sum(adj, axis=1)
+
+    # Add remaining nodes
+    for new_node in range(m+1, n):
+        # Preferential attachment
+        probs = degrees[:new_node] / np.sum(degrees[:new_node])
+        targets = np.random.choice(new_node, size=m, replace=False, p=probs)
+        for target in targets:
+            adj[new_node, target] = adj[target, new_node] = 1
+        degrees = np.sum(adj, axis=1)
+
+    return adj
+
+m_ba = 2
+adj_ba = barabasi_albert(n_compare, m_ba)
+
+# Compute metrics for both
+degrees_er = np.sum(adj_er, axis=1).astype(int)
+degrees_ba = np.sum(adj_ba, axis=1).astype(int)
+
+avg_degree_er = np.mean(degrees_er)
+avg_degree_ba = np.mean(degrees_ba)
+
+# Clustering coefficients
+def compute_clustering(adj):
+    n = adj.shape[0]
+    degrees = np.sum(adj, axis=1).astype(int)
+    clustering = np.zeros(n)
+    for i in range(n):
+        neighbors = np.where(adj[i] == 1)[0]
+        k = len(neighbors)
+        if k >= 2:
+            edges = 0
+            for j in range(len(neighbors)):
+                for l in range(j+1, len(neighbors)):
+                    if adj[neighbors[j], neighbors[l]] == 1:
+                        edges += 1
+            clustering[i] = 2 * edges / (k * (k - 1))
+    return clustering
+
+clustering_er = compute_clustering(adj_er)
+clustering_ba = compute_clustering(adj_ba)
+
+avg_clust_er = np.mean(clustering_er)
+avg_clust_ba = np.mean(clustering_ba)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Degree distributions comparison
+max_degree = max(max(degrees_er), max(degrees_ba))
+bins = np.arange(0, max_degree + 2) - 0.5
+
+axes[0, 0].hist(degrees_er, bins=bins, alpha=0.5, label=f'ER (avg={avg_degree_er:.1f})',
+                edgecolor='blue', color='blue')
+axes[0, 0].hist(degrees_ba, bins=bins, alpha=0.5, label=f'BA (avg={avg_degree_ba:.1f})',
+                edgecolor='red', color='red')
+axes[0, 0].set_xlabel('Degree $k$')
+axes[0, 0].set_ylabel('Frequency')
+axes[0, 0].set_title('Degree Distribution Comparison')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+
+# Log-log degree distribution for BA (scale-free test)
+unique_ba, counts_ba = np.unique(degrees_ba, return_counts=True)
+axes[0, 1].loglog(unique_ba[unique_ba > 0], counts_ba[unique_ba > 0], 'ro', markersize=8, label='BA Data')
+
+# Power law fit
+log_k = np.log(unique_ba[unique_ba > 1])
+log_p = np.log(counts_ba[unique_ba > 1] / n_compare)
+if len(log_k) > 2:
+    coeffs = np.polyfit(log_k, log_p, 1)
+    gamma = -coeffs[0]
+    k_fit = np.logspace(np.log10(2), np.log10(max(degrees_ba)), 50)
+    p_fit = np.exp(coeffs[1]) * n_compare * k_fit**(-gamma)
+    axes[0, 1].loglog(k_fit, p_fit, 'b--', linewidth=2, label=f'Power law $\\gamma={gamma:.2f}$')
+
+axes[0, 1].set_xlabel('Degree $k$')
+axes[0, 1].set_ylabel('Frequency')
+axes[0, 1].set_title('BA Degree Distribution (log-log)')
+axes[0, 1].legend()
+axes[0, 1].grid(True, alpha=0.3)
+
+# Clustering coefficient vs degree
+axes[1, 0].scatter(degrees_er, clustering_er, alpha=0.4, label='Erdos-Renyi', s=30)
+axes[1, 0].scatter(degrees_ba, clustering_ba, alpha=0.4, label='Barabasi-Albert', s=30)
+axes[1, 0].set_xlabel('Degree $k$')
+axes[1, 0].set_ylabel('Local Clustering $C_i$')
+axes[1, 0].set_title('Clustering vs Degree')
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Network metrics comparison
+metrics_names = ['Nodes', 'Edges', 'Avg Degree', 'Avg Clustering']
+metrics_er = [n_compare, int(np.sum(adj_er)/2), avg_degree_er, avg_clust_er * 10]
+metrics_ba = [n_compare, int(np.sum(adj_ba)/2), avg_degree_ba, avg_clust_ba * 10]
+
+x = np.arange(len(metrics_names))
+width = 0.35
+axes[1, 1].bar(x - width/2, metrics_er, width, label='Erdos-Renyi', alpha=0.7)
+axes[1, 1].bar(x + width/2, metrics_ba, width, label='Barabasi-Albert', alpha=0.7)
+axes[1, 1].set_ylabel('Value (clustering x10)')
+axes[1, 1].set_xticks(x)
+axes[1, 1].set_xticklabels(metrics_names)
+axes[1, 1].set_title('Network Metrics Comparison')
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('network_random_models.pdf', 'Comparison of Erdos-Renyi and Barabasi-Albert random graph models')
+
+# Store for summary
+n_edges_er = int(np.sum(adj_er) / 2)
+n_edges_ba = int(np.sum(adj_ba) / 2)
+\end{pycode}
+
+\section{Small-World Networks}
+
+\begin{pycode}
+# Watts-Strogatz small-world model
+def watts_strogatz(n, k, p):
+    """Generate Watts-Strogatz small-world network."""
+    adj = np.zeros((n, n))
+
+    # Create ring lattice
+    for i in range(n):
+        for j in range(1, k//2 + 1):
+            adj[i, (i+j) % n] = adj[(i+j) % n, i] = 1
+
+    # Rewire edges with probability p
+    for i in range(n):
+        for j in range(1, k//2 + 1):
+            if np.random.rand() < p:
+                neighbor = (i + j) % n
+                if adj[i, neighbor] == 1:
+                    adj[i, neighbor] = adj[neighbor, i] = 0
+                    # Choose new target
+                    possible = [x for x in range(n) if x != i and adj[i, x] == 0]
+                    if possible:
+                        new_target = np.random.choice(possible)
+                        adj[i, new_target] = adj[new_target, i] = 1
+
+    return adj
+
+# Characteristic path length
+def compute_path_length(adj):
+    n = adj.shape[0]
+    total_dist = 0
+    count = 0
+    for i in range(n):
+        dist = bfs_shortest_paths(adj, i)
+        for j in range(i+1, n):
+            if dist[j] < np.inf:
+                total_dist += dist[j]
+                count += 1
+    return total_dist / count if count > 0 else np.inf
+
+# Generate networks for different rewiring probabilities
+n_ws = 50
+k_ws = 6
+p_values = [0, 0.01, 0.05, 0.1, 0.2, 0.5, 1.0]
+
+path_lengths = []
+clusterings = []
+
+for p_ws in p_values:
+    adj_ws = watts_strogatz(n_ws, k_ws, p_ws)
+    pl = compute_path_length(adj_ws)
+    clust = np.mean(compute_clustering(adj_ws))
+    path_lengths.append(pl)
+    clusterings.append(clust)
+
+# Normalize by p=0 values
+L0 = path_lengths[0]
+C0 = clusterings[0]
+L_norm = [L/L0 for L in path_lengths]
+C_norm = [C/C0 for C in clusterings]
+
+# Generate examples for visualization
+adj_lattice = watts_strogatz(30, 4, 0)
+adj_small_world = watts_strogatz(30, 4, 0.1)
+adj_random = watts_strogatz(30, 4, 1.0)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Small-world transition
+axes[0, 0].semilogx(p_values[1:], L_norm[1:], 'o-', markersize=8, label='$L(p)/L(0)$')
+axes[0, 0].semilogx(p_values[1:], C_norm[1:], 's-', markersize=8, label='$C(p)/C(0)$')
+axes[0, 0].set_xlabel('Rewiring probability $p$')
+axes[0, 0].set_ylabel('Normalized value')
+axes[0, 0].set_title('Small-World Transition')
+axes[0, 0].legend()
+axes[0, 0].grid(True, alpha=0.3)
+axes[0, 0].axvspan(0.01, 0.1, alpha=0.2, color='yellow', label='Small-world regime')
+
+# Plot the three network types
+for idx, (adj_plot, title) in enumerate([(adj_lattice, 'Ring Lattice (p=0)'),
+                                          (adj_small_world, 'Small-World (p=0.1)'),
+                                          (adj_random, 'Random (p=1)')]):
+    if idx == 0:
+        ax = axes[0, 1]
+    elif idx == 1:
+        ax = axes[1, 0]
+    else:
+        ax = axes[1, 1]
+
+    n_plot = adj_plot.shape[0]
+    theta = np.linspace(0, 2*np.pi, n_plot, endpoint=False)
+    pos_plot = np.column_stack([np.cos(theta), np.sin(theta)])
+
+    for i in range(n_plot):
+        for j in range(i+1, n_plot):
+            if adj_plot[i, j] == 1:
+                ax.plot([pos_plot[i, 0], pos_plot[j, 0]],
+                       [pos_plot[i, 1], pos_plot[j, 1]],
+                       'gray', linewidth=0.5, alpha=0.5)
+
+    ax.scatter(pos_plot[:, 0], pos_plot[:, 1], s=50, c='steelblue',
+               edgecolors='black', linewidth=0.5)
+    ax.set_title(title)
+    ax.set_aspect('equal')
+    ax.axis('off')
+
+plt.tight_layout()
+save_plot('network_small_world.pdf', 'Watts-Strogatz small-world network model')
+
+# Small-world index
+sw_index = (C_norm[3] / C_norm[-1]) / (L_norm[3] / L_norm[-1]) if L_norm[-1] > 0 else 0
+\end{pycode}
+
+\section{Network Motifs and Structural Patterns}
+
+\begin{pycode}
+# Analyze network motifs
+# Count common subgraph patterns
+
+def count_triangles(adj):
+    n = adj.shape[0]
+    count = 0
+    for i in range(n):
+        for j in range(i+1, n):
+            for k in range(j+1, n):
+                if adj[i,j] == 1 and adj[j,k] == 1 and adj[i,k] == 1:
+                    count += 1
+    return count
+
+def count_stars(adj, k=3):
+    """Count k-stars (one hub connected to k nodes)."""
+    n = adj.shape[0]
+    degrees = np.sum(adj, axis=1).astype(int)
+    from math import comb
+    count = sum(comb(d, k) for d in degrees if d >= k)
+    return count
+
+def count_paths(adj, length=2):
+    """Count paths of given length."""
+    if length == 2:
+        return count_stars(adj, 2)  # 2-star = path of length 2
+    else:
+        return 0
+
+# Analyze original ER network
+tri_count = count_triangles(adj)
+star3_count = count_stars(adj, 3)
+star2_count = count_stars(adj, 2)
+
+# Assortativity (degree correlation)
+def compute_assortativity(adj):
+    n = adj.shape[0]
+    degrees = np.sum(adj, axis=1)
+    edges = []
+    for i in range(n):
+        for j in range(i+1, n):
+            if adj[i, j] == 1:
+                edges.append((degrees[i], degrees[j]))
+
+    if len(edges) == 0:
+        return 0
+
+    edges = np.array(edges)
+    x, y = edges[:, 0], edges[:, 1]
+
+    # Pearson correlation
+    r = np.corrcoef(np.concatenate([x, y]), np.concatenate([y, x]))[0, 1]
+    return r
+
+assortativity = compute_assortativity(adj)
+assortativity_ba = compute_assortativity(adj_ba)
+
+# Visualization
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Motif counts
+motifs = ['Triangles', '3-Stars', '2-Paths']
+counts = [tri_count, star3_count, star2_count]
+colors = ['coral', 'steelblue', 'seagreen']
+axes[0, 0].bar(motifs, counts, color=colors, alpha=0.7, edgecolor='black')
+axes[0, 0].set_ylabel('Count')
+axes[0, 0].set_title('Network Motif Counts')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Degree-degree correlation plot (assortativity visualization)
+edges = []
+for i in range(n):
+    for j in range(i+1, n):
+        if adj[i, j] == 1:
+            edges.append((degrees[i], degrees[j]))
+
+if edges:
+    edges = np.array(edges)
+    axes[0, 1].scatter(edges[:, 0], edges[:, 1], alpha=0.3, s=50)
+    axes[0, 1].set_xlabel('Degree of node $i$')
+    axes[0, 1].set_ylabel('Degree of node $j$')
+    axes[0, 1].set_title(f'Degree Correlation (assortativity r={assortativity:.3f})')
+    axes[0, 1].grid(True, alpha=0.3)
+
+# Rich-club coefficient
+def rich_club_coefficient(adj):
+    degrees = np.sum(adj, axis=1).astype(int)
+    unique_degrees = np.unique(degrees)
+    phi = {}
+
+    for k in unique_degrees:
+        # Nodes with degree > k
+        rich_nodes = np.where(degrees > k)[0]
+        n_rich = len(rich_nodes)
+        if n_rich < 2:
+            continue
+
+        # Edges among rich nodes
+        edges_rich = 0
+        for i in range(len(rich_nodes)):
+            for j in range(i+1, len(rich_nodes)):
+                if adj[rich_nodes[i], rich_nodes[j]] == 1:
+                    edges_rich += 1
+
+        max_edges = n_rich * (n_rich - 1) / 2
+        if max_edges > 0:
+            phi[k] = edges_rich / max_edges
+
+    return phi
+
+phi = rich_club_coefficient(adj)
+k_vals = sorted(phi.keys())
+phi_vals = [phi[k] for k in k_vals]
+
+axes[1, 0].plot(k_vals, phi_vals, 'o-', markersize=6)
+axes[1, 0].set_xlabel('Degree threshold $k$')
+axes[1, 0].set_ylabel('Rich-club coefficient $\\phi(k)$')
+axes[1, 0].set_title('Rich-Club Organization')
+axes[1, 0].grid(True, alpha=0.3)
+
+# Compare ER and BA assortativity
+network_types = ['Erdos-Renyi', 'Barabasi-Albert']
+assort_values = [assortativity, assortativity_ba]
+colors = ['steelblue', 'coral']
+axes[1, 1].bar(network_types, assort_values, color=colors, alpha=0.7, edgecolor='black')
+axes[1, 1].axhline(y=0, color='black', linestyle='--', linewidth=1)
+axes[1, 1].set_ylabel('Assortativity Coefficient')
+axes[1, 1].set_title('Network Assortativity Comparison')
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+save_plot('network_motifs.pdf', 'Network motifs, assortativity, and rich-club organization')
+\end{pycode}
+
+\section{Results Summary}
+
+\begin{pycode}
+# Create comprehensive results table
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Network Analysis Results}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Metric & ER Network & BA Network \\')
+print(r'\midrule')
+print(f'Nodes & {n} & {n_compare} \\\\')
+print(f'Edges & {n_edges} & {n_edges_ba} \\\\')
+print(f'Average Degree & {avg_degree:.2f} & {avg_degree_ba:.2f} \\\\')
+print(f'Average Clustering & {avg_clustering:.4f} & {avg_clust_ba:.4f} \\\\')
+print(f'Characteristic Path Length & {char_path_length:.2f} & -- \\\\')
+print(f'Global Clustering & {global_clustering:.4f} & -- \\\\')
+print(f'Assortativity & {assortativity:.3f} & {assortativity_ba:.3f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+
+# Centrality summary table
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Top Nodes by Centrality Measures}')
+print(r'\begin{tabular}{lccc}')
+print(r'\toprule')
+print(r'Rank & Degree & Betweenness & Eigenvector \\')
+print(r'\midrule')
+for i in range(5):
+    print(f'{i+1} & Node {top_degree[i]} & Node {top_between[i]} & Node {top_eigen[i]} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+
+# Community detection results
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Community Detection Results}')
+print(r'\begin{tabular}{lcc}')
+print(r'\toprule')
+print(r'Method & Communities & Modularity \\')
+print(r'\midrule')
+print(f'Label Propagation & {n_communities_lp} & {mod_lp:.4f} \\\\')
+print(f'Spectral Clustering & {k_communities} & {mod_spec:.4f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+
+# Motif counts
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Network Motif Counts}')
+print(r'\begin{tabular}{lc}')
+print(r'\toprule')
+print(r'Motif Type & Count \\')
+print(r'\midrule')
+print(f'Triangles & {tri_count} \\\\')
+print(f'3-Stars & {star3_count} \\\\')
+print(f'2-Paths & {star2_count} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Statistical Summary}
+
+Network analysis results:
+\begin{itemize}
+    \item Nodes: \py{f"{n}"}, Edges: \py{f"{n_edges}"}
+    \item Average degree: \py{f"{avg_degree:.2f}"}
+    \item Average clustering: \py{f"{avg_clustering:.4f}"}
+    \item Global clustering: \py{f"{global_clustering:.4f}"}
+    \item Characteristic path length: \py{f"{char_path_length:.2f}"}
+    \item Network density: \py{f"{density:.4f}"}
+    \item Number of triangles: \py{f"{triangles}"}
+    \item Assortativity coefficient: \py{f"{assortativity:.3f}"}
+    \item Communities detected (LP): \py{f"{n_communities_lp}"}
+    \item Modularity (LP): \py{f"{mod_lp:.4f}"}
+    \item Modularity (Spectral): \py{f"{mod_spec:.4f}"}
+\end{itemize}
+
+\section{Conclusion}
+
+Network metrics reveal structural properties of complex systems. This analysis demonstrated:
+
+\begin{enumerate}
+    \item \textbf{Centrality measures}: Degree, betweenness, closeness, and eigenvector centrality capture different aspects of node importance. High correlation between measures indicates consistent network structure.
+
+    \item \textbf{Community detection}: Label propagation and spectral clustering identify community structure with modularity quantifying partition quality.
+
+    \item \textbf{Random graph models}: Erdos-Renyi produces homogeneous degree distributions, while Barabasi-Albert generates scale-free networks with power-law degree distributions through preferential attachment.
+
+    \item \textbf{Small-world networks}: Watts-Strogatz model shows that small rewiring probability creates networks with high clustering and short path lengths, characteristic of real-world networks.
+
+    \item \textbf{Network motifs}: Triangle counting and rich-club analysis reveal hierarchical organization and hub structure.
+\end{enumerate}
+
+These tools apply to social networks, biological systems (protein interactions, neural networks), infrastructure (power grids, transportation), and information networks (WWW, citations). Understanding network topology enables prediction of system behavior, identification of critical nodes, and optimization of network performance.
+
+\end{document}

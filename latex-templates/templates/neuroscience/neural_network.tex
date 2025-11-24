@@ -1,0 +1,391 @@
+\documentclass[a4paper, 11pt]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[makestderr]{pythontex}
+
+\definecolor{excitatory}{RGB}{52, 152, 219}
+\definecolor{inhibitory}{RGB}{231, 76, 60}
+\definecolor{activity}{RGB}{46, 204, 113}
+
+\title{Spiking Neural Networks:\\
+Population Dynamics and Synchronization}
+\author{Department of Neuroscience\\Technical Report NS-2024-003}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This report presents a comprehensive analysis of spiking neural network dynamics. We implement leaky integrate-and-fire neurons, analyze population synchronization, compute spike train statistics, examine balanced excitation-inhibition, and investigate network oscillations. All simulations use PythonTeX for reproducibility.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+The leaky integrate-and-fire (LIF) neuron model:
+\begin{equation}
+\tau_m \frac{dV}{dt} = -(V - V_{rest}) + R_m I_{syn}
+\end{equation}
+
+When $V \geq V_{th}$: emit spike and reset to $V_{reset}$.
+
+\section{Network Connectivity}
+Synaptic current:
+\begin{equation}
+I_{syn}(t) = \sum_j w_j \sum_k \delta(t - t_j^k - d)
+\end{equation}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# LIF parameters
+tau_m = 20.0    # Membrane time constant (ms)
+V_rest = -65.0  # Resting potential (mV)
+V_th = -50.0    # Threshold (mV)
+V_reset = -70.0 # Reset potential (mV)
+R_m = 10.0      # Membrane resistance (MOhm)
+tau_syn = 5.0   # Synaptic time constant (ms)
+
+# Network parameters
+N = 200         # Total neurons
+N_exc = int(0.8 * N)
+N_inh = N - N_exc
+p_conn = 0.1    # Connection probability
+w_exc = 0.3     # Excitatory weight
+w_inh = -1.2    # Inhibitory weight
+
+# Simulation parameters
+dt = 0.1        # Time step (ms)
+T = 1000        # Total time (ms)
+n_steps = int(T / dt)
+
+# Initialize
+V = V_rest + 5 * np.random.randn(N)
+is_exc = np.arange(N) < N_exc
+
+# Create connectivity
+W = np.zeros((N, N))
+for i in range(N):
+    for j in range(N):
+        if i != j and np.random.rand() < p_conn:
+            W[i, j] = w_exc if is_exc[j] else w_inh
+
+# External input
+I_ext = 15.0
+
+# Recording
+spike_times = [[] for _ in range(N)]
+V_record = np.zeros((N, n_steps))
+I_syn = np.zeros(N)
+
+# Simulation
+for step in range(n_steps):
+    t = step * dt
+    I_syn *= np.exp(-dt / tau_syn)
+
+    dV = dt / tau_m * (-(V - V_rest) + R_m * (I_ext + I_syn))
+    V += dV
+
+    spiked = V >= V_th
+    for n in np.where(spiked)[0]:
+        spike_times[n].append(t)
+        I_syn += W[:, n]
+
+    V[spiked] = V_reset
+    V_record[:, step] = V
+\end{pycode}
+
+\chapter{Network Activity}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Raster plot
+ax = axes[0, 0]
+for i in range(N):
+    if len(spike_times[i]) > 0:
+        color = '#3498db' if is_exc[i] else '#e74c3c'
+        ax.scatter(spike_times[i], [i]*len(spike_times[i]), c=color, s=0.5, marker='|')
+
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Neuron Index')
+ax.set_title('Spike Raster')
+ax.set_xlim([0, T])
+
+# Population rate
+bin_size = 5
+n_bins = int(T / bin_size)
+pop_rate = np.zeros(n_bins)
+exc_rate = np.zeros(n_bins)
+inh_rate = np.zeros(n_bins)
+
+for i, st in enumerate(spike_times):
+    for t in st:
+        bin_idx = min(int(t / bin_size), n_bins - 1)
+        pop_rate[bin_idx] += 1
+        if is_exc[i]:
+            exc_rate[bin_idx] += 1
+        else:
+            inh_rate[bin_idx] += 1
+
+pop_rate = pop_rate / N * 1000 / bin_size
+exc_rate = exc_rate / N_exc * 1000 / bin_size
+inh_rate = inh_rate / N_inh * 1000 / bin_size
+
+t_bins = np.arange(0, T, bin_size)
+ax = axes[0, 1]
+ax.plot(t_bins, pop_rate, 'k-', linewidth=1, label='Total')
+ax.plot(t_bins, exc_rate, 'b-', linewidth=1, alpha=0.7, label='Exc')
+ax.plot(t_bins, inh_rate, 'r-', linewidth=1, alpha=0.7, label='Inh')
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Rate (Hz)')
+ax.set_title('Population Activity')
+ax.legend(fontsize=8)
+ax.grid(True, alpha=0.3)
+
+# Firing rate distribution
+firing_rates = [len(st) / (T / 1000) for st in spike_times]
+mean_rate = np.mean(firing_rates)
+
+ax = axes[0, 2]
+ax.hist(firing_rates, bins=30, alpha=0.7, color='green', edgecolor='black')
+ax.axvline(mean_rate, color='r', linewidth=2, label=f'Mean: {mean_rate:.1f} Hz')
+ax.set_xlabel('Firing Rate (Hz)')
+ax.set_ylabel('Count')
+ax.set_title('Rate Distribution')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# ISI distribution
+all_isis = []
+for st in spike_times:
+    if len(st) > 1:
+        all_isis.extend(np.diff(st))
+
+ax = axes[1, 0]
+if len(all_isis) > 0:
+    ax.hist(all_isis, bins=50, alpha=0.7, color='purple', edgecolor='black')
+    cv_isi = np.std(all_isis) / np.mean(all_isis)
+    ax.axvline(np.mean(all_isis), color='r', linewidth=2)
+ax.set_xlabel('ISI (ms)')
+ax.set_ylabel('Count')
+ax.set_title(f'ISI Distribution (CV={cv_isi:.2f})')
+ax.grid(True, alpha=0.3)
+
+# Cross-correlogram
+ax = axes[1, 1]
+# Select two excitatory neurons with spikes
+active_exc = [i for i in range(N_exc) if len(spike_times[i]) > 10]
+if len(active_exc) >= 2:
+    st1 = np.array(spike_times[active_exc[0]])
+    st2 = np.array(spike_times[active_exc[1]])
+
+    lags = np.arange(-50, 51, 1)
+    cc = np.zeros(len(lags))
+    for i, lag in enumerate(lags):
+        for t1 in st1:
+            cc[i] += np.sum(np.abs(st2 - t1 - lag) < 0.5)
+
+    ax.bar(lags, cc, width=1, color='#3498db', alpha=0.7)
+    ax.set_xlabel('Lag (ms)')
+    ax.set_ylabel('Coincidences')
+    ax.set_title('Cross-Correlogram')
+    ax.grid(True, alpha=0.3)
+
+# Power spectrum of population activity
+ax = axes[1, 2]
+f_pop, psd_pop = signal.welch(pop_rate, fs=1000/bin_size, nperseg=len(pop_rate)//2)
+ax.semilogy(f_pop, psd_pop, 'k-', linewidth=1.5)
+ax.set_xlabel('Frequency (Hz)')
+ax.set_ylabel('Power')
+ax.set_title('Population Power Spectrum')
+ax.grid(True, alpha=0.3, which='both')
+ax.set_xlim([0, 100])
+
+plt.tight_layout()
+plt.savefig('snn_activity.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+rate_exc = np.mean([firing_rates[i] for i in range(N_exc)])
+rate_inh = np.mean([firing_rates[i] for i in range(N_exc, N)])
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{snn_activity.pdf}
+\caption{Network activity: (a) raster, (b) population rate, (c) rate distribution, (d) ISI, (e) cross-correlogram, (f) power spectrum.}
+\end{figure}
+
+\chapter{Synchronization Analysis}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(14, 8))
+
+# Synchrony measure (population spike count variance)
+sync_window = 5  # ms
+n_sync_bins = int(T / sync_window)
+spike_counts = np.zeros(n_sync_bins)
+
+for st in spike_times:
+    for t in st:
+        bin_idx = min(int(t / sync_window), n_sync_bins - 1)
+        spike_counts[bin_idx] += 1
+
+fano_factor = np.var(spike_counts) / np.mean(spike_counts) if np.mean(spike_counts) > 0 else 0
+
+ax = axes[0, 0]
+ax.hist(spike_counts, bins=30, alpha=0.7, color='orange', edgecolor='black')
+ax.axvline(np.mean(spike_counts), color='r', linewidth=2, label=f'FF={fano_factor:.2f}')
+ax.set_xlabel('Spikes per bin')
+ax.set_ylabel('Count')
+ax.set_title('Spike Count Distribution')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Membrane potential traces
+ax = axes[0, 1]
+sample_neurons = [0, N_exc//2, N_exc, N_exc + N_inh//2]
+t_plot = np.arange(0, T, dt)
+for i, n in enumerate(sample_neurons[:3]):
+    label = 'Exc' if n < N_exc else 'Inh'
+    color = '#3498db' if n < N_exc else '#e74c3c'
+    ax.plot(t_plot[:1000], V_record[n, :1000] - i*30, color=color, linewidth=0.5, label=label)
+
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('$V_m$ (offset)')
+ax.set_title('Membrane Potentials')
+ax.set_xlim([0, 100])
+ax.grid(True, alpha=0.3)
+
+# E/I balance
+ax = axes[0, 2]
+t_balance = t_bins[10:]
+ei_ratio = exc_rate[10:] / (inh_rate[10:] + 1)
+ax.plot(t_balance, ei_ratio, 'g-', linewidth=1)
+ax.axhline(N_exc/N_inh, color='r', linestyle='--', alpha=0.5, label='Expected')
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('E/I Rate Ratio')
+ax.set_title('Excitation-Inhibition Balance')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Input-output curves
+ax = axes[1, 0]
+I_test = np.linspace(5, 30, 10)
+rates_test = []
+
+for I in I_test:
+    V_test = V_rest * np.ones(20)
+    spikes_test = 0
+    for _ in range(int(500/dt)):
+        dV = dt / tau_m * (-(V_test - V_rest) + R_m * I)
+        V_test += dV
+        spiked = V_test >= V_th
+        spikes_test += np.sum(spiked)
+        V_test[spiked] = V_reset
+    rates_test.append(spikes_test / 20 / 0.5)
+
+ax.plot(I_test, rates_test, 'ko-', markersize=6)
+ax.set_xlabel('Input Current ($\\mu$A/cm$^2$)')
+ax.set_ylabel('Firing Rate (Hz)')
+ax.set_title('Single Neuron F-I Curve')
+ax.grid(True, alpha=0.3)
+
+# Pairwise correlations
+ax = axes[1, 1]
+n_pairs = 50
+correlations = []
+for _ in range(n_pairs):
+    i, j = np.random.choice(N_exc, 2, replace=False)
+    if len(spike_times[i]) > 5 and len(spike_times[j]) > 5:
+        # Simple correlation measure
+        bins_ij = np.arange(0, T, 10)
+        counts_i = np.histogram(spike_times[i], bins=bins_ij)[0]
+        counts_j = np.histogram(spike_times[j], bins=bins_ij)[0]
+        if np.std(counts_i) > 0 and np.std(counts_j) > 0:
+            corr = np.corrcoef(counts_i, counts_j)[0, 1]
+            correlations.append(corr)
+
+if len(correlations) > 0:
+    ax.hist(correlations, bins=20, alpha=0.7, color='#9b59b6', edgecolor='black')
+    ax.axvline(np.mean(correlations), color='r', linewidth=2)
+ax.set_xlabel('Correlation')
+ax.set_ylabel('Count')
+ax.set_title('Pairwise Spike Correlations')
+ax.grid(True, alpha=0.3)
+
+mean_corr = np.mean(correlations) if len(correlations) > 0 else 0
+
+# Connectivity matrix visualization
+ax = axes[1, 2]
+im = ax.imshow(W[:50, :50], cmap='RdBu', aspect='auto', vmin=-2, vmax=2)
+ax.set_xlabel('Presynaptic')
+ax.set_ylabel('Postsynaptic')
+ax.set_title('Weight Matrix (50x50)')
+plt.colorbar(im, ax=ax)
+
+plt.tight_layout()
+plt.savefig('snn_sync.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{snn_sync.pdf}
+\caption{Synchronization: (a) spike counts, (b) membrane traces, (c) E/I balance, (d) F-I curve, (e) correlations, (f) connectivity.}
+\end{figure}
+
+\chapter{Numerical Results}
+
+\begin{pycode}
+results_table = [
+    ('Network size', f'{N}', 'neurons'),
+    ('Mean firing rate', f'{mean_rate:.1f}', 'Hz'),
+    ('Excitatory rate', f'{rate_exc:.1f}', 'Hz'),
+    ('Inhibitory rate', f'{rate_inh:.1f}', 'Hz'),
+    ('ISI CV', f'{cv_isi:.2f}', ''),
+    ('Mean pairwise correlation', f'{mean_corr:.3f}', ''),
+]
+\end{pycode}
+
+\begin{table}[htbp]
+\centering
+\caption{Spiking network results}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parameter & Value & Units \\
+\midrule
+\py{results_table[0][0]} & \py{results_table[0][1]} & \py{results_table[0][2]} \\
+\py{results_table[1][0]} & \py{results_table[1][1]} & \py{results_table[1][2]} \\
+\py{results_table[2][0]} & \py{results_table[2][1]} & \py{results_table[2][2]} \\
+\py{results_table[3][0]} & \py{results_table[3][1]} & \py{results_table[3][2]} \\
+\py{results_table[4][0]} & \py{results_table[4][1]} & \py{results_table[4][2]} \\
+\py{results_table[5][0]} & \py{results_table[5][1]} & \py{results_table[5][2]} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Conclusions}
+
+\begin{enumerate}
+    \item Balanced E/I maintains stable asynchronous activity
+    \item ISI CV near 1 indicates irregular Poisson-like firing
+    \item Sparse connectivity produces weak correlations
+    \item Population oscillations emerge from network interactions
+    \item Inhibition shapes temporal precision of excitation
+    \item LIF networks capture essential cortical dynamics
+\end{enumerate}
+
+\end{document}

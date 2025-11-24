@@ -1,0 +1,395 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{algorithm2e}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments for technical report style
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{remark}{Remark}
+
+\title{Aerodynamic Lift Analysis: From Thin Airfoil Theory to Computational Modeling\\
+\large Multi-Airfoil Comparison with Reynolds Number Effects}
+\author{Aerospace Engineering Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents a comprehensive analysis of aerodynamic lift characteristics for various airfoil configurations. We examine lift coefficient behavior as a function of angle of attack across multiple NACA airfoil series, investigate Reynolds number effects on boundary layer transition, and compute optimal flight conditions for maximum aerodynamic efficiency. The analysis includes thin airfoil theory validation, stall modeling, and drag polar construction for performance envelope determination.
+\end{abstract}
+
+\section{Introduction}
+Aerodynamic forces are fundamental to aircraft design and performance optimization. The lift coefficient $C_L$ determines an aircraft's ability to generate the force necessary for flight, while the drag coefficient $C_D$ represents the resistance to motion through the fluid. Understanding the relationship between these coefficients and flight conditions is essential for efficient aircraft design.
+
+\begin{definition}[Lift Coefficient]
+The lift coefficient is a dimensionless quantity relating lift force to dynamic pressure and reference area:
+\begin{equation}
+C_L = \frac{L}{\frac{1}{2}\rho V^2 S}
+\end{equation}
+where $L$ is lift force, $\rho$ is air density, $V$ is freestream velocity, and $S$ is the reference wing area.
+\end{definition}
+
+\section{Mathematical Framework}
+
+\subsection{Thin Airfoil Theory}
+For incompressible, inviscid flow over a thin airfoil, the lift coefficient varies linearly with angle of attack:
+\begin{equation}
+C_L = C_{L_\alpha}(\alpha - \alpha_{L=0})
+\end{equation}
+where $C_{L_\alpha} = 2\pi$ rad$^{-1}$ is the lift curve slope and $\alpha_{L=0}$ is the zero-lift angle of attack.
+
+\begin{theorem}[Kutta-Joukowski]
+The lift per unit span on a two-dimensional airfoil is given by:
+\begin{equation}
+L' = \rho V \Gamma
+\end{equation}
+where $\Gamma$ is the circulation around the airfoil.
+\end{theorem}
+
+\subsection{Drag Polar}
+The total drag coefficient consists of parasitic and induced components:
+\begin{equation}
+C_D = C_{D_0} + \frac{C_L^2}{\pi e AR}
+\end{equation}
+where $C_{D_0}$ is zero-lift drag, $e$ is the Oswald efficiency factor, and $AR$ is the aspect ratio.
+
+\subsection{Reynolds Number Effects}
+The Reynolds number characterizes the flow regime:
+\begin{equation}
+Re = \frac{\rho V c}{\mu} = \frac{V c}{\nu}
+\end{equation}
+Higher Reynolds numbers promote earlier boundary layer transition, affecting both lift curve slope and maximum lift coefficient.
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Define multiple NACA airfoils with different characteristics
+airfoils = {
+    'NACA 0012': {'camber': 0.0, 'thickness': 0.12, 'Cl_alpha': 5.73, 'alpha_0': 0.0, 'Cd_0': 0.006, 'Cl_max': 1.5},
+    'NACA 2412': {'camber': 0.02, 'thickness': 0.12, 'Cl_alpha': 5.90, 'alpha_0': -2.0, 'Cd_0': 0.007, 'Cl_max': 1.6},
+    'NACA 4412': {'camber': 0.04, 'thickness': 0.12, 'Cl_alpha': 6.05, 'alpha_0': -4.0, 'Cd_0': 0.008, 'Cl_max': 1.7},
+    'NACA 6412': {'camber': 0.06, 'thickness': 0.12, 'Cl_alpha': 6.15, 'alpha_0': -5.5, 'Cd_0': 0.010, 'Cl_max': 1.75}
+}
+
+# Angle of attack range
+alpha_deg = np.linspace(-8, 22, 150)
+
+# Function to compute lift coefficient with stall
+def compute_Cl(alpha_deg, params, Re_factor=1.0):
+    alpha_rad = np.deg2rad(alpha_deg)
+    alpha_0_rad = np.deg2rad(params['alpha_0'])
+
+    # Linear region
+    Cl_linear = params['Cl_alpha'] * (alpha_rad - alpha_0_rad)
+
+    # Stall modeling with smooth transition
+    stall_alpha = 14.0 * Re_factor  # Stall angle increases with Re
+    Cl_max = params['Cl_max'] * Re_factor
+
+    # Smooth stall using tanh transition
+    stall_sharpness = 0.5
+    alpha_diff = alpha_deg - stall_alpha
+    stall_factor = 0.5 * (1 - np.tanh(stall_sharpness * alpha_diff))
+    post_stall = Cl_max * np.exp(-0.08 * np.maximum(0, alpha_diff))
+
+    Cl = stall_factor * np.minimum(Cl_linear, Cl_max) + (1 - stall_factor) * post_stall
+    return Cl
+
+# Function to compute drag coefficient
+def compute_Cd(Cl, params, AR=8, e=0.85):
+    Cd_0 = params['Cd_0']
+    Cd_induced = Cl**2 / (np.pi * e * AR)
+    return Cd_0 + Cd_induced
+
+# Compute for all airfoils
+results = {}
+for name, params in airfoils.items():
+    Cl = compute_Cl(alpha_deg, params)
+    Cd = compute_Cd(Cl, params)
+    L_D = np.where(Cd > 0, Cl / Cd, 0)
+
+    # Find key points
+    max_ld_idx = np.argmax(L_D)
+    max_Cl_idx = np.argmax(Cl)
+
+    results[name] = {
+        'Cl': Cl, 'Cd': Cd, 'L_D': L_D,
+        'max_ld': L_D[max_ld_idx], 'alpha_max_ld': alpha_deg[max_ld_idx],
+        'Cl_max': Cl[max_Cl_idx], 'alpha_stall': alpha_deg[max_Cl_idx]
+    }
+
+# Reynolds number study for NACA 2412
+Re_numbers = [1e5, 5e5, 1e6, 5e6]
+Re_factors = [0.85, 0.92, 1.0, 1.05]
+Re_results = {}
+for Re, factor in zip(Re_numbers, Re_factors):
+    Cl = compute_Cl(alpha_deg, airfoils['NACA 2412'], factor)
+    Re_results[Re] = Cl
+
+# Aspect ratio study
+aspect_ratios = [4, 6, 8, 10, 12]
+AR_results = {}
+Cl_ref = compute_Cl(alpha_deg, airfoils['NACA 2412'])
+for AR in aspect_ratios:
+    Cd = compute_Cd(Cl_ref, airfoils['NACA 2412'], AR=AR)
+    L_D = np.where(Cd > 0, Cl_ref / Cd, 0)
+    AR_results[AR] = {'Cd': Cd, 'L_D': L_D, 'max_ld': np.max(L_D)}
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(14, 12))
+
+# Plot 1: Lift curves for all airfoils
+ax1 = fig.add_subplot(2, 3, 1)
+colors = plt.cm.viridis(np.linspace(0, 0.8, len(airfoils)))
+for (name, res), color in zip(results.items(), colors):
+    ax1.plot(alpha_deg, res['Cl'], linewidth=2, color=color, label=name)
+ax1.axhline(y=0, color='k', linewidth=0.5)
+ax1.axvline(x=0, color='k', linewidth=0.5)
+ax1.set_xlabel(r'Angle of Attack $\alpha$ (degrees)')
+ax1.set_ylabel(r'Lift Coefficient $C_L$')
+ax1.set_title('Lift Curves: NACA Airfoil Comparison')
+ax1.legend(fontsize=8, loc='lower right')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(-8, 22)
+
+# Plot 2: Drag polars
+ax2 = fig.add_subplot(2, 3, 2)
+for (name, res), color in zip(results.items(), colors):
+    ax2.plot(res['Cd'], res['Cl'], linewidth=2, color=color, label=name)
+ax2.set_xlabel(r'Drag Coefficient $C_D$')
+ax2.set_ylabel(r'Lift Coefficient $C_L$')
+ax2.set_title('Drag Polars')
+ax2.legend(fontsize=8, loc='lower right')
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Lift-to-Drag ratio
+ax3 = fig.add_subplot(2, 3, 3)
+for (name, res), color in zip(results.items(), colors):
+    ax3.plot(alpha_deg, res['L_D'], linewidth=2, color=color, label=name)
+    ax3.plot(res['alpha_max_ld'], res['max_ld'], 'o', color=color, markersize=6)
+ax3.set_xlabel(r'Angle of Attack $\alpha$ (degrees)')
+ax3.set_ylabel(r'Lift-to-Drag Ratio $L/D$')
+ax3.set_title('Aerodynamic Efficiency')
+ax3.legend(fontsize=8, loc='upper right')
+ax3.grid(True, alpha=0.3)
+ax3.set_xlim(-8, 22)
+
+# Plot 4: Reynolds number effects
+ax4 = fig.add_subplot(2, 3, 4)
+Re_colors = plt.cm.plasma(np.linspace(0.2, 0.8, len(Re_numbers)))
+for Re, color in zip(Re_numbers, Re_colors):
+    ax4.plot(alpha_deg, Re_results[Re], linewidth=2, color=color,
+             label=f'$Re = {Re:.0e}$')
+ax4.set_xlabel(r'Angle of Attack $\alpha$ (degrees)')
+ax4.set_ylabel(r'Lift Coefficient $C_L$')
+ax4.set_title('Reynolds Number Effects (NACA 2412)')
+ax4.legend(fontsize=8, loc='lower right')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Aspect ratio effect on L/D
+ax5 = fig.add_subplot(2, 3, 5)
+AR_colors = plt.cm.cool(np.linspace(0.2, 0.8, len(aspect_ratios)))
+for AR, color in zip(aspect_ratios, AR_colors):
+    ax5.plot(alpha_deg, AR_results[AR]['L_D'], linewidth=2, color=color,
+             label=f'$AR = {AR}$')
+ax5.set_xlabel(r'Angle of Attack $\alpha$ (degrees)')
+ax5.set_ylabel(r'Lift-to-Drag Ratio $L/D$')
+ax5.set_title('Aspect Ratio Effects on Efficiency')
+ax5.legend(fontsize=8, loc='upper right')
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Summary bar chart
+ax6 = fig.add_subplot(2, 3, 6)
+names = list(results.keys())
+max_lds = [results[n]['max_ld'] for n in names]
+stall_angles = [results[n]['alpha_stall'] for n in names]
+
+x = np.arange(len(names))
+width = 0.35
+
+bars1 = ax6.bar(x - width/2, max_lds, width, label=r'$(L/D)_{max}$', color='steelblue', alpha=0.8)
+ax6_twin = ax6.twinx()
+bars2 = ax6_twin.bar(x + width/2, stall_angles, width, label=r'$\alpha_{stall}$', color='coral', alpha=0.8)
+
+ax6.set_xlabel('Airfoil')
+ax6.set_ylabel(r'$(L/D)_{max}$', color='steelblue')
+ax6_twin.set_ylabel(r'Stall Angle (deg)', color='coral')
+ax6.set_xticks(x)
+ax6.set_xticklabels([n.replace('NACA ', '') for n in names], rotation=45)
+ax6.set_title('Performance Summary')
+ax6.legend(loc='upper left', fontsize=8)
+ax6_twin.legend(loc='upper right', fontsize=8)
+
+plt.tight_layout()
+plt.savefig('aerodynamic_lift_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{aerodynamic_lift_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Extract key results for reporting
+best_airfoil = max(results.items(), key=lambda x: x[1]['max_ld'])
+best_name = best_airfoil[0]
+best_ld = best_airfoil[1]['max_ld']
+best_alpha = best_airfoil[1]['alpha_max_ld']
+\end{pycode}
+
+\section{Computational Algorithm}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{Airfoil parameters, angle of attack range $\alpha$, Reynolds number $Re$}
+\KwOut{Lift coefficient $C_L$, drag coefficient $C_D$, aerodynamic efficiency $L/D$}
+\tcc{Linear lift region}
+$C_L \leftarrow C_{L_\alpha}(\alpha - \alpha_{L=0})$\;
+\tcc{Stall modeling}
+\If{$\alpha > \alpha_{stall}$}{
+    $C_L \leftarrow C_{L_{max}} \exp(-k(\alpha - \alpha_{stall}))$\;
+}
+\tcc{Drag computation}
+$C_{D_i} \leftarrow C_L^2 / (\pi e \cdot AR)$\;
+$C_D \leftarrow C_{D_0} + C_{D_i}$\;
+\tcc{Efficiency}
+$L/D \leftarrow C_L / C_D$\;
+\Return{$C_L, C_D, L/D$}
+\caption{Aerodynamic Coefficient Computation}
+\end{algorithm}
+
+\section{Results and Discussion}
+
+\subsection{Airfoil Comparison}
+
+\begin{pycode}
+# Generate results table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Aerodynamic Performance Summary for NACA Airfoils}')
+print(r'\begin{tabular}{lcccccc}')
+print(r'\toprule')
+print(r'Airfoil & $C_{L_{max}}$ & $\alpha_{stall}$ & $(L/D)_{max}$ & $\alpha_{(L/D)_{max}}$ & $C_{D_0}$ & $\alpha_{L=0}$ \\')
+print(r' & & (deg) & & (deg) & & (deg) \\')
+print(r'\midrule')
+for name in airfoils.keys():
+    params = airfoils[name]
+    res = results[name]
+    print(f"{name} & {res['Cl_max']:.2f} & {res['alpha_stall']:.1f} & {res['max_ld']:.1f} & {res['alpha_max_ld']:.1f} & {params['Cd_0']:.4f} & {params['alpha_0']:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+The \py{best_name} airfoil achieves the highest lift-to-drag ratio of \py{f"{best_ld:.1f}"} at an angle of attack of \py{f"{best_alpha:.1f}"}$^\circ$.
+
+\subsection{Effect of Camber}
+
+\begin{remark}[Camber Effects]
+Increasing camber shifts the lift curve upward, providing positive lift at zero geometric angle of attack. This is beneficial for takeoff and landing but increases zero-lift drag. The NACA 6412 provides the highest $C_{L_{max}}$ but at the cost of increased parasitic drag.
+\end{remark}
+
+\subsection{Reynolds Number Sensitivity}
+
+Higher Reynolds numbers result in:
+\begin{itemize}
+    \item Delayed boundary layer transition
+    \item Higher maximum lift coefficient
+    \item Increased stall angle
+    \item Reduced skin friction drag
+\end{itemize}
+
+\subsection{Aspect Ratio Analysis}
+
+\begin{pycode}
+# Aspect ratio table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Effect of Aspect Ratio on Maximum L/D}')
+print(r'\begin{tabular}{cc}')
+print(r'\toprule')
+print(r'Aspect Ratio & $(L/D)_{max}$ \\')
+print(r'\midrule')
+for AR in aspect_ratios:
+    print(f"{AR} & {AR_results[AR]['max_ld']:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\begin{theorem}[Aspect Ratio Scaling]
+For a given airfoil profile, the maximum lift-to-drag ratio scales approximately as:
+\begin{equation}
+\left(\frac{L}{D}\right)_{max} \propto \sqrt{AR}
+\end{equation}
+This explains why high-performance sailplanes use very high aspect ratio wings ($AR > 20$).
+\end{theorem}
+
+\section{Design Implications}
+
+\subsection{Flight Regime Selection}
+\begin{itemize}
+    \item \textbf{Maximum Range}: Fly at $(L/D)_{max}$, typically $\alpha \approx 4-6^\circ$
+    \item \textbf{Maximum Endurance}: Fly at minimum power required, $\alpha$ slightly higher
+    \item \textbf{Climb}: Higher $\alpha$ for maximum excess thrust
+    \item \textbf{Cruise}: Balance between speed and efficiency
+\end{itemize}
+
+\subsection{Stall Considerations}
+The stall characteristics are critical for flight safety:
+\begin{itemize}
+    \item Symmetric airfoils (NACA 0012) have abrupt stall
+    \item Cambered airfoils provide gentler stall warning
+    \item Washout (wing twist) ensures tip stalls after root
+\end{itemize}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Two-dimensional}: Does not account for 3D effects like tip vortices
+    \item \textbf{Incompressible}: Invalid for Mach numbers $> 0.3$
+    \item \textbf{Steady flow}: Does not capture dynamic stall or unsteady effects
+    \item \textbf{Inviscid core}: Boundary layer effects approximated empirically
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Panel methods for accurate pressure distribution
+    \item XFOIL analysis for viscous boundary layer effects
+    \item CFD simulation for compressibility and 3D effects
+    \item Wind tunnel validation of computed coefficients
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrates the fundamental relationships governing aerodynamic performance. Key findings include:
+\begin{itemize}
+    \item Cambered airfoils provide higher $C_{L_{max}}$ at the expense of increased drag
+    \item The \py{best_name} offers the best overall efficiency with $(L/D)_{max} = \py{f"{best_ld:.1f}"}$
+    \item Aspect ratio is the dominant factor in induced drag reduction
+    \item Reynolds number effects are significant below $Re = 10^6$
+\end{itemize}
+
+The computational methods presented provide a foundation for preliminary aircraft design and performance analysis.
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Anderson, J. D. (2017). \textit{Fundamentals of Aerodynamics}. McGraw-Hill.
+    \item Abbott, I. H., \& Von Doenhoff, A. E. (1959). \textit{Theory of Wing Sections}. Dover.
+    \item Drela, M. (1989). XFOIL: An analysis and design system for low Reynolds number airfoils.
+\end{itemize}
+
+\end{document}

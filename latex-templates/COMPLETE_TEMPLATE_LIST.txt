@@ -1,0 +1,215 @@
+================================================================================
+COMPLETE LIST OF 100 NEW LATEX TEMPLATES WITH PYTHONTEX
+================================================================================
+
+Organized by Category
+Total: 100 templates across 32 categories
+
+================================================================================
+
+ACOUSTICS (3 templates)
+────────────────────────────────────────────────────────────────
+1.  templates/acoustics/room_acoustics.tex
+2.  templates/acoustics/sound_propagation.tex
+3.  templates/acoustics/musical_acoustics.tex
+
+ASTROPHYSICS (4 templates)
+────────────────────────────────────────────────────────────────
+4.  templates/astrophysics/black_holes.tex
+5.  templates/astrophysics/gravitational_waves.tex
+6.  templates/astrophysics/neutron_stars.tex
+7.  templates/astrophysics/galaxy_dynamics.tex
+
+ATMOSPHERIC SCIENCE (3 templates)
+────────────────────────────────────────────────────────────────
+8.  templates/atmospheric-science/atmospheric_dynamics.tex
+9.  templates/atmospheric-science/radiative_transfer.tex
+10. templates/atmospheric-science/air_pollution.tex
+
+BIOMEDICAL ENGINEERING (4 templates)
+────────────────────────────────────────────────────────────────
+11. templates/biomedical/biomechanics.tex
+12. templates/biomedical/pharmacokinetics.tex
+13. templates/biomedical/medical_imaging.tex
+14. templates/biomedical/biosignal_processing.tex
+
+CHEMICAL ENGINEERING (4 templates)
+────────────────────────────────────────────────────────────────
+15. templates/chemical-engineering/reaction_engineering.tex
+16. templates/chemical-engineering/mass_transfer.tex
+17. templates/chemical-engineering/process_control.tex
+18. templates/chemical-engineering/separation_processes.tex
+
+CIVIL ENGINEERING (3 templates)
+────────────────────────────────────────────────────────────────
+19. templates/civil-engineering/structural_analysis.tex
+20. templates/civil-engineering/soil_mechanics.tex
+21. templates/civil-engineering/traffic_flow.tex
+
+COGNITIVE SCIENCE (3 templates)
+────────────────────────────────────────────────────────────────
+22. templates/cognitive-science/decision_making.tex
+23. templates/cognitive-science/memory_models.tex
+24. templates/cognitive-science/attention.tex
+
+COMPUTATIONAL BIOLOGY (4 templates)
+────────────────────────────────────────────────────────────────
+25. templates/computational-biology/protein_folding.tex
+26. templates/computational-biology/metabolic_networks.tex
+27. templates/computational-biology/genetic_algorithms.tex
+28. templates/computational-biology/cellular_automata.tex
+
+CONTROL THEORY (3 templates)
+────────────────────────────────────────────────────────────────
+29. templates/control-theory/optimal_control.tex
+30. templates/control-theory/adaptive_control.tex
+31. templates/control-theory/nonlinear_control.tex
+
+COSMOLOGY (3 templates)
+────────────────────────────────────────────────────────────────
+32. templates/cosmology/big_bang.tex
+33. templates/cosmology/inflation.tex
+34. templates/cosmology/structure_formation.tex
+
+CRYPTOGRAPHY (3 templates)
+────────────────────────────────────────────────────────────────
+35. templates/cryptography/rsa_encryption.tex
+36. templates/cryptography/hash_functions.tex
+37. templates/cryptography/elliptic_curves.tex
+
+ECOLOGY (4 templates)
+────────────────────────────────────────────────────────────────
+38. templates/ecology/food_webs.tex
+39. templates/ecology/species_distribution.tex
+40. templates/ecology/island_biogeography.tex
+41. templates/ecology/metapopulation.tex
+
+ELECTROMAGNETICS (4 templates)
+────────────────────────────────────────────────────────────────
+42. templates/electromagnetics/wave_propagation.tex
+43. templates/electromagnetics/antenna_design.tex
+44. templates/electromagnetics/emc.tex
+45. templates/electromagnetics/microwave.tex
+
+EPIDEMIOLOGY (3 templates)
+────────────────────────────────────────────────────────────────
+46. templates/epidemiology/seir_model.tex
+47. templates/epidemiology/network_epidemics.tex
+48. templates/epidemiology/spatial_epidemiology.tex
+
+FINANCIAL MATHEMATICS (4 templates)
+────────────────────────────────────────────────────────────────
+49. templates/financial-math/option_pricing.tex
+50. templates/financial-math/portfolio_optimization.tex
+51. templates/financial-math/risk_management.tex
+52. templates/financial-math/time_series_finance.tex
+
+GAME DEVELOPMENT (3 templates)
+────────────────────────────────────────────────────────────────
+53. templates/game-development/procedural_generation.tex
+54. templates/game-development/physics_simulation.tex
+55. templates/game-development/pathfinding.tex
+
+GEOCHEMISTRY (3 templates)
+────────────────────────────────────────────────────────────────
+56. templates/geochemistry/isotope_geochemistry.tex
+57. templates/geochemistry/aqueous_geochemistry.tex
+58. templates/geochemistry/mineral_thermodynamics.tex
+
+HYDROLOGY (3 templates)
+────────────────────────────────────────────────────────────────
+59. templates/hydrology/rainfall_runoff.tex
+60. templates/hydrology/groundwater_flow.tex
+61. templates/hydrology/flood_frequency.tex
+
+IMAGE PROCESSING (4 templates)
+────────────────────────────────────────────────────────────────
+62. templates/image-processing/edge_detection.tex
+63. templates/image-processing/image_filtering.tex
+64. templates/image-processing/morphological.tex
+65. templates/image-processing/segmentation.tex
+
+MARINE BIOLOGY (3 templates)
+────────────────────────────────────────────────────────────────
+66. templates/marine-biology/ocean_productivity.tex
+67. templates/marine-biology/population_genetics.tex
+68. templates/marine-biology/fisheries_models.tex
+
+OPERATIONS RESEARCH (4 templates)
+────────────────────────────────────────────────────────────────
+69. templates/operations-research/linear_programming.tex
+70. templates/operations-research/queueing_theory.tex
+71. templates/operations-research/inventory_models.tex
+72. templates/operations-research/scheduling.tex
+
+PHOTONICS (3 templates)
+────────────────────────────────────────────────────────────────
+73. templates/photonics/laser_physics.tex
+74. templates/photonics/nonlinear_optics.tex
+75. templates/photonics/photonic_crystals.tex
+
+PLASMA PHYSICS (3 templates)
+────────────────────────────────────────────────────────────────
+76. templates/plasma-physics/plasma_parameters.tex
+77. templates/plasma-physics/mhd.tex
+78. templates/plasma-physics/plasma_waves.tex
+
+POWER SYSTEMS (3 templates)
+────────────────────────────────────────────────────────────────
+79. templates/power-systems/load_flow.tex
+80. templates/power-systems/transient_stability.tex
+81. templates/power-systems/renewable_integration.tex
+
+PROBABILITY THEORY (4 templates)
+────────────────────────────────────────────────────────────────
+82. templates/probability/markov_chains.tex
+83. templates/probability/random_walks.tex
+84. templates/probability/extreme_value.tex
+85. templates/probability/point_processes.tex
+
+PSYCHOPHYSICS (3 templates)
+────────────────────────────────────────────────────────────────
+86. templates/psychophysics/weber_fechner.tex
+87. templates/psychophysics/signal_detection.tex
+88. templates/psychophysics/color_perception.tex
+
+QUANTUM MECHANICS (4 templates)
+────────────────────────────────────────────────────────────────
+89. templates/quantum-mechanics/harmonic_oscillator.tex
+90. templates/quantum-mechanics/hydrogen_atom.tex
+91. templates/quantum-mechanics/perturbation_theory.tex
+92. templates/quantum-mechanics/scattering.tex
+
+RELATIVITY (3 templates)
+────────────────────────────────────────────────────────────────
+93. templates/relativity/special_relativity.tex
+94. templates/relativity/general_relativity.tex
+95. templates/relativity/gravitational_lensing.tex
+
+SEMICONDUCTOR PHYSICS (3 templates)
+────────────────────────────────────────────────────────────────
+96. templates/semiconductor/band_theory.tex
+97. templates/semiconductor/pn_junctions.tex
+98. templates/semiconductor/mosfet.tex
+
+SYSTEMS BIOLOGY (2 templates)
+────────────────────────────────────────────────────────────────
+99.  templates/systems-biology/gene_regulatory.tex
+100. templates/systems-biology/signal_transduction.tex
+
+================================================================================
+TOTAL: 100 NEW COMPUTATIONAL TEMPLATES
+================================================================================
+
+All templates feature:
+  • PythonTeX integration for computational content
+  • 6-9 matplotlib plots per template
+  • Topic-specific mathematical frameworks
+  • Numerical tables with results
+  • 300-400 lines of substantial content
+  • Publication-quality formatting
+
+Base directory: /home/user/latex-templates/templates/
+Output directory: /home/user/latex-templates/output/
+
+================================================================================

@@ -1,0 +1,315 @@
+% Musical Acoustics Analysis
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{pythontex}
+\usepackage{hyperref}
+\usepackage{float}
+
+\title{Musical Acoustics\\Harmonic Analysis and Instrument Modeling}
+\author{Music Technology Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Computational analysis of musical acoustics including harmonic series, string vibrations, wind instrument resonances, and psychoacoustic phenomena.
+\end{abstract}
+
+\section{Introduction}
+
+Musical instruments produce sound through vibrating systems generating harmonic spectra.
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import sawtooth, square
+from scipy.fft import fft, fftfreq
+plt.rcParams['text.usetex'] = True
+plt.rcParams['font.family'] = 'serif'
+
+c = 343
+fs = 44100
+\end{pycode}
+
+\section{Harmonic Series}
+
+$f_n = n f_1$
+
+\begin{pycode}
+f1 = 110
+n_harmonics = 16
+harmonics = np.arange(1, n_harmonics + 1) * f1
+
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.bar(range(1, n_harmonics + 1), harmonics, color='steelblue')
+ax.set_xlabel('Harmonic Number')
+ax.set_ylabel('Frequency (Hz)')
+ax.set_title(f'Harmonic Series of A2 ({f1} Hz)')
+ax.grid(True, alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig('harmonic_series.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{harmonic_series.pdf}
+\caption{Harmonic series for 110 Hz fundamental.}
+\end{figure}
+
+\section{String Vibration Modes}
+
+\begin{pycode}
+L = 0.65
+T = 70
+mu = 0.00531
+f1_string = (1 / (2 * L)) * np.sqrt(T / mu)
+
+x = np.linspace(0, L, 500)
+modes = [1, 2, 3, 4, 5]
+
+fig, axes = plt.subplots(len(modes), 1, figsize=(10, 8), sharex=True)
+for ax, n in zip(axes, modes):
+    y = np.sin(n * np.pi * x / L)
+    ax.plot(x * 100, y, 'b-', linewidth=1.5)
+    ax.fill_between(x * 100, y, alpha=0.3)
+    ax.set_ylabel(f'Mode {n}')
+    ax.axhline(y=0, color='k', linewidth=0.5)
+    fn = n * f1_string
+    ax.text(0.98, 0.8, f'$f_{n}$ = {fn:.1f} Hz', transform=ax.transAxes, ha='right')
+axes[-1].set_xlabel('Position (cm)')
+plt.tight_layout()
+plt.savefig('string_modes.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{string_modes.pdf}
+\caption{String vibration mode shapes.}
+\end{figure}
+
+\section{Waveform Synthesis}
+
+\begin{pycode}
+duration = 0.02
+t = np.linspace(0, duration, int(fs * duration))
+f0 = 220
+
+waveforms = {
+    'Sine': np.sin(2 * np.pi * f0 * t),
+    'Triangle': sawtooth(2 * np.pi * f0 * t, 0.5),
+    'Sawtooth': sawtooth(2 * np.pi * f0 * t),
+    'Square': square(2 * np.pi * f0 * t)
+}
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+for ax, (name, wave) in zip(axes.flatten(), waveforms.items()):
+    ax.plot(t * 1000, wave, 'b-', linewidth=1)
+    ax.set_xlabel('Time (ms)')
+    ax.set_ylabel('Amplitude')
+    ax.set_title(f'{name} Wave')
+    ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('waveforms.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{waveforms.pdf}
+\caption{Musical waveform types.}
+\end{figure}
+
+\section{Spectral Analysis}
+
+\begin{pycode}
+duration_fft = 0.1
+t_fft = np.linspace(0, duration_fft, int(fs * duration_fft))
+N = len(t_fft)
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+waveforms_fft = {
+    'Sine': np.sin(2 * np.pi * f0 * t_fft),
+    'Triangle': sawtooth(2 * np.pi * f0 * t_fft, 0.5),
+    'Sawtooth': sawtooth(2 * np.pi * f0 * t_fft),
+    'Square': square(2 * np.pi * f0 * t_fft)
+}
+
+for ax, (name, wave) in zip(axes.flatten(), waveforms_fft.items()):
+    yf = np.abs(fft(wave))[:N//2]
+    xf = fftfreq(N, 1/fs)[:N//2]
+    yf = yf / np.max(yf)
+    ax.plot(xf, yf, 'b-', linewidth=0.8)
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('Magnitude')
+    ax.set_title(f'{name} Spectrum')
+    ax.set_xlim([0, 3000])
+plt.tight_layout()
+plt.savefig('spectra.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{spectra.pdf}
+\caption{Frequency spectra showing harmonic content.}
+\end{figure}
+
+\section{Pipe Resonances}
+
+\begin{pycode}
+L_pipe = 0.5
+n_res = 8
+f_open = np.array([n * c / (2 * L_pipe) for n in range(1, n_res + 1)])
+f_closed = np.array([(2*n - 1) * c / (4 * L_pipe) for n in range(1, n_res + 1)])
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+ax1.bar(range(1, n_res + 1), f_open, color='forestgreen')
+ax1.set_xlabel('Mode')
+ax1.set_ylabel('Frequency (Hz)')
+ax1.set_title('Open Pipe')
+
+ax2.bar(range(1, n_res + 1), f_closed, color='darkorange')
+ax2.set_xlabel('Mode')
+ax2.set_ylabel('Frequency (Hz)')
+ax2.set_title('Closed Pipe')
+plt.tight_layout()
+plt.savefig('pipe_resonances.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{pipe_resonances.pdf}
+\caption{Pipe resonance frequencies.}
+\end{figure}
+
+\section{Beating Phenomenon}
+
+\begin{pycode}
+f1_beat, f2_beat = 440, 443
+beat_freq = abs(f1_beat - f2_beat)
+duration_beat = 1.0
+t_beat = np.linspace(0, duration_beat, int(fs * duration_beat))
+
+y1 = np.cos(2 * np.pi * f1_beat * t_beat)
+y2 = np.cos(2 * np.pi * f2_beat * t_beat)
+y_sum = y1 + y2
+
+fig, axes = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
+axes[0].plot(t_beat, y1, 'b-', linewidth=0.5)
+axes[0].set_ylabel('$f_1$ = 440 Hz')
+axes[1].plot(t_beat, y2, 'r-', linewidth=0.5)
+axes[1].set_ylabel('$f_2$ = 443 Hz')
+axes[2].plot(t_beat, y_sum, 'g-', linewidth=0.5)
+axes[2].set_ylabel('Sum')
+axes[2].set_xlabel('Time (s)')
+for ax in axes:
+    ax.set_xlim([0, 0.5])
+plt.tight_layout()
+plt.savefig('beating.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{beating.pdf}
+\caption{Beating with \py{beat_freq} Hz beat frequency.}
+\end{figure}
+
+\section{Tuning Systems}
+
+\begin{pycode}
+intervals = ['Unison', 'Minor 2nd', 'Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th', 'Tritone', 'Perfect 5th']
+equal_temp = [2**(i/12) for i in range(8)]
+just_int = [1, 16/15, 9/8, 6/5, 5/4, 4/3, 45/32, 3/2]
+cents_diff = [1200 * np.log2(j/e) if e != 0 else 0 for j, e in zip(just_int, equal_temp)]
+
+fig, ax = plt.subplots(figsize=(12, 6))
+x = np.arange(len(intervals))
+width = 0.35
+ax.bar(x - width/2, equal_temp, width, label='Equal Temperament')
+ax.bar(x + width/2, just_int, width, label='Just Intonation')
+ax.set_xlabel('Interval')
+ax.set_ylabel('Frequency Ratio')
+ax.set_title('Tuning Systems Comparison')
+ax.set_xticks(x)
+ax.set_xticklabels(intervals, rotation=45, ha='right')
+ax.legend()
+plt.tight_layout()
+plt.savefig('tuning_comparison.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{tuning_comparison.pdf}
+\caption{Tuning system comparison.}
+\end{figure}
+
+\section{ADSR Envelope}
+
+\begin{pycode}
+attack, decay, sustain_level, sustain_time, release = 0.05, 0.1, 0.7, 0.3, 0.2
+t_env = np.linspace(0, attack + decay + sustain_time + release, 1000)
+envelope = np.zeros_like(t_env)
+
+for i, t in enumerate(t_env):
+    if t < attack:
+        envelope[i] = t / attack
+    elif t < attack + decay:
+        envelope[i] = 1 - (1 - sustain_level) * (t - attack) / decay
+    elif t < attack + decay + sustain_time:
+        envelope[i] = sustain_level
+    else:
+        envelope[i] = sustain_level * (1 - (t - attack - decay - sustain_time) / release)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.plot(t_env * 1000, envelope, 'b-', linewidth=2)
+ax.fill_between(t_env * 1000, envelope, alpha=0.3)
+ax.set_xlabel('Time (ms)')
+ax.set_ylabel('Amplitude')
+ax.set_title('ADSR Envelope')
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('adsr_envelope.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{adsr_envelope.pdf}
+\caption{ADSR amplitude envelope.}
+\end{figure}
+
+\section{Results}
+
+\begin{pycode}
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Tuning Comparison}')
+print(r'\begin{tabular}{@{}lccc@{}}')
+print(r'\toprule')
+print(r'Interval & Equal Temp & Just Int & Diff (cents) \\')
+print(r'\midrule')
+for i in range(len(intervals)):
+    print(f"{intervals[i]} & {equal_temp[i]:.4f} & {just_int[i]:.4f} & {cents_diff[i]:.1f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Conclusions}
+
+This analysis covers fundamental musical acoustics including harmonic generation, vibration modes, and tuning systems.
+
+\end{document}

@@ -1,0 +1,641 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[makestderr]{pythontex}
+
+\title{Computer Science: Graph Algorithms and Network Analysis}
+\author{Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document presents a comprehensive analysis of fundamental graph algorithms including shortest path algorithms (Dijkstra, Bellman-Ford, Floyd-Warshall), minimum spanning trees (Prim, Kruskal), graph traversal (BFS, DFS), and network flow algorithms. We implement these algorithms in Python and analyze their time complexity, correctness, and practical applications in network routing, social network analysis, and optimization problems.
+\end{abstract}
+
+\section{Introduction}
+Graph algorithms are fundamental to computer science and find applications in networking, social media analysis, logistics, and artificial intelligence. This analysis covers both theoretical foundations and practical implementations of key algorithms for path finding, tree construction, and network analysis.
+
+\section{Mathematical Framework}
+
+\subsection{Graph Representation}
+A graph $G = (V, E)$ consists of vertices $V$ and edges $E$. For weighted graphs, each edge $(u, v)$ has weight $w(u, v)$.
+
+\subsection{Dijkstra's Algorithm}
+For non-negative edge weights, Dijkstra's algorithm computes shortest paths:
+\begin{equation}
+d[v] = \min_{u \in \text{adj}(v)} \{d[u] + w(u, v)\}
+\end{equation}
+
+Time complexity: $O((V + E) \log V)$ with priority queue.
+
+\subsection{Bellman-Ford Algorithm}
+Handles negative weights and detects negative cycles:
+\begin{equation}
+d^{(k)}[v] = \min_{u} \{d^{(k-1)}[v], d^{(k-1)}[u] + w(u, v)\}
+\end{equation}
+
+Time complexity: $O(VE)$.
+
+\subsection{Minimum Spanning Tree}
+For a connected weighted graph, MST minimizes total edge weight:
+\begin{equation}
+\text{MST}(G) = \arg\min_{T \subset E} \sum_{(u,v) \in T} w(u, v)
+\end{equation}
+
+subject to $T$ forming a spanning tree.
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from collections import defaultdict
+import heapq
+import time
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Store results
+results = {}
+
+# Graph class for algorithms
+class Graph:
+    def __init__(self, n_vertices):
+        self.V = n_vertices
+        self.adj = defaultdict(list)
+        self.edges = []
+
+    def add_edge(self, u, v, w):
+        self.adj[u].append((v, w))
+        self.adj[v].append((u, w))
+        self.edges.append((w, u, v))
+
+    def get_adjacency_matrix(self):
+        matrix = np.zeros((self.V, self.V))
+        for u in self.adj:
+            for v, w in self.adj[u]:
+                matrix[u][v] = w
+        return matrix
+
+# Generate random graph
+n_nodes = 10
+g = Graph(n_nodes)
+pos = np.random.rand(n_nodes, 2)
+
+# Create connected graph with random edges
+for i in range(n_nodes - 1):
+    w = np.linalg.norm(pos[i] - pos[i+1]) * 10
+    g.add_edge(i, i+1, round(w, 1))
+
+# Add additional edges
+for _ in range(8):
+    i, j = np.random.choice(n_nodes, 2, replace=False)
+    if j not in [v for v, _ in g.adj[i]]:
+        w = np.linalg.norm(pos[i] - pos[j]) * 10
+        g.add_edge(i, j, round(w, 1))
+\end{pycode}
+
+\subsection{Dijkstra's Algorithm Implementation}
+
+\begin{pycode}
+def dijkstra(graph, start):
+    """Dijkstra's algorithm with priority queue"""
+    dist = {v: float('inf') for v in range(graph.V)}
+    prev = {v: None for v in range(graph.V)}
+    dist[start] = 0
+    visited = set()
+    pq = [(0, start)]
+
+    while pq:
+        d, u = heapq.heappop(pq)
+        if u in visited:
+            continue
+        visited.add(u)
+
+        for v, w in graph.adj[u]:
+            if v not in visited:
+                new_dist = dist[u] + w
+                if new_dist < dist[v]:
+                    dist[v] = new_dist
+                    prev[v] = u
+                    heapq.heappush(pq, (new_dist, v))
+
+    return dist, prev
+
+def get_path(prev, start, end):
+    """Reconstruct path from predecessors"""
+    path = []
+    current = end
+    while current is not None:
+        path.append(current)
+        current = prev[current]
+    return path[::-1] if path[-1] == start else []
+
+# Run Dijkstra from node 0
+start_node = 0
+end_node = n_nodes - 1
+t_start = time.time()
+distances, predecessors = dijkstra(g, start_node)
+dijkstra_time = (time.time() - t_start) * 1000
+
+shortest_path = get_path(predecessors, start_node, end_node)
+path_length = distances[end_node]
+
+results['dijkstra_time'] = dijkstra_time
+results['path_length'] = path_length
+results['path_nodes'] = len(shortest_path)
+\end{pycode}
+
+\subsection{Bellman-Ford Algorithm}
+
+\begin{pycode}
+def bellman_ford(graph, start):
+    """Bellman-Ford algorithm for shortest paths"""
+    dist = {v: float('inf') for v in range(graph.V)}
+    prev = {v: None for v in range(graph.V)}
+    dist[start] = 0
+
+    # Relax edges V-1 times
+    for _ in range(graph.V - 1):
+        for w, u, v in graph.edges:
+            if dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+                prev[v] = u
+            if dist[v] + w < dist[u]:
+                dist[u] = dist[v] + w
+                prev[u] = v
+
+    # Check for negative cycles
+    has_negative_cycle = False
+    for w, u, v in graph.edges:
+        if dist[u] + w < dist[v]:
+            has_negative_cycle = True
+            break
+
+    return dist, prev, has_negative_cycle
+
+t_start = time.time()
+bf_distances, bf_prev, negative_cycle = bellman_ford(g, start_node)
+bellman_ford_time = (time.time() - t_start) * 1000
+
+results['bellman_ford_time'] = bellman_ford_time
+results['has_negative_cycle'] = negative_cycle
+\end{pycode}
+
+\subsection{Minimum Spanning Tree - Prim's Algorithm}
+
+\begin{pycode}
+def prim_mst(graph):
+    """Prim's algorithm for MST"""
+    mst_edges = []
+    visited = set([0])
+    edges = [(w, 0, v) for v, w in graph.adj[0]]
+    heapq.heapify(edges)
+    total_weight = 0
+
+    while edges and len(visited) < graph.V:
+        w, u, v = heapq.heappop(edges)
+        if v in visited:
+            continue
+        visited.add(v)
+        mst_edges.append((u, v, w))
+        total_weight += w
+
+        for next_v, next_w in graph.adj[v]:
+            if next_v not in visited:
+                heapq.heappush(edges, (next_w, v, next_v))
+
+    return mst_edges, total_weight
+
+t_start = time.time()
+mst_edges, mst_weight = prim_mst(g)
+prim_time = (time.time() - t_start) * 1000
+
+results['prim_time'] = prim_time
+results['mst_weight'] = mst_weight
+results['mst_edges'] = len(mst_edges)
+\end{pycode}
+
+\subsection{Kruskal's Algorithm}
+
+\begin{pycode}
+class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank = [0] * n
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        px, py = self.find(x), self.find(y)
+        if px == py:
+            return False
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+        return True
+
+def kruskal_mst(graph):
+    """Kruskal's algorithm for MST"""
+    uf = UnionFind(graph.V)
+    mst_edges = []
+    total_weight = 0
+
+    # Sort edges by weight
+    sorted_edges = sorted(graph.edges)
+
+    for w, u, v in sorted_edges:
+        if uf.union(u, v):
+            mst_edges.append((u, v, w))
+            total_weight += w
+            if len(mst_edges) == graph.V - 1:
+                break
+
+    return mst_edges, total_weight
+
+t_start = time.time()
+kruskal_edges, kruskal_weight = kruskal_mst(g)
+kruskal_time = (time.time() - t_start) * 1000
+
+results['kruskal_time'] = kruskal_time
+\end{pycode}
+
+\subsection{Graph Traversal: BFS and DFS}
+
+\begin{pycode}
+def bfs(graph, start):
+    """Breadth-first search"""
+    visited = []
+    queue = [start]
+    seen = {start}
+
+    while queue:
+        u = queue.pop(0)
+        visited.append(u)
+        for v, _ in graph.adj[u]:
+            if v not in seen:
+                seen.add(v)
+                queue.append(v)
+
+    return visited
+
+def dfs(graph, start):
+    """Depth-first search"""
+    visited = []
+    stack = [start]
+    seen = set()
+
+    while stack:
+        u = stack.pop()
+        if u not in seen:
+            seen.add(u)
+            visited.append(u)
+            for v, _ in graph.adj[u]:
+                if v not in seen:
+                    stack.append(v)
+
+    return visited
+
+bfs_order = bfs(g, 0)
+dfs_order = dfs(g, 0)
+
+results['bfs_order'] = bfs_order
+results['dfs_order'] = dfs_order
+\end{pycode}
+
+\subsection{Visualization of Graph Algorithms}
+
+\begin{pycode}
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+def draw_graph(ax, pos, edges, title, highlight_edges=None, highlight_path=None):
+    # Draw all edges
+    for u in range(n_nodes):
+        for v, w in g.adj[u]:
+            if u < v:
+                ax.plot([pos[u, 0], pos[v, 0]], [pos[u, 1], pos[v, 1]],
+                        'gray', linewidth=1, alpha=0.3)
+
+    # Highlight specific edges
+    if highlight_edges:
+        for u, v, w in highlight_edges:
+            ax.plot([pos[u, 0], pos[v, 0]], [pos[u, 1], pos[v, 1]],
+                    'g-', linewidth=3, alpha=0.8)
+
+    # Highlight path
+    if highlight_path:
+        for i in range(len(highlight_path) - 1):
+            u, v = highlight_path[i], highlight_path[i+1]
+            ax.plot([pos[u, 0], pos[v, 0]], [pos[u, 1], pos[v, 1]],
+                    'r-', linewidth=3, zorder=4)
+
+    # Draw nodes
+    for i in range(n_nodes):
+        color = 'lightblue'
+        if highlight_path and i in highlight_path:
+            color = 'lightcoral'
+        ax.scatter(pos[i, 0], pos[i, 1], s=400, c=color, edgecolors='black', zorder=5)
+        ax.text(pos[i, 0], pos[i, 1], str(i), ha='center', va='center', fontsize=10, fontweight='bold')
+
+    ax.set_title(title)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_aspect('equal')
+
+# Original graph with shortest path
+draw_graph(axes[0, 0], pos, g.edges, f'Dijkstra Shortest Path (Cost: {path_length:.1f})',
+           highlight_path=shortest_path)
+
+# Minimum Spanning Tree (Prim)
+draw_graph(axes[0, 1], pos, g.edges, f"Prim's MST (Weight: {mst_weight:.1f})",
+           highlight_edges=mst_edges)
+
+# MST with Kruskal
+draw_graph(axes[0, 2], pos, g.edges, f"Kruskal's MST (Weight: {kruskal_weight:.1f})",
+           highlight_edges=kruskal_edges)
+
+# Distance comparison
+ax3 = axes[1, 0]
+nodes = list(range(n_nodes))
+dijkstra_dists = [distances[i] for i in nodes]
+bf_dists = [bf_distances[i] for i in nodes]
+x_pos = np.arange(n_nodes)
+width = 0.35
+ax3.bar(x_pos - width/2, dijkstra_dists, width, label='Dijkstra', alpha=0.7)
+ax3.bar(x_pos + width/2, bf_dists, width, label='Bellman-Ford', alpha=0.7)
+ax3.set_xlabel('Node')
+ax3.set_ylabel('Distance from Source')
+ax3.set_title('Shortest Path Distances')
+ax3.legend()
+ax3.grid(True, alpha=0.3)
+
+# BFS vs DFS order
+ax4 = axes[1, 1]
+ax4.plot(range(n_nodes), bfs_order, 'bo-', label='BFS', linewidth=2, markersize=8)
+ax4.plot(range(n_nodes), dfs_order, 'rs-', label='DFS', linewidth=2, markersize=8)
+ax4.set_xlabel('Visit Order')
+ax4.set_ylabel('Node ID')
+ax4.set_title('BFS vs DFS Traversal Order')
+ax4.legend()
+ax4.grid(True, alpha=0.3)
+
+# Adjacency matrix
+ax5 = axes[1, 2]
+adj_matrix = g.get_adjacency_matrix()
+im = ax5.imshow(adj_matrix, cmap='YlOrRd')
+plt.colorbar(im, ax=ax5, label='Edge Weight')
+ax5.set_xlabel('Node')
+ax5.set_ylabel('Node')
+ax5.set_title('Adjacency Matrix')
+
+plt.tight_layout()
+plt.savefig('graph_algorithms_main.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{graph_algorithms_main.pdf}')
+print(r'\caption{Graph algorithm results: (a) Dijkstra shortest path, (b) Prim MST, (c) Kruskal MST, (d) distance comparison, (e) traversal order, (f) adjacency matrix.}')
+print(r'\label{fig:main}')
+print(r'\end{figure}')
+plt.close()
+\end{pycode}
+
+\subsection{Algorithm Complexity Analysis}
+
+\begin{pycode}
+# Compare algorithm performance across different graph sizes
+graph_sizes = [10, 20, 50, 100, 200]
+dijkstra_times = []
+bellman_times = []
+prim_times = []
+kruskal_times = []
+
+for n in graph_sizes:
+    # Create random graph
+    test_g = Graph(n)
+    test_pos = np.random.rand(n, 2)
+
+    # Ensure connectivity
+    for i in range(n - 1):
+        w = np.linalg.norm(test_pos[i] - test_pos[i+1]) * 10
+        test_g.add_edge(i, i+1, round(w, 1))
+
+    # Add random edges
+    for _ in range(n):
+        i, j = np.random.choice(n, 2, replace=False)
+        if j not in [v for v, _ in test_g.adj[i]]:
+            w = np.linalg.norm(test_pos[i] - test_pos[j]) * 10
+            test_g.add_edge(i, j, round(w, 1))
+
+    # Time Dijkstra
+    t0 = time.time()
+    dijkstra(test_g, 0)
+    dijkstra_times.append((time.time() - t0) * 1000)
+
+    # Time Bellman-Ford
+    t0 = time.time()
+    bellman_ford(test_g, 0)
+    bellman_times.append((time.time() - t0) * 1000)
+
+    # Time Prim
+    t0 = time.time()
+    prim_mst(test_g)
+    prim_times.append((time.time() - t0) * 1000)
+
+    # Time Kruskal
+    t0 = time.time()
+    kruskal_mst(test_g)
+    kruskal_times.append((time.time() - t0) * 1000)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Shortest path algorithms
+ax1 = axes[0]
+ax1.plot(graph_sizes, dijkstra_times, 'b-o', linewidth=2, label='Dijkstra')
+ax1.plot(graph_sizes, bellman_times, 'r-s', linewidth=2, label='Bellman-Ford')
+ax1.set_xlabel('Number of Vertices')
+ax1.set_ylabel('Time (ms)')
+ax1.set_title('Shortest Path Algorithm Comparison')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# MST algorithms
+ax2 = axes[1]
+ax2.plot(graph_sizes, prim_times, 'g-o', linewidth=2, label="Prim's")
+ax2.plot(graph_sizes, kruskal_times, 'm-s', linewidth=2, label="Kruskal's")
+ax2.set_xlabel('Number of Vertices')
+ax2.set_ylabel('Time (ms)')
+ax2.set_title('MST Algorithm Comparison')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('graph_algorithms_complexity.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{graph_algorithms_complexity.pdf}')
+print(r'\caption{Algorithm complexity comparison: (a) shortest path algorithms, (b) MST algorithms.}')
+print(r'\label{fig:complexity}')
+print(r'\end{figure}')
+plt.close()
+
+results['dijkstra_200'] = dijkstra_times[-1]
+results['bellman_200'] = bellman_times[-1]
+results['prim_200'] = prim_times[-1]
+results['kruskal_200'] = kruskal_times[-1]
+\end{pycode}
+
+\subsection{Graph Connectivity Analysis}
+
+\begin{pycode}
+# Analyze graph properties
+def graph_metrics(graph):
+    """Calculate various graph metrics"""
+    # Degree distribution
+    degrees = [len(graph.adj[v]) for v in range(graph.V)]
+
+    # Clustering coefficient
+    clustering = []
+    for v in range(graph.V):
+        neighbors = [u for u, _ in graph.adj[v]]
+        if len(neighbors) < 2:
+            clustering.append(0)
+            continue
+        edges_between = 0
+        for i, u1 in enumerate(neighbors):
+            for u2 in neighbors[i+1:]:
+                if u2 in [n for n, _ in graph.adj[u1]]:
+                    edges_between += 1
+        max_edges = len(neighbors) * (len(neighbors) - 1) / 2
+        clustering.append(edges_between / max_edges if max_edges > 0 else 0)
+
+    return degrees, clustering
+
+degrees, clustering = graph_metrics(g)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Degree distribution
+ax1 = axes[0]
+ax1.bar(range(n_nodes), degrees, alpha=0.7, color='steelblue', edgecolor='black')
+ax1.axhline(y=np.mean(degrees), color='r', linestyle='--', label=f'Mean: {np.mean(degrees):.1f}')
+ax1.set_xlabel('Node')
+ax1.set_ylabel('Degree')
+ax1.set_title('Node Degree Distribution')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Clustering coefficient
+ax2 = axes[1]
+ax2.bar(range(n_nodes), clustering, alpha=0.7, color='coral', edgecolor='black')
+ax2.axhline(y=np.mean(clustering), color='b', linestyle='--', label=f'Mean: {np.mean(clustering):.2f}')
+ax2.set_xlabel('Node')
+ax2.set_ylabel('Clustering Coefficient')
+ax2.set_title('Local Clustering Coefficients')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('graph_algorithms_metrics.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{figure}[H]')
+print(r'\centering')
+print(r'\includegraphics[width=\textwidth]{graph_algorithms_metrics.pdf}')
+print(r'\caption{Graph metrics: (a) degree distribution, (b) clustering coefficients.}')
+print(r'\label{fig:metrics}')
+print(r'\end{figure}')
+plt.close()
+
+results['mean_degree'] = np.mean(degrees)
+results['mean_clustering'] = np.mean(clustering)
+results['n_edges'] = len(g.edges)
+\end{pycode}
+
+\section{Results and Discussion}
+
+\subsection{Shortest Path Results}
+
+\begin{table}[H]
+\centering
+\caption{Shortest Path Algorithm Performance}
+\label{tab:shortest}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Algorithm} & \textbf{Time (ms)} & \textbf{Complexity} & \textbf{Features} \\
+\midrule
+Dijkstra & \py{f"{results['dijkstra_time']:.3f}"} & $O((V+E)\log V)$ & Non-negative weights \\
+Bellman-Ford & \py{f"{results['bellman_ford_time']:.3f}"} & $O(VE)$ & Negative cycle detection \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Shortest path from node \py{start_node} to node \py{end_node}:
+\begin{itemize}
+    \item Path: \py{f"{' -> '.join(map(str, shortest_path))}"}
+    \item Total distance: \py{f"{results['path_length']:.2f}"}
+    \item Number of hops: \py{f"{results['path_nodes'] - 1}"}
+\end{itemize}
+
+\subsection{Minimum Spanning Tree Results}
+
+\begin{table}[H]
+\centering
+\caption{MST Algorithm Performance}
+\label{tab:mst}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Algorithm} & \textbf{Time (ms)} & \textbf{Complexity} & \textbf{MST Weight} \\
+\midrule
+Prim's & \py{f"{results['prim_time']:.3f}"} & $O(E \log V)$ & \py{f"{results['mst_weight']:.2f}"} \\
+Kruskal's & \py{f"{results['kruskal_time']:.3f}"} & $O(E \log E)$ & \py{f"{kruskal_weight:.2f}"} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Graph Properties}
+
+\begin{itemize}
+    \item Number of vertices: \py{f"{n_nodes}"}
+    \item Number of edges: \py{f"{results['n_edges']}"}
+    \item Mean degree: \py{f"{results['mean_degree']:.2f}"}
+    \item Mean clustering coefficient: \py{f"{results['mean_clustering']:.3f}"}
+    \item Negative cycle detected: \py{"Yes" if results['has_negative_cycle'] else "No"}
+\end{itemize}
+
+\subsection{Scalability Analysis}
+
+At 200 vertices:
+\begin{itemize}
+    \item Dijkstra: \py{f"{results['dijkstra_200']:.2f}"} ms
+    \item Bellman-Ford: \py{f"{results['bellman_200']:.2f}"} ms
+    \item Prim's MST: \py{f"{results['prim_200']:.2f}"} ms
+    \item Kruskal's MST: \py{f"{results['kruskal_200']:.2f}"} ms
+\end{itemize}
+
+\section{Conclusion}
+This analysis demonstrated fundamental graph algorithms with their implementations and complexity analysis. Key findings include:
+\begin{enumerate}
+    \item Dijkstra's algorithm is efficient for non-negative weights with $O((V+E)\log V)$ complexity
+    \item Bellman-Ford handles negative weights but has higher $O(VE)$ complexity
+    \item Both Prim's and Kruskal's algorithms produce identical MSTs with similar performance
+    \item BFS explores level-by-level while DFS goes deep first, affecting traversal order
+    \item Graph metrics like degree distribution and clustering coefficient characterize network structure
+\end{enumerate}
+
+These algorithms form the foundation for network analysis, routing protocols, and optimization in various domains.
+
+\end{document}

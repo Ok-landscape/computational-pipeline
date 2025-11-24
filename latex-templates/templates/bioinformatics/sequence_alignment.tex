@@ -1,0 +1,506 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Sequence Alignment: Dynamic Programming and Scoring Matrices\\
+\large Global and Local Alignment with Statistical Significance}
+\author{Computational Genomics Division\\Computational Science Templates}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This comprehensive analysis presents algorithms for pairwise sequence alignment. We implement the Needleman-Wunsch algorithm for global alignment and Smith-Waterman for local alignment using dynamic programming. The analysis covers scoring matrices (BLOSUM, PAM), gap penalties, traceback procedures, and statistical significance assessment. We demonstrate alignment on nucleotide and protein sequences, visualize scoring matrices, and evaluate alignment quality through comparison with random sequence distributions.
+\end{abstract}
+
+\section{Introduction}
+
+Sequence alignment is fundamental to bioinformatics, enabling comparison of DNA, RNA, and protein sequences to infer homology, identify conserved regions, and predict function. Optimal alignment algorithms use dynamic programming to efficiently find the best alignment among exponentially many possibilities.
+
+\begin{definition}[Sequence Alignment]
+An alignment of two sequences places them in a matrix to maximize similarity, allowing gaps (insertions/deletions) to optimize the correspondence. Each position is either a match, mismatch, or gap.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Global Alignment}
+
+\begin{theorem}[Needleman-Wunsch Algorithm]
+The optimal global alignment score is computed by the recurrence:
+\begin{equation}
+F(i,j) = \max\begin{cases}
+F(i-1, j-1) + s(a_i, b_j) & \text{(match/mismatch)}\\
+F(i-1, j) + d & \text{(gap in sequence B)}\\
+F(i, j-1) + d & \text{(gap in sequence A)}
+\end{cases}
+\end{equation}
+where $s(a_i, b_j)$ is the substitution score and $d$ is the gap penalty.
+\end{theorem}
+
+\subsection{Local Alignment}
+
+\begin{theorem}[Smith-Waterman Algorithm]
+Local alignment finds the best matching subsequences:
+\begin{equation}
+F(i,j) = \max\begin{cases}
+0 & \text{(restart)}\\
+F(i-1, j-1) + s(a_i, b_j)\\
+F(i-1, j) + d\\
+F(i, j-1) + d
+\end{cases}
+\end{equation}
+The key difference from global alignment is the zero option that allows starting fresh.
+\end{theorem}
+
+\subsection{Gap Penalties}
+
+\begin{definition}[Affine Gap Penalty]
+A more realistic gap model penalizes gap opening differently from extension:
+\begin{equation}
+\gamma(g) = d + (g-1) \cdot e
+\end{equation}
+where $d$ is the gap opening penalty and $e$ is the extension penalty.
+\end{definition}
+
+\begin{remark}[Typical Values]
+\begin{itemize}
+    \item Linear gap: $d = -2$ to $-8$
+    \item Affine: $d = -10$ to $-12$, $e = -1$ to $-2$
+\end{itemize}
+\end{remark}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif')
+
+np.random.seed(42)
+
+# Scoring matrices
+BLOSUM62 = {
+    ('A', 'A'): 4, ('A', 'R'): -1, ('A', 'N'): -2, ('A', 'D'): -2, ('A', 'C'): 0,
+    ('R', 'R'): 5, ('R', 'N'): 0, ('R', 'D'): -2, ('R', 'C'): -3,
+    ('N', 'N'): 6, ('N', 'D'): 1, ('N', 'C'): -3,
+    ('D', 'D'): 6, ('D', 'C'): -3,
+    ('C', 'C'): 9
+}
+
+# Simple scoring for nucleotides
+def score_nt(a, b, match=2, mismatch=-1):
+    return match if a == b else mismatch
+
+def score_aa(a, b, match=4, mismatch=-2):
+    """Simplified amino acid scoring"""
+    if a == b:
+        return match
+    # Some similar residues
+    similar = [('I', 'L'), ('I', 'V'), ('L', 'V'), ('F', 'Y'), ('D', 'E'), ('K', 'R')]
+    if (a, b) in similar or (b, a) in similar:
+        return 1
+    return mismatch
+
+def needleman_wunsch(seq1, seq2, score_func, gap=-2):
+    """Global alignment using Needleman-Wunsch"""
+    m, n = len(seq1), len(seq2)
+    F = np.zeros((m+1, n+1))
+    traceback = np.zeros((m+1, n+1), dtype=int)  # 0: diag, 1: up, 2: left
+
+    # Initialize
+    for i in range(m+1):
+        F[i, 0] = i * gap
+    for j in range(n+1):
+        F[0, j] = j * gap
+
+    # Fill matrix
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            match = F[i-1, j-1] + score_func(seq1[i-1], seq2[j-1])
+            delete = F[i-1, j] + gap
+            insert = F[i, j-1] + gap
+
+            F[i, j] = max(match, delete, insert)
+
+            if F[i, j] == match:
+                traceback[i, j] = 0
+            elif F[i, j] == delete:
+                traceback[i, j] = 1
+            else:
+                traceback[i, j] = 2
+
+    return F, traceback
+
+def smith_waterman(seq1, seq2, score_func, gap=-2):
+    """Local alignment using Smith-Waterman"""
+    m, n = len(seq1), len(seq2)
+    F = np.zeros((m+1, n+1))
+
+    max_score = 0
+    max_pos = (0, 0)
+
+    for i in range(1, m+1):
+        for j in range(1, n+1):
+            match = F[i-1, j-1] + score_func(seq1[i-1], seq2[j-1])
+            delete = F[i-1, j] + gap
+            insert = F[i, j-1] + gap
+            F[i, j] = max(0, match, delete, insert)
+
+            if F[i, j] > max_score:
+                max_score = F[i, j]
+                max_pos = (i, j)
+
+    return F, max_score, max_pos
+
+def get_alignment(seq1, seq2, traceback):
+    """Reconstruct alignment from traceback"""
+    align1, align2 = '', ''
+    i, j = len(seq1), len(seq2)
+
+    while i > 0 or j > 0:
+        if i > 0 and j > 0 and traceback[i, j] == 0:
+            align1 = seq1[i-1] + align1
+            align2 = seq2[j-1] + align2
+            i -= 1
+            j -= 1
+        elif i > 0 and (j == 0 or traceback[i, j] == 1):
+            align1 = seq1[i-1] + align1
+            align2 = '-' + align2
+            i -= 1
+        else:
+            align1 = '-' + align1
+            align2 = seq2[j-1] + align2
+            j -= 1
+
+    return align1, align2
+
+def calculate_identity(align1, align2):
+    """Calculate percent identity"""
+    matches = sum(1 for a, b in zip(align1, align2) if a == b and a != '-')
+    length = len(align1)
+    return matches / length * 100 if length > 0 else 0
+
+def dot_plot(seq1, seq2):
+    """Create dot plot matrix"""
+    m, n = len(seq1), len(seq2)
+    dot = np.zeros((m, n))
+    for i in range(m):
+        for j in range(n):
+            if seq1[i] == seq2[j]:
+                dot[i, j] = 1
+    return dot
+
+# Example sequences
+# DNA sequences
+dna1 = "AGTACGCATGC"
+dna2 = "TATGCATGAC"
+
+# Protein sequences
+prot1 = "HEAGAWGHEE"
+prot2 = "PAWHEAE"
+
+# Run alignments
+F_global_dna, tb_dna = needleman_wunsch(dna1, dna2, score_nt)
+F_local_dna, max_local_dna, pos_dna = smith_waterman(dna1, dna2, score_nt)
+align1_dna, align2_dna = get_alignment(dna1, dna2, tb_dna)
+
+F_global_prot, tb_prot = needleman_wunsch(prot1, prot2, score_aa)
+F_local_prot, max_local_prot, pos_prot = smith_waterman(prot1, prot2, score_aa)
+align1_prot, align2_prot = get_alignment(prot1, prot2, tb_prot)
+
+# Calculate statistics
+global_score_dna = F_global_dna[-1, -1]
+global_score_prot = F_global_prot[-1, -1]
+identity_dna = calculate_identity(align1_dna, align2_dna)
+identity_prot = calculate_identity(align1_prot, align2_prot)
+
+# Statistical significance
+n_random = 1000
+random_scores_dna = []
+random_scores_prot = []
+
+for _ in range(n_random):
+    rand_dna = ''.join(np.random.choice(['A', 'C', 'G', 'T'], len(dna2)))
+    rand_prot = ''.join(np.random.choice(list('ACDEFGHIKLMNPQRSTVWY'), len(prot2)))
+
+    F_rand, _ = needleman_wunsch(dna1, rand_dna, score_nt)
+    random_scores_dna.append(F_rand[-1, -1])
+
+    F_rand_p, _ = needleman_wunsch(prot1, rand_prot, score_aa)
+    random_scores_prot.append(F_rand_p[-1, -1])
+
+p_value_dna = np.sum(np.array(random_scores_dna) >= global_score_dna) / n_random
+p_value_prot = np.sum(np.array(random_scores_prot) >= global_score_prot) / n_random
+
+# Z-scores
+z_dna = (global_score_dna - np.mean(random_scores_dna)) / np.std(random_scores_dna)
+z_prot = (global_score_prot - np.mean(random_scores_prot)) / np.std(random_scores_prot)
+
+# E-value approximation (simplified)
+m, n = len(dna1), len(dna2)
+db_size = 1e6  # hypothetical database size
+lambda_param = 0.3  # typical value
+K_param = 0.1
+e_value_dna = K_param * m * db_size * np.exp(-lambda_param * global_score_dna)
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(14, 16))
+
+# Plot 1: Global alignment matrix (DNA)
+ax1 = fig.add_subplot(3, 3, 1)
+im1 = ax1.imshow(F_global_dna, cmap='viridis', aspect='auto')
+ax1.set_xlabel('Sequence 2 (DNA)')
+ax1.set_ylabel('Sequence 1 (DNA)')
+ax1.set_title(f'Global Alignment (Score: {global_score_dna:.0f})')
+ax1.set_xticks(range(len(dna2)+1))
+ax1.set_yticks(range(len(dna1)+1))
+ax1.set_xticklabels(['-'] + list(dna2), fontsize=7)
+ax1.set_yticklabels(['-'] + list(dna1), fontsize=7)
+plt.colorbar(im1, ax=ax1, shrink=0.8)
+
+# Plot 2: Local alignment matrix (DNA)
+ax2 = fig.add_subplot(3, 3, 2)
+im2 = ax2.imshow(F_local_dna, cmap='viridis', aspect='auto')
+ax2.plot(pos_dna[1], pos_dna[0], 'r*', markersize=15)
+ax2.set_xlabel('Sequence 2')
+ax2.set_ylabel('Sequence 1')
+ax2.set_title(f'Local Alignment (Max: {max_local_dna:.0f})')
+plt.colorbar(im2, ax=ax2, shrink=0.8)
+
+# Plot 3: Dot plot
+ax3 = fig.add_subplot(3, 3, 3)
+dot = dot_plot(dna1, dna2)
+ax3.imshow(dot, cmap='binary', aspect='auto')
+ax3.set_xlabel('Sequence 2')
+ax3.set_ylabel('Sequence 1')
+ax3.set_title('Dot Plot')
+ax3.set_xticks(range(len(dna2)))
+ax3.set_yticks(range(len(dna1)))
+ax3.set_xticklabels(list(dna2), fontsize=7)
+ax3.set_yticklabels(list(dna1), fontsize=7)
+
+# Plot 4: Score distribution (DNA)
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.hist(random_scores_dna, bins=30, alpha=0.7, color='steelblue', edgecolor='black', density=True)
+ax4.axvline(x=global_score_dna, color='red', linewidth=2, label=f'Score: {global_score_dna:.0f}')
+ax4.axvline(x=np.mean(random_scores_dna), color='green', linestyle='--', linewidth=2, label='Mean')
+ax4.set_xlabel('Alignment Score')
+ax4.set_ylabel('Density')
+ax4.set_title(f'Score Distribution (DNA, p={p_value_dna:.3f})')
+ax4.legend(fontsize=7)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Score distribution (Protein)
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.hist(random_scores_prot, bins=30, alpha=0.7, color='green', edgecolor='black', density=True)
+ax5.axvline(x=global_score_prot, color='red', linewidth=2, label=f'Score: {global_score_prot:.0f}')
+ax5.set_xlabel('Alignment Score')
+ax5.set_ylabel('Density')
+ax5.set_title(f'Score Distribution (Protein, p={p_value_prot:.3f})')
+ax5.legend(fontsize=7)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Global alignment matrix (Protein)
+ax6 = fig.add_subplot(3, 3, 6)
+im6 = ax6.imshow(F_global_prot, cmap='plasma', aspect='auto')
+ax6.set_xlabel('Sequence 2 (Protein)')
+ax6.set_ylabel('Sequence 1 (Protein)')
+ax6.set_title(f'Protein Alignment (Score: {global_score_prot:.0f})')
+ax6.set_xticks(range(len(prot2)+1))
+ax6.set_yticks(range(len(prot1)+1))
+ax6.set_xticklabels(['-'] + list(prot2), fontsize=7)
+ax6.set_yticklabels(['-'] + list(prot1), fontsize=7)
+plt.colorbar(im6, ax=ax6, shrink=0.8)
+
+# Plot 7: Gap penalty effect
+ax7 = fig.add_subplot(3, 3, 7)
+gap_penalties = [-1, -2, -4, -6, -8, -10]
+scores_by_gap = []
+for gap in gap_penalties:
+    F, _ = needleman_wunsch(dna1, dna2, score_nt, gap=gap)
+    scores_by_gap.append(F[-1, -1])
+
+ax7.plot(gap_penalties, scores_by_gap, 'bo-', linewidth=2, markersize=8)
+ax7.set_xlabel('Gap Penalty')
+ax7.set_ylabel('Alignment Score')
+ax7.set_title('Effect of Gap Penalty')
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Identity vs Length
+ax8 = fig.add_subplot(3, 3, 8)
+lengths = range(5, 101, 5)
+identities = []
+for L in lengths:
+    # Random sequences of length L
+    s1 = ''.join(np.random.choice(['A', 'C', 'G', 'T'], L))
+    s2 = ''.join(np.random.choice(['A', 'C', 'G', 'T'], L))
+    _, tb = needleman_wunsch(s1, s2, score_nt)
+    a1, a2 = get_alignment(s1, s2, tb)
+    identities.append(calculate_identity(a1, a2))
+
+ax8.plot(lengths, identities, 'g.-', linewidth=1)
+ax8.axhline(y=25, color='r', linestyle='--', alpha=0.7, label='Random (25\\%)')
+ax8.set_xlabel('Sequence Length')
+ax8.set_ylabel('Percent Identity')
+ax8.set_title('Random Alignment Identity')
+ax8.legend(fontsize=8)
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Scoring matrix heatmap (simplified BLOSUM)
+ax9 = fig.add_subplot(3, 3, 9)
+aas = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G']
+n_aa = len(aas)
+blosum_matrix = np.zeros((n_aa, n_aa))
+for i, a1 in enumerate(aas):
+    for j, a2 in enumerate(aas):
+        blosum_matrix[i, j] = score_aa(a1, a2)
+
+im9 = ax9.imshow(blosum_matrix, cmap='RdBu', aspect='auto', vmin=-4, vmax=4)
+ax9.set_xticks(range(n_aa))
+ax9.set_yticks(range(n_aa))
+ax9.set_xticklabels(aas)
+ax9.set_yticklabels(aas)
+ax9.set_title('Substitution Matrix')
+plt.colorbar(im9, ax=ax9, shrink=0.8)
+
+plt.tight_layout()
+plt.savefig('sequence_alignment_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{sequence_alignment_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Alignment Results}
+
+\begin{pycode}
+# Results table
+print(r'\begin{table}[h]')
+print(r'\centering')
+print(r'\caption{Sequence Alignment Results}')
+print(r'\begin{tabular}{lccccc}')
+print(r'\toprule')
+print(r'Alignment & Global Score & Local Score & Identity (\\%) & Z-score & p-value \\')
+print(r'\midrule')
+print(f"DNA & {global_score_dna:.0f} & {max_local_dna:.0f} & {identity_dna:.1f} & {z_dna:.2f} & {p_value_dna:.3f} \\\\")
+print(f"Protein & {global_score_prot:.0f} & {max_local_prot:.0f} & {identity_prot:.1f} & {z_prot:.2f} & {p_value_prot:.3f} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Sequence Details}
+
+\begin{example}[DNA Alignment]
+Sequences:
+\begin{itemize}
+    \item Sequence 1: \texttt{\py{f"{dna1}"}}
+    \item Sequence 2: \texttt{\py{f"{dna2}"}}
+    \item Aligned 1: \texttt{\py{f"{align1_dna}"}}
+    \item Aligned 2: \texttt{\py{f"{align2_dna}"}}
+\end{itemize}
+\end{example}
+
+\begin{example}[Protein Alignment]
+Sequences:
+\begin{itemize}
+    \item Sequence 1: \texttt{\py{f"{prot1}"}}
+    \item Sequence 2: \texttt{\py{f"{prot2}"}}
+    \item Aligned 1: \texttt{\py{f"{align1_prot}"}}
+    \item Aligned 2: \texttt{\py{f"{align2_prot}"}}
+\end{itemize}
+\end{example}
+
+\section{Statistical Significance}
+
+\subsection{Z-score and P-value}
+
+\begin{remark}[Significance Assessment]
+Alignment significance is evaluated by comparing to random sequences:
+\begin{itemize}
+    \item \textbf{Z-score}: Number of standard deviations above mean
+    \item \textbf{P-value}: Probability of score by chance
+    \item Z $>$ 5 typically indicates significant similarity
+    \item P $<$ 0.01 suggests true homology
+\end{itemize}
+\end{remark}
+
+\subsection{E-value}
+
+The expected number of alignments with score $\geq S$ by chance:
+\begin{equation}
+E = K \cdot m \cdot n \cdot e^{-\lambda S}
+\end{equation}
+
+\section{Scoring Matrices}
+
+\subsection{BLOSUM Series}
+
+BLOcks SUbstitution Matrices derived from aligned blocks:
+\begin{itemize}
+    \item BLOSUM62: Most widely used, 62\% identity threshold
+    \item BLOSUM80: For closely related sequences
+    \item BLOSUM45: For distantly related sequences
+\end{itemize}
+
+\subsection{PAM Series}
+
+Point Accepted Mutation matrices based on evolutionary models:
+\begin{itemize}
+    \item PAM1: 1\% expected mutations
+    \item PAM250: Distant relationships
+\end{itemize}
+
+\section{Limitations and Extensions}
+
+\subsection{Model Limitations}
+\begin{enumerate}
+    \item \textbf{Pairwise only}: No multiple sequence alignment
+    \item \textbf{Linear gap}: Affine penalties more realistic
+    \item \textbf{Global/local}: No semi-global option shown
+    \item \textbf{No profiles}: Sequence-to-sequence only
+\end{enumerate}
+
+\subsection{Possible Extensions}
+\begin{itemize}
+    \item Affine gap penalties
+    \item Multiple sequence alignment (ClustalW, MUSCLE)
+    \item Profile HMMs for remote homology
+    \item BLAST heuristics for database search
+\end{itemize}
+
+\section{Conclusion}
+
+This analysis demonstrates sequence alignment fundamentals:
+\begin{itemize}
+    \item Needleman-Wunsch provides optimal global alignment
+    \item Smith-Waterman finds best local similarities
+    \item DNA alignment: score = \py{f"{global_score_dna:.0f}"}, identity = \py{f"{identity_dna:.0f}"}\%
+    \item Protein alignment: score = \py{f"{global_score_prot:.0f}"}, identity = \py{f"{identity_prot:.0f}"}\%
+    \item Statistical significance evaluated by Z-score and p-value
+\end{itemize}
+
+\section*{Further Reading}
+\begin{itemize}
+    \item Durbin, R. et al. (1998). \textit{Biological Sequence Analysis}. Cambridge University Press.
+    \item Altschul, S. F. et al. (1990). Basic local alignment search tool. \textit{J. Mol. Biol.}, 215, 403-410.
+    \item Henikoff, S. \& Henikoff, J. G. (1992). Amino acid substitution matrices from protein blocks. \textit{PNAS}, 89, 10915-10919.
+\end{itemize}
+
+\end{document}

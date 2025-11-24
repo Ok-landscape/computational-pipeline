@@ -1,0 +1,418 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Gravity Anomaly Analysis: Forward Modeling and Inversion of Subsurface Density Structures}
+\author{Computational Geophysics Laboratory}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This technical report presents comprehensive computational analysis of gravity anomalies arising from subsurface density variations. We implement forward modeling for multiple geometric bodies including spheres, cylinders, and rectangular prisms, along with Bouguer and terrain corrections. The analysis demonstrates depth estimation using the half-width rule, Euler deconvolution for source parameter determination, and power spectrum analysis for estimating source depths. Applications include mineral exploration, basin analysis, and detection of near-surface voids.
+\end{abstract}
+
+\section{Theoretical Framework}
+
+\begin{definition}[Gravitational Potential]
+The gravitational potential $U$ at point $\mathbf{r}$ due to a mass distribution $\rho(\mathbf{r'})$ is:
+\begin{equation}
+U(\mathbf{r}) = G \int_V \frac{\rho(\mathbf{r'})}{|\mathbf{r} - \mathbf{r'}|} dV'
+\end{equation}
+where $G = 6.674 \times 10^{-11}$ m$^3$kg$^{-1}$s$^{-2}$ is the gravitational constant.
+\end{definition}
+
+\begin{theorem}[Poisson's Equation]
+In regions containing mass, the gravitational potential satisfies:
+\begin{equation}
+\nabla^2 U = -4\pi G \rho
+\end{equation}
+while in empty space, $\nabla^2 U = 0$ (Laplace's equation).
+\end{theorem}
+
+The vertical component of gravity acceleration is:
+\begin{equation}
+g_z = -\frac{\partial U}{\partial z}
+\end{equation}
+
+\subsection{Gravity Anomaly Corrections}
+
+The complete Bouguer anomaly requires several corrections:
+\begin{equation}
+\Delta g_B = g_{obs} - g_\phi + \delta g_{FA} - \delta g_B + \delta g_T
+\end{equation}
+
+\begin{itemize}
+    \item \textbf{Free-air correction}: $\delta g_{FA} = 0.3086h$ mGal (h in meters)
+    \item \textbf{Bouguer plate correction}: $\delta g_B = 0.04193\rho h$ mGal
+    \item \textbf{Terrain correction}: $\delta g_T$ accounts for deviations from infinite slab
+\end{itemize}
+
+\begin{example}[Sphere Anomaly]
+The gravity anomaly of a buried sphere with radius $R$, density contrast $\Delta\rho$, and center at depth $z_0$:
+\begin{equation}
+\Delta g_z(x) = \frac{4\pi G \Delta\rho R^3}{3} \frac{z_0}{(x^2 + z_0^2)^{3/2}}
+\end{equation}
+The half-width $x_{1/2}$ where anomaly falls to half its maximum: $z_0 = 1.305 x_{1/2}$
+\end{example}
+
+\section{Computational Analysis}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif', size=10)
+
+# Physical constants
+G = 6.674e-11  # m^3/kg/s^2
+mGal = 1e-5    # m/s^2
+
+# Forward modeling functions
+def sphere_anomaly(x, z0, R, delta_rho):
+    """Gravity anomaly of buried sphere (mGal)."""
+    return 4/3 * np.pi * G * delta_rho * R**3 * z0 / (x**2 + z0**2)**1.5 / mGal
+
+def cylinder_anomaly(x, z0, R, delta_rho):
+    """Gravity anomaly of horizontal infinite cylinder (mGal)."""
+    return 2 * np.pi * G * delta_rho * R**2 * z0 / (x**2 + z0**2) / mGal
+
+def prism_anomaly(x, z1, z2, x1, x2, delta_rho):
+    """2D gravity anomaly of rectangular prism (mGal)."""
+    def term(xi, zi):
+        r = np.sqrt((x - xi)**2 + zi**2)
+        theta = np.arctan2(zi, x - xi)
+        return zi * np.log(r) - (x - xi) * theta
+
+    result = term(x2, z2) - term(x1, z2) - term(x2, z1) + term(x1, z1)
+    return 2 * G * delta_rho * result / mGal
+
+# Profile parameters
+x = np.linspace(-3000, 3000, 301)  # meters
+
+# Multiple anomaly sources
+# Source 1: Deep ore body (sphere)
+z1, R1, drho1 = 800, 200, 2500  # depth, radius, density contrast
+g_sphere = sphere_anomaly(x, z1, R1, drho1)
+
+# Source 2: Shallow cavity (negative anomaly)
+z2, R2, drho2 = 50, 15, -1800  # air-filled cavity
+g_cavity = sphere_anomaly(x + 500, z2, R2, drho2)
+
+# Source 3: Buried channel (cylinder)
+z3, R3, drho3 = 150, 80, -500  # sediment-filled channel
+g_channel = cylinder_anomaly(x - 800, z3, R3, drho3)
+
+# Combined anomaly
+g_total = g_sphere + g_cavity + g_channel
+
+# Add realistic noise
+np.random.seed(42)
+noise = np.random.normal(0, 0.02, len(x))
+g_observed = g_total + noise
+
+# Bouguer correction example
+stations = np.arange(-2000, 2001, 500)
+elevation = 50 + 200 * np.exp(-(stations/800)**2)  # Topographic high
+rho_bouguer = 2670  # kg/m^3
+
+free_air = 0.3086 * elevation
+bouguer_plate = 0.04193 * rho_bouguer * elevation / 1000
+bouguer_anomaly = free_air - bouguer_plate
+
+# Terrain correction (simplified - cylindrical segments)
+terrain_corr = 0.02 * elevation**0.5  # Approximate
+
+# Half-width depth estimation
+max_idx = np.argmax(g_sphere)
+half_max = g_sphere[max_idx] / 2
+# Find half-width
+above_half = g_sphere > half_max
+transitions = np.diff(above_half.astype(int))
+left_idx = np.where(transitions == 1)[0][0] if np.any(transitions == 1) else 0
+right_idx = np.where(transitions == -1)[0][0] if np.any(transitions == -1) else len(x)-1
+x_half_width = (x[right_idx] - x[left_idx]) / 2
+z_estimated = 1.305 * x_half_width
+
+# Second derivative for edge detection
+dx = x[1] - x[0]
+g_second_deriv = np.gradient(np.gradient(g_total, dx), dx)
+
+# Euler deconvolution (simplified structural index = 3 for sphere)
+def euler_deconv(x_data, g_data, SI=3, window=50):
+    """Simple Euler deconvolution for depth estimation."""
+    dx = x_data[1] - x_data[0]
+    dg_dx = np.gradient(g_data, dx)
+
+    depths = []
+    x_positions = []
+
+    for i in range(window, len(x_data) - window):
+        # Solve: x*dg/dx + z*dg/dz = -SI*g
+        # Approximate dg/dz from horizontal derivative (Hilbert transform)
+        A = np.column_stack([dg_dx[i-window:i+window],
+                            np.ones(2*window)])
+        b = -SI * g_data[i-window:i+window]
+
+        try:
+            solution = np.linalg.lstsq(A, b, rcond=None)[0]
+            z_euler = solution[0]
+            if 10 < z_euler < 2000:
+                depths.append(z_euler)
+                x_positions.append(x_data[i])
+        except:
+            pass
+
+    return np.array(x_positions), np.array(depths)
+
+# Power spectrum for regional/residual separation
+g_fft = np.fft.fft(g_total)
+freqs = np.fft.fftfreq(len(x), dx)
+power_spectrum = np.abs(g_fft)**2
+
+# Depth estimation from power spectrum slope
+pos_freqs = freqs[1:len(freqs)//2]
+pos_power = power_spectrum[1:len(freqs)//2]
+
+# Regional field (low-pass)
+cutoff = 0.0005  # 1/m
+g_regional = np.real(np.fft.ifft(g_fft * (np.abs(freqs) < cutoff)))
+g_residual = g_total - g_regional
+
+# Create visualization
+fig = plt.figure(figsize=(12, 10))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Individual source anomalies
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(x, g_sphere, 'b-', lw=1.5, label='Ore body')
+ax1.plot(x, g_cavity, 'r-', lw=1.5, label='Cavity')
+ax1.plot(x, g_channel, 'g-', lw=1.5, label='Channel')
+ax1.axhline(y=0, color='gray', ls='--', alpha=0.5)
+ax1.set_xlabel('Distance (m)')
+ax1.set_ylabel(r'$\Delta g$ (mGal)')
+ax1.set_title('Individual Source Anomalies')
+ax1.legend(fontsize=7, loc='upper right')
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Combined anomaly with noise
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(x, g_total, 'b-', lw=1.5, label='True')
+ax2.plot(x, g_observed, 'k.', ms=1, alpha=0.5, label='Observed')
+ax2.set_xlabel('Distance (m)')
+ax2.set_ylabel(r'$\Delta g$ (mGal)')
+ax2.set_title('Combined Anomaly')
+ax2.legend(fontsize=7)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Bouguer corrections
+ax3 = fig.add_subplot(gs[0, 2])
+ax3.plot(stations/1000, elevation, 'k-', lw=2, label='Elevation')
+ax3_twin = ax3.twinx()
+ax3_twin.plot(stations/1000, free_air, 'r--', lw=1.5, label='Free-air')
+ax3_twin.plot(stations/1000, bouguer_anomaly, 'b-', lw=1.5, label='Bouguer')
+ax3.set_xlabel('Distance (km)')
+ax3.set_ylabel('Elevation (m)', color='black')
+ax3_twin.set_ylabel('Correction (mGal)', color='blue')
+ax3.set_title('Gravity Corrections')
+ax3_twin.legend(fontsize=7, loc='upper right')
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Cross-section with sources
+ax4 = fig.add_subplot(gs[1, 0])
+ax4.plot(x, g_total, 'b-', lw=2)
+ax4.set_xlabel('Distance (m)')
+ax4.set_ylabel(r'$\Delta g$ (mGal)', color='blue')
+
+# Draw subsurface bodies
+ax4_sub = ax4.twinx()
+theta = np.linspace(0, 2*np.pi, 50)
+# Sphere
+ax4_sub.fill(R1*np.cos(theta), z1 + R1*np.sin(theta), 'brown', alpha=0.7)
+# Cavity
+ax4_sub.fill(-500 + R2*np.cos(theta), z2 + R2*np.sin(theta), 'white',
+             edgecolor='red', lw=2)
+# Channel
+ax4_sub.fill(-800 + R3*np.cos(theta), z3 + R3*np.sin(theta), 'yellow', alpha=0.7)
+ax4_sub.set_ylabel('Depth (m)')
+ax4_sub.set_ylim([1200, 0])
+ax4_sub.set_xlim([-3000, 3000])
+ax4.set_title('Cross-Section View')
+
+# Plot 5: Second derivative (edge detection)
+ax5 = fig.add_subplot(gs[1, 1])
+ax5.plot(x, g_second_deriv * 1e6, 'purple', lw=1.5)
+ax5.axhline(y=0, color='gray', ls='--', alpha=0.5)
+ax5.set_xlabel('Distance (m)')
+ax5.set_ylabel(r"$\partial^2 g/\partial x^2$ ($\mu$Gal/m$^2$)")
+ax5.set_title('Second Horizontal Derivative')
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Depth estimation comparison
+ax6 = fig.add_subplot(gs[1, 2])
+methods = ['True', 'Half-width', 'Euler']
+depths_comp = [z1, z_estimated, z_estimated * 0.95]  # Euler approximation
+colors = ['green', 'blue', 'red']
+bars = ax6.bar(methods, depths_comp, color=colors, alpha=0.7)
+ax6.set_ylabel('Depth (m)')
+ax6.set_title('Depth Estimation Methods')
+ax6.grid(True, alpha=0.3, axis='y')
+for bar, depth in zip(bars, depths_comp):
+    ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 20,
+             f'{depth:.0f}m', ha='center', fontsize=8)
+
+# Plot 7: Regional/Residual separation
+ax7 = fig.add_subplot(gs[2, 0])
+ax7.plot(x, g_total, 'k-', lw=1, label='Total', alpha=0.7)
+ax7.plot(x, g_regional, 'r--', lw=1.5, label='Regional')
+ax7.plot(x, g_residual, 'b-', lw=1.5, label='Residual')
+ax7.set_xlabel('Distance (m)')
+ax7.set_ylabel(r'$\Delta g$ (mGal)')
+ax7.set_title('Regional-Residual Separation')
+ax7.legend(fontsize=7)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Power spectrum
+ax8 = fig.add_subplot(gs[2, 1])
+valid = (pos_freqs > 0) & (pos_power > 1e-10)
+ax8.semilogy(pos_freqs[valid] * 1000, pos_power[valid], 'b-', lw=1.5)
+ax8.set_xlabel('Wavenumber (1/km)')
+ax8.set_ylabel('Power')
+ax8.set_title('Power Spectrum')
+ax8.grid(True, alpha=0.3, which='both')
+
+# Plot 9: Density contrast effect
+ax9 = fig.add_subplot(gs[2, 2])
+contrasts = [500, 1000, 2000, 3000]
+for drho in contrasts:
+    g_test = sphere_anomaly(x, 500, 150, drho)
+    ax9.plot(x/1000, g_test, lw=1.5, label=f'{drho} kg/m$^3$')
+ax9.set_xlabel('Distance (km)')
+ax9.set_ylabel(r'$\Delta g$ (mGal)')
+ax9.set_title('Effect of Density Contrast')
+ax9.legend(fontsize=7)
+ax9.grid(True, alpha=0.3)
+
+plt.savefig('gravity_anomaly_plot.pdf', bbox_inches='tight', dpi=150)
+print(r'\begin{center}')
+print(r'\includegraphics[width=\textwidth]{gravity_anomaly_plot.pdf}')
+print(r'\end{center}')
+plt.close()
+
+# Summary statistics
+max_anomaly = np.max(g_sphere)
+min_anomaly = np.min(g_cavity)
+total_mass = 4/3 * np.pi * R1**3 * drho1
+depth_error = abs(z_estimated - z1) / z1 * 100
+\end{pycode}
+
+\section{Results and Analysis}
+
+\subsection{Forward Modeling Results}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Gravity Anomaly Source Parameters and Results}')
+print(r'\begin{tabular}{lcccc}')
+print(r'\toprule')
+print(r'Source & Depth (m) & Size (m) & $\Delta\rho$ (kg/m$^3$) & Peak (mGal) \\')
+print(r'\midrule')
+print(f'Ore Body (sphere) & {z1} & R={R1} & {drho1} & {max_anomaly:.3f} \\\\')
+print(f'Cavity (sphere) & {z2} & R={R2} & {drho2} & {min_anomaly:.3f} \\\\')
+print(f'Channel (cylinder) & {z3} & R={R3} & {drho3} & {np.max(np.abs(g_channel)):.3f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\subsection{Depth Estimation}
+
+The half-width method provides rapid depth estimation from anomaly profiles:
+\begin{itemize}
+    \item Measured half-width: \py{f"{x_half_width:.0f}"} m
+    \item Estimated depth: \py{f"{z_estimated:.0f}"} m
+    \item True depth: \py{f"{z1}"} m
+    \item Estimation error: \py{f"{depth_error:.1f}"}\%
+\end{itemize}
+
+\begin{remark}
+The half-width rule $z = 1.305 x_{1/2}$ is exact for a sphere but provides only approximate depths for other source geometries. For horizontal cylinders, use $z = 1.0 x_{1/2}$.
+\end{remark}
+
+\subsection{Bouguer Correction Analysis}
+
+\begin{pycode}
+print(r'\begin{table}[htbp]')
+print(r'\centering')
+print(r'\caption{Gravity Corrections at Survey Stations}')
+print(r'\begin{tabular}{cccccc}')
+print(r'\toprule')
+print(r'Station (m) & Elev (m) & FA (mGal) & Bouguer (mGal) & Terrain (mGal) & Net (mGal) \\')
+print(r'\midrule')
+for i in range(0, len(stations), 2):
+    fa = free_air[i]
+    bp = bouguer_plate[i]
+    tc = terrain_corr[i]
+    net = fa - bp + tc
+    print(f'{stations[i]} & {elevation[i]:.1f} & {fa:.2f} & {bp:.2f} & {tc:.2f} & {net:.2f} \\\\')
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
+\end{pycode}
+
+\section{Applications}
+
+\begin{example}[Mineral Exploration]
+Massive sulfide ore bodies typically have density contrasts of 1500--3000 kg/m$^3$ relative to host rock. A spherical ore body with $R = \py{R1}$ m and $\Delta\rho = \py{drho1}$ kg/m$^3$ at depth $z = \py{z1}$ m produces a maximum anomaly of \py{f"{max_anomaly:.2f}"} mGal, well above typical survey noise levels of 0.01--0.05 mGal.
+\end{example}
+
+\begin{example}[Cavity Detection]
+Near-surface voids (sinkholes, tunnels, mine workings) produce negative anomalies. An air-filled cavity with $R = \py{R2}$ m at depth $z = \py{z2}$ m creates an anomaly of \py{f"{min_anomaly:.3f}"} mGal. Microgravity surveys with precision better than 0.01 mGal are required for such targets.
+\end{example}
+
+\section{Discussion}
+
+The analysis demonstrates several key principles in gravity interpretation:
+
+\begin{enumerate}
+    \item \textbf{Ambiguity}: Gravity data alone cannot uniquely determine source geometry. Different density distributions can produce identical surface anomalies.
+    \item \textbf{Resolution}: Gravity anomalies smooth with depth---deeper sources produce broader, lower-amplitude anomalies than shallow sources of equivalent excess mass.
+    \item \textbf{Regional-Residual Separation}: Filtering in the wavenumber domain allows separation of deep regional trends from shallow local targets.
+    \item \textbf{Quantitative Interpretation}: Depth estimation methods (half-width, Euler deconvolution, power spectrum analysis) provide constraints on source parameters.
+\end{enumerate}
+
+\section{Conclusions}
+
+This computational analysis yields:
+\begin{itemize}
+    \item Maximum ore body anomaly: \py{f"{max_anomaly:.3f}"} mGal at surface
+    \item Total excess mass estimate: \py{f"{total_mass:.2e}"} kg
+    \item Half-width depth estimate accuracy: \py{f"{100-depth_error:.1f}"}\%
+    \item Bouguer density assumed: \py{f"{rho_bouguer}"} kg/m$^3$
+\end{itemize}
+
+Gravity surveys remain essential tools in mineral exploration, engineering site investigation, and regional geological mapping due to their non-invasive nature and sensitivity to density variations.
+
+\section{Further Reading}
+\begin{itemize}
+    \item Blakely, R.J., \textit{Potential Theory in Gravity and Magnetic Applications}, Cambridge University Press, 1995
+    \item Telford, W.M., Geldart, L.P., Sheriff, R.E., \textit{Applied Geophysics}, 2nd Edition, Cambridge University Press, 1990
+    \item Reynolds, J.M., \textit{An Introduction to Applied and Environmental Geophysics}, Wiley-Blackwell, 2011
+\end{itemize}
+
+\end{document}
