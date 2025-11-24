@@ -1,20 +1,35 @@
-# ===== LaTeX-Templates Repository .gitignore =====
-# Enhanced version with comprehensive exclusions
+# ===== Split Repository: Public Content Only =====
+# This repo tracks ONLY published notebooks
+# Private outputs and orchestration live in: computational-pipeline-outputs
 
-# Notebooks - publish only published notebooks
+# === PRIVATE CONTENT (tracked in outputs repo) ===
+output/
+orchestration/
+templates/
+*.py
+*.sh
+*.md
+batch*.py
+batch*.json
+batch.pid
+*.txt
+
+# === Notebook Management ===
+# Only track published notebooks
 notebooks/drafts/
 notebooks/temp/
 notebooks/**/.ipynb_checkpoints/
 
-# Only publish the notebooks/published/ directory
+# Allow published notebooks
 !notebooks/published/
 !notebooks/published/*.ipynb
 
-# LaTeX Templates - allow all templates and documentation
-!latex-templates/
-!latex-templates/**
+# Exclude plot images in notebooks/published/ (they're in output/)
+notebooks/published/*.png
+notebooks/published/*.jpg
+notebooks/published/*.svg
 
-# But exclude build artifacts within latex-templates
+# === LaTeX Templates (if applicable) ===
 latex-templates/**/*.aux
 latex-templates/**/*.log
 latex-templates/**/*.out
@@ -26,41 +41,8 @@ latex-templates/**/*.run.xml
 latex-templates/**/*.fls
 latex-templates/**/*.fdb_latexmk
 latex-templates/**/*.synctex.gz
-latex-templates/**/*.nav
-latex-templates/**/*.snm
-latex-templates/**/*.vrb
-latex-templates/**/*.pytxcode
-latex-templates/**/pythontex-files-*/
-latex-templates/**/*.pytxmcr
-latex-templates/**/*.pytxpyg
-latex-templates/**/*.sagetex.sage
-latex-templates/**/*.sagetex.py
-latex-templates/**/*.sagetex.scmd
-latex-templates/**/*.sout
-latex-templates/**/*.Rout
-latex-templates/**/.Rhistory
-latex-templates/**/.RData
-latex-templates/**/*-concordance.tex
-latex-templates/**/figure/
-latex-templates/logs/*.log
-latex-templates/logs/*.txt
 
-# Keep these essential files
-!latex-templates/templates/**/*.tex
-!latex-templates/templates/**/*.Rnw
-!latex-templates/templates/**/*.bib
-!latex-templates/templates/**/*.cls
-!latex-templates/templates/**/*.sty
-!latex-templates/output/*.pdf
-!latex-templates/*.md
-!latex-templates/*.txt
-!latex-templates/Makefile
-!latex-templates/scripts/
-!latex-templates/config/
-!latex-templates/*.sh
-!latex-templates/*.py
-
-# Development and temporary files
+# === Development Files ===
 *~
 *.swp
 *.swo
@@ -68,7 +50,7 @@ latex-templates/logs/*.txt
 *.bak
 .DS_Store
 
-# Python cache
+# === Python Cache ===
 __pycache__/
 *.pyc
 *.pyo
@@ -76,26 +58,22 @@ __pycache__/
 .mypy_cache/
 *.egg-info/
 
-# Virtual environments
+# === Virtual Environments ===
 venv/
 env/
 ENV/
 .venv/
 
-# IDE files
+# === IDE Files ===
 .vscode/
 .idea/
 *.sublime-*
 
-# OS files
+# === OS Files ===
 Thumbs.db
 .Trash-*/
 
-# Git-related
-*.orig
-*.rej
-
-# Secrets and credentials (extra safety)
+# === Secrets ===
 .env
 .env.local
 credentials.json
@@ -103,23 +81,16 @@ secrets/
 *.key
 *.pem
 
-# Build directories
+# === Build Directories ===
 build/
 dist/
 .build/
 
-# Documentation builds
-docs/_build/
-site/
-
-# Logs
+# === Logs ===
 *.log
 logs/
 *.log.*
 
-# Allow README and documentation
+# === Allow Essential Documentation ===
 !README.md
-!CONTRIBUTING.md
 !LICENSE
-!CHANGELOG.md
-!docs/

@@ -1,0 +1,161 @@
+# Social Media Posts: Householder Transformation
+
+================================================================================
+## 1. TWITTER/X (280 chars)
+================================================================================
+
+Mirror, mirror in the math: Householder transformations reflect vectors across hyperplanes using H = I - 2vvᵀ. The secret weapon behind numerically stable QR decomposition!
+
+#Python #LinearAlgebra #Math #NumPy #DataScience
+
+================================================================================
+## 2. BLUESKY (300 chars)
+================================================================================
+
+The Householder transformation elegantly reflects vectors across hyperplanes. Using just H = I - 2vvᵀ, it zeros out matrix elements with machine-precision stability.
+
+This 1958 algorithm remains the gold standard for QR decomposition in numerical computing.
+
+#Math #Python #NumericalMethods
+
+================================================================================
+## 3. THREADS (500 chars)
+================================================================================
+
+Ever wonder how computers solve systems of equations without losing accuracy?
+
+Enter the Householder transformation - a clever reflection trick from 1958.
+
+The idea: reflect a vector across a hyperplane so it points along a coordinate axis. The formula is beautifully simple: H = I - 2vvᵀ
+
+Key properties:
+- Symmetric (H = Hᵀ)
+- Orthogonal (HᵀH = I)
+- Involutory (H² = I)
+
+This is WHY your numpy.linalg.qr() calls just work. Numerical stability for free!
+
+================================================================================
+## 4. MASTODON (500 chars)
+================================================================================
+
+Implemented Householder QR decomposition from scratch in Python.
+
+The Householder matrix H = I - 2vvᵀ reflects vectors across hyperplanes. For QR, we choose v to map each column onto e₁, systematically zeroing sub-diagonal elements.
+
+Properties that make this elegant:
+- Orthogonal: HᵀH = I (condition number preserved!)
+- Involutory: H² = I
+- det(H) = -1 (reflection, not rotation)
+
+Complexity: O(mn² - n³/3) for m×n matrix
+
+Notebook includes stability analysis showing errors stay at machine epsilon.
+
+#Python #NumPy #LinearAlgebra #NumericalAnalysis
+
+================================================================================
+## 5. REDDIT (r/learnpython or r/math)
+================================================================================
+
+**Title:** I implemented Householder QR decomposition from scratch - here's what I learned about numerical stability
+
+**Body:**
+
+I've been working through fundamental linear algebra algorithms, and the Householder transformation completely changed how I think about numerical computing.
+
+**The Problem:** We need to decompose a matrix A into Q (orthogonal) and R (upper triangular). The naive Gram-Schmidt approach loses orthogonality due to floating-point errors.
+
+**The Solution:** Householder reflections.
+
+Instead of building Q column by column, we use reflections to zero out elements below the diagonal. Each reflection is defined by:
+
+H = I - 2vvᵀ
+
+where v is a unit vector perpendicular to the "mirror."
+
+**Why is this stable?**
+
+1. Orthogonal transformations preserve the 2-norm
+2. The condition number of R equals that of A
+3. Errors stay at machine epsilon even for 100×100 matrices
+
+**Key insight:** To transform vector x to point along e₁, we set:
+- α = -sign(x₁)||x||
+- u = x - αe₁
+- v = u/||u||
+
+The sign choice avoids catastrophic cancellation when x₁ > 0.
+
+My implementation shows:
+- ||QᵀQ - I|| stays around 10⁻¹⁴ regardless of matrix size
+- ||QR - A|| similarly tiny
+
+The notebook walks through 2D visualization (reflecting vectors across a line) up to full QR on arbitrary matrices.
+
+**View the full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/householder_transformation.ipynb
+
+Happy to answer questions about the implementation!
+
+================================================================================
+## 6. FACEBOOK (500 chars)
+================================================================================
+
+How do computers solve complex math problems without losing accuracy? The answer is a 67-year-old trick called the Householder transformation.
+
+Imagine a mirror that reflects vectors in high-dimensional space. By choosing the right mirror angle, we can systematically simplify matrices while preserving their essential properties.
+
+The formula is elegant: H = I - 2vvᵀ
+
+This is why your GPS, weather models, and machine learning algorithms actually work!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/householder_transformation.ipynb
+
+================================================================================
+## 7. LINKEDIN (1000 chars)
+================================================================================
+
+Just completed an implementation of Householder QR decomposition - a cornerstone algorithm in numerical linear algebra.
+
+**The Challenge:**
+Decomposing matrices into orthogonal (Q) and triangular (R) components is fundamental to solving linear systems, least squares problems, and eigenvalue computations. But naive approaches suffer from numerical instability.
+
+**The Solution:**
+Householder transformations use orthogonal reflections (H = I - 2vvᵀ) to systematically zero matrix elements. Key advantages:
+
+• Numerical Stability: Errors remain at machine epsilon (~10⁻¹⁴)
+• Condition Preservation: cond(R) = cond(A)
+• Efficiency: O(mn² - n³/3) operations
+
+**Technical Implementation:**
+- Careful sign selection (α = -sign(x₁)||x||) prevents catastrophic cancellation
+- In-place updates minimize memory allocation
+- Works for rectangular matrices (m ≥ n)
+
+**Applications:**
+This algorithm underlies QR factorization in NumPy/SciPy, LAPACK, and every major numerical library. It's essential for least squares regression, principal component analysis, and solving overdetermined systems.
+
+View the implementation with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/householder_transformation.ipynb
+
+#NumericalComputing #LinearAlgebra #Python #DataScience #ScientificComputing
+
+================================================================================
+## 8. INSTAGRAM (500 chars)
+================================================================================
+
+Mirrors in mathematics ✨
+
+The Householder transformation reflects vectors across hyperplanes - and it's the secret behind stable numerical computing.
+
+Formula: H = I - 2vvᵀ
+
+What makes it special:
+→ Symmetric
+→ Orthogonal
+→ Self-inverse (apply twice = identity)
+
+This 1958 algorithm is still the gold standard for QR decomposition in NumPy, MATLAB, and every scientific computing library.
+
+The plot shows a 2D reflection, the resulting upper triangular structure, and stability analysis proving errors stay at machine precision.
+
+#Math #Coding #Python #DataScience #LinearAlgebra #NumericalMethods #STEM #Science #Algorithms

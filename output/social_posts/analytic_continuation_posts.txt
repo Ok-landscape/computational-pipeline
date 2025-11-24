@@ -1,0 +1,136 @@
+SOCIAL MEDIA POSTS: ANALYTIC CONTINUATION
+===========================================
+
+### 1. TWITTER/X (< 280 chars)
+---
+Ever wondered how mathematicians extend functions beyond their "natural" limits? Analytic continuation lets us push ζ(s) from Re(s)>1 to the entire complex plane! 🧵
+
+Explored it with Python visualizations #ComplexAnalysis #Math #Python
+---
+
+### 2. BLUESKY (< 300 chars)
+---
+Analytic continuation is like finding secret passages in mathematics. The Riemann zeta function ζ(s) only converges for Re(s) > 1, but through analytic continuation, we can extend it everywhere (except s=1)!
+
+Created interactive visualizations showing how overlapping power series make this possible.
+---
+
+### 3. THREADS (< 500 chars)
+---
+Just explored one of the coolest concepts in complex analysis: analytic continuation 🔍
+
+Think of it like this: you have a function that works in one region, but you want to know what it does elsewhere. By cleverly overlapping power series expansions (like stepping stones), you can extend the function to new territory!
+
+The Riemann zeta function ζ(s) is the famous example - the series ∑(1/n^s) only works for Re(s)>1, but the function itself exists everywhere. Mind-blowing! 🤯
+---
+
+### 4. MASTODON (< 500 chars)
+---
+Implemented a computational exploration of analytic continuation in Python. Key findings:
+
+• Power series with overlapping domains can extend functions beyond their convergence radius
+• The Identity Theorem guarantees uniqueness in overlap regions
+• Riemann ζ(s) continues from Re(s)>1 to ℂ\{1} via the functional equation
+• Multi-valued functions like log(z) exhibit monodromy: circling the origin adds 2πi
+
+Visualized: convergence domains, phase portraits, and error analysis comparing series approximations. #MathematicalComputing #ComplexAnalysis
+---
+
+### 5. REDDIT (Title + Body with CoCalc URL)
+---
+TITLE: I visualized analytic continuation - how mathematicians extend functions beyond their "natural" domains [OC]
+
+BODY:
+Hey r/learnpython! I just created an interactive notebook exploring one of the most powerful techniques in complex analysis: **analytic continuation**.
+
+**What is it?**
+Imagine you have a function that only works in a certain region - like the infinite series ∑(1/n^s), which only converges when the real part of s is greater than 1. But what if the function *should* exist outside that region? Analytic continuation is the process of extending it.
+
+**What I learned:**
+
+1. **Power series stepping stones**: You can extend a function by creating overlapping power series centered at different points. Where they overlap, they must agree (Identity Theorem).
+
+2. **The Riemann zeta function**: The famous ζ(s) = ∑(1/n^s) only converges for Re(s) > 1, but through analytic continuation, we can define it everywhere except s=1. This continuation reveals the "non-trivial zeros" on the critical line Re(s)=1/2, which are at the heart of the Riemann Hypothesis!
+
+3. **Multi-valued functions**: Some functions like log(z) become multi-valued when continued. If you start at z=1 and go around the origin in a circle, you don't come back to the same value - you're off by 2πi! This is called monodromy.
+
+**The visualization shows:**
+- Overlapping circles of convergence for the function f(z) = 1/(1-z)
+- A color map of |ζ(s)| showing the zeta function across the complex plane
+- The spiral structure of the complex logarithm's branches
+- Error analysis comparing different power series approximations
+- A phase portrait showing the analytic structure
+
+**Tools used:** Python, NumPy, SciPy, Matplotlib
+
+**View and run the notebook interactively:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/analytic_continuation.ipynb
+
+The code is fully self-contained - it demonstrates power series continuation, computes the Riemann zeta function, and visualizes phase portraits and branch cuts.
+
+This concept shows up everywhere in physics: Wick rotation in quantum field theory, S-matrix resonances in scattering theory, and partition function calculations in statistical mechanics.
+
+Would love to hear if anyone has questions about the implementation or the math!
+---
+
+### 6. FACEBOOK (< 500 chars with CoCalc URL)
+---
+Just dove into one of mathematics' coolest magic tricks: analytic continuation! 🎩✨
+
+Ever wonder how mathematicians take a function that only works in one area and extend it to work almost everywhere? It's like finding hidden pathways in the mathematical universe.
+
+I created visualizations showing how the famous Riemann zeta function ζ(s) - which seems to only exist for Re(s)>1 - actually extends across the entire complex plane. The results are stunning!
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/analytic_continuation.ipynb
+---
+
+### 7. LINKEDIN (< 1000 chars with CoCalc URL)
+---
+Computational Exploration: Analytic Continuation in Complex Analysis
+
+I recently implemented a comprehensive study of analytic continuation, a fundamental technique for extending the domain of analytic functions beyond their original regions of definition.
+
+**Methodology:**
+• Developed Python implementations using NumPy and SciPy to compute power series expansions centered at multiple points
+• Visualized convergence domains with error analysis comparing approximations to exact values
+• Generated phase portraits demonstrating analytic structure and singularity behavior
+• Computed the Riemann zeta function ζ(s) across the complex plane, demonstrating continuation from Re(s)>1 to ℂ\{1}
+
+**Key Technical Insights:**
+1. The Identity Theorem guarantees uniqueness when two analytic functions agree on overlapping domains
+2. Multi-valued functions like log(z) exhibit monodromy - analytic continuation around branch points produces different values
+3. Natural boundaries exist where continuation becomes impossible (e.g., the unit circle for ∑z^(2^n))
+
+**Applications:** This technique is essential in quantum field theory (Wick rotation), scattering theory (S-matrix poles), statistical mechanics (partition functions), and theoretical physics.
+
+**Interactive notebook available:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/analytic_continuation.ipynb
+
+Skills demonstrated: Python, NumPy, SciPy, Matplotlib, complex analysis, numerical methods, scientific visualization
+
+#Mathematics #Python #ScientificComputing #DataScience #ComplexAnalysis
+---
+
+### 8. INSTAGRAM (< 500 chars, visual-focused)
+---
+Mathematics has secret passages 🚪✨
+
+This visualization shows analytic continuation - a technique for extending functions beyond their natural boundaries.
+
+The colorful plot reveals the Riemann zeta function ζ(s) across the complex plane. Even though the series ∑(1/n^s) only converges for Re(s)>1, the function itself exists almost everywhere!
+
+Those red stars? Non-trivial zeros on the critical line Re(s)=1/2 - the heart of the million-dollar Riemann Hypothesis 💎
+
+Swipe for:
+→ Overlapping power series domains
+→ Phase portraits revealing analytic structure
+→ Branch cuts of the complex logarithm
+→ Error analysis of series approximations
+
+Created with Python | NumPy | Matplotlib
+
+#Mathematics #ComplexAnalysis #Python #DataVisualization #STEM #MathArt #Science #Coding #RiemannHypothesis #NumberTheory
+---
+
+END OF SOCIAL POSTS

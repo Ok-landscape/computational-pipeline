@@ -1,0 +1,156 @@
+# Social Media Posts: K-Nearest Neighbors Algorithm
+
+Generated from: k_nearest_neighbors.ipynb
+
+---
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Built a K-Nearest Neighbors classifier from scratch! The key insight: distance d(x,y) = √Σ(xᵢ - yᵢ)² finds your closest neighbors, then majority vote decides the class. Small k = overfitting, large k = too smooth. #Python #MachineLearning #DataScience
+
+### Bluesky (300 chars)
+Implemented KNN classification from scratch in Python. The algorithm stores all training data and classifies new points by finding k nearest neighbors using Euclidean distance: d(x,y) = √Σ(xᵢ - yᵢ)². Fascinating to see how k controls the bias-variance tradeoff in decision boundaries.
+
+### Threads (500 chars)
+Just coded a K-Nearest Neighbors classifier completely from scratch!
+
+The math is elegant: measure Euclidean distance d(x,y) = √Σ(xᵢ - yᵢ)² to find your k closest neighbors, then let them vote on the class.
+
+The cool part? Watching how k changes everything:
+- k=1: Jagged boundaries, overfits to noise
+- k=15: Smooth boundaries, more generalized
+
+Best test accuracy hit 98.3% at k=5. Sometimes the simplest algorithms are the most powerful.
+
+#Python #MachineLearning #DataScience
+
+### Mastodon (500 chars)
+Implemented K-Nearest Neighbors from scratch to explore the bias-variance tradeoff.
+
+Core algorithm:
+1. Compute Euclidean distance: d(x,y) = √Σ(xᵢ - yᵢ)²
+2. Find k nearest neighbors
+3. Classify by majority vote: ŷ = argmax_c Σ 𝟙(yᵢ = c)
+
+Observations:
+- k=1: 100% train acc, overfits badly
+- k=5: Optimal test accuracy (98.3%)
+- k=15: Smoother boundaries, slight underfitting
+
+O(1) training, O(nd) prediction - the classic lazy learner tradeoff.
+
+#Python #MachineLearning #ComputationalScience
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/MachineLearning)
+
+**Title:** I built a K-Nearest Neighbors classifier from scratch - here's what I learned about the bias-variance tradeoff
+
+**Body:**
+
+I wanted to deeply understand KNN, so I implemented it from scratch instead of using sklearn.
+
+**The Core Idea (ELI5):**
+
+Imagine you're a new kid at school and want to know which lunch table to sit at. You look at the k kids sitting nearest to you and join whichever group has the most people. That's literally KNN!
+
+**The Math:**
+
+KNN measures "nearness" using Euclidean distance:
+
+d(x,y) = √Σ(xᵢ - yᵢ)²
+
+For each new point, find the k closest training points and let them vote. The class with the most votes wins.
+
+**What I Learned:**
+
+1. **k=1 is deceptively good on training data** - 100% accuracy because each point is its own nearest neighbor. But it overfits terribly.
+
+2. **The bias-variance tradeoff is real** - Small k = low bias, high variance (wiggly boundaries). Large k = high bias, low variance (smooth boundaries).
+
+3. **Optimal k exists** - For my dataset, k=5 gave the best test accuracy at 98.3%.
+
+4. **It's a "lazy learner"** - O(1) training (just store data) but O(nd) prediction. For big datasets, you'd want KD-trees.
+
+**Code highlights:**
+- Used numpy for vectorized distance calculations
+- Implemented both standard and weighted voting (inverse distance weights)
+- Visualized decision boundaries for k=1, 5, 15
+
+Check out the full notebook with interactive code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/k_nearest_neighbors.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+### Facebook (500 chars)
+
+Ever wonder how your phone recognizes faces or Netflix recommends movies? Many of these use a beautifully simple algorithm: K-Nearest Neighbors.
+
+The idea: to classify something new, just look at its closest neighbors and go with the majority.
+
+I built one from scratch and discovered that choosing k (how many neighbors to consult) is crucial - too few and you overfit, too many and you miss patterns. Sweet spot: k=5 gave 98.3% accuracy!
+
+Explore the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/k_nearest_neighbors.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Implementing Machine Learning Fundamentals: K-Nearest Neighbors from Scratch**
+
+Understanding algorithms at a fundamental level is crucial for any data scientist. I recently implemented K-Nearest Neighbors classification from scratch to deeply explore the bias-variance tradeoff.
+
+**Technical Approach:**
+
+Built a complete KNN classifier using only NumPy, implementing:
+- Euclidean distance computation: d(x,y) = √Σ(xᵢ - yᵢ)²
+- Majority voting classification
+- Weighted voting variant (inverse distance weighting)
+- Cross-validation for hyperparameter selection
+
+**Key Findings:**
+
+The choice of k dramatically affects model performance:
+- k=1: 100% training accuracy but poor generalization (high variance)
+- k=5: Optimal test accuracy of 98.3% (balanced bias-variance)
+- k=15: Smoother decision boundaries but slight underfitting (high bias)
+
+**Computational Considerations:**
+
+KNN exemplifies the "lazy learning" paradigm - O(1) training time but O(nd) prediction complexity. Production systems require approximate nearest neighbor methods (KD-trees, locality-sensitive hashing) for scalability.
+
+View the complete implementation with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/k_nearest_neighbors.ipynb
+
+#MachineLearning #DataScience #Python #AlgorithmDesign
+
+---
+
+### Instagram (500 chars)
+
+The beauty of simplicity in machine learning
+
+K-Nearest Neighbors: To classify a new point, find its closest neighbors and let them vote.
+
+That's it. No complex training. No neural networks. Just geometry.
+
+Swipe to see how different k values change the decision boundaries:
+- k=1: Every point matters (overfitting)
+- k=5: The sweet spot (98.3% accuracy)
+- k=15: Smooth and generalized
+
+Sometimes the oldest algorithms are still the most elegant.
+
+Built from scratch in Python.
+
+#MachineLearning
+#DataScience
+#Python
+#Algorithms
+#CodeArt
+#DataVisualization

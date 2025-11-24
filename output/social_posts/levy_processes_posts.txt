@@ -1,0 +1,175 @@
+# Social Media Posts: Lévy Processes
+# Generated from: levy_processes.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Lévy processes: the "wild" cousins of Brownian motion.
+
+When α < 2, variance becomes infinite. Smaller α = heavier tails = bigger jumps.
+
+Key insight: self-similarity with index H = 1/α
+
+#Math #Python #StochasticProcesses #DataScience
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Explored Lévy processes today - stochastic processes with stationary independent increments.
+
+The stability index α controls tail heaviness:
+- α = 2: Brownian motion (Gaussian)
+- α = 1: Cauchy process (infinite mean!)
+- α < 2: infinite variance
+
+Self-similar with H = 1/α
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Just built a simulation of α-stable Lévy processes and the results are fascinating.
+
+These processes generalize Brownian motion but with a twist: as you decrease α below 2, the tails get heavier and jumps get wilder.
+
+At α = 1 (Cauchy process), even the mean doesn't exist! At α = 0.5, you get extreme jumps.
+
+The cool part: they're self-similar. Zoom in or out and statistically they look the same, scaled by c^(1/α).
+
+Used in finance, physics, and modeling rare events.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented α-stable Lévy process simulations using the Chambers-Mallows-Stuck algorithm.
+
+Key mathematical structure:
+- Lévy-Khintchine formula gives characteristic exponent ψ(θ)
+- Triplet (γ, σ², ν) uniquely determines the process
+- Self-similarity: X_{ct} =^d c^(1/α) X_t
+
+Findings:
+- α = 2 → Gaussian (finite variance)
+- α < 2 → power-law tails: P(|X| > x) ~ x^(-α)
+- α ≤ 1 → infinite mean
+
+Applications: jump-diffusion models in finance, anomalous diffusion in physics.
+
+#Mathematics #Probability #StochasticProcesses #Python
+
+================================================================================
+REDDIT (r/learnpython or r/math)
+================================================================================
+
+Title: I built a simulation of Lévy processes - here's what I learned about "wild" randomness
+
+Body:
+
+**TL;DR:** Lévy processes generalize Brownian motion to allow for jumps and heavy tails. I simulated α-stable processes and visualized how the stability index α controls the "wildness" of the paths.
+
+---
+
+**What are Lévy processes?**
+
+A stochastic process with:
+1. X₀ = 0
+2. Independent increments
+3. Stationary increments
+4. Stochastic continuity
+
+Brownian motion and Poisson processes are both special cases!
+
+**The key parameter: α (stability index)**
+
+- α = 2: You get standard Brownian motion (Gaussian)
+- α = 1.5: Heavy tails, infinite variance
+- α = 1.0: Cauchy process - even the mean is undefined!
+- α = 0.5: Extremely heavy tails with dramatic jumps
+
+**Cool findings:**
+
+1. **Heavy tails follow power laws:** P(|X| > x) ~ x^(-α)
+
+2. **Self-similarity:** These processes look statistically identical at any time scale when rescaled by c^(1/α)
+
+3. **Jump structure:** Smaller α means more frequent large jumps. The Lévy measure ν(dx) ~ |x|^(-1-α) dx controls this.
+
+**The simulation method:**
+
+Used the Chambers-Mallows-Stuck algorithm to generate stable random variables, then constructed paths via cumulative sums with proper time scaling.
+
+**Why it matters:**
+
+Lévy processes are used in mathematical finance (modeling asset price jumps), physics (anomalous diffusion), and anywhere extreme events matter.
+
+**View the interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/levy_processes.ipynb
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+Ever wondered what happens when random walks get "wild"?
+
+I explored Lévy processes - a beautiful class of random processes that include Brownian motion but go much further.
+
+The stability index α controls how extreme the jumps can be. At α = 2, you get gentle Gaussian behavior. Drop to α = 1 and the average doesn't even exist mathematically!
+
+These models help explain rare extreme events in finance, physics, and nature.
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/levy_processes.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Lévy Processes: When Gaussian Isn't Enough
+
+In quantitative finance and risk modeling, we often need to account for rare but extreme events that Gaussian models miss. Enter Lévy processes.
+
+Key technical insights from my simulation study:
+
+- The Lévy-Khintchine formula provides a complete characterization through the triplet (γ, σ², ν) - drift, diffusion, and jump measure
+
+- α-stable processes with α < 2 exhibit infinite variance, crucial for modeling fat-tailed returns
+
+- Self-similarity property (H = 1/α) enables multi-scale analysis
+
+- Implemented Chambers-Mallows-Stuck algorithm for efficient stable distribution sampling
+
+Practical applications:
+- Jump-diffusion models for derivative pricing
+- Heavy-tailed risk measures (VaR, CVaR)
+- Anomalous diffusion in physical systems
+
+The methodology demonstrates proficiency in stochastic simulation, numerical methods, and Python scientific computing (NumPy, SciPy, Matplotlib).
+
+Full notebook with code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/levy_processes.ipynb
+
+#QuantitativeFinance #DataScience #Python #Mathematics #RiskManagement
+
+================================================================================
+INSTAGRAM (< 500 chars)
+================================================================================
+
+The math of extreme events
+
+These four plots show α-stable Lévy processes with different stability indices.
+
+α = 2: Smooth Brownian motion
+α = 1.5: Occasional big jumps
+α = 1.0: Cauchy process - mean undefined!
+α = 0.5: Wild jumps everywhere
+
+Lower α = heavier tails = more extreme behavior
+
+Used in modeling stock market crashes, earthquake magnitudes, and animal foraging patterns.
+
+Self-similar: zoom in or out and they look statistically identical
+
+#mathematics #datascience #python #stochasticprocesses #visualization #coding #science

@@ -1,0 +1,167 @@
+# Social Media Posts: Arnoldi Iteration
+
+---
+
+## 1. Twitter/X (280 chars max)
+
+🔢 Arnoldi Iteration: Build an orthonormal basis for Krylov subspace K_k(A,b) = span{b, Ab, A²b,...}
+
+Result? Eigenvalues of the Hessenberg matrix H_k converge to extreme eigenvalues of A!
+
+Foundation of GMRES & eigenvalue solvers.
+
+#Python #NumPy #LinearAlgebra #Math
+
+---
+
+## 2. Bluesky (300 chars max)
+
+Implemented the Arnoldi iteration algorithm in Python today.
+
+It constructs an orthonormal basis Q_k for the Krylov subspace and produces an upper Hessenberg matrix H_k satisfying:
+
+AQ_k = Q_{k+1}H̃_k
+
+The Ritz values (eigenvalues of H_k) rapidly approximate the extreme eigenvalues of A.
+
+---
+
+## 3. Threads (500 chars max)
+
+Ever wondered how iterative eigenvalue solvers work?
+
+The Arnoldi iteration is the answer! Starting from just a matrix A and vector b, it builds:
+
+• An orthonormal Krylov basis: span{b, Ab, A²b,...}
+• An upper Hessenberg matrix H_k
+
+The magic: eigenvalues of small matrix H_k approximate eigenvalues of huge matrix A!
+
+In my test with a 100×100 matrix, the top 5 eigenvalues converged in just ~30 iterations. This powers GMRES, the go-to solver for large linear systems.
+
+---
+
+## 4. Mastodon (500 chars max)
+
+Exploring the Arnoldi iteration - the workhorse behind GMRES and implicitly restarted Arnoldi methods.
+
+Key insight: Given A ∈ ℝⁿˣⁿ and b ∈ ℝⁿ, construct orthonormal Q_k spanning K_k(A,b) via modified Gram-Schmidt.
+
+The Arnoldi relation AQ_k = Q_{k+1}H̃_k gives us an upper Hessenberg H_k whose eigenvalues (Ritz values) converge to extreme eigenvalues of A.
+
+Complexity: O(k²n) for orthogonalization, O(kn) storage. Sweet spot for large sparse systems!
+
+#NumericalLinearAlgebra #Python #ScientificComputing
+
+---
+
+## 5. Reddit
+
+**Title:** Implemented Arnoldi Iteration from scratch - here's how eigenvalue approximation actually works
+
+**Body:**
+
+Hey r/learnpython!
+
+I just built an implementation of the **Arnoldi iteration** and wanted to share what I learned.
+
+### What is it?
+
+The Arnoldi iteration takes a big matrix A and finds its eigenvalues without computing them directly. Instead, it:
+
+1. Starts with a random vector b
+2. Builds a sequence: b, Ab, A²b, A³b,... (called a Krylov subspace)
+3. Orthogonalizes these vectors (like Gram-Schmidt)
+4. Produces a small "summary" matrix H_k
+
+The cool part? The eigenvalues of the small matrix H_k approximate the eigenvalues of the big matrix A!
+
+### Why it matters
+
+This is the foundation of:
+- **GMRES** - solving Ax = b for huge sparse systems
+- **Eigenvalue algorithms** - finding eigenvalues of matrices too big to decompose directly
+
+### What I found
+
+Testing on a 100×100 matrix with clustered eigenvalues:
+- Top eigenvalues converged in ~30 iterations
+- Orthogonality preserved to machine precision (~10⁻¹⁵)
+- Arnoldi relation AQ_k = Q_{k+1}H̃_k verified numerically
+
+The visualization shows Ritz value convergence, the characteristic Hessenberg structure (zeros below subdiagonal), and eigenvalue distribution matching.
+
+### View the full notebook
+
+You can run and modify this notebook directly in your browser:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/arnoldi_iteration.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+## 6. Facebook (500 chars max)
+
+Ever wonder how computers find eigenvalues of massive matrices? They don't compute them directly - that's way too expensive!
+
+Instead, algorithms like Arnoldi iteration build a small "summary" matrix whose eigenvalues approximate the real ones.
+
+I implemented this in Python and watched eigenvalues converge in real-time. After just 30 iterations on a 100×100 matrix, the approximations matched to 10+ decimal places!
+
+This powers Google's PageRank and countless scientific simulations.
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/arnoldi_iteration.ipynb
+
+---
+
+## 7. LinkedIn (1000 chars max)
+
+**Implementing the Arnoldi Iteration: A Foundation of Modern Numerical Computing**
+
+Just completed an implementation of the Arnoldi iteration algorithm, which serves as the backbone for solving large-scale linear systems and eigenvalue problems in scientific computing.
+
+**Technical Approach:**
+
+The algorithm constructs an orthonormal basis for the Krylov subspace K_k(A,b) = span{b, Ab, A²b,...,A^{k-1}b} using modified Gram-Schmidt orthogonalization. This produces:
+
+• Orthonormal matrix Q_k ∈ ℝⁿˣᵏ
+• Upper Hessenberg matrix H_k satisfying AQ_k = Q_{k+1}H̃_k
+
+**Key Results:**
+
+• Ritz values (eigenvalues of H_k) converged to true eigenvalues within 30 iterations
+• Maintained orthogonality to machine precision (~10⁻¹⁵)
+• Verified the Arnoldi relation to numerical precision
+
+**Applications:**
+
+This method underpins GMRES (solving Ax = b), implicitly restarted Arnoldi for eigenproblems, model order reduction, and exponential integrators for PDEs.
+
+**Skills demonstrated:** Python, NumPy, numerical linear algebra, algorithm implementation, scientific visualization with Matplotlib.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/arnoldi_iteration.ipynb
+
+---
+
+## 8. Instagram (500 chars max)
+
+Building eigenvalue solvers from scratch ✨
+
+The Arnoldi iteration transforms finding eigenvalues of huge matrices into a tractable problem.
+
+How? It builds a small matrix H_k whose eigenvalues approximate those of the original matrix A.
+
+Swipe to see:
+📊 Ritz value convergence → eigenvalues emerging
+🔢 Hessenberg matrix structure → the zeros below subdiagonal
+📈 Distribution matching → approximation quality
+
+The largest eigenvalues converge fastest - exactly what we need for most applications!
+
+#NumericalMethods
+#LinearAlgebra
+#Python
+#DataScience
+#Mathematics
+#CodingLife
+#ScienceVisualization

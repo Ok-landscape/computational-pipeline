@@ -1,0 +1,165 @@
+# Social Media Posts: The Schwarzschild Metric
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Black holes curve spacetime so intensely that time itself slows down. At r = 1.5rₛ, your clock runs at just 58% speed vs. infinity.
+
+Visualized the math in Python with embedding diagrams & orbital potentials.
+
+#Physics #BlackHoles #Python #GeneralRelativity
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+The Schwarzschild metric describes spacetime around a non-rotating black hole. Key insight: at the ISCO (6rₛ), infalling matter releases 5.7% of its rest mass as energy—this powers quasars and X-ray binaries.
+
+Created Python visualizations of metric components and effective potentials.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Einstein's equations have an exact solution for black holes: the Schwarzschild metric.
+
+The math reveals mind-bending physics:
+• Time dilation: clocks slow near massive objects
+• Event horizon at r = rₛ where nothing escapes
+• ISCO at 6rₛ: the closest stable orbit
+• Photon sphere at 3rₛ: light orbits the black hole
+
+I visualized these with Python—the embedding diagram (Flamm's paraboloid) shows how space itself curves into a funnel shape near the singularity.
+
+GPS satellites actually correct for this time dilation daily!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Built a Python notebook exploring the Schwarzschild metric—the exact solution for spacetime around spherically symmetric masses.
+
+Visualized:
+• Metric components gₜₜ and gᵣᵣ diverging at the event horizon
+• Time dilation factor √(1 - rₛ/r)
+• Flamm's paraboloid embedding diagram
+• Effective potential Veff showing ISCO at 6rₛ and photon sphere at 3rₛ
+
+The Schwarzschild radius: rₛ = 2GM/c²
+
+Matter at ISCO releases 5.7% of mc² as energy—powering the most energetic objects in the universe.
+
+#Physics #GeneralRelativity #BlackHoles #Python #SciComm
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/Physics or r/learnpython)
+--------------------------------------------------------------------------------
+**Title:** Visualizing the Schwarzschild Metric: Black Hole Spacetime in Python
+
+**Body:**
+
+I created a Jupyter notebook exploring the Schwarzschild metric—Einstein's exact solution for spacetime around a non-rotating black hole.
+
+**What is it?**
+
+The metric describes how distances and time intervals are measured near a massive object. The line element is:
+
+ds² = -(1 - rₛ/r)c²dt² + (1 - rₛ/r)⁻¹dr² + r²dΩ²
+
+where rₛ = 2GM/c² is the Schwarzschild radius.
+
+**Key visualizations:**
+
+1. **Metric components** - Shows how gₜₜ → 0 and gᵣᵣ → ∞ at the event horizon
+2. **Time dilation** - At r = 1.5rₛ, clocks run at 58% speed compared to infinity
+3. **Flamm's paraboloid** - An embedding diagram showing spatial curvature as a funnel
+4. **Effective potential** - Reveals the ISCO at 6rₛ and photon sphere at 3rₛ
+
+**Why it matters:**
+
+• GPS satellites correct for gravitational time dilation daily
+• Matter falling to the ISCO releases 5.7% of its rest mass as energy (powers quasars!)
+• The photon sphere explains gravitational lensing around black holes
+
+**View the interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/schwarzschild_metric.ipynb
+
+All code uses numpy and matplotlib—fully self-contained for anyone to run and modify.
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered what happens to space and time near a black hole?
+
+I built a Python notebook exploring the Schwarzschild metric—the mathematical description of black hole spacetime.
+
+Mind-blowing finding: at just 1.5× the event horizon radius, your clock would run at only 58% the speed of a clock far away! This "gravitational time dilation" is real—GPS satellites correct for it daily.
+
+The notebook includes visualizations of how space curves into a funnel shape near the singularity.
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/schwarzschild_metric.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+**Computational General Relativity: Visualizing Black Hole Spacetime**
+
+I developed a Jupyter notebook implementing numerical analysis of the Schwarzschild metric—Einstein's exact solution for spacetime geometry around non-rotating black holes.
+
+**Technical Implementation:**
+
+Using NumPy and Matplotlib, I visualized four key aspects:
+• Metric tensor components showing divergence at the event horizon
+• Gravitational time dilation factor √(1 - rₛ/r)
+• Flamm's paraboloid embedding diagram via surface-of-revolution computation
+• Effective potential for geodesic motion, identifying the ISCO and photon sphere
+
+**Key Results:**
+
+The analysis demonstrates that matter at the innermost stable circular orbit (6rₛ) releases 5.7% of its rest mass as energy—explaining the extreme luminosity of quasars and active galactic nuclei.
+
+**Skills Demonstrated:**
+- Scientific computing with Python
+- 3D visualization and surface plotting
+- Mathematical physics implementation
+- Technical documentation
+
+Interactive notebook available here: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/schwarzschild_metric.ipynb
+
+#Physics #Python #DataVisualization #ScientificComputing #GeneralRelativity
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Black holes bend spacetime itself
+
+This visualization shows Flamm's paraboloid—how space curves around a black hole like a funnel
+
+The math behind it: the Schwarzschild metric describes exactly how clocks slow down and distances stretch near massive objects
+
+At 1.5× the event horizon:
+→ Time runs at 58% speed
+
+At the photon sphere (3rₛ):
+→ Light orbits the black hole
+
+At the ISCO (6rₛ):
+→ Last stable orbit before the plunge
+
+All computed in Python with NumPy
+
+This is real physics—GPS satellites correct for time dilation every day
+
+#BlackHole #Physics #Python #Science #GeneralRelativity #Astrophysics #DataViz #STEM #SpaceTime #Einstein
+
+--------------------------------------------------------------------------------

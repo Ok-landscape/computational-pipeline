@@ -1,0 +1,165 @@
+================================================================================
+FEYNMAN DIAGRAMS BASICS - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+Visualized Feynman diagrams in Python! These elegant drawings translate particle physics math into pictures.
+
+e⁻ + e⁻ → e⁻ + e⁻ (Møller scattering)
+
+Code: matplotlib + numpy
+Result: 6 classic QED diagrams
+
+#Physics #Python #QuantumFieldTheory #Science
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+Built a Python visualization system for Feynman diagrams - the pictorial language of particle physics.
+
+Covered key QED processes:
+• Electron scattering (Møller, Bhabha)
+• Pair annihilation (e⁺e⁻ → γγ)
+• Compton scattering
+• Vacuum polarization loops
+
+Code produces publication-quality diagrams.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder how particle physicists visualize the invisible?
+
+Feynman diagrams! Created by Richard Feynman in 1948, these drawings translate complex quantum field theory calculations into intuitive pictures.
+
+Built a Python system to draw the 6 fundamental QED diagrams:
+- Electron-electron scattering
+- Pair annihilation (matter meets antimatter!)
+- Compton scattering (light bouncing off electrons)
+- Vacuum polarization (even "empty" space has structure)
+
+Also calculated how the electromagnetic coupling constant α ≈ 1/137 "runs" with energy - at high energies it's actually ~1/129!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+Implemented Feynman diagram visualization in Python + cross-section calculations for QED processes.
+
+Key results:
+• 6 fundamental diagrams: QED vertex, Møller, Bhabha, pair annihilation, Compton, vacuum polarization
+• Differential cross-section dσ/dΩ for e⁻μ⁻ scattering
+• Running coupling: α⁻¹(0) = 137.036 → α⁻¹(Mz) ≈ 128.9
+
+The running of α demonstrates how loop corrections (vacuum polarization) modify the effective charge at high Q².
+
+Uses: matplotlib, numpy for wavy photon lines + coiled gluon visualizations.
+
+#Physics #QFT #Python
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+
+**Title:** Built a Python visualization system for Feynman diagrams - the pictorial language of particle physics
+
+**Body:**
+
+**What are Feynman diagrams?**
+
+Imagine you want to calculate the probability that two electrons bounce off each other. In quantum field theory, this involves some seriously complex math with integrals over all possible particle paths.
+
+In 1948, Richard Feynman invented a brilliant shortcut: draw pictures! Each line and vertex in the diagram corresponds to a specific mathematical term. Draw the picture → translate to math → get your answer.
+
+**What I built:**
+
+A Python visualization system that draws the 6 fundamental diagrams in Quantum Electrodynamics (QED):
+
+1. **Basic QED vertex** - where electrons emit/absorb photons
+2. **Møller scattering** - two electrons bouncing off each other
+3. **Pair annihilation** - electron + positron → two photons
+4. **Compton scattering** - photon bouncing off an electron
+5. **Bhabha scattering** - electron + positron → electron + positron
+6. **Vacuum polarization** - a quantum loop that modifies the photon propagator
+
+**Cool physics insight:**
+
+Also calculated how the fine structure constant α ≈ 1/137 changes with energy! At low energies (everyday physics): α⁻¹ ≈ 137. At high energies (like the Z boson mass ~91 GeV): α⁻¹ ≈ 129.
+
+This "running" happens because virtual particle loops (like the vacuum polarization diagram) screen the electric charge differently at different scales.
+
+**Tech stack:** Python, NumPy, Matplotlib
+
+The wavy photon lines are generated parametrically with sine wave oscillations perpendicular to the line direction. Fermion lines use matplotlib's arrow annotations.
+
+**View the full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/feynman_diagrams_basics.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+How do physicists visualize the invisible world of subatomic particles?
+
+With Feynman diagrams! These elegant pictures (invented by Richard Feynman in 1948) translate complex quantum calculations into intuitive drawings.
+
+I built a Python system to visualize these diagrams and calculate real physics - like how the strength of electromagnetism actually changes depending on the energy scale!
+
+Check out the interactive notebook where you can explore the code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/feynman_diagrams_basics.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+**Computational Physics Project: Feynman Diagram Visualization System**
+
+Developed a Python-based visualization framework for Feynman diagrams in Quantum Electrodynamics (QED), combining theoretical physics with practical programming.
+
+**Technical Implementation:**
+• Custom drawing functions for fermion lines (arrows), photon lines (parametric sine waves), and gluon lines (coiled springs)
+• Matplotlib-based rendering with publication-quality output
+• Numerical cross-section calculations using Mandelstam variables
+
+**Physics Covered:**
+• Six fundamental QED processes: vertex interactions, Møller/Bhabha scattering, pair annihilation, Compton scattering, vacuum polarization
+• Differential cross-section calculation for electron-muon scattering
+• Running coupling constant demonstration: α⁻¹(0) = 137.036 → α⁻¹(91 GeV) ≈ 128.9
+
+**Key Skills Demonstrated:**
+• Translating theoretical physics into computational models
+• Scientific visualization with matplotlib
+• Numerical methods for particle physics calculations
+
+View the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/feynman_diagrams_basics.ipynb
+
+#Physics #Python #DataVisualization #ComputationalScience #QuantumFieldTheory
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters, visual-focused caption)
+--------------------------------------------------------------------------------
+
+The secret language of particle physics
+
+Feynman diagrams turn impossible quantum calculations into beautiful pictures.
+
+Each diagram tells a story:
+→ Electrons meeting and scattering
+→ Matter annihilating with antimatter
+→ Light bouncing off particles
+→ The quantum vacuum buzzing with virtual particles
+
+Built this visualization in Python.
+Fun fact: The electromagnetic force actually gets STRONGER at higher energies!
+
+α⁻¹ = 137 (everyday) → 129 (high energy)
+
+#physics #python #science #quantumphysics #dataviz #coding #particlephysics #feynman
+
+================================================================================
+END OF POSTS
+================================================================================

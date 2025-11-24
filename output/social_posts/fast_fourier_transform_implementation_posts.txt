@@ -1,0 +1,162 @@
+# Social Media Posts: Fast Fourier Transform Implementation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+
+The FFT reduces O(N²) to O(N log N) - that's 170x faster for just 2048 points!
+
+Implemented 3 versions in Python: naive DFT, recursive & iterative FFT. The butterfly operation is pure elegance.
+
+#Python #FFT #SignalProcessing #Math #DSP
+
+---
+
+### Bluesky (< 300 chars)
+
+Implemented the Cooley-Tukey FFT algorithm from scratch in Python.
+
+Key insight: Split DFT into even/odd terms, apply twiddle factors (e^(-i2π/N)), and combine with butterfly operations.
+
+Result: O(N²) → O(N log N). For N=2048, that's ~170x speedup over naive DFT.
+
+---
+
+### Threads (< 500 chars)
+
+Ever wondered how your phone analyzes audio so fast?
+
+The Fast Fourier Transform! I implemented it from scratch today.
+
+The naive approach? O(N²) - painfully slow.
+The FFT? O(N log N) - blazingly fast.
+
+The trick: recursively split your signal into even/odd samples, multiply by "twiddle factors" (complex exponentials), then combine with butterfly operations.
+
+For 2048 samples: ~170x speedup. This is why FFT is one of the most important algorithms ever created.
+
+---
+
+### Mastodon (< 500 chars)
+
+Implemented Cooley-Tukey radix-2 FFT in Python.
+
+The Danielson-Lanczos lemma lets us decompose:
+Xₖ = Eₖ + Wₙᵏ · Oₖ
+Xₖ₊ₙ/₂ = Eₖ - Wₙᵏ · Oₖ
+
+Where Wₙ = e^(-i2π/N) is the twiddle factor.
+
+Three implementations compared:
+- Naive DFT: O(N²)
+- Recursive FFT: O(N log N)
+- Iterative FFT: O(N log N) with bit-reversal
+
+Verified against NumPy with <10⁻¹⁴ error. Applied to composite signal analysis (50Hz + 120Hz + noise).
+
+#FFT #DSP #Python #SignalProcessing
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (Title + Body for r/learnpython or r/math)
+
+**Title:** Implemented FFT from scratch - here's why it's O(N log N) instead of O(N²)
+
+**Body:**
+
+I just implemented the Fast Fourier Transform algorithm from scratch and wanted to share what I learned!
+
+**The Problem:**
+The Discrete Fourier Transform converts time-domain signals to frequency-domain. The naive formula is:
+
+Xₖ = Σₙ₌₀ᴺ⁻¹ xₙ · e^(-i2πkn/N)
+
+Computing this directly requires N multiplications for each of N outputs = O(N²). For N=2048, that's ~4 million operations.
+
+**The Clever Trick:**
+The Cooley-Tukey algorithm splits the sum into even and odd indexed terms:
+- Eₖ = FFT of even samples
+- Oₖ = FFT of odd samples
+
+Then combines them with the "butterfly operation":
+- Xₖ = Eₖ + W · Oₖ
+- Xₖ₊ₙ/₂ = Eₖ - W · Oₖ
+
+Where W = e^(-i2πk/N) is called the "twiddle factor."
+
+Apply this recursively log₂(N) times → O(N log N)!
+
+**Results:**
+For N=2048:
+- Naive: O(N²) ≈ 4M operations
+- FFT: O(N log N) ≈ 22K operations
+- Speedup: ~170x
+
+I tested on a signal with 50Hz + 120Hz components plus noise - the FFT perfectly identified both frequencies.
+
+**Code & Notebook:**
+Full implementation with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fast_fourier_transform_implementation.ipynb
+
+---
+
+### Facebook (< 500 chars)
+
+Want to see math magic?
+
+The Fast Fourier Transform is one of the most important algorithms in computing history.
+
+I implemented it from scratch today: it transforms an O(N²) problem into O(N log N). For 2048 data points, that's 170x faster!
+
+The algorithm splits your data recursively, applies complex number tricks (twiddle factors!), and reassembles everything efficiently.
+
+Applications: audio processing, image compression, medical imaging, and more.
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fast_fourier_transform_implementation.ipynb
+
+---
+
+### LinkedIn (< 1000 chars)
+
+Just completed an implementation of the Fast Fourier Transform algorithm from first principles.
+
+The FFT represents a fundamental leap in computational efficiency - reducing O(N²) complexity to O(N log N). For practical datasets, this means transforming hours of computation into seconds.
+
+Key technical insights:
+
+• The Cooley-Tukey radix-2 algorithm exploits symmetry in complex exponentials through the Danielson-Lanczos lemma
+
+• The "butterfly operation" combines sub-transforms using twiddle factors: Xₖ = Eₖ + Wₙᵏ · Oₖ
+
+• Implemented three versions: naive DFT (reference), recursive FFT, and iterative FFT with bit-reversal permutation
+
+• Achieved numerical accuracy within 10⁻¹⁴ of NumPy's optimized implementation
+
+Demonstrated practical application: spectral analysis of composite signals to identify frequency components (50Hz and 120Hz) buried in noise.
+
+The FFT remains foundational to signal processing, telecommunications, medical imaging, and scientific computing.
+
+Full notebook with code and visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fast_fourier_transform_implementation.ipynb
+
+#SignalProcessing #Python #Algorithms #ComputationalScience #DataScience
+
+---
+
+### Instagram (< 500 chars)
+
+The FFT: One algorithm to rule them all
+
+What you're seeing: A composite signal (50Hz + 120Hz + noise) transformed into its frequency components.
+
+The Fast Fourier Transform does this in O(N log N) time instead of O(N²).
+
+For 2048 points: ~170x faster than the naive approach.
+
+How? Split the data recursively, multiply by complex "twiddle factors," and combine with butterfly operations.
+
+This powers your music apps, MRI machines, WiFi, and so much more.
+
+Full Python implementation from scratch - no black boxes, just pure math.

@@ -1,0 +1,159 @@
+# Social Media Posts: LSTM Cell Implementation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Built an LSTM cell from scratch in Python! These gated networks solve the vanishing gradient problem with 3 gates controlling memory flow: forget, input, and output. 384 parameters to learn temporal patterns.
+
+#DeepLearning #Python #MachineLearning #NeuralNetworks #AI
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented a Long Short-Term Memory cell from first principles. LSTMs use three gates (forget, input, output) to control information flow through cell state and hidden state. Visualized gate activations on sinusoidal inputs - fascinating to see how the network learns to modulate memory over time.
+
+#Python #MachineLearning #DeepLearning
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how neural networks remember long sequences? I just built an LSTM cell from scratch!
+
+The magic is in 3 gates:
+- Forget gate: decides what to discard
+- Input gate: controls new information
+- Output gate: filters the result
+
+The cell state acts like a conveyor belt, carrying information across time steps while gates add or remove info.
+
+With just 384 parameters, it learns to process sine/cosine waves and captures temporal patterns beautifully. The visualization of gate activations is mesmerizing!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+New notebook: LSTM Cell Implementation from Scratch
+
+Built a complete Long Short-Term Memory cell with NumPy, implementing the core equations:
+
+fₜ = σ(Wf·[hₜ₋₁, xₜ] + bf)
+iₜ = σ(Wi·[hₜ₋₁, xₜ] + bi)
+cₜ = fₜ⊙cₜ₋₁ + iₜ⊙tanh(Wc·[hₜ₋₁, xₜ] + bc)
+hₜ = oₜ⊙tanh(cₜ)
+
+Key insight: forget gate biases initialized to 1 for better gradient flow. Includes Xavier initialization and full sequence processing with gate activation visualizations.
+
+#Python #DeepLearning #MachineLearning #NeuralNetworks
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** Built an LSTM Cell from Scratch - Here's How the Math Works
+
+**Body:**
+
+I implemented a Long Short-Term Memory (LSTM) cell using only NumPy to understand how these networks actually work under the hood. Here's what I learned:
+
+**ELI5 Version:**
+Imagine you're reading a book and need to remember important plot points while forgetting irrelevant details. LSTMs do exactly this with three "gates":
+
+1. **Forget Gate** - Like deciding "I don't need to remember what the character ate for breakfast"
+2. **Input Gate** - "This new information about the villain is important, let me store it"
+3. **Output Gate** - "When asked about the story, here's what I'll share"
+
+**The Key Equations (in Unicode):**
+
+- Forget: fₜ = σ(Wf·[hₜ₋₁, xₜ] + bf)
+- Input: iₜ = σ(Wi·[hₜ₋₁, xₜ] + bi)
+- Cell update: cₜ = fₜ⊙cₜ₋₁ + iₜ⊙c̃ₜ
+- Output: hₜ = oₜ⊙tanh(cₜ)
+
+Where σ is sigmoid, ⊙ is element-wise multiplication.
+
+**Cool Findings:**
+
+- With input dim=3 and hidden dim=8, we get 4×8×(8+3+1) = 384 parameters
+- Initializing forget gate bias to 1 (not 0) helps gradient flow
+- Cell states can grow unbounded; hidden states are bounded by tanh
+- Gate activations show beautiful patterns when processing sinusoidal inputs
+
+The visualization shows how different hidden units specialize in tracking different aspects of the input signal.
+
+**Full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lstm_cell_implementation.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just built a neural network memory cell from scratch!
+
+LSTMs are the backbone of many AI systems that process sequences - think speech recognition, language translation, and time series prediction.
+
+The secret? Three "gates" that control what to remember and what to forget. Like how we remember important plot points while reading but forget what we had for lunch.
+
+Implemented everything in Python with just NumPy - no deep learning frameworks needed!
+
+Check out the full notebook with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lstm_cell_implementation.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Implementing LSTM Networks from First Principles**
+
+I recently completed a from-scratch implementation of a Long Short-Term Memory (LSTM) cell, the foundational architecture behind many sequence modeling applications in NLP, speech recognition, and time series forecasting.
+
+**Technical Highlights:**
+
+• Implemented all four LSTM equations using NumPy with Xavier/Glorot initialization
+• Created complete forward pass for both single timesteps and full sequences
+• Visualized gate activations and state evolution across time
+
+**Key Engineering Decisions:**
+
+• Forget gate bias initialized to 1.0 (following Jozefowicz et al., 2015) for improved gradient flow
+• Input clipping in sigmoid to prevent numerical overflow
+• Separate storage of gate activations for interpretability analysis
+
+**Methodology:**
+
+The implementation processes synthetic sinusoidal signals (sin, cos, sin(2t)) through an 8-dimensional hidden state, demonstrating how different hidden units learn to track various input features. Parameter count: 384 for d=3, n=8.
+
+This exercise reinforced the importance of understanding foundational architectures before using high-level frameworks.
+
+Full implementation with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lstm_cell_implementation.ipynb
+
+#DeepLearning #MachineLearning #Python #NeuralNetworks #DataScience #AI
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+LSTM Cell from Scratch ✨
+
+Built this visualization of how neural networks remember!
+
+LSTMs use 3 gates to control memory:
+→ Forget gate: what to discard
+→ Input gate: what to store
+→ Output gate: what to share
+
+The heatmaps show gate activations processing sine waves through time. Each row is a hidden unit learning different patterns.
+
+Cool fact: With just 384 parameters, it learns temporal dependencies that regular networks can't capture.
+
+Swipe to see the gate dynamics!
+
+#DeepLearning #Python #MachineLearning #NeuralNetworks #DataScience #Coding #AI #DataVisualization #Tech
+
+--------------------------------------------------------------------------------

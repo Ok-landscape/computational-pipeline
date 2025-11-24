@@ -1,0 +1,186 @@
+# Social Media Posts: Options Greeks Calculation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### TWITTER/X (280 chars)
+--------------------------------------------------------------------------------
+Just built a Black-Scholes Greeks calculator in Python! 📊
+
+Delta, Gamma, Theta, Vega, Rho - the 5 key risk measures every options trader needs.
+
+ATM options: Δ≈0.5, max Γ, max time decay.
+
+#Python #QuantFinance #Options #Trading #DataScience
+
+--------------------------------------------------------------------------------
+
+### BLUESKY (300 chars)
+--------------------------------------------------------------------------------
+Implemented a complete Black-Scholes Greeks calculator for options pricing analysis.
+
+The 5 primary Greeks:
+• Delta (Δ): price sensitivity
+• Gamma (Γ): delta convexity
+• Theta (Θ): time decay
+• Vega (ν): volatility sensitivity
+• Rho (ρ): rate sensitivity
+
+Full derivations and visualizations included.
+
+--------------------------------------------------------------------------------
+
+### THREADS (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how options traders manage risk? It all comes down to the Greeks! 📈
+
+Built a Python implementation of all 5 Black-Scholes Greeks:
+
+Δ Delta - how much option price moves with stock
+Γ Gamma - how fast delta changes (convexity!)
+Θ Theta - time decay eating your premium
+ν Vega - volatility sensitivity
+ρ Rho - interest rate effects
+
+Key insight: At-the-money options have the highest gamma and vega, but also the worst time decay. That's the risk/reward tradeoff!
+
+#QuantFinance #Python #Options
+
+--------------------------------------------------------------------------------
+
+### MASTODON (500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Black-Scholes Greeks implementation in Python
+
+Derived and coded all 5 primary sensitivity measures:
+• Δ = N(d₁) for calls, N(d₁)-1 for puts
+• Γ = N'(d₁)/(S·σ·√T)
+• Θ = time decay with term structure effects
+• ν = S·√T·N'(d₁)
+• ρ = KT·e^(-rT)·N(d₂)
+
+Visualizations show how Greeks vary with underlying price and time to maturity. Gamma spikes near expiration for ATM options - crucial for hedging!
+
+Uses NumPy + SciPy with analytical formulas, no numerical differentiation needed.
+
+#QuantFinance #Python #Mathematics #Finance
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### REDDIT (r/learnpython or r/algotrading)
+--------------------------------------------------------------------------------
+**Title:** Built a complete Black-Scholes Greeks calculator - here's what I learned about options risk
+
+**Body:**
+
+I just finished implementing all 5 primary Greeks for options pricing and wanted to share some insights.
+
+**ELI5 version:** The Greeks tell you how sensitive your option price is to different factors:
+
+- **Delta (Δ)** - If the stock goes up $1, how much does your option go up? ATM calls have delta ≈ 0.5
+- **Gamma (Γ)** - How fast does delta change? Think of it as acceleration. Peaks at-the-money
+- **Theta (Θ)** - How much value do you lose each day? Time decay is brutal for ATM options
+- **Vega (ν)** - If volatility increases 1%, what happens to your option? Always positive
+- **Rho (ρ)** - Interest rate sensitivity. Usually the least important Greek
+
+**Key formulas (using Black-Scholes):**
+
+Delta_call = N(d₁)
+
+Gamma = N'(d₁) / (S × σ × √T)
+
+where d₁ = [ln(S/K) + (r + σ²/2)T] / (σ√T)
+
+**Biggest insight:** Gamma explodes as expiration approaches for ATM options. A 1-week ATM option has way more gamma than a 1-year option. This is why market makers constantly rehedge near expiration.
+
+The code uses NumPy and SciPy with a clean class-based structure. All analytical formulas - no numerical differentiation needed.
+
+**View and run the full notebook here:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/greeks_calculation_options.ipynb
+
+Happy to answer questions about the implementation or the math!
+
+--------------------------------------------------------------------------------
+
+### FACEBOOK (500 chars)
+--------------------------------------------------------------------------------
+Just completed a deep dive into options pricing mathematics! 📊
+
+The "Greeks" are how traders measure risk:
+• Delta: direction exposure
+• Gamma: how fast risk changes
+• Theta: time decay (options lose value daily!)
+• Vega: volatility sensitivity
+• Rho: interest rate effects
+
+Built a Python calculator with visualizations showing how each Greek behaves across different stock prices. The plots reveal why at-the-money options are both the most responsive AND decay the fastest!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/greeks_calculation_options.ipynb
+
+--------------------------------------------------------------------------------
+
+### LINKEDIN (1000 chars)
+--------------------------------------------------------------------------------
+Quantitative Finance Implementation: Black-Scholes Greeks Calculator
+
+Completed a comprehensive Python implementation of options sensitivity analysis, deriving and coding all five primary Greeks under the Black-Scholes framework.
+
+Technical highlights:
+• Analytical derivations of Delta, Gamma, Theta, Vega, and Rho
+• Object-oriented design with NumPy/SciPy for vectorized computation
+• Visualization of Greeks as functions of underlying price
+• Term structure analysis showing Gamma and Vega evolution
+
+Key findings from the analysis:
+- At-the-money options exhibit maximum Gamma (convexity) and Vega (volatility sensitivity)
+- Time decay (Theta) accelerates dramatically as expiration approaches
+- Gamma spikes for short-dated ATM options, explaining increased hedging activity near expiration
+
+This type of sensitivity analysis is fundamental to:
+• Delta-neutral hedging strategies
+• Portfolio risk management
+• Options market making
+• Volatility trading
+
+The implementation uses analytical formulas rather than numerical differentiation, providing both computational efficiency and educational clarity.
+
+View the complete notebook with derivations, code, and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/greeks_calculation_options.ipynb
+
+#QuantitativeFinance #Python #RiskManagement #Derivatives #FinancialEngineering
+
+--------------------------------------------------------------------------------
+
+### INSTAGRAM (500 chars)
+--------------------------------------------------------------------------------
+Options Greeks: The math behind risk management 📈
+
+Swipe to see how these 5 sensitivity measures behave:
+
+Δ DELTA
+How much your option moves with the stock
+
+Γ GAMMA
+The "acceleration" of delta
+
+Θ THETA
+Daily time decay eating your premium
+
+ν VEGA
+Volatility sensitivity
+
+ρ RHO
+Interest rate effects
+
+Notice how everything peaks at-the-money? That's where options are most sensitive - and most risky.
+
+Built with Python + NumPy + SciPy
+
+#quantfinance #python #options #trading #datascience #mathematics #coding #finance #derivatives #riskmanagement
+
+--------------------------------------------------------------------------------

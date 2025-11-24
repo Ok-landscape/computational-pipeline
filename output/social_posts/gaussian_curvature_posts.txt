@@ -1,0 +1,158 @@
+# Social Media Posts: Gaussian Curvature
+# Generated from: gaussian_curvature.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Why can't you flatten a map without distortion?
+
+Gaussian curvature: K = κ₁ · κ₂
+
+Spheres (K > 0) can't become planes (K = 0) without tearing.
+
+Gauss proved this in 1827 - still blowing minds today.
+
+#Math #Geometry #Python #Science
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Exploring Gaussian Curvature with Python
+
+The Theorema Egregium proves that K = κ₁·κ₂ is intrinsic - it depends only on measurements within the surface itself.
+
+This explains why every world map has distortions: you cannot bend a sphere (K > 0) into a plane (K = 0) without stretching.
+
+#Math #Science
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Did you know there's a mathematical reason why every map of Earth is distorted?
+
+Gaussian curvature (K) measures how "curved" a surface is:
+• Sphere: K > 0 (positive, dome-like)
+• Saddle: K < 0 (negative, Pringles chip)
+• Plane: K = 0 (flat)
+
+Gauss's "Theorema Egregium" (1827) proves K is intrinsic - you literally cannot bend a sphere into a flat map without tearing or stretching it.
+
+I visualized this with Python, computing K for spheres, saddles, and tori. Math is beautiful!
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented numerical computation of Gaussian curvature in Python.
+
+K = (LN - M²) / (EG - F²)
+
+where E, F, G are first fundamental form coefficients and L, M, N are second fundamental form coefficients.
+
+Key insight: For a torus, K > 0 on the outer rim, K < 0 on the inner rim, and K = 0 at top/bottom.
+
+The Theorema Egregium shows K is an intrinsic invariant - isometric deformations preserve curvature. This is why cartographers cannot make a perfect flat map of Earth.
+
+#Mathematics #DifferentialGeometry #Python
+
+================================================================================
+REDDIT
+================================================================================
+
+Title: I computed Gaussian Curvature for spheres, saddles, and tori in Python - here's why every map of Earth is wrong
+
+Body:
+
+**ELI5 version:** Imagine wrapping a gift. You can wrap a cylinder (like a tube) with flat paper - just roll it up. But try wrapping a ball perfectly with flat paper and you'll get creases or have to tear it. That's Gaussian curvature at work!
+
+**The math:** Gaussian curvature K = κ₁ · κ₂, where κ₁ and κ₂ are the maximum and minimum "bendiness" at any point.
+
+- Sphere: K = 1/R² (always positive, bends the same way in all directions)
+- Saddle: K < 0 (bends up in one direction, down in another - think Pringles)
+- Plane: K = 0 (no bending)
+
+**Why it matters:** Gauss proved the "Theorema Egregium" (Remarkable Theorem) in 1827: you cannot change a surface's Gaussian curvature without stretching or tearing. A sphere has K > 0, a plane has K = 0, so there's no perfect flat map of Earth. Every projection (Mercator, Robinson, etc.) introduces distortion.
+
+**What I built:** Used NumPy to compute K numerically using the first and second fundamental forms:
+
+K = (LN - M²) / (EG - F²)
+
+Visualized three surfaces:
+1. Sphere - constant positive curvature
+2. Hyperbolic paraboloid (saddle) - negative curvature everywhere
+3. Torus - K varies! Positive on outer rim, negative on inner rim, zero at top/bottom
+
+**Cool applications:**
+- General Relativity uses this concept for spacetime curvature
+- Computer graphics uses curvature for mesh analysis
+- Material science studies stress in curved shells
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gaussian_curvature.ipynb
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+Ever wonder why every map of Earth looks different and they're ALL slightly wrong?
+
+The answer is Gaussian curvature - a mathematical property that Gauss discovered in 1827.
+
+Spheres have positive curvature. Flat surfaces have zero curvature. And you simply CANNOT transform one into the other without stretching or tearing!
+
+I visualized this concept using Python, computing curvature for spheres, saddles, and donuts (tori). The math behind why we can't have a perfect world map is beautiful.
+
+Check out the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gaussian_curvature.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Differential Geometry Through Computational Methods
+
+I recently built a Python implementation to numerically compute Gaussian curvature - a fundamental concept from differential geometry with applications in physics, computer graphics, and material science.
+
+Key technical components:
+- Implemented finite difference methods for computing partial derivatives on parametric surfaces
+- Calculated first and second fundamental form coefficients (E, F, G and L, M, N)
+- Applied the curvature formula: K = (LN - M²) / (EG - F²)
+
+The project visualizes three classical surfaces:
+1. Sphere - constant positive curvature (K = 1/R²)
+2. Hyperbolic paraboloid - negative curvature throughout
+3. Torus - variable curvature (positive on outer rim, negative on inner)
+
+The Theorema Egregium demonstrates that Gaussian curvature is an intrinsic invariant - it's preserved under isometric deformations. This has profound implications from map projections to Einstein's general relativity.
+
+Skills demonstrated: NumPy, Matplotlib, numerical methods, 3D visualization, mathematical modeling.
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gaussian_curvature.ipynb
+
+#DataScience #Mathematics #Python #ScientificComputing #Visualization
+
+================================================================================
+INSTAGRAM (< 500 chars)
+================================================================================
+
+Gaussian Curvature: Why Math Says Perfect Maps Are Impossible
+
+Swipe to see:
+• A sphere (always curves the same way)
+• A saddle (curves up AND down)
+• A donut/torus (both kinds of curvature!)
+
+The color shows curvature:
+Red = positive (dome-like)
+Blue = negative (saddle-like)
+
+Fun fact: Gauss proved in 1827 that you can't flatten a sphere without distortion.
+
+That's why every world map lies to you a little bit.
+
+Built with Python + Matplotlib.
+
+#Mathematics #Science #DataVisualization #Python #Geometry #Coding #STEM #ScienceArt #MathIsBeautiful
+
+================================================================================

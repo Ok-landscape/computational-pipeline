@@ -1,0 +1,167 @@
+# Birthday Paradox - Social Media Posts
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Only 23 people needed for a >50% chance two share a birthday. Why? With 23 people there are 253 possible pairs to compare. The math: P(n) = 1 - ∏(365-k)/365. Intuition fails us here! #Math #Probability #Python #DataScience
+
+### Bluesky (300 chars)
+The Birthday Paradox: Just 23 people gives >50% probability of a shared birthday. The key insight? It's not about matching YOUR birthday - it's about 253 pairwise comparisons. Monte Carlo simulation confirms the exact formula beautifully. #Mathematics #Probability #Python
+
+### Threads (500 chars)
+Here's why probability breaks your brain:
+
+In a room of just 23 people, there's a >50% chance two share a birthday.
+
+Sounds impossible? Here's why it works:
+
+With n people, you have n(n-1)/2 pairs to compare
+- 23 people = 253 pairs
+- Each pair has 1/365 chance of matching
+- Many comparisons = likely collision
+
+The formula: P(n) = 1 - ∏(365-k)/365
+
+At n=50, probability hits 97%
+At n=70, it's 99.9%
+
+Built a Python simulation that confirms the math perfectly.
+
+### Mastodon (500 chars)
+Implemented the Birthday Paradox in Python with both analytical and Monte Carlo approaches.
+
+Key results:
+- P(23) ≈ 50.73% (the famous threshold)
+- P(50) ≈ 97%
+- P(70) ≈ 99.9%
+
+The exponential approximation P(n) ≈ 1 - e^(-n(n-1)/730) has <1.5% error.
+
+The deeper insight: This generalizes to hash collisions. With d slots, expect collisions after ~1.25√d insertions. Critical for cryptography (birthday attacks need O(√N) not O(N)).
+
+#Python #Math #Probability #Cryptography
+
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/math)
+
+**Title:** I built a Birthday Paradox simulator in Python - here's why only 23 people need for 50% collision probability
+
+**Body:**
+I've always found the Birthday Paradox counterintuitive, so I decided to implement it properly and really understand why it works.
+
+**The Problem:** In a group of n people, what's the probability at least two share a birthday?
+
+**The Counterintuitive Answer:** Only 23 people needed for >50% probability!
+
+**Why Our Intuition Fails:**
+We think about the chance someone shares OUR birthday (1/365). But we should think about ALL pairs. With 23 people, there are C(23,2) = 253 unique pairs to compare.
+
+**The Math:**
+The probability all n people have different birthdays:
+P_different = (365/365) × (364/365) × (363/365) × ... × (365-n+1)/365
+
+So probability of at least one match:
+P(n) = 1 - ∏(365-k)/365 for k from 0 to n-1
+
+**My Implementation:**
+- Exact analytical calculation
+- Exponential approximation: P(n) ≈ 1 - e^(-n(n-1)/730)
+- Monte Carlo simulation (10,000 trials per group size)
+
+**Key Results:**
+- P(10) = 11.7%
+- P(23) = 50.7%
+- P(50) = 97.0%
+- P(70) = 99.9%
+
+The approximation has <1.5% error - surprisingly accurate!
+
+**Real-World Applications:**
+- Hash table collision analysis
+- Cryptographic birthday attacks (O(√N) instead of O(N))
+- Any system where you need to estimate collision probability
+
+**View the full notebook with interactive code:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/birthday_paradox.ipynb
+
+Happy to answer questions about the implementation!
+
+
+### Facebook (500 chars)
+
+Here's a fun probability puzzle:
+
+How many people do you need in a room for a >50% chance that two share a birthday?
+
+The answer: Just 23!
+
+This seems impossibly low, but here's the trick - you're not matching YOUR birthday. With 23 people, there are 253 possible pairs. Each pair has a small chance of matching, but with 253 tries, it adds up fast.
+
+By 50 people, probability hits 97%. By 70, it's 99.9%!
+
+Built a Python simulation to prove it.
+
+Full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/birthday_paradox.ipynb
+
+
+### LinkedIn (1000 chars)
+
+The Birthday Paradox: A Lesson in Probabilistic Thinking
+
+In probability theory, the Birthday Paradox demonstrates how intuition fails with combinatorial problems. The result: only 23 people are needed for >50% probability that two share a birthday.
+
+Why does this matter professionally?
+
+This same mathematical principle underlies:
+- Hash table performance analysis
+- Cryptographic security (birthday attacks)
+- Database collision estimation
+- Quality assurance sampling strategies
+
+Technical Implementation:
+
+I built a comprehensive analysis using:
+- Exact analytical solution using the product formula
+- Exponential approximation: P(n) ≈ 1 - e^(-n(n-1)/730)
+- Monte Carlo simulation with 10,000 trials per configuration
+
+Key insight: With n items, there are n(n-1)/2 pairwise comparisons. This quadratic growth is why collisions occur faster than intuition suggests.
+
+The approximation achieves <1.5% error while being computationally efficient - a useful trade-off for system design.
+
+Skills demonstrated: Python, NumPy, Matplotlib, probability theory, Monte Carlo methods, mathematical modeling.
+
+View the complete notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/birthday_paradox.ipynb
+
+
+### Instagram (500 chars)
+
+THE BIRTHDAY PARADOX
+
+Only 23 people needed for a 50% chance two share a birthday.
+
+Sounds impossible?
+
+Here's the secret:
+
+It's not about matching YOUR birthday.
+It's about the 253 possible PAIRS.
+
+The numbers:
+10 people → 11.7%
+23 people → 50.7%
+50 people → 97.0%
+70 people → 99.9%
+
+This same math explains:
+- Why passwords get cracked
+- How hackers break encryption
+- Database collision rates
+
+Swipe to see the probability curve!
+
+Built with Python + NumPy + Matplotlib
+
+#Python #Math #DataScience #Probability #Statistics #Coding #Programming #STEM #Science #MathIsFun

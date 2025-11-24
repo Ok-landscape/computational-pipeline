@@ -1,0 +1,166 @@
+=============================================================
+SOCIAL MEDIA POSTS: Trapezoidal Rule Numerical Integration
+=============================================================
+
+-------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+-------------------------------------------------------------
+
+Approximate ANY integral with simple geometry!
+
+The Trapezoidal Rule divides curves into trapezoids:
+∫f(x)dx ≈ h[f(a)/2 + Σf(xᵢ) + f(b)/2]
+
+Error is O(h²) - halve h, error drops 4x!
+
+#Python #NumericalAnalysis #Math #Science
+
+-------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+-------------------------------------------------------------
+
+Numerical integration made intuitive: the Trapezoidal Rule approximates the area under curves by fitting trapezoids.
+
+Key insight: Error scales as O(h²). Double your sample points → quarter your error.
+
+Implemented in Python with convergence analysis and visualizations.
+
+#Science #Mathematics #Python
+
+-------------------------------------------------------------
+3. THREADS (< 500 chars)
+-------------------------------------------------------------
+
+Ever wondered how computers calculate integrals when there's no analytical solution?
+
+The Trapezoidal Rule is beautifully simple: divide your curve into trapezoids and sum their areas.
+
+Formula: ∫ₐᵇf(x)dx ≈ h[(f(a)+f(b))/2 + Σf(xᵢ)]
+
+The best part? It has O(h²) convergence - meaning if you halve your step size, your error drops by ~4x. That's math you can count on!
+
+Built a Python implementation with adaptive error control that automatically achieves your desired tolerance.
+
+-------------------------------------------------------------
+4. MASTODON (< 500 chars)
+-------------------------------------------------------------
+
+Implemented the composite Trapezoidal Rule in Python with full convergence analysis.
+
+The method approximates ∫ₐᵇf(x)dx by linear interpolation across n subintervals:
+
+I ≈ h[f(x₀)/2 + Σᵢ₌₁ⁿ⁻¹f(xᵢ) + f(xₙ)/2]
+
+Truncation error: E = -(b-a)h²f''(ξ)/12
+
+Demonstrated O(h²) convergence with log-log plots. Also built an adaptive version using Richardson extrapolation for automatic error control to specified tolerance.
+
+Code includes tests with x³, sin(x), exp(-x²), and 1/(1+x²).
+
+#Python #NumericalMethods #Mathematics #Science
+
+-------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+-------------------------------------------------------------
+
+TITLE: Understanding the Trapezoidal Rule - A Visual Python Implementation with Convergence Analysis
+
+BODY:
+
+**What is it?**
+
+The Trapezoidal Rule is a numerical integration technique that approximates the definite integral of a function by fitting trapezoids under the curve. It's one of the simplest Newton-Cotes formulas and a great starting point for numerical analysis.
+
+**How it works (ELI5):**
+
+Imagine you want to find the area under a curvy line. Instead of doing complex calculus, you draw straight lines connecting points on the curve. Each section becomes a trapezoid (like a rectangle with a slanted top). Add up all the trapezoid areas, and you get a pretty good estimate!
+
+**The Math:**
+
+The composite formula is:
+∫ₐᵇf(x)dx ≈ h[(f(a)+f(b))/2 + Σf(xᵢ)]
+
+where h = (b-a)/n is the step size.
+
+**Why it matters:**
+
+- Error is O(h²) - doubling your points quarters your error
+- Stable and works for any continuous function
+- Foundation for understanding more advanced methods
+
+**What I learned:**
+
+1. Richardson extrapolation can estimate error without knowing the exact answer
+2. The error ratio of ~4 when halving h beautifully confirms the O(h²) theory
+3. Even simple methods need many subintervals for transcendental functions like exp(-x²)
+
+**Try the interactive notebook:**
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/trapezoidal_rule.ipynb
+
+The notebook includes geometric visualizations, convergence plots, and an adaptive implementation that automatically achieves your desired accuracy.
+
+-------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+-------------------------------------------------------------
+
+How do computers calculate integrals when there's no formula?
+
+The Trapezoidal Rule offers an elegant solution: approximate curves with simple trapezoids!
+
+The more trapezoids you use, the better your answer - and the error shrinks predictably (4x better when you double your points).
+
+I built a Python notebook exploring this with visualizations showing the geometry and convergence. There's even an adaptive version that automatically achieves whatever precision you need!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/trapezoidal_rule.ipynb
+
+-------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+-------------------------------------------------------------
+
+Numerical Integration: Building the Trapezoidal Rule from First Principles
+
+Just completed an in-depth Python implementation of the Trapezoidal Rule for numerical integration, demonstrating both the theory and practical application.
+
+**Technical Highlights:**
+
+- Implemented composite trapezoidal formula with O(h²) convergence
+- Built adaptive integration with Richardson extrapolation for automatic error control
+- Validated against analytical solutions: x³, sin(x), exp(-x²), 1/(1+x²)
+- Created visualizations showing geometric interpretation and log-log convergence plots
+
+**Key Takeaway:**
+
+The Trapezoidal Rule illustrates a fundamental principle in numerical methods: trading computational effort for accuracy in a predictable, analyzable way. Understanding when and why it achieves O(h²) convergence builds intuition for more sophisticated techniques like Simpson's Rule and Gaussian Quadrature.
+
+**Skills Demonstrated:**
+- Numerical analysis
+- Algorithm implementation
+- Error analysis and convergence testing
+- Scientific visualization with Matplotlib
+
+View the full implementation with interactive code: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/trapezoidal_rule.ipynb
+
+#NumericalAnalysis #Python #Mathematics #DataScience #ScientificComputing
+
+-------------------------------------------------------------
+8. INSTAGRAM (< 500 chars)
+-------------------------------------------------------------
+
+Numerical integration, visualized.
+
+The Trapezoidal Rule: fit trapezoids under a curve to estimate its integral. Simple geometry, powerful results.
+
+Why it works:
+- More trapezoids → less error
+- Error drops 4x when you double the points
+- O(h²) convergence proven by the perfect slope on log-log plots
+
+Swipe to see:
+- Geometric interpretation with 6 vs 20 trapezoids
+- Convergence analysis
+- Approximation approaching exact value
+
+Built in Python with NumPy & Matplotlib.
+
+#Mathematics #Python #DataVisualization #Calculus #NumericalMethods #Science #Coding #STEM

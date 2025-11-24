@@ -1,0 +1,206 @@
+# Social Media Posts: Bisection Method for Root Finding
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+The bisection method: when in doubt, split it in half!
+
+Finding where f(x) = x³ - x - 2 crosses zero:
+→ Start with [1, 2]
+→ 37 iterations later: x ≈ 1.521379706804568
+
+Simple, robust, guaranteed to work.
+
+#Python #NumericalMethods #Math
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented the bisection method for root finding today.
+
+Given f(x) = x³ - x - 2 on [1, 2]:
+• Error halves each iteration: εₙ = (b₀ - a₀)/2ⁿ⁺¹
+• Found root x ≈ 1.521379706804568 in 37 iterations
+• Linear convergence, but guaranteed to work for any continuous function
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever need to find where a function equals zero? The bisection method is your reliable friend.
+
+Here's how it works:
+1. Pick an interval [a, b] where f(a) and f(b) have opposite signs
+2. Check the midpoint c = (a + b)/2
+3. Narrow down to whichever half contains the root
+4. Repeat until you're close enough
+
+For f(x) = x³ - x - 2, starting from [1, 2]:
+→ 37 iterations
+→ Root: x ≈ 1.521379706804568
+→ Error bound: 10⁻¹⁰
+
+Not the fastest method, but it ALWAYS works. That's the beauty of it.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Exploring the bisection method for root finding.
+
+For a continuous f(x) with f(a)·f(b) < 0, the Intermediate Value Theorem guarantees a root in (a, b).
+
+Algorithm:
+• Compute midpoint: c = (a + b)/2
+• Update interval based on sign of f(c)
+• Error after n iterations: |r - cₙ| ≤ (b₀ - a₀)/2ⁿ⁺¹
+
+Results for f(x) = x³ - x - 2 on [1, 2]:
+• Root: 1.521379706804568
+• 37 iterations for ε = 10⁻¹⁰
+• Linear convergence (rate = 1/2)
+
+Also found the Dottie number solving cos(x) - x = 0!
+
+#NumericalAnalysis #Python #Mathematics
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Visualizing the Bisection Method: A Simple but Powerful Root-Finding Algorithm
+
+**Body:**
+
+I created a Jupyter notebook exploring the bisection method, one of the most fundamental algorithms in numerical analysis. Here's what I learned:
+
+**The Basic Idea (ELI5)**
+
+Imagine you're playing a number guessing game. Someone picks a number between 1 and 100, and tells you "higher" or "lower" after each guess. The optimal strategy? Always guess the middle.
+
+That's exactly what the bisection method does for finding roots (where a function equals zero).
+
+**How It Works**
+
+1. Start with an interval [a, b] where f(a) and f(b) have opposite signs
+2. The Intermediate Value Theorem guarantees a root exists between them
+3. Compute the midpoint c = (a + b)/2
+4. Check which half contains the root (based on sign of f(c))
+5. Repeat with the new, smaller interval
+
+**Key Results**
+
+For f(x) = x³ - x - 2 on [1, 2]:
+- Found root x ≈ 1.521379706804568
+- Required 37 iterations for tolerance 10⁻¹⁰
+- Error bound after n iterations: (b₀ - a₀)/2ⁿ⁺¹
+
+**Why It Matters**
+
+The bisection method has LINEAR convergence (error halves each step), which is slower than Newton-Raphson's quadratic convergence. But here's the tradeoff:
+
+✓ Guaranteed to converge for continuous functions
+✓ No derivatives needed
+✓ Numerically stable
+✗ Needs initial bracketing with sign change
+✗ Can't find tangent roots
+
+**Bonus:** Also found the Dottie number (≈0.739) by solving cos(x) - x = 0. It's the unique fixed point of cosine!
+
+Check out the full notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bisection_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how computers find exact solutions to equations?
+
+The bisection method is beautifully simple: keep cutting the search space in half until you find the answer.
+
+For the equation x³ - x - 2 = 0:
+• Start between 1 and 2
+• 37 halvings later → x ≈ 1.5214
+
+It's like a high-low guessing game, but for math! Slow but guaranteed to work.
+
+View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bisection_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Numerical Methods: The Bisection Algorithm
+
+Just completed an implementation of the bisection method for root finding—a foundational algorithm in numerical analysis that demonstrates key principles of computational mathematics.
+
+**Technical Implementation:**
+• Python with NumPy/Matplotlib
+• Full iteration history tracking
+• Convergence visualization and error analysis
+
+**Key Findings:**
+For f(x) = x³ - x - 2 on interval [1, 2]:
+• Converged to x = 1.521379706804568 in 37 iterations
+• Achieved error bound of 10⁻¹⁰
+• Verified theoretical convergence: εₙ = (b₀ - a₀)/2ⁿ⁺¹
+
+**Why This Matters:**
+The bisection method offers guaranteed convergence for continuous functions—critical when reliability matters more than speed. It's often used to:
+• Provide initial estimates for faster algorithms (Newton-Raphson)
+• Solve problems where derivatives are unavailable
+• Handle functions with numerical instabilities
+
+**Skills Demonstrated:**
+• Numerical analysis theory and implementation
+• Scientific visualization
+• Algorithm convergence analysis
+
+Full notebook with interactive code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bisection_method.ipynb
+
+#NumericalMethods #Python #DataScience #ComputationalMathematics #ScientificComputing
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Finding where math meets zero
+
+The bisection method is elegant in its simplicity:
+→ Pick an interval
+→ Split in half
+→ Keep the half with the answer
+→ Repeat
+
+For x³ - x - 2 = 0:
+Starting interval: [1, 2]
+After 37 halvings: x ≈ 1.5214
+
+The error halves every single time.
+Guaranteed convergence.
+No fancy calculus required.
+
+Sometimes the simplest approach
+is the most reliable.
+
+Swipe to see the convergence plots →
+
+#NumericalMethods
+#Mathematics
+#Python
+#DataVisualization
+#CodingLife
+#STEM
+#ScienceIsBeautiful
+
+--------------------------------------------------------------------------------

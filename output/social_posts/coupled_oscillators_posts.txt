@@ -1,0 +1,170 @@
+# Social Media Posts: Coupled Oscillators
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Why do two connected pendulums "steal" each other's energy? 🔄
+
+It's the beat phenomenon—energy flows back & forth at ω_beat = ω₂ - ω₁
+
+Simulated it in Python with normal mode analysis!
+
+#Physics #Python #Oscillators #Science
+
+---
+
+### Bluesky (300 chars)
+Coupled oscillators reveal beautiful physics: two pendulums connected by a spring exchange energy periodically through the beat phenomenon.
+
+Normal modes decouple the system:
+• Symmetric: ω₁ = ω₀
+• Antisymmetric: ω₂ = √(ω₀² + 2ω_c²)
+
+Implemented in Python with scipy's odeint.
+
+---
+
+### Threads (500 chars)
+Ever wonder why two connected pendulums seem to "take turns" swinging?
+
+It's called the beat phenomenon, and it's one of my favorite physics concepts!
+
+When you displace one pendulum, the energy doesn't just stay there—it gradually transfers to the second pendulum, then back again. The math behind it involves normal modes that oscillate independently.
+
+I built a Python simulation showing:
+→ Displacement over time
+→ Energy transfer between oscillators
+→ Phase space trajectories
+→ Normal mode decomposition
+
+The patterns are mesmerizing!
+
+---
+
+### Mastodon (500 chars)
+Explored coupled oscillator dynamics with Python today.
+
+Two pendulums (mass m, length l) connected by spring constant k follow:
+ẍ₁ = -ω₀²x₁ - ω_c²(x₁ - x₂)
+ẍ₂ = -ω₀²x₂ - ω_c²(x₂ - x₁)
+
+Normal coordinates q₁ = x₁ + x₂ and q₂ = x₁ - x₂ decouple into independent harmonic oscillators with frequencies ω₁ = ω₀ and ω₂ = √(ω₀² + 2ω_c²).
+
+Beat frequency ω_beat = ω₂ - ω₁ governs energy exchange period.
+
+Solved with scipy.integrate.odeint, visualized with matplotlib.
+
+#Physics #Python #Oscillators
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit
+
+**Title:** I simulated coupled oscillators in Python and finally understood the beat phenomenon
+
+**Body:**
+
+Ever seen two pendulums connected by a spring "take turns" swinging? That's the beat phenomenon, and I finally grokked it by coding it myself.
+
+**The Setup**
+
+Two identical pendulums connected by a weak spring. When you pull one back and release, something counterintuitive happens: the first pendulum gradually stops while the second one starts swinging. Then the energy flows back. It's like they're passing a ball back and forth.
+
+**The Math (ELI5)**
+
+The trick is finding "normal modes"—special ways the system can move where both pendulums oscillate at a single frequency:
+
+- **Symmetric mode**: Both swing together (spring stays relaxed)
+- **Antisymmetric mode**: They swing opposite (spring gets stretched)
+
+Any motion is just these two modes superimposed. The beat comes from their frequency difference.
+
+**What I Learned**
+
+1. Normal mode analysis is incredibly powerful for simplifying coupled systems
+2. Energy conservation is maintained throughout (good sanity check!)
+3. The phase space plot creates beautiful Lissajous-like patterns
+
+**The Code**
+
+Used numpy and scipy's odeint to solve the ODEs, matplotlib for visualization. The notebook shows displacement, energy transfer, phase space, and normal mode decomposition.
+
+**Interactive Notebook**
+
+You can view and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/coupled_oscillators.ipynb
+
+This same physics appears in molecular vibrations, crystal lattices, and even quantum systems!
+
+---
+
+### Facebook (500 chars)
+
+Why do two pendulums connected by a spring seem to "take turns" swinging? 🎯
+
+It's called the beat phenomenon—one of physics' most elegant examples of energy transfer!
+
+I built a Python simulation showing how energy flows back and forth between the oscillators. The secret? "Normal modes" that let us break the complex motion into simple, independent pieces.
+
+This same physics explains molecular vibrations, crystal behavior, and even how noise-canceling works!
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/coupled_oscillators.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Computational Physics: Analyzing Coupled Oscillator Dynamics**
+
+Recently completed a numerical analysis of coupled harmonic oscillators—a foundational system in physics with applications spanning molecular spectroscopy, solid-state physics, and mechanical engineering.
+
+**Technical Approach:**
+
+• Formulated the equations of motion for two spring-coupled pendulums
+• Applied normal mode analysis to decouple the system
+• Implemented numerical integration using scipy's odeint
+• Visualized dynamics including phase space trajectories and energy transfer
+
+**Key Results:**
+
+The simulation demonstrates the beat phenomenon: periodic energy exchange between oscillators governed by the frequency difference between symmetric (ω₁ = ω₀) and antisymmetric (ω₂ = √(ω₀² + 2ω_c²)) normal modes.
+
+**Skills Demonstrated:**
+
+→ Differential equation modeling
+→ Numerical methods (ODE integration)
+→ Scientific visualization with matplotlib
+→ Physical interpretation of mathematical results
+
+This methodology extends directly to N-body oscillator chains, forming the basis for understanding phonons in materials science.
+
+Full analysis available: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/coupled_oscillators.ipynb
+
+#ComputationalPhysics #Python #NumericalMethods #DataScience
+
+---
+
+### Instagram (500 chars)
+
+Two pendulums, one spring, infinite beauty ✨
+
+This is the beat phenomenon—when connected oscillators exchange energy in perfect rhythm.
+
+Watch how:
+→ Blue oscillator starts with all the energy
+→ Gradually transfers to red
+→ Then flows back again
+→ Forever (in theory!)
+
+The math reveals two "normal modes" that make this complex dance surprisingly simple to understand.
+
+This same physics explains:
+• How molecules vibrate
+• Why crystals have specific heat properties
+• Quantum entanglement in coupled systems
+
+Built with Python, numpy, scipy, and matplotlib.
+
+#Physics #Python #DataVisualization #Science #Oscillators #Math #Coding #STEM #ScienceIsBeautiful

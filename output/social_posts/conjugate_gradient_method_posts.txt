@@ -1,0 +1,156 @@
+===============================================================================
+CONJUGATE GRADIENT METHOD - Social Media Posts
+===============================================================================
+
+--- SHORT-FORM POSTS ---
+
+### Twitter/X (< 280 chars)
+-------------------------------------------------------------------------------
+Solving Ax = b with 1000x1000 matrices? Don't invert—iterate!
+
+The Conjugate Gradient method finds solutions in O(√κ) iterations using A-conjugate search directions.
+
+Faster than LU decomposition for large sparse systems.
+
+#Python #NumericalMethods #LinearAlgebra #Math
+-------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+-------------------------------------------------------------------------------
+The Conjugate Gradient method elegantly transforms solving Ax = b into minimizing a quadratic form f(x) = ½xᵀAx - bᵀx.
+
+Each iteration moves along A-orthogonal directions, guaranteeing convergence in at most n steps.
+
+Convergence scales as O(√κ) with condition number.
+-------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+-------------------------------------------------------------------------------
+Ever wondered how computers solve massive systems of equations efficiently?
+
+The Conjugate Gradient method is the answer for symmetric positive definite matrices. Instead of computing matrix inverses (expensive!), it iteratively finds the solution by minimizing f(x) = ½xᵀAx - bᵀx.
+
+The magic: search directions are A-conjugate (pᵢᵀApⱼ = 0), so each step makes optimal progress. For a matrix with condition number κ, it converges in O(√κ) iterations.
+
+Beautiful math, practical results.
+-------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+-------------------------------------------------------------------------------
+Implemented the Conjugate Gradient method for solving Ax = b where A is symmetric positive definite.
+
+Key insights from numerical experiments:
+• Iterations scale as O(√κ) with condition number κ = λₘₐₓ/λₘᵢₙ
+• Uses A-conjugate directions: pᵢᵀApⱼ = 0 for i ≠ j
+• Equivalent to minimizing f(x) = ½xᵀAx - bᵀx
+• Converges in at most n iterations (exact arithmetic)
+
+Tested with κ ∈ {10, 100, 1000} on 100×100 systems. The theoretical convergence bound holds beautifully in practice.
+
+#NumericalAnalysis #LinearAlgebra #Python #ScientificComputing
+-------------------------------------------------------------------------------
+
+--- LONG-FORM POSTS ---
+
+### Reddit (r/learnpython or r/math)
+-------------------------------------------------------------------------------
+**Title:** Understanding the Conjugate Gradient Method: Solving Linear Systems Without Matrix Inversion
+
+**Body:**
+
+I created a notebook exploring the Conjugate Gradient (CG) method, one of the most elegant algorithms in numerical linear algebra.
+
+**The Problem:** Solve Ax = b where A is a symmetric positive definite matrix.
+
+**ELI5 Version:**
+Imagine you're trying to find the lowest point in a valley. You could walk directly downhill (steepest descent), but you'd zigzag inefficiently. The CG method is smarter—each step takes you in a direction that's "independent" from all previous ones, so you never waste effort retreading old ground. For an n-dimensional valley, you reach the bottom in at most n steps.
+
+**The Math (simplified):**
+- Solving Ax = b is equivalent to minimizing f(x) = ½xᵀAx - bᵀx
+- Gradient: ∇f(x) = Ax - b (the residual r = b - Ax)
+- Search directions p₀, p₁, ... are A-conjugate: pᵢᵀApⱼ = 0 for i ≠ j
+- Step size: α = (rᵀr)/(pᵀAp)
+- Update: x_{k+1} = x_k + αp_k
+
+**Key Finding:**
+Convergence speed depends on the condition number κ = λₘₐₓ/λₘᵢₙ. The error bound is:
+
+‖x_k - x*‖_A ≤ 2((√κ - 1)/(√κ + 1))^k ‖x₀ - x*‖_A
+
+So iterations scale as O(√κ), not O(κ) like steepest descent.
+
+**Experiments:**
+- Tested 100×100 matrices with κ ∈ {10, 100, 1000}
+- Higher condition numbers need more iterations (as expected)
+- Theoretical bounds match observed convergence closely
+
+**Why It Matters:**
+For large sparse systems (think: finite element methods, optimization), CG beats direct solvers. No need to form or invert matrices—just matrix-vector products.
+
+View the full interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/conjugate_gradient_method.ipynb
+-------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+-------------------------------------------------------------------------------
+How do computers solve massive systems of equations?
+
+The Conjugate Gradient method is a beautiful algorithm that finds solutions by taking "smart" steps—each direction is independent from all previous ones in a mathematical sense.
+
+Instead of inverting huge matrices (slow and memory-intensive), it iteratively zeroes in on the answer. For a 100×100 system, it converges in at most 100 steps, often far fewer.
+
+This is the backbone of scientific computing, from physics simulations to machine learning.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/conjugate_gradient_method.ipynb
+-------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+-------------------------------------------------------------------------------
+Numerical Linear Algebra Deep Dive: The Conjugate Gradient Method
+
+I've been exploring iterative methods for solving linear systems, and the Conjugate Gradient (CG) method stands out for its elegance and efficiency.
+
+**Technical Summary:**
+The CG method solves Ax = b for symmetric positive definite matrices by reformulating it as a quadratic minimization problem. The key innovation is using A-conjugate search directions (pᵢᵀApⱼ = 0), which guarantees convergence in at most n iterations for an n×n system.
+
+**Key Results from Implementation:**
+• Convergence scales as O(√κ) where κ is the condition number
+• Tested with κ ∈ {10, 100, 1000} on 100×100 systems
+• Theoretical error bounds match observed behavior
+• Significantly outperforms direct solvers for large sparse systems
+
+**Practical Applications:**
+• Finite element analysis
+• Image reconstruction (tomography)
+• Machine learning optimization
+• Computational fluid dynamics
+
+The algorithm requires only matrix-vector products, making it ideal for large sparse systems where direct factorization is prohibitive.
+
+Skills demonstrated: Python, NumPy, SciPy, numerical analysis, algorithm implementation, scientific visualization.
+
+View the full notebook with code and convergence analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/conjugate_gradient_method.ipynb
+-------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+-------------------------------------------------------------------------------
+The art of solving equations at scale
+
+This visualization shows the Conjugate Gradient method in action—an elegant algorithm that finds solutions to Ax = b without ever inverting a matrix.
+
+The plots reveal:
+• How different condition numbers affect convergence
+• The beautiful 2D trajectory of CG steps
+• Theoretical bounds matching real performance
+
+Each colored line represents a different problem difficulty. The steeper the descent, the faster the solution.
+
+Math can be visual. Math can be beautiful.
+
+#Mathematics #DataScience #Python #Visualization #NumericalMethods #LinearAlgebra #ScientificComputing #CodingLife #STEM
+-------------------------------------------------------------------------------
+
+===============================================================================
+END OF POSTS
+===============================================================================

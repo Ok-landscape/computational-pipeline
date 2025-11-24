@@ -1,0 +1,171 @@
+# Social Media Posts: Bézier Curve Drawing
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Ever wonder how fonts and graphics stay smooth at any zoom? Bézier curves! Just a few control points create perfectly smooth paths using Bernstein polynomials: B(t) = Σ C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ·Pᵢ
+
+#Python #Math #ComputerGraphics #Coding
+
+---
+
+### Bluesky (300 chars)
+Explored the mathematics behind Bézier curves today. These elegant parametric curves use Bernstein polynomials to interpolate control points: B(t) = Σ C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ·Pᵢ
+
+From car body design to vector fonts, they're everywhere in graphics.
+
+#Python #Mathematics
+
+---
+
+### Threads (500 chars)
+Just built a complete Bézier curve implementation from scratch!
+
+These curves are everywhere - fonts, SVG graphics, animation paths, CAD design. The math is beautiful:
+
+B(t) = Σ C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ·Pᵢ
+
+Key insights:
+• Curve always passes through first & last control points
+• Stays inside the convex hull of control points
+• De Casteljau's algorithm gives numerical stability
+• Rational Bézier curves can draw perfect circles!
+
+Drew a heart shape and decorative patterns to demo the power.
+
+---
+
+### Mastodon (500 chars)
+Implemented Bézier curves with both Bernstein polynomial evaluation and De Casteljau's recursive algorithm.
+
+Bernstein form: Bᵢ,ₙ(t) = C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ
+
+De Casteljau recursion: Pᵢ⁽ʳ⁾(t) = (1-t)·Pᵢ⁽ʳ⁻¹⁾ + t·Pᵢ₊₁⁽ʳ⁻¹⁾
+
+Also explored rational Bézier curves - with weight w₁ = 1/√2, you get an exact circular arc! The notebook includes visualizations of control point manipulation and C¹ continuous splines.
+
+#Python #Math #CompSci
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/math)
+
+**Title:** I built a complete Bézier curve implementation from scratch - here's how the math works
+
+**Body:**
+
+I just finished a deep dive into Bézier curves and wanted to share what I learned!
+
+**What are Bézier curves?**
+
+They're parametric curves used everywhere - fonts, vector graphics, CAD, animation. Named after Pierre Bézier who developed them for car body design at Renault.
+
+**The core math (ELI5 version):**
+
+Imagine you have a few "control points" - the curve smoothly flows from the first to the last, being "pulled" toward the middle ones. The formula uses Bernstein polynomials:
+
+B(t) = Σ C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ·Pᵢ
+
+Where t goes from 0 to 1, and C(n,i) is the binomial coefficient.
+
+**Cool properties I discovered:**
+
+1. **Endpoint interpolation** - curve passes through P₀ and Pₙ exactly
+2. **Convex hull containment** - curve never leaves the "boundary" of control points
+3. **Tangent behavior** - slope at endpoints matches direction to adjacent control point
+4. **Affine invariance** - rotate/scale control points, curve transforms identically
+
+**De Casteljau's algorithm:**
+
+Instead of computing polynomials directly, you can recursively interpolate between points:
+
+P⁽ʳ⁾(t) = (1-t)·P⁽ʳ⁻¹⁾ + t·P⁽ʳ⁻¹⁾
+
+This is more numerically stable and shows the geometric construction beautifully.
+
+**Rational Bézier curves:**
+
+By adding weights to control points, you can draw exact conic sections. With weight 1/√2 on the middle control point of a quadratic curve, you get a perfect circular arc!
+
+**What I built:**
+
+- Bernstein polynomial evaluation
+- De Casteljau's algorithm
+- Rational Bézier curves
+- Composite splines with C¹ continuity
+- Fun shapes (heart, decorative patterns)
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bezier_curve_drawing.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+### Facebook (500 chars)
+
+Ever wonder how computer graphics create perfectly smooth curves? Meet Bézier curves!
+
+These mathematical gems use just a few control points to generate beautiful, smooth paths. They're behind everything from the fonts you're reading to car body designs.
+
+I built an interactive notebook exploring the math and creating cool shapes - including a heart and decorative patterns!
+
+The magic formula: B(t) = Σ C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ·Pᵢ
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bezier_curve_drawing.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Exploring the Mathematics Behind Smooth Curves in Computer Graphics**
+
+Just completed a comprehensive implementation of Bézier curves, the mathematical foundation behind vector graphics, font rendering, and CAD systems.
+
+**Technical Highlights:**
+
+• Implemented Bernstein polynomial evaluation: Bᵢ,ₙ(t) = C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ
+
+• Built De Casteljau's recursive algorithm for numerically stable curve evaluation
+
+• Explored rational Bézier curves for exact conic section representation
+
+• Created composite splines with C¹ continuity for complex shapes
+
+**Key Skills Demonstrated:**
+
+- Mathematical modeling and parametric curve theory
+- NumPy/SciPy for scientific computing
+- Matplotlib for technical visualization
+- Algorithm implementation (recursive and iterative approaches)
+
+**Applications:**
+
+These curves are fundamental to graphics programming, game development, font design (TrueType, PostScript), and industrial CAD. Understanding the underlying mathematics enables better optimization and customization of graphics systems.
+
+View the complete implementation with interactive visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bezier_curve_drawing.ipynb
+
+#Python #Mathematics #ComputerGraphics #DataVisualization #SoftwareDevelopment
+
+---
+
+### Instagram (500 chars)
+
+The art of smooth curves
+
+These beautiful patterns were created using Bézier curves - the same math that powers fonts, vector graphics, and animation.
+
+Just a few control points create perfectly smooth paths through Bernstein polynomials:
+
+B(t) = Σ C(n,i)·tⁱ·(1-t)ⁿ⁻ⁱ·Pᵢ
+
+The decorative spiral pattern uses 8 connected cubic Bézier segments.
+
+Also drew a heart shape with just 2 curves and 8 control points!
+
+Math really is beautiful when you visualize it.
+
+#python #math #coding #dataviz #computerscience #graphics #visualization #matplotlib

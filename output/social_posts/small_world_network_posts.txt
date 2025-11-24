@@ -1,0 +1,163 @@
+# Social Media Posts: Small World Networks (Watts-Strogatz Model)
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+## Twitter/X (< 280 chars)
+
+Six degrees of separation explained mathematically! 🌐
+
+Just 1% random rewiring cuts network path length by 60% while keeping 80% clustering.
+
+The secret behind social networks, brains & power grids.
+
+#NetworkScience #Python #DataScience #Math
+
+---
+
+## Bluesky (< 300 chars)
+
+Small world networks: where local clustering meets global shortcuts.
+
+The Watts-Strogatz model shows that rewiring just 1-10% of connections creates networks with both tight local communities AND short paths between any two nodes.
+
+This explains everything from social networks to neural architectures.
+
+---
+
+## Threads (< 500 chars)
+
+Ever heard of "six degrees of separation"? There's beautiful math behind it!
+
+I just simulated the Watts-Strogatz small world model and the results are striking:
+
+→ At just 5% rewiring probability, path length drops to 38% of original
+→ But clustering stays at 82%!
+
+This means you can have tight-knit local communities AND short paths to anyone. It's why your friend's friend knows someone across the world.
+
+Real examples: social networks, brain neurons, power grids.
+
+---
+
+## Mastodon (< 500 chars)
+
+Implemented the Watts-Strogatz small world network model from scratch in Python.
+
+Key metrics computed:
+• Clustering coefficient: Cᵢ = 2Eᵢ / (kᵢ(kᵢ-1))
+• Average path length: L = (1/N(N-1)) ∑ d(i,j)
+
+Results for N=100, K=6:
+• Small world regime: 0.01 < p < 0.1
+• At p≈0.05: C(p)/C(0)=0.82, L(p)/L(0)=0.38
+
+The asymmetry exists because path length is global (sensitive to shortcuts) while clustering is local (needs many rewirings to disrupt).
+
+#NetworkScience #Python #Complexity
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+## Reddit
+
+**Title:** I simulated small world networks and finally understand "six degrees of separation" [Python visualization + code]
+
+**Body:**
+
+You've probably heard of "six degrees of separation" - the idea that any two people are connected through about 6 acquaintances. But why 6? Why not 100 in a world of 8 billion people?
+
+The answer lies in **small world networks**, formalized by Watts and Strogatz in 1998.
+
+**ELI5 Version:**
+
+Imagine 100 people standing in a circle, each holding hands with their 3 nearest neighbors on each side. To pass a message across the circle, it takes ~17 hops on average. Now randomly swap just 5% of those hand-holds to connect to random people across the circle.
+
+Result? Average hops drop to ~6, but most people still have tight local friend groups.
+
+**The Math (simplified):**
+
+The model tracks two things:
+- **Clustering** (C): How connected are your neighbors to each other? Stays at 82% of original with 5% rewiring
+- **Path length** (L): Average hops between any two nodes. Drops to 38% of original with 5% rewiring
+
+This asymmetry is the magic - clustering is local (hard to disrupt), path length is global (sensitive to shortcuts).
+
+**What I learned:**
+
+The visualization really drove home why this matters. Those few random long-distance connections act as "superhighways" that dramatically shrink the network while local structure stays intact. This applies to:
+- Social networks (friends of friends)
+- Neural networks (local circuits + long axons)
+- Power grids (local redundancy + transmission lines)
+
+**Try it yourself:** Interactive notebook with full Python implementation
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/small_world_network.ipynb
+
+---
+
+## Facebook (< 500 chars)
+
+Why are we all connected by just "six degrees of separation"?
+
+I coded up a simulation of small world networks and the results are fascinating.
+
+Start with a network where everyone knows their neighbors. Add just a few random long-distance connections. Suddenly the average distance between ANY two people drops by 60%, but local friend groups stay intact!
+
+This is the secret behind social networks, brain wiring, and even power grids.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/small_world_network.ipynb
+
+---
+
+## LinkedIn (< 1000 chars)
+
+**Understanding Network Effects: A Computational Exploration of Small World Networks**
+
+I recently implemented the Watts-Strogatz small world network model to better understand the mathematical foundations of network effects.
+
+**Key Technical Findings:**
+
+Using Python (NumPy, Matplotlib), I built the model from scratch and computed:
+• Clustering coefficient using local triangle counting
+• Average path length via BFS traversal
+
+For a network of 100 nodes with degree 6, the "small world" regime emerges at 1-10% rewiring probability, where:
+• Clustering retains 80%+ of original value
+• Path length drops to <40% of original
+
+**Professional Relevance:**
+
+This framework explains why:
+• Viral content spreads faster than expected (short paths)
+• Communities remain tight despite global connectivity (high clustering)
+• A few key connectors can dramatically change network dynamics
+
+The asymmetry between local clustering (resilient) and global path length (fragile) has direct implications for organizational design, marketing strategy, and infrastructure planning.
+
+Full implementation with visualization: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/small_world_network.ipynb
+
+---
+
+## Instagram (< 500 chars)
+
+Six degrees of separation, visualized ✨
+
+This plot shows the magic of small world networks.
+
+🔵 Blue line: clustering (local connections)
+🔴 Red line: path length (global reach)
+
+As we add random shortcuts:
+→ Path length PLUMMETS (easy to reach anyone)
+→ Clustering STAYS HIGH (tight friend groups)
+
+The green zone? That's the sweet spot where networks are both connected AND clustered.
+
+Your brain, your social network, even power grids - they all live in this zone.
+
+Built with Python 🐍
+
+#DataVisualization #NetworkScience #Python #Mathematics #DataScience #Complexity

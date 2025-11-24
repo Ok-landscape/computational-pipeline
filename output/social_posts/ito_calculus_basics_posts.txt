@@ -1,0 +1,174 @@
+# Social Media Posts: Itô Calculus Basics
+# Generated from: notebooks/published/ito_calculus_basics.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Why does ∫W dW = W²/2 - T/2 instead of just W²/2?
+
+The "extra" -T/2 term is the signature of Itô calculus - where random noise doesn't follow ordinary calculus rules.
+
+Verified with 5000 Monte Carlo paths!
+
+#Math #Python #Stochastic #DataScience
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Itô calculus gives a surprising result: ∫W_t dW_t = ½W_T² - ½T
+
+That -½T comes from the quadratic variation of Brownian motion. Unlike regular integrals, stochastic integrals care about *how* you evaluate them (left vs midpoint).
+
+Monte Carlo verified in Python.
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Ever wonder why finance models need "special" calculus?
+
+In ordinary calculus: ∫x dx = x²/2
+In Itô calculus: ∫W dW = W²/2 - T/2
+
+That mysterious -T/2 term? It's because Brownian motion has "infinite" variation - it wiggles so much that the choice of left-point vs midpoint evaluation actually matters.
+
+This is why the Black-Scholes formula has that -σ²/2 drift correction. Math that makes billion-dollar markets work.
+
+Simulated 5000 paths to verify. The theory holds up beautifully.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented a numerical verification of Itô's famous integral result:
+
+∫₀ᵀ W_t dW_t = ½W_T² - ½T
+
+Key findings from 5000 Monte Carlo paths:
+- Itô integral mean: -0.5 (matches -T/2 for T=1)
+- Stratonovich integral mean: 0 (follows ordinary calculus)
+- Difference: exactly T/2 (the quadratic variation)
+
+Also verified the Itô isometry: E[(∫f dW)²] = ∫f² dt
+
+The -σ²/2 drift in GBM isn't magic - it's Itô's lemma at work.
+
+#Mathematics #StochasticCalculus #Python #Science
+
+================================================================================
+REDDIT (Title + Body for r/learnpython or r/math)
+================================================================================
+
+TITLE: I built a Python simulation to understand why stochastic integrals are "broken" (Itô calculus)
+
+BODY:
+
+**The Problem**
+
+In regular calculus, we learn that ∫x dx = x²/2. Simple, right?
+
+But when x is replaced by Brownian motion W_t (the mathematical model of random noise), something weird happens:
+
+∫W_t dW_t = ½W_T² - **½T**
+
+Where does that extra -½T come from?!
+
+**The Answer: Quadratic Variation**
+
+Brownian motion is so "rough" that it accumulates variation at rate T over time interval [0,T]. This affects how we compute integrals. The Itô integral uses left-point evaluation (like W_t at time t_i), while the Stratonovich integral uses midpoints.
+
+The difference between them is exactly T/2 - the quadratic variation.
+
+**Why This Matters**
+
+This is the foundation of mathematical finance. The Black-Scholes formula for option pricing uses Itô calculus, and that mysterious -σ²/2 drift correction comes directly from Itô's lemma.
+
+**What I Learned**
+
+I simulated 5000 Brownian motion paths and computed both integrals numerically:
+
+- Itô integral mean: ≈ -0.5 (matches theory!)
+- Stratonovich integral mean: ≈ 0 (ordinary calculus result)
+- Itô isometry: E[(∫f dW)²] = ∫f² dt verified for multiple test functions
+
+The code uses NumPy for vectorized simulation and Matplotlib for visualization. No external dependencies beyond the scientific Python stack.
+
+**Try It Yourself**
+
+View and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/ito_calculus_basics.ipynb
+
+Key takeaway: Stochastic calculus isn't "broken" - it's accounting for the infinite roughness of random paths that ordinary calculus can't handle.
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+Did you know that random noise doesn't follow normal calculus rules?
+
+In Itô calculus (the math behind stock prices and physics), integrating Brownian motion gives:
+
+∫W dW = W²/2 - T/2
+
+That -T/2 term seems wrong... but it's actually correct! It comes from how "rough" random motion is.
+
+I built a Python simulation with 5000 random paths to verify this. The theory matches the numerics perfectly.
+
+Explore the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/ito_calculus_basics.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring the Mathematics Behind Financial Modeling: Itô Calculus
+
+I recently completed a computational project implementing and verifying the fundamental results of Itô calculus - the mathematical framework underlying quantitative finance, from options pricing to risk management.
+
+Key Technical Accomplishments:
+
+- Monte Carlo simulation of 5000 Brownian motion paths
+- Numerical verification of Itô's integral formula: ∫W_t dW_t = ½W_T² - ½T
+- Comparison of Itô vs Stratonovich integration approaches
+- Validation of the Itô isometry property
+- Implementation of Geometric Brownian Motion with the Itô drift correction
+
+The project demonstrates how the -σ²/2 term in the Black-Scholes model isn't an arbitrary correction - it emerges naturally from Itô's lemma applied to the logarithm of the price process.
+
+Tools: Python, NumPy, Matplotlib, Jupyter
+
+This work reinforces the importance of rigorous mathematical foundations in quantitative analysis. The "surprising" results of stochastic calculus become intuitive once you understand quadratic variation.
+
+View the full analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/ito_calculus_basics.ipynb
+
+#QuantitativeFinance #Mathematics #Python #DataScience #StochasticCalculus
+
+================================================================================
+INSTAGRAM (< 500 chars, visual-focused)
+================================================================================
+
+When random meets calculus, weird things happen.
+
+This visualization shows:
+- Brownian motion paths (random walks in continuous time)
+- Itô vs Stratonovich integral distributions
+- The isometry that makes stochastic calculus work
+- Geometric Brownian Motion (how stock prices move)
+
+The key insight: ∫W dW = W²/2 - T/2
+
+That -T/2 isn't a bug - it's the signature of how rough randomness really is.
+
+5000 Monte Carlo simulations.
+Pure Python.
+Math that runs Wall Street.
+
+#Mathematics
+#DataVisualization
+#Python
+#QuantFinance
+#Science
+#Coding

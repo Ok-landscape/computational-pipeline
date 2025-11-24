@@ -1,0 +1,157 @@
+# Social Media Posts for: The Lanczos Algorithm
+
+Generated from notebook: lanczos_algorithm.ipynb
+
+---
+
+## 1. Twitter/X (< 280 chars)
+
+How do you find eigenvalues of a 10,000×10,000 matrix without computing all of them?
+
+The Lanczos algorithm turns it into a tiny tridiagonal problem using Krylov subspaces.
+
+Extremal eigenvalues converge first!
+
+#Python #NumericalMethods #LinearAlgebra #Math
+
+---
+
+## 2. Bluesky (< 300 chars)
+
+The Lanczos algorithm: a 1950s breakthrough still powering modern computation.
+
+It finds eigenvalues of huge sparse matrices by projecting onto Krylov subspaces, producing a tridiagonal matrix Tₘ = VₘᵀAVₘ.
+
+The extremal eigenvalues (largest & smallest) converge fastest—perfect for most applications.
+
+---
+
+## 3. Threads (< 500 chars)
+
+Ever wonder how scientists compute eigenvalues of matrices with millions of entries?
+
+The Lanczos algorithm (1950) is the answer. It works by building a Krylov subspace:
+
+span{v₁, Av₁, A²v₁, ..., Aᵐ⁻¹v₁}
+
+The magic: for symmetric matrices, this projects onto a tridiagonal matrix—super easy to solve!
+
+Three-term recurrence:
+β_{j+1}v_{j+1} = Avⱼ - αⱼvⱼ - βⱼv_{j-1}
+
+Used in quantum chemistry, PCA, and network analysis. Still indispensable after 70+ years.
+
+---
+
+## 4. Mastodon (< 500 chars)
+
+Implemented the Lanczos algorithm for eigenvalue computation of large symmetric matrices.
+
+Key insight: Project A onto Krylov subspace K_m(A,v₁) to get tridiagonal matrix T_m.
+
+The Ritz values (eigenvalues of T_m) approximate A's eigenvalues, with extremal ones converging first at rate related to Chebyshev polynomials.
+
+Tested on 100×100 discrete Laplacian—50 iterations give <10⁻¹⁰ error for extremal eigenvalues.
+
+Full reorthogonalization maintains numerical stability.
+
+#NumericalLinearAlgebra #Python #SciPy
+
+---
+
+## 5. Reddit (Title + Body for r/learnpython or r/math)
+
+**Title:** Implemented the Lanczos Algorithm in Python - Here's How It Finds Eigenvalues of Huge Matrices
+
+**Body:**
+
+**The Problem:** You have a massive symmetric matrix (think 10,000×10,000) and need its eigenvalues. Computing all of them is way too slow.
+
+**The Solution:** The Lanczos algorithm (1950) cleverly reduces this to a much smaller problem.
+
+**How it works (ELI5):**
+
+1. Start with a random vector v₁
+2. Build the Krylov subspace: {v₁, Av₁, A²v₁, ...}
+3. For symmetric matrices, this creates a tridiagonal matrix T_m (mostly zeros!)
+4. The eigenvalues of tiny T_m approximate the eigenvalues of massive A
+
+**The cool part:** Extremal eigenvalues (largest and smallest) converge first! After just 50 iterations on a 100×100 matrix, I got errors below 10⁻¹⁰ for the extreme eigenvalues.
+
+**Three-term recurrence** makes it efficient:
+- β_{j+1}·v_{j+1} = A·vⱼ - αⱼ·vⱼ - βⱼ·v_{j-1}
+- α values form the diagonal
+- β values form the off-diagonals
+
+**Real-world uses:**
+- Quantum chemistry calculations
+- PCA/spectral clustering in ML
+- Vibration analysis in engineering
+- Network/graph analysis
+
+Full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lanczos_algorithm.ipynb
+
+---
+
+## 6. Facebook (< 500 chars)
+
+How do computers find patterns in massive datasets?
+
+Often they need eigenvalues of huge matrices—but computing them all would take forever.
+
+The Lanczos algorithm (invented in 1950!) solves this elegantly. It builds a special subspace where the problem becomes tiny but still accurate.
+
+The largest and smallest eigenvalues pop out first—usually exactly what scientists need!
+
+Used in everything from chemistry simulations to machine learning.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lanczos_algorithm.ipynb
+
+---
+
+## 7. LinkedIn (< 1000 chars)
+
+**Implementing Classical Algorithms: The Lanczos Method for Large-Scale Eigenvalue Problems**
+
+In computational science, we often encounter symmetric matrices far too large for direct eigenvalue computation. The Lanczos algorithm, developed by Cornelius Lanczos in 1950, remains the go-to solution.
+
+**Technical Approach:**
+The algorithm projects matrix A onto a Krylov subspace K_m(A,v₁) = span{v₁, Av₁, A²v₁, ..., Aᵐ⁻¹v₁}, yielding a tridiagonal matrix T_m whose eigenvalues (Ritz values) approximate those of A.
+
+**Key Implementation Details:**
+- Three-term recurrence: β_{j+1}v_{j+1} = Avⱼ - αⱼvⱼ - βⱼv_{j-1}
+- Full reorthogonalization for numerical stability
+- Convergence driven by Chebyshev polynomial bounds
+
+**Results:**
+Testing on a 100×100 discrete Laplacian, 50 iterations achieved <10⁻¹⁰ error for extremal eigenvalues—demonstrating the algorithm's rapid convergence where it matters most.
+
+**Applications:** Quantum chemistry, structural mechanics, spectral clustering, network analysis.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lanczos_algorithm.ipynb
+
+#NumericalMethods #LinearAlgebra #Python #ScientificComputing #DataScience
+
+---
+
+## 8. Instagram (< 500 chars, visual-focused)
+
+The Lanczos Algorithm: 70 years old and still essential ✨
+
+This visualization shows how eigenvalue approximations converge—extremal values (red & blue lines) drop to machine precision in just tens of iterations.
+
+How it works:
+→ Build Krylov subspace from matrix-vector products
+→ Project to tridiagonal form
+→ Solve the tiny problem instead
+
+Used in:
+• Quantum simulations
+• Machine learning (PCA)
+• Network analysis
+• Engineering vibration studies
+
+Sometimes the classics are classics for a reason.
+
+#NumericalMethods #LinearAlgebra #Python #DataScience #Mathematics #ScienceVisualization

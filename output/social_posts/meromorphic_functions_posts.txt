@@ -1,0 +1,179 @@
+=== SOCIAL MEDIA POSTS: MEROMORPHIC FUNCTIONS ===
+
+================================
+1. TWITTER/X (< 280 chars)
+================================
+
+Ever wonder what functions look like when they "blow up" at specific points? 🌀
+
+Meromorphic functions are like smooth roads with infinite speed bumps—analytic everywhere except at isolated poles!
+
+Explored: Γ(z), tan(z), and phase portraits
+
+#ComplexAnalysis #Math #Python
+
+================================
+2. BLUESKY (< 300 chars)
+================================
+
+Meromorphic functions: complex functions that are analytic everywhere except at isolated poles where they shoot to ∞.
+
+Computed residues, visualized the Gamma function Γ(z), and created phase portraits showing pole structure in the complex plane.
+
+A beautiful blend of theory and computation.
+
+================================
+3. THREADS (< 500 chars)
+================================
+
+Just explored meromorphic functions—basically complex functions that are smooth everywhere except at a few "trouble spots" (poles) where they explode to infinity!
+
+Think of tan(z) with its infinite poles at π/2 + nπ, or the famous Gamma function Γ(z) with poles at all negative integers.
+
+The coolest part? The residue theorem lets you calculate complex integrals just by checking what happens near the poles. Verified it numerically and the math checks out! ✨
+
+================================
+4. MASTODON (< 500 chars)
+================================
+
+Deep dive into meromorphic functions: complex functions holomorphic everywhere except at isolated poles.
+
+Key examples computed:
+• Γ(z): simple poles at z = 0, -1, -2, ...
+• tan(z): infinitely many poles at z = π/2 + nπ
+• f(z) = z²/[(z-1)(z-2)(z+i)]: verified residue theorem numerically
+
+Generated phase portraits showing pole structure—poles appear where all colors meet due to rapid phase winding.
+
+#ComplexAnalysis #SciComp
+
+================================
+5. REDDIT (r/learnpython or r/math)
+================================
+
+TITLE: Visualizing Meromorphic Functions: From Gamma to Phase Portraits [OC]
+
+BODY:
+
+I just finished a computational exploration of meromorphic functions and wanted to share what I learned!
+
+## What are Meromorphic Functions?
+
+A meromorphic function is a complex function f(z) that's analytic (smooth) everywhere except at a discrete set of isolated points called **poles**, where the function blows up to infinity.
+
+The name comes from Greek: "meros" (part) + "morphe" (form) = "partially holomorphic"
+
+## Examples I Explored
+
+**1. The Gamma Function Γ(z)**
+- Generalizes the factorial: Γ(n+1) = n! for integers
+- Has simple poles at z = 0, -1, -2, -3, ...
+- The residues follow a beautiful pattern: Res(Γ, -n) = (-1)ⁿ/n!
+
+**2. Simple Rational Functions**
+- f(z) = 1/(z² + 1) has poles at z = ±i
+- Computed residues: Res(f, i) = 1/(2i), Res(f, -i) = -1/(2i)
+
+**3. The Tangent Function**
+- tan(z) = sin(z)/cos(z) has infinitely many poles
+- Located at z = π/2 + nπ for all integers n
+- Each pole has residue -1
+
+## The Residue Theorem
+
+This is the killer app for meromorphic functions! For a closed contour γ enclosing poles {z_k}:
+
+∮_γ f(z) dz = 2πi ∑_k Res(f, z_k)
+
+I verified this numerically for f(z) = z²/[(z-1)(z-2)(z+i)] by:
+1. Computing residues analytically
+2. Numerically integrating around a contour
+3. Comparing the results—they matched to within 10⁻⁹!
+
+## Phase Portraits
+
+The coolest visualization: phase portraits where hue = arg(f(z)) and brightness = |f(z)|.
+
+Poles appear as points where all colors meet (because the phase winds rapidly around them). You can literally *see* the complex structure!
+
+## What I Learned
+
+- Meromorphic functions generalize rational functions to infinite cases
+- The residue at a pole captures local behavior via Laurent series
+- Numerical verification of the residue theorem builds intuition
+- Phase portraits reveal structure invisible in traditional plots
+- Tools: NumPy, SciPy, Matplotlib for all computations
+
+The interplay between analytical formulas and computational verification was incredibly satisfying. Complex analysis comes alive when you can actually *see* these functions!
+
+Interactive notebook with all visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/meromorphic_functions.ipynb
+
+================================
+6. FACEBOOK (< 500 chars)
+================================
+
+Ever heard of functions that are smooth everywhere except at specific "blow-up" points? That's meromorphic functions!
+
+Just computed and visualized some famous examples:
+✨ The Gamma function Γ(z)—a generalization of factorials
+✨ tan(z) with its infinite poles
+✨ Phase portraits showing where complex functions explode to infinity
+
+The math behind this powers everything from quantum physics to evaluating tricky integrals. Science is beautiful! 🌀
+
+See the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/meromorphic_functions.ipynb
+
+================================
+7. LINKEDIN (< 1000 chars)
+================================
+
+Just completed a computational analysis of meromorphic functions—a fundamental class of complex functions that appear throughout mathematics, physics, and engineering.
+
+**Technical Highlights:**
+
+Meromorphic functions are complex-valued functions that are holomorphic everywhere except at isolated poles (points where the function diverges to infinity). They form a natural generalization of rational functions.
+
+**Key Examples Analyzed:**
+
+1. **Gamma Function Γ(z):** Computed pole locations at negative integers and verified the residue formula Res(Γ, -n) = (-1)ⁿ/n!
+
+2. **Residue Theorem Verification:** For f(z) = z²/[(z-1)(z-2)(z+i)], calculated residues analytically and validated via numerical contour integration (agreement to 10⁻⁹)
+
+3. **Phase Portrait Visualization:** Generated complex phase plots where hue encodes arg(f(z)) and brightness encodes |f(z)|—poles appear as color singularities
+
+**Skills Demonstrated:**
+- Complex analysis theory and Laurent series
+- Numerical integration using SciPy
+- Scientific visualization with Matplotlib
+- Verification of analytical results through computation
+
+**Applications:** Residue calculus enables evaluation of real integrals, appears in quantum field theory propagators, and is central to the Riemann zeta function in number theory.
+
+Explore the full analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/meromorphic_functions.ipynb
+
+#Mathematics #ScientificComputing #Python #ComplexAnalysis
+
+================================
+8. INSTAGRAM (< 500 chars, visual-focused)
+================================
+
+MEROMORPHIC FUNCTIONS: Where Math Meets Infinity 🌀
+
+Swipe to see phase portraits of complex functions—those colorful singularities? Those are POLES where the function explodes to ∞
+
+📊 What you're seeing:
+→ Gamma function Γ(z)
+→ Rational functions with multiple poles
+→ tan(z) with infinite poles
+→ Phase portraits (hue = angle, brightness = magnitude)
+
+The residue theorem lets you calculate integrals just by studying these poles. Verified it works: analytical vs numerical matched to 9 decimal places! ✨
+
+#ComplexAnalysis #Mathematics #DataViz #ScientificComputing #Python #STEM
+
+================================
+
+END OF SOCIAL MEDIA POSTS

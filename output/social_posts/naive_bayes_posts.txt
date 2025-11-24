@@ -1,0 +1,110 @@
+# Social Media Posts: Naive Bayes Classification
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Built a Gaussian Naive Bayes classifier from scratch! Despite the "naive" assumption that features are independent, it achieves great accuracy. The math: P(class|x) ∝ P(class) × ∏P(xᵢ|class). Simple yet powerful! #Python #MachineLearning #DataScience
+
+### Bluesky (300 chars)
+Implemented Gaussian Naive Bayes from scratch in Python. The classifier uses Bayes' theorem with the assumption that features are conditionally independent given the class. Despite this strong assumption, it performs remarkably well on our synthetic dataset. #MachineLearning #Statistics
+
+### Threads (500 chars)
+Just built a Naive Bayes classifier from scratch!
+
+Here's the core idea: We use Bayes' theorem to calculate P(class|features). The "naive" part? We assume all features are independent given the class, so P(x|class) = P(x₁|class) × P(x₂|class) × ...
+
+This makes computation super efficient - we only need to estimate means and variances for each feature per class. Despite the simplifying assumption, it achieves excellent accuracy and creates smooth decision boundaries. Sometimes simple wins!
+
+### Mastodon (500 chars)
+Implemented Gaussian Naive Bayes classification from scratch using NumPy.
+
+Core equation: P(Cₖ|x) = P(x|Cₖ)P(Cₖ)/P(x)
+
+The classifier assumes conditional independence: P(x|Cₖ) = ∏ᵢP(xᵢ|Cₖ)
+
+For continuous features, we model each P(xᵢ|Cₖ) as Gaussian with mean μₖᵢ and variance σ²ₖᵢ.
+
+Key insight: We only need the ranking of posteriors, not exact values - that's why this "naive" assumption works well in practice! #Python #MachineLearning #Probability
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/MachineLearning)
+
+**Title:** Implemented Gaussian Naive Bayes from Scratch - Here's How the Math Works
+
+**Body:**
+I built a Naive Bayes classifier from scratch to really understand what's happening under the hood. Here's what I learned:
+
+**The Core Idea:**
+Naive Bayes uses Bayes' theorem to classify data points:
+P(class|features) ∝ P(features|class) × P(class)
+
+**The "Naive" Assumption:**
+The classifier assumes all features are conditionally independent given the class. So instead of calculating P(x₁, x₂, ..., xₙ|class), we just multiply individual probabilities: P(x₁|class) × P(x₂|class) × ... × P(xₙ|class)
+
+**Why It Works:**
+Even though features are rarely truly independent, the classifier only needs to get the *ranking* of class probabilities right, not the exact values. This is why such a simple model often performs surprisingly well!
+
+**For Gaussian (continuous) features:**
+Each feature is modeled as a normal distribution. We just need to estimate the mean μ and variance σ² for each feature in each class from training data.
+
+**Results:**
+On a synthetic 2D dataset with two Gaussian-distributed classes, the classifier learned clear decision boundaries and achieved strong test accuracy. The probability contour plot shows smooth transitions between classes.
+
+**Key Takeaways:**
+- Training is O(n × K) - just compute means and variances
+- Prediction requires only the argmax of posterior probabilities
+- Great for high-dimensional data where more complex models overfit
+
+Check out the interactive notebook with full implementation and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/naive_bayes.ipynb
+
+---
+
+### Facebook (500 chars)
+
+Ever wondered how spam filters know which emails are junk? Many use Naive Bayes - a simple but surprisingly effective classification algorithm!
+
+I built one from scratch to understand it. The "naive" part? It assumes features are independent, which simplifies the math enormously. Despite this being rarely true, it works great because we only need relative rankings of probabilities!
+
+Check out the full notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/naive_bayes.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Building Machine Learning Algorithms from First Principles: Naive Bayes**
+
+Understanding ML algorithms at a fundamental level is crucial for any data scientist. I recently implemented Gaussian Naive Bayes classification from scratch to deepen my understanding of probabilistic classifiers.
+
+**Key Technical Insights:**
+
+The algorithm applies Bayes' theorem with a conditional independence assumption. For continuous features, we model class-conditional distributions as Gaussians, requiring only mean and variance estimation - making training computationally efficient at O(n × K).
+
+**What I Demonstrated:**
+- Implemented complete training pipeline with numerical stability considerations
+- Visualized decision boundaries and posterior probability contours
+- Analyzed why the "naive" independence assumption works in practice
+
+**Skills Applied:** Python, NumPy, probability theory, statistical modeling, data visualization
+
+The key insight: the classifier only needs correct probability rankings, not calibrated values - explaining its robustness despite oversimplified assumptions.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/naive_bayes.ipynb
+
+#MachineLearning #DataScience #Python #Statistics #ProbabilisticModeling
+
+---
+
+### Instagram (500 chars)
+
+Visualizing probability in action!
+
+This plot shows a Naive Bayes classifier separating two classes of data points. The colors represent the probability of belonging to each class - blue for class 0, red for class 1.
+
+The magic of Naive Bayes: it assumes features are independent, which sounds wrong but works surprisingly well. We're essentially asking "what's the probability this point belongs to each class?" and picking the highest.
+
+Built from scratch with Python and NumPy. Sometimes the simplest models are the most elegant!
+
+#DataScience #MachineLearning #Python #Visualization #Probability #Statistics #CodingLife #DataVisualization

@@ -1,0 +1,142 @@
+================================================================================
+SOCIAL MEDIA POSTS: Population Genetics - Hardy-Weinberg Equilibrium
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+Why don't allele frequencies change on their own? The Hardy-Weinberg equation p² + 2pq + q² = 1 explains genetic equilibrium in populations. Simulated 100 generations to show genetic drift in action!
+
+#Python #Genetics #PopulationGenetics #Science #DataViz
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+Explored Hardy-Weinberg equilibrium: the null model of population genetics. The equation p² + 2pq + q² = 1 predicts genotype frequencies when evolution isn't occurring. Simulated genetic drift across population sizes—smaller populations drift faster toward fixation.
+
+#Science #Genetics #Python
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder why some traits persist in populations while others disappear?
+
+The Hardy-Weinberg principle (p² + 2pq + q² = 1) describes genetic equilibrium—when allele frequencies stay constant across generations.
+
+But here's the catch: it only holds under ideal conditions (infinite population, no selection, random mating).
+
+Simulated 100 generations with different population sizes. Result? Small populations (N=50) showed massive drift, while large populations (N=5000) stayed stable. Genetic drift is real!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+Built a population genetics simulation exploring Hardy-Weinberg equilibrium in Python.
+
+Key equation: p² + 2pq + q² = 1
+
+Where p = frequency of dominant allele, q = frequency of recessive allele (p + q = 1)
+
+Simulated genetic drift across 100 generations:
+• N=50: High variance, rapid allele frequency changes
+• N=5000: Near-deterministic, frequencies stable
+
+Used chi-squared test (χ² = Σ(O-E)²/E) to validate equilibrium assumptions. Maximum heterozygosity (2pq = 0.5) occurs at p = 0.5.
+
+#PopulationGenetics #Python #Science
+
+--------------------------------------------------------------------------------
+5. REDDIT (Title + Body for r/learnpython or r/science)
+--------------------------------------------------------------------------------
+
+TITLE: [OC] Simulating Hardy-Weinberg Equilibrium and Genetic Drift in Python
+
+BODY:
+
+I built a Python simulation to explore one of the foundational concepts in population genetics: the Hardy-Weinberg principle.
+
+**ELI5 Version:**
+Imagine a population of organisms with two versions of a gene (alleles). The Hardy-Weinberg equation tells us what percentage of the population will have each combination IF nothing is changing the gene frequencies (no natural selection, everyone mates randomly, etc.).
+
+The equation is: p² + 2pq + q² = 1
+
+Where:
+- p = frequency of allele A
+- q = frequency of allele a (and p + q = 1)
+- p² = frequency of AA individuals
+- 2pq = frequency of Aa individuals
+- q² = frequency of aa individuals
+
+**What I learned:**
+
+1. **Genetic drift is powerful in small populations** - With N=50, allele frequencies swung wildly and sometimes hit fixation (0 or 1). With N=5000, frequencies barely budged from the starting point.
+
+2. **Maximum heterozygosity occurs at p = 0.5** - The "Hardy-Weinberg parabola" shows that genetic diversity (heterozygotes) peaks when both alleles are equally common.
+
+3. **Chi-squared testing** - Used χ² = Σ(O-E)²/E to test whether observed genotype counts match Hardy-Weinberg expectations.
+
+Libraries used: NumPy, SciPy, Matplotlib
+
+View and run the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/population_genetics_hardy_weinberg.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+Why do some genetic traits persist across generations while others fade away?
+
+I explored this using the Hardy-Weinberg principle—the mathematical foundation of population genetics.
+
+The cool finding: in small populations (50 individuals), genetic drift causes huge swings in gene frequencies. But in large populations (5000+), frequencies stay remarkably stable.
+
+Maximum genetic diversity happens when both allele versions are equally common (p = q = 0.5).
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/population_genetics_hardy_weinberg.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+Excited to share my latest computational biology project: a Python simulation of Hardy-Weinberg equilibrium and genetic drift.
+
+**Technical Approach:**
+• Implemented the Hardy-Weinberg model: p² + 2pq + q² = 1
+• Simulated multi-generation evolution using multinomial sampling
+• Applied chi-squared goodness-of-fit testing (χ² = Σ(O-E)²/E) to validate equilibrium assumptions
+• Visualized genetic drift across population sizes (N=50 to N=5000)
+
+**Key Insights:**
+The simulation clearly demonstrates that genetic drift—random fluctuations in allele frequencies—has dramatically different effects based on population size. Small populations showed rapid movement toward fixation, while large populations maintained stable frequencies near the initial value.
+
+**Skills Demonstrated:**
+Statistical modeling, Monte Carlo simulation, scientific visualization, population genetics theory
+
+**Tools:** Python, NumPy, SciPy (stats module), Matplotlib
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/population_genetics_hardy_weinberg.ipynb
+
+#PopulationGenetics #Python #DataScience #ComputationalBiology #Bioinformatics
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters, visual-focused caption)
+--------------------------------------------------------------------------------
+
+The math of genetic inheritance, visualized.
+
+This is the Hardy-Weinberg parabola—showing how genetic diversity (heterozygosity) changes with allele frequency.
+
+Peak diversity happens at p = 0.5 (both alleles equally common).
+
+The other plots show genetic drift: watch how small populations (red line) swing wildly while large populations (blue line) stay stable.
+
+Equation: p² + 2pq + q² = 1
+
+Built with Python + Matplotlib.
+
+.
+.
+.
+#genetics #populationgenetics #dataviz #python #science #biology #evolution #coding #matplotlib #scientificcomputing

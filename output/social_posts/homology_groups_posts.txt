@@ -1,0 +1,185 @@
+================================================================================
+HOMOLOGY GROUPS - SOCIAL MEDIA POSTS
+Generated from: notebooks/published/homology_groups.ipynb
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+How do you count holes in shapes mathematically?
+
+Homology groups detect "holes" of different dimensions:
+- b0 = connected components
+- b1 = loops
+- b2 = voids
+
+A torus has b1=2 (two independent loops!)
+
+#Math #Topology #Python #AlgebraicTopology
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Homology groups: the mathematical machinery for detecting "holes" in topological spaces.
+
+Betti numbers count:
+- b0: connected pieces
+- b1: 1D holes (loops)
+- b2: 2D holes (cavities)
+
+The torus has b0=1, b1=2, b2=1 - explaining why it's fundamentally different from a sphere.
+
+#Math #Topology
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how mathematicians rigorously define "holes" in shapes?
+
+Homology groups are the answer! They're algebraic invariants that capture topological structure.
+
+The key insight: build a "chain complex" of simplices, then quotient cycles by boundaries.
+
+What falls out:
+- Circle: one loop (b1=1)
+- Sphere: one cavity (b2=1)
+- Torus: two loops + one cavity
+
+The Euler characteristic X = b0 - b1 + b2 connects this to classical geometry.
+
+Built a Python implementation from scratch!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented homology group computation in Python using boundary matrices and rank calculations.
+
+The chain complex C_n --> C_{n-1} --> ... satisfies the key property: the boundary of a boundary is zero (d^2 = 0).
+
+Homology H_n = ker(d_n) / im(d_{n+1}) captures n-dimensional holes.
+
+Results verified:
+- S^1: H_0=Z, H_1=Z
+- S^2: H_0=Z, H_1=0, H_2=Z
+- T^2: H_0=Z, H_1=Z^2, H_2=Z
+
+Euler-Poincare formula confirmed: X from simplices = X from Betti numbers.
+
+#AlgebraicTopology #Python #Math
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+Title: I built a Python implementation of homology group computation from scratch
+
+Body:
+
+**TL;DR:** Homology groups detect "holes" in shapes. I wrote Python code to compute them using boundary matrices.
+
+**What are homology groups?**
+
+Imagine you want to mathematically distinguish a coffee mug from a ball. They're both smooth surfaces, but the mug has a handle - a "hole" you can stick your finger through. Homology groups formalize this intuition.
+
+The Betti numbers tell you:
+- b0 = number of connected pieces
+- b1 = number of 1D holes (loops)
+- b2 = number of 2D holes (cavities)
+
+**How it works:**
+
+1. Represent your space as a simplicial complex (vertices, edges, triangles, etc.)
+2. Build boundary matrices that encode how n-simplices connect to (n-1)-simplices
+3. The key property: the boundary of a boundary is always zero
+4. Homology = cycles that aren't boundaries
+
+**What I learned:**
+
+- A hollow triangle (circle) has b1=1 - one loop
+- A filled triangle (disk) has b1=0 - the triangle "fills" the hole
+- A hollow tetrahedron (sphere) has b2=1 - one cavity
+- A torus has b1=2 - two independent loops (meridian and longitude)
+
+The Euler characteristic X = b0 - b1 + b2 + ... works out to 2 for a sphere and 0 for a torus.
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/homology_groups.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+How do mathematicians count "holes" in shapes?
+
+Homology groups are the answer - they're algebraic tools that detect topological features.
+
+A coffee mug and a donut are "the same" topologically (both have one hole). But a ball has no holes. Homology makes this precise!
+
+I built a Python implementation that computes these groups automatically. The code verified that a torus has two independent loops while a sphere has none.
+
+Math is beautiful when you can compute it.
+
+Explore the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/homology_groups.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring Computational Algebraic Topology: Homology Groups in Python
+
+I recently completed a project implementing homology group computation from first principles - a fascinating intersection of abstract mathematics and practical programming.
+
+**The Problem:** How do we rigorously detect and classify "holes" in topological spaces?
+
+**The Solution:** Homology groups provide algebraic invariants that capture the essential structure of a space. The Betti numbers (b0, b1, b2, ...) count holes of each dimension.
+
+**Technical Approach:**
+- Represented spaces as simplicial complexes
+- Constructed boundary matrices mapping n-chains to (n-1)-chains
+- Applied rank-nullity theorem to compute homology dimensions
+- Verified results against known topological invariants
+
+**Key Results:**
+- Circle: b1=1 (one loop)
+- Sphere: b2=1 (one cavity)
+- Torus: b1=2, b2=1 (two loops, one cavity)
+
+This work demonstrates how abstract mathematical concepts become computationally tractable through careful algorithm design.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/homology_groups.ipynb
+
+#Mathematics #Python #DataScience #AlgebraicTopology #ComputationalMathematics
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+
+Counting holes with math
+
+Homology groups are how topologists detect "holes" in shapes.
+
+The Betti numbers tell the story:
+b0 = connected pieces
+b1 = loops you can draw
+b2 = cavities inside
+
+A donut (torus) has:
+b0 = 1 (one piece)
+b1 = 2 (two loops!)
+b2 = 1 (hollow inside)
+
+Built this visualization showing different spaces and their homology.
+
+The Euler characteristic X = b0 - b1 + b2 is 0 for a torus but 2 for a sphere.
+
+Math reveals what eyes can't always see.
+
+#mathematics #topology #python #dataviz #coding #scienceart #mathisbeautiful
+
+================================================================================
+END OF POSTS
+================================================================================

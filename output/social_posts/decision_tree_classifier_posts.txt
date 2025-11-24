@@ -1,0 +1,170 @@
+# Social Media Posts: Decision Tree Classifier
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Built a decision tree classifier from scratch! The algorithm minimizes Gini impurity: G(S) = 1 - Σpₖ² to find optimal splits. Achieved 100% accuracy on synthetic data.
+
+#MachineLearning #Python #DataScience #AI
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented a decision tree classifier using information theory principles. The model recursively partitions feature space by maximizing information gain at each node. Clean axis-aligned boundaries, highly interpretable results.
+
+#MachineLearning #Python #DataScience
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how decision trees actually work under the hood?
+
+I built one from scratch using numpy! The core idea: at each node, find the split that maximizes information gain.
+
+The algorithm uses Gini impurity: G(S) = 1 - Σpₖ²
+
+This measures how "mixed" a set of samples is. Pure nodes (all one class) have G=0.
+
+The result? Interpretable, axis-aligned decision boundaries that separate classes beautifully. No black box here - you can trace exactly why each prediction was made!
+
+#MachineLearning #Python
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New notebook: Decision Tree Classifier from scratch
+
+Implemented using Gini impurity as the splitting criterion:
+G(S) = 1 - Σₖpₖ²
+
+Key implementation details:
+- Recursive tree growing with depth/sample limits
+- Exhaustive threshold search per feature
+- O(n·m·log n) training complexity
+
+The model creates interpretable axis-aligned decision boundaries. Each split tests a single feature against a threshold, making the classification logic completely transparent.
+
+Test accuracy achieved on synthetic 3-class data.
+
+#Python #MachineLearning #DataScience
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** I built a Decision Tree Classifier from scratch in Python - here's how information theory makes it work
+
+**Body:**
+
+I just finished implementing a decision tree classifier using only numpy, and I wanted to share what I learned about the math behind it.
+
+**The Core Idea (ELI5)**
+
+Imagine you're playing 20 questions to guess an animal. You want each question to eliminate as many possibilities as possible. Decision trees work the same way - at each node, they ask the question that best separates the classes.
+
+**The Math**
+
+The algorithm uses Gini impurity to measure how "mixed" a set of samples is:
+
+G(S) = 1 - Σpₖ²
+
+Where pₖ is the proportion of samples in class k. A pure node (all one class) has G=0, while maximum impurity occurs when classes are equally mixed.
+
+At each split, we find the feature and threshold that maximizes information gain - the reduction in impurity from parent to children.
+
+**What I Learned**
+
+1. Decision boundaries are always axis-aligned (perpendicular to feature axes) because each split tests only one feature
+2. Despite simple splits, combining them creates complex non-linear boundaries
+3. Controlling max_depth and min_samples_split is crucial to prevent overfitting
+
+The implementation handles multi-class classification and achieves strong accuracy on synthetic clustered data.
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/decision_tree_classifier.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built a machine learning algorithm from scratch - a Decision Tree Classifier!
+
+The cool part? Unlike "black box" AI models, you can see exactly how it makes decisions. It's like a flowchart that asks yes/no questions about your data until it reaches an answer.
+
+The math is elegant: it finds the questions that best separate different categories using information theory (the same math behind data compression!).
+
+See the full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/decision_tree_classifier.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Excited to share my latest project: implementing a Decision Tree Classifier from first principles using Python and NumPy.
+
+**Technical Approach**
+
+The implementation uses Gini impurity as the splitting criterion, recursively partitioning the feature space to maximize information gain at each node. Key components include:
+
+- Exhaustive threshold search across all features
+- Configurable stopping criteria (max_depth, min_samples_split)
+- Efficient tree traversal for O(log n) predictions
+
+**Key Takeaways**
+
+Decision trees exemplify the trade-off between interpretability and flexibility in ML. While each split is a simple threshold test on one feature, their composition creates complex decision boundaries.
+
+This project reinforced the importance of understanding algorithms at a fundamental level - not just calling library functions, but knowing why they work.
+
+**Skills Demonstrated:** Algorithm implementation, NumPy, Information Theory, Data Visualization, Machine Learning fundamentals
+
+View the complete implementation with mathematical derivations and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/decision_tree_classifier.ipynb
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Decision Tree Classifier - built from scratch
+
+The algorithm asks questions about your data,
+splitting it until each group is "pure"
+
+How it decides what to ask?
+Information theory
+
+Gini impurity measures how mixed a group is:
+G = 1 - Σpₖ²
+
+Lower = purer = better
+
+The result?
+Clean decision boundaries that separate classes
+(swipe to see the visualization)
+
+This is interpretable AI -
+you can trace exactly why
+each prediction was made
+
+No black boxes here
+
+#MachineLearning
+#Python
+#DataScience
+#AI
+#CodingLife
+#LearnToCode
+
+--------------------------------------------------------------------------------

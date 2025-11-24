@@ -1,0 +1,176 @@
+# Social Media Posts: Yield Curve Bootstrapping
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+
+Just built a yield curve bootstrapper in Python!
+
+The math: d(t) = e^(-r(t)·t)
+
+Starting from T-bills → coupon bonds, iteratively solving for zero rates. Forward rates reveal market expectations.
+
+#Python #QuantFinance #FixedIncome #Finance
+
+---
+
+### Bluesky (300 chars)
+
+Implemented yield curve bootstrapping from scratch in Python.
+
+Key insight: Zero rates are typically above par yields when the curve slopes upward. Forward rates are more volatile than spot rates.
+
+Used cubic spline interpolation for smooth curves between market points.
+
+---
+
+### Threads (500 chars)
+
+Ever wondered how banks price bonds?
+
+They use yield curve bootstrapping - a technique that builds a "zero-coupon curve" from market prices.
+
+The process:
+1. Start with short-term instruments (T-bills)
+2. Iteratively solve for discount factors
+3. Extract zero rates: r(t) = -ln(d(t))/t
+
+I built this in Python with ~150 lines of code. The validation showed near-zero repricing errors (<0.01 basis points).
+
+Forward rates between consecutive maturities reveal what the market expects rates to be in the future.
+
+---
+
+### Mastodon (500 chars)
+
+Built a yield curve bootstrapping implementation in Python.
+
+Core algorithm:
+- For zero-coupon: r(t) = ln(F/P)/t
+- For coupon bonds: d(tₙ) = (P - ΣCᵢ·d(tᵢ))/(Cₙ + F)
+
+Used cubic spline interpolation on zero rates for smooth curves.
+
+Key finding: Instantaneous forward rate f(t) = r(t) + t·dr/dt shows more volatility than the underlying zero curve.
+
+Validated by repricing all input instruments with <0.01bp error.
+
+#QuantitativeFinance #Python #FixedIncome
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit
+
+**Title:** I built a yield curve bootstrapping algorithm in Python - here's how it works
+
+**Body:**
+
+**What is yield curve bootstrapping?**
+
+It's a fundamental technique in fixed income that constructs a zero-coupon yield curve from market prices. Think of it as reverse-engineering the "true" interest rates from observable bond prices.
+
+**Why does this matter?**
+
+The zero curve is essential for:
+- Pricing any fixed income security
+- Calculating forward rates (what the market expects future rates to be)
+- Managing interest rate risk
+
+**The Algorithm (ELI5):**
+
+1. **Start simple**: Take short-term instruments like T-bills. These are already zero-coupon, so the rate is just: r = ln(Face Value / Price) / Time
+
+2. **Build iteratively**: For longer-dated coupon bonds, you already know the discount factors for earlier payment dates. Solve for the unknown discount factor at maturity.
+
+3. **Extract the rate**: r(t) = -ln(d(t)) / t
+
+**Key Insights:**
+
+- Zero rates > par yields when the curve slopes upward
+- Forward rates are more volatile than spot rates
+- The choice of interpolation method affects forward rates significantly
+
+**Validation:**
+
+Repriced all 10 input instruments with errors < 0.01 basis points. The curve perfectly fits the market data by construction.
+
+**Code highlights:**
+- ~150 lines of Python
+- Uses numpy, scipy (cubic splines), matplotlib
+- Semi-annual coupon payments assumed
+
+View the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/yield_curve_bootstrapping.ipynb
+
+---
+
+### Facebook
+
+Ever wonder how financial institutions determine interest rates for different time periods?
+
+I built a "yield curve bootstrapper" - a tool that constructs the fundamental interest rate curve used to price bonds and loans.
+
+The cool part: It starts with simple 3-month T-bills and iteratively builds up to 30-year rates. Each step uses the previous results, like solving a puzzle one piece at a time.
+
+Key formula: Discount Factor = e^(-rate × time)
+
+The resulting curve shows that forward rates (what markets expect future rates to be) are much more volatile than current rates. This has implications for everything from mortgage rates to corporate bonds.
+
+Built with Python in ~150 lines of code!
+
+Check out the full notebook with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/yield_curve_bootstrapping.ipynb
+
+---
+
+### LinkedIn
+
+**Yield Curve Bootstrapping: A Core Fixed Income Technique**
+
+I recently implemented a yield curve bootstrapping algorithm in Python, demonstrating one of the foundational techniques in quantitative finance.
+
+**Technical Approach:**
+
+The bootstrapping procedure iteratively solves for zero-coupon rates from a set of market instruments:
+- Short-end: Zero-coupon instruments provide direct rate observations
+- Long-end: Coupon bonds require solving for the unknown discount factor given previously bootstrapped values
+
+**Key Implementation Details:**
+
+- Used cubic spline interpolation for continuous curve construction
+- Implemented forward rate calculations: f(t₁,t₂) = (r₂t₂ - r₁t₁)/(t₂ - t₁)
+- Validated through repricing with <0.01bp error across all instruments
+
+**Practical Applications Demonstrated:**
+- Bond pricing for arbitrary maturities
+- Forward-starting swap rate calculations
+- Risk-free discount curve construction
+
+**Key Findings:**
+
+The zero curve exceeds the par yield curve in an upward-sloping environment. Forward rates exhibit higher volatility than spot rates, providing insight into market expectations for future monetary policy.
+
+Skills demonstrated: Python, NumPy, SciPy, financial mathematics, fixed income analytics.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/yield_curve_bootstrapping.ipynb
+
+---
+
+### Instagram
+
+Building the backbone of bond pricing
+
+This visualization shows a bootstrapped yield curve - the foundation for pricing trillions of dollars in fixed income securities.
+
+What you're seeing:
+- Blue line: Zero-coupon rates (the "true" rates)
+- Green dashed: Par yield curve
+- Red dots: Market data points
+
+The magic? Starting from simple T-bills, we iteratively solve for rates at each maturity. The curve then prices any bond perfectly.
+
+Fun fact: Forward rates (what markets expect rates to be in the future) are always more volatile than current spot rates.
+
+Built with Python, visualized with matplotlib.
+
+#QuantFinance #Python #DataVisualization #FixedIncome #Finance #Coding #FinancialEngineering #InterestRates #BondMarket

@@ -1,0 +1,158 @@
+================================================================================
+ORNSTEIN-UHLENBECK PROCESS - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how particles "remember" where they came from? The Ornstein-Uhlenbeck process models mean-reverting randomness: dX = θ(μ - X)dt + σdW
+
+It always drifts back to equilibrium. Nature's rubber band!
+
+#Python #Math #Stochastics #Physics
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+The Ornstein-Uhlenbeck process: a stochastic model where randomness has memory. Unlike pure Brownian motion, it pulls back toward a mean μ with rate θ.
+
+Stationary distribution: N(μ, σ²/2θ)
+
+Simulated 50 paths and verified the theoretical predictions match beautifully.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Brownian motion is completely random - it wanders forever without direction.
+
+But what if randomness had a "home"?
+
+The Ornstein-Uhlenbeck process adds mean reversion. No matter how far it drifts, there's always a force pulling it back to equilibrium.
+
+The math: dX = θ(μ - X)dt + σdW
+
+Where θ controls how fast it snaps back. Used everywhere from physics (particle velocities) to finance (interest rates) to biology (population dynamics).
+
+Simulated it in Python and the theory checks out perfectly!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Explored the Ornstein-Uhlenbeck process today - a mean-reverting stochastic differential equation:
+
+dX = θ(μ - X)dt + σdW
+
+Key properties verified numerically:
+- Mean: E[Xₜ] = μ + (x₀ - μ)e^(-θt)
+- Variance: Var(Xₜ) = σ²/2θ · (1 - e^(-2θt))
+- Stationary dist: N(μ, σ²/2θ)
+- Autocovariance decays exponentially: e^(-θ|s|)
+
+Half-life t₁/₂ = ln(2)/θ confirmed empirically. KS test passed for terminal distribution normality.
+
+#StochasticProcesses #Python #Mathematics #Physics
+
+--------------------------------------------------------------------------------
+5. REDDIT (Title + Body for r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+TITLE: I simulated the Ornstein-Uhlenbeck process and verified it statistically - here's what I learned about mean-reverting randomness
+
+BODY:
+
+**What is it?**
+
+The Ornstein-Uhlenbeck (OU) process is like Brownian motion with a rubber band attached. Regular Brownian motion wanders off forever, but OU always gets pulled back toward a central value.
+
+**The equation (in plain terms):**
+
+dX = θ(μ - X)dt + σdW
+
+- θ (theta): How strong the rubber band is - higher means faster snap-back
+- μ (mu): The "home" value it wants to return to
+- σ (sigma): How much random noise there is
+- dW: The random Brownian kicks
+
+**ELI5 version:** Imagine a drunk person walking home. Regular Brownian motion = drunk person in an infinite field. OU process = drunk person in a valley - they stumble around randomly, but gravity always pulls them back toward the bottom.
+
+**What I verified:**
+
+1. The mean converges exponentially to μ with half-life = ln(2)/θ
+2. Variance grows from 0 to σ²/(2θ) as the stationary limit
+3. Terminal distribution passes Kolmogorov-Smirnov normality test
+4. Autocovariance decays exponentially as theory predicts
+
+**Why it matters:**
+
+- Physics: Models velocity of particles experiencing friction
+- Finance: The Vasicek model for interest rates is exactly this
+- Biology: Population sizes fluctuating around carrying capacity
+
+**View the interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/ornstein_uhlenbeck_process.ipynb
+
+Code uses numpy, scipy, and matplotlib. The "exact discretization" method gives perfect samples because we know the transition distribution analytically!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Randomness that remembers where home is!
+
+The Ornstein-Uhlenbeck process is a beautiful piece of mathematics that describes how random systems bounce back to equilibrium.
+
+Originally discovered in 1930 to explain how particles move through fluids, it's now used everywhere - from predicting interest rates to modeling how neurons fire.
+
+I simulated 50 random paths and watched them all converge toward the mean. Math is satisfying when theory and simulation match perfectly!
+
+Explore the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/ornstein_uhlenbeck_process.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Stochastic Process Implementation: Ornstein-Uhlenbeck Mean-Reverting Dynamics
+
+I recently implemented and validated the Ornstein-Uhlenbeck (OU) process, a foundational stochastic differential equation with applications across quantitative finance, physics, and computational biology.
+
+Technical highlights:
+
+- Implemented exact discretization (not Euler-Maruyama approximation) since the OU transition density is analytically known
+- Verified convergence: mean approaches equilibrium with half-life t = ln(2)/θ
+- Validated stationary distribution N(μ, σ²/2θ) via Kolmogorov-Smirnov test
+- Confirmed exponential autocovariance decay structure
+
+The OU process is central to:
+- Vasicek interest rate modeling
+- Langevin dynamics in molecular simulation
+- Mean-reverting volatility models
+- Neural activity modeling
+
+This exercise reinforced the importance of understanding analytical solutions - when you know the exact transition distribution, simulation becomes both more accurate and more efficient than naive discretization methods.
+
+Full implementation with statistical verification:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/ornstein_uhlenbeck_process.ipynb
+
+#QuantitativeFinance #StochasticProcesses #Python #DataScience #ComputationalMethods
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+Mean-reverting randomness
+
+Those colorful squiggly lines? They're 50 simulations of the Ornstein-Uhlenbeck process - random walks that always find their way home.
+
+Unlike pure chaos, this process has memory. The gray band shows where theory predicts they'll be. And they listened!
+
+Bottom right: histogram of where all paths ended up vs. the predicted bell curve.
+
+Math describing reality = deeply satisfying
+
+θ = 1.0 | μ = 0.0 | σ = 0.3
+
+#mathematics #physics #dataviz #python #stochastics #simulation #coding #scienceart

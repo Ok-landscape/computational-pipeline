@@ -1,0 +1,177 @@
+# Social Media Posts: Relativistic Kinematics
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Why does time slow down at high speeds? The Lorentz factor γ = 1/√(1-v²/c²) explains it all! At 99.94% of c, muons live 29x longer than at rest.
+
+Visualized the math with Python.
+
+#Physics #Relativity #Python #Science
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored relativistic kinematics in Python today. The Lorentz factor γ = 1/√(1-β²) is the key to understanding why moving clocks run slow and rulers shrink.
+
+At β = 0.9, relativistic momentum is 2.3x the classical prediction. Einstein was onto something big.
+
+#Physics #Science
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why nothing can travel faster than light?
+
+I built a Python notebook exploring relativistic kinematics - the physics of objects moving near light speed.
+
+The magic is in the Lorentz factor: γ = 1/√(1-v²/c²)
+
+This single formula explains:
+• Time dilation (moving clocks run slow)
+• Length contraction (moving objects shrink)
+• Why momentum → ∞ as v → c
+
+My favorite result: Add 0.6c + 0.7c using Einstein's formula and you get 0.915c, not 1.3c!
+
+The universe has a built-in speed limit.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Relativistic Kinematics
+
+Implemented the core equations of special relativity in Python:
+
+• Lorentz factor: γ = 1/√(1-β²)
+• Time dilation: Δt = γΔt₀
+• Length contraction: L = L₀/γ
+• Energy-momentum: E² = (pc)² + (m₀c²)²
+
+Key verification: At β = 0.8, the energy E = γm₀c² = 1.6667m₀c² matches √(p² + m₀²) exactly.
+
+Also demonstrated relativistic velocity addition: 0.6c ⊕ 0.7c = 0.915c
+
+The math is beautiful. #Physics #Python #Relativity #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/Physics)
+--------------------------------------------------------------------------------
+**Title:** I built a Python notebook visualizing relativistic kinematics - here's what I learned about Einstein's physics
+
+**Body:**
+
+I wanted to understand special relativity beyond just the equations, so I coded up the key relationships in Python and visualized them.
+
+**The Core Idea**
+
+Everything in relativistic kinematics comes from one formula - the Lorentz factor:
+
+γ = 1/√(1 - v²/c²)
+
+where β = v/c is your speed as a fraction of light speed.
+
+**What happens at high speeds:**
+
+1. **Time dilation** - A clock moving at 0.9994c (like cosmic ray muons) experiences time 29x slower. That's why muons created in the upper atmosphere survive long enough to reach Earth's surface.
+
+2. **Length contraction** - Objects shrink along their direction of motion by factor 1/γ
+
+3. **Momentum goes wild** - At β = 0.9, relativistic momentum p = γm₀v is 2.29x the classical prediction. As v → c, momentum → ∞, which is why you can't accelerate to light speed.
+
+4. **Velocity addition** - Add 0.6c + 0.7c and you don't get 1.3c. Einstein's formula gives (0.6 + 0.7)/(1 + 0.6×0.7) = 0.915c. The universe enforces its speed limit!
+
+**The energy-momentum relation**
+
+The most elegant equation: E² = (pc)² + (m₀c²)²
+
+For massless particles (photons), this gives E = pc. For massive particles at rest, E = m₀c² (that famous equation!).
+
+**Code highlights:**
+
+- Used numpy for vectorized calculations
+- Created 6 publication-quality plots with matplotlib
+- Verified the energy-momentum relation numerically
+
+The full notebook is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/relativistic_kinematics.ipynb
+
+What aspects of special relativity would you like to see explored next? I'm thinking about relativistic Doppler effect or maybe the twin paradox with actual numbers.
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Did you know that time literally runs slower when you move fast?
+
+I created a computational notebook exploring relativistic kinematics - the physics of near-light-speed motion.
+
+The key formula is γ = 1/√(1-v²/c²)
+
+At 99.94% of light speed, time slows by a factor of 29! This isn't science fiction - it's how GPS satellites work and why particle accelerators can study short-lived particles.
+
+Check out the full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/relativistic_kinematics.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Computational Physics Project: Relativistic Kinematics
+
+I recently completed a Python notebook implementing the core equations of Einstein's Special Relativity, demonstrating both the mathematical framework and practical numerical verification.
+
+Key implementations:
+• Lorentz factor calculations: γ = 1/√(1-β²)
+• Time dilation and length contraction
+• Relativistic vs. classical momentum/energy comparisons
+• Energy-momentum dispersion relation: E² = (pc)² + (m₀c²)²
+• Relativistic velocity addition formula
+
+Technical approach:
+- NumPy for vectorized mathematical operations
+- Matplotlib with GridSpec for multi-panel publication-quality visualizations
+- Numerical verification of theoretical predictions
+
+Notable result: Demonstrated that at β = 0.8, the independently calculated energy E = γm₀c² = 1.6667m₀c² precisely matches the energy-momentum relation √(p² + m₀²), validating the implementation.
+
+This type of computational verification is essential in physics education and research - it builds intuition while ensuring mathematical consistency.
+
+View the full notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/relativistic_kinematics.ipynb
+
+#Physics #Python #ComputationalScience #DataVisualization #STEM
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The physics of near-light-speed motion
+
+This visualization shows 6 key relationships in special relativity:
+
+• The Lorentz factor γ → ∞ as v → c
+• Time slows down for moving observers
+• Objects shrink along their motion
+• Momentum diverges from classical predictions
+• Energy-momentum relation E² = p²c² + m₀²c⁴
+• Velocity addition respects the cosmic speed limit
+
+My favorite: At 0.9994c, muons live 29x longer due to time dilation. That's why cosmic ray muons reach Earth's surface!
+
+Built with Python, NumPy, and Matplotlib.
+
+#physics #relativity #einstein #python #dataviz #science #coding #matplotlib #spacetime
+
+--------------------------------------------------------------------------------

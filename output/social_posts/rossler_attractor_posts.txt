@@ -1,0 +1,175 @@
+# Social Media Posts: Rössler Attractor
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+The Rössler attractor: chaos from just 3 equations! 🌀
+
+dx/dt = -y - z
+dy/dt = x + ay
+dz/dt = b + z(x - c)
+
+A tiny perturbation of 10⁻⁶ causes trajectories to diverge exponentially. Deterministic yet unpredictable!
+
+#Python #Chaos #Math #Physics
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored the Rössler attractor today—Otto Rössler's 1976 "minimal chaos" system.
+
+Three coupled ODEs with standard parameters (a=0.2, b=0.2, c=5.7) produce beautiful spiral chaos.
+
+Estimated Lyapunov exponent λ₁ ≈ 0.07 confirms sensitive dependence on initial conditions.
+
+#Science #Mathematics
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered what "chaos" really means in mathematics?
+
+The Rössler attractor is a perfect example. It's a system of just 3 differential equations:
+• dx/dt = -y - z
+• dy/dt = x + ay
+• dz/dt = b + z(x - c)
+
+The magic? Two trajectories starting just 0.000001 apart will eventually diverge completely. This is the "butterfly effect"—deterministic equations producing unpredictable behavior.
+
+With Python and scipy, you can simulate 50,000 time steps and watch chaos unfold!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented the Rössler attractor in Python using scipy's odeint.
+
+The system: dx/dt = -y - z, dy/dt = x + ay, dz/dt = b + z(x - c)
+
+Key findings with parameters a=b=0.2, c=5.7:
+• Positive Lyapunov exponent λ₁ ≈ 0.07 → chaos confirmed
+• Trajectories with Δx₀ = 10⁻⁶ diverge exponentially
+• Beautiful single-scroll "folded band" structure in phase space
+
+Simpler than Lorenz (only one nonlinear term: xz) but captures all essential chaotic dynamics.
+
+#Chaos #DynamicalSystems #Python #SciPy
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Simulating the Rössler Attractor in Python: A Visual Introduction to Chaos Theory
+
+**Body:**
+
+I created a notebook exploring the Rössler attractor—a beautiful example of deterministic chaos that's simpler than the famous Lorenz system.
+
+**What is it?**
+
+The Rössler system is three coupled differential equations:
+- dx/dt = -y - z
+- dy/dt = x + ay
+- dz/dt = b + z(x - c)
+
+Think of it as a mathematical recipe where each variable's rate of change depends on the others.
+
+**ELI5 Version:**
+
+Imagine spinning a ball on a string, but occasionally giving it a "kick" (the z equation). The ball traces a spiral pattern but never quite repeats its path—that's chaos!
+
+**The "Butterfly Effect" Demo:**
+
+I ran two simulations with initial conditions differing by just 0.000001. At first they're identical, but after ~30 time units, they've completely diverged. This exponential separation is quantified by the Lyapunov exponent (λ₁ ≈ 0.07).
+
+**Code Stack:**
+- numpy for arrays
+- scipy.integrate.odeint for solving ODEs
+- matplotlib for 3D visualization
+
+The notebook includes:
+- 3D attractor visualization
+- xy, xz projections
+- Time series plots
+- Lyapunov exponent estimation
+
+**View the full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/rossler_attractor.ipynb
+
+Questions welcome! Chaos theory is endlessly fascinating.
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just explored some beautiful mathematics—the Rössler attractor!
+
+It's a system of 3 equations that produces "chaos": behavior that's completely deterministic yet impossible to predict long-term.
+
+The coolest part? I simulated two scenarios starting almost identically (difference of 0.000001), and they ended up completely different. This is the famous "butterfly effect" in action!
+
+Check out the full interactive notebook with code and visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/rossler_attractor.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Computational Exploration: The Rössler Attractor and Deterministic Chaos
+
+I recently completed a detailed numerical analysis of the Rössler system—a cornerstone model in dynamical systems theory introduced by Otto Rössler in 1976.
+
+Technical Implementation:
+• Numerical integration using scipy.integrate.odeint
+• 50,000 time steps with dt=0.01
+• Transient removal (10%) for attractor visualization
+• Lyapunov exponent estimation via trajectory divergence analysis
+
+Key Results:
+The system exhibits characteristic chaotic behavior with parameters (a=0.2, b=0.2, c=5.7):
+- Positive largest Lyapunov exponent λ₁ ≈ 0.07
+- Exponential divergence of nearby trajectories (sensitive dependence)
+- Fractal "folded band" structure in phase space
+
+Skills Demonstrated:
+- ODE numerical methods
+- Scientific Python stack (NumPy, SciPy, Matplotlib)
+- 3D visualization and data analysis
+- Mathematical modeling of nonlinear systems
+
+This type of analysis is fundamental to understanding complex systems in fields from weather prediction to financial markets.
+
+Full notebook with code: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/rossler_attractor.ipynb
+
+#DataScience #Python #Mathematics #ScientificComputing #Chaos
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Chaos, visualized 🌀
+
+This is the Rössler attractor—a mathematical system where order and randomness coexist.
+
+Three simple equations.
+Infinite complexity.
+
+The spiral never closes on itself. Two points starting 0.000001 apart will eventually be on completely different paths.
+
+That's the butterfly effect: deterministic equations producing unpredictable behavior.
+
+Created with Python, NumPy, and Matplotlib.
+
+.
+.
+.
+#chaos #mathematics #python #dataviz #science #coding #visualization #physics #butterfly #attractor #dynamicalsystems #scipy #numpy #matplotlib
+
+--------------------------------------------------------------------------------

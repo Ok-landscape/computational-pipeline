@@ -1,0 +1,164 @@
+# Social Media Posts: Gravitational Waves
+# Generated from: notebooks/published/gravitational_waves.ipynb
+
+================================================================================
+TWITTER/X (280 chars max)
+================================================================================
+
+Just simulated a binary black hole merger like GW150914! Two black holes (36 + 29 solar masses) spiraling inward, with frequency f ∝ (t_c - t)^(-3/8). Peak strain ~10⁻²¹. The universe whispers in spacetime ripples.
+
+#Python #Physics #GravitationalWaves #LIGO
+
+================================================================================
+BLUESKY (300 chars max)
+================================================================================
+
+Simulated gravitational waves from a binary black hole inspiral using Python. The characteristic "chirp" shows frequency increasing as f ∝ τ^(-3/8) before merger. At peak, GW150914 radiated ~3.6×10⁴⁹ W—brighter than all stars combined!
+
+#Physics #Python #Science
+
+================================================================================
+THREADS (500 chars max)
+================================================================================
+
+Just built a gravitational wave simulator in Python!
+
+What's happening: Two black holes (36 + 29 solar masses) spiral toward each other, losing energy to gravitational radiation. As they get closer, the frequency increases—this is the famous "chirp" signal.
+
+The math: frequency evolves as f ∝ (t_c - t)^(-3/8), where t_c is coalescence time.
+
+Mind-blowing fact: At merger, the system radiated energy at ~3.6×10⁴⁹ watts. That's more than ALL stars in the observable universe combined, just for a moment.
+
+#Science #Physics #Python
+
+================================================================================
+MASTODON (500 chars max)
+================================================================================
+
+Implemented a gravitational wave waveform generator in Python, modeling binary black hole inspirals like GW150914.
+
+Key physics:
+• Metric perturbation: g_μν = η_μν + h_μν
+• Chirp mass: M = (m₁m₂)^(3/5)/(m₁+m₂)^(1/5)
+• Frequency evolution: f ∝ τ^(-3/8)
+• Peak strain: ~10⁻²¹
+
+The quadrupole formula h_ij = (2G/c⁴r)Q̈_ij gives strain from the mass quadrupole moment. Two polarizations (h₊, h×) carry source orientation info.
+
+Code uses numpy/scipy/matplotlib. #Physics #Python #Astrophysics
+
+================================================================================
+REDDIT (r/learnpython or r/physics)
+================================================================================
+
+**Title:** I built a gravitational wave simulator in Python - here's what I learned about GW150914
+
+**Body:**
+
+Hey everyone! I just finished a Python project simulating gravitational waves from binary black hole mergers, specifically modeling something like the famous GW150914 detection.
+
+**What are gravitational waves?**
+
+They're ripples in spacetime predicted by Einstein in 1916. When massive objects accelerate (like two black holes spiraling together), they create these waves that travel at light speed. LIGO first detected them in 2015!
+
+**The cool physics:**
+
+In the weak-field limit, spacetime can be written as flat space plus a small perturbation: g_μν = η_μν + h_μν
+
+The key quantity is the "chirp mass": M = (m₁m₂)^(3/5)/(m₁+m₂)^(1/5)
+
+This determines how the frequency evolves: f ∝ (t_c - t)^(-3/8)
+
+That's the "chirp" - frequency increasing as the black holes get closer!
+
+**What I simulated:**
+
+- Two black holes: 36 and 29 solar masses
+- Distance: 410 Megaparsecs
+- Generated both polarization states (h₊ and h×)
+- Created time-frequency spectrograms showing the chirp
+
+**Mind-blowing result:**
+
+At merger, the peak gravitational wave luminosity was ~3.6×10⁴⁹ watts. That's MORE than all stars in the observable universe combined, just for a brief moment!
+
+The peak strain at Earth was only ~10⁻²¹. That's like measuring a change smaller than the width of a proton across LIGO's 4km arms. Incredible engineering!
+
+**What I learned:**
+
+1. The quadrupole formula connects mass distribution to wave strain
+2. Two polarizations carry complementary info about source orientation
+3. These signals enable "standard siren" cosmology for measuring the universe's expansion
+
+Check out the notebook with full code and visualizations here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gravitational_waves.ipynb
+
+Happy to answer questions about the implementation!
+
+================================================================================
+FACEBOOK (500 chars max)
+================================================================================
+
+Just simulated one of the most violent events in the universe—two black holes merging!
+
+When black holes spiral together, they create ripples in spacetime called gravitational waves. LIGO detected these for the first time in 2015.
+
+I modeled a system like GW150914: two black holes (36 + 29 times our Sun's mass) at 410 megaparsecs away.
+
+The craziest part? At merger, they released energy at 3.6×10⁴⁹ watts—briefly outshining ALL stars in the universe combined!
+
+Explore the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gravitational_waves.ipynb
+
+================================================================================
+LINKEDIN (1000 chars max)
+================================================================================
+
+Excited to share my latest computational physics project: a gravitational wave signal simulator built in Python.
+
+**Project Overview:**
+I implemented a waveform generator for binary black hole inspirals, modeling systems similar to LIGO's historic GW150914 detection.
+
+**Technical Approach:**
+• Applied the quadrupole approximation from General Relativity
+• Calculated chirp mass evolution: M = (m₁m₂)^(3/5)/(m₁+m₂)^(1/5)
+• Generated both polarization states (h₊, h×) using the transverse-traceless gauge
+• Created time-frequency spectrograms using scipy's signal processing tools
+
+**Key Results:**
+For a 36+29 solar mass binary at 410 Mpc, the simulation shows:
+- Frequency chirp following f ∝ τ^(-3/8)
+- Peak strain amplitude of ~10⁻²¹
+- Peak luminosity of ~3.6×10⁴⁹ W
+
+**Skills Demonstrated:**
+- Numerical implementation of General Relativity equations
+- Signal processing and spectrogram analysis
+- Scientific visualization with matplotlib
+- Self-contained, reproducible computational workflows
+
+This work bridges fundamental physics and data science—exactly the kind of multi-disciplinary challenge I find most engaging.
+
+Full notebook with code and derivations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gravitational_waves.ipynb
+
+#Physics #Python #DataScience #ComputationalScience #LIGO #GravitationalWaves
+
+================================================================================
+INSTAGRAM (500 chars max, visual-focused)
+================================================================================
+
+Gravitational waves: the universe's whisper
+
+These plots show what happens when two black holes collide—spacetime itself ripples outward at the speed of light.
+
+The "chirp": frequency increases as the black holes spiral closer
+Peak power: 3.6×10⁴⁹ watts (brighter than all stars combined!)
+Strain detected: just 10⁻²¹ (smaller than a proton)
+
+First detected in 2015, gravitational waves opened a new way to observe the cosmos.
+
+Built this simulation in Python using numpy, scipy, and matplotlib.
+
+.
+.
+.
+#gravitationalwaves #physics #python #astrophysics #blackholes #science #LIGO #spacetime #coding #dataviz

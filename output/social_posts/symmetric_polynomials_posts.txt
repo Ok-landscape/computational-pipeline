@@ -1,0 +1,169 @@
+================================================================================
+SYMMETRIC POLYNOMIALS - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+Symmetric polynomials: math that doesn't care about order!
+
+e₁(a,b,c) = a+b+c
+e₂(a,b,c) = ab+ac+bc
+e₃(a,b,c) = abc
+
+Swap variables any way you like - the result stays the same. Fundamental to Galois theory & why some equations can't be solved.
+
+#Math #Python #Algebra
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+Explored symmetric polynomials today - functions that remain unchanged under any permutation of variables.
+
+Key insight: Every symmetric polynomial can be written using just the elementary ones (e₁, e₂, ..., eₙ).
+
+This is why polynomial coefficients encode root information via Vieta's formulas.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Just built a computational notebook on symmetric polynomials and I'm kind of obsessed with how elegant they are.
+
+The idea: a polynomial f(x,y,z) is symmetric if swapping any variables leaves it unchanged.
+
+The cool part? There are special "elementary" symmetric polynomials e₁, e₂, ... eₙ that generate ALL symmetric polynomials. It's like having a universal basis.
+
+And they connect directly to polynomial roots through Vieta's formulas: coefficients = elementary symmetric polynomials of the roots!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+Implemented symmetric polynomials in Python and verified several classical results:
+
+- Elementary symmetric polynomials e_k (sums over k-subset products)
+- Power sum polynomials p_k = ∑xᵢᵏ
+- Newton's identities connecting e_k and p_k
+- Vieta's formulas: polynomial coefficients are signed e_k of roots
+
+The fundamental theorem states {e₁,...,eₙ} generates the entire ring of symmetric polynomials. Verified numerically that e_k is invariant under all n! permutations.
+
+Applications span Galois theory, representation theory, and combinatorics.
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** Implementing Symmetric Polynomials in Python - From Theory to Visualization
+
+**Body:**
+
+I built an interactive Jupyter notebook exploring symmetric polynomials - polynomials that stay the same when you swap their variables around.
+
+**What are symmetric polynomials?**
+
+A polynomial f(x₁, x₂, ..., xₙ) is symmetric if permuting the variables doesn't change it. For example, x₁ + x₂ + x₃ is symmetric, but x₁ + 2x₂ is not.
+
+**The elementary symmetric polynomials:**
+
+- e₀ = 1
+- e₁ = x₁ + x₂ + ... + xₙ (sum of all variables)
+- e₂ = sum of all products of 2 distinct variables
+- e₃ = sum of all products of 3 distinct variables
+- eₙ = x₁ · x₂ · ... · xₙ (product of all)
+
+**Why do they matter?**
+
+1. **Fundamental Theorem:** Every symmetric polynomial can be written using just e₁, e₂, ..., eₙ
+2. **Vieta's Formulas:** The coefficients of a polynomial are (up to sign) the elementary symmetric polynomials of its roots
+3. **Galois Theory:** These polynomials are key to understanding which polynomial equations can be solved by radicals
+
+**What I implemented:**
+
+- Functions to compute e_k and power sum polynomials p_k
+- Verification of Newton's identities (relating e_k and p_k)
+- Vieta's formulas demonstration
+- Symmetry verification across all permutations
+- Visualizations of polynomial behavior
+
+The code uses only numpy and matplotlib. Each function is documented with examples.
+
+**Interactive Notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/symmetric_polynomials.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder why a polynomial's coefficients "know" about its roots?
+
+The answer is symmetric polynomials - special functions that don't change when you swap variables around.
+
+Vieta discovered that if r₁, r₂, r₃ are roots of x³ + ax² + bx + c, then:
+- a = -(r₁ + r₂ + r₃)
+- b = r₁r₂ + r₁r₃ + r₂r₃
+- c = -r₁r₂r₃
+
+The coefficients ARE the symmetric polynomials of the roots!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/symmetric_polynomials.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+New computational notebook: Symmetric Polynomials - Theory and Implementation
+
+I developed an interactive Python notebook exploring one of algebra's most elegant structures: symmetric polynomials.
+
+Key implementations:
+- Elementary symmetric polynomials e_k using combinatorial summation
+- Power sum symmetric polynomials p_k = x₁ᵏ + x₂ᵏ + ... + xₙᵏ
+- Complete homogeneous symmetric polynomials h_k
+- Numerical verification of Newton's identities
+- Vieta's formulas connecting polynomial coefficients to root structure
+
+Technical approach:
+- Leveraged Python's itertools for efficient k-subset enumeration
+- Verified invariance under all n! permutations
+- Created visualizations showing polynomial behavior and term counts
+
+These polynomials are foundational to:
+- Galois theory (solvability of equations)
+- Representation theory (symmetric group characters)
+- Algebraic combinatorics
+- Invariant theory
+
+The notebook demonstrates clean, documented code with mathematical verification at each step.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/symmetric_polynomials.ipynb
+
+#Mathematics #Python #DataScience #ComputationalMathematics #Algebra
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters)
+--------------------------------------------------------------------------------
+
+Symmetric Polynomials
+
+Polynomials that don't care about order.
+
+e₁ = x + y + z
+e₂ = xy + xz + yz
+e₃ = xyz
+
+Swap x, y, z however you want.
+The answer stays the same.
+
+These simple functions unlock:
+- Why some equations can't be solved
+- How coefficients encode roots
+- The deep structure of algebra
+
+Newton, Vieta, and Galois all studied these.
+Now computed in Python.
+
+Mathematics is beautiful.

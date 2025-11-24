@@ -1,0 +1,138 @@
+# Word2Vec Skip-Gram Model - Social Media Posts
+
+===============================================================================
+## SHORT-FORM POSTS
+===============================================================================
+
+### 1. Twitter/X (< 280 chars)
+
+Built Word2Vec Skip-Gram from scratch! The model learns word relationships by predicting context from center words. king - man + woman ≈ queen actually works!
+
+#Python #NLP #MachineLearning #Word2Vec #DataScience
+
+---
+
+### 2. Bluesky (< 300 chars)
+
+Implemented Word2Vec Skip-Gram with negative sampling from scratch using NumPy. The model maximizes P(context|center) using sigmoid: σ(x) = 1/(1 + e⁻ˣ). Fascinating to see semantic clusters emerge and analogies like man:king :: woman:queen actually work.
+
+---
+
+### 3. Threads (< 500 chars)
+
+Just coded Word2Vec Skip-Gram from scratch!
+
+The core idea: predict surrounding words from a center word. The objective function sums log probabilities over all word pairs in a context window.
+
+Negative sampling makes it tractable - instead of computing softmax over the entire vocabulary, we sample a few "negative" examples and use binary classification.
+
+The coolest part? The learned embeddings capture semantic relationships. Similar words cluster together, and vector arithmetic works: king - man + woman ≈ queen
+
+---
+
+### 4. Mastodon (< 500 chars)
+
+Implemented Skip-Gram Word2Vec with negative sampling in pure NumPy.
+
+Key math: maximize log σ(u·v) for true pairs + Σ log σ(-u·v) for negative samples, where σ(x) = 1/(1+e⁻ˣ).
+
+The noise distribution P(w) ∝ U(w)^(3/4) downweights frequent words. Embeddings learned on a small synthetic corpus successfully capture semantic relationships - royalty clusters together, man/woman/boy/girl cluster together.
+
+Vector analogies work too: v_king - v_man + v_woman ≈ v_queen
+
+===============================================================================
+## LONG-FORM POSTS
+===============================================================================
+
+### 5. Reddit (r/learnpython or r/MachineLearning)
+
+**Title:** I implemented Word2Vec Skip-Gram with Negative Sampling from scratch - here's how it works
+
+**Body:**
+
+I built a Word2Vec Skip-Gram model using only NumPy to really understand how word embeddings work. Here's what I learned:
+
+**The Core Idea (ELI5):**
+Imagine learning what a word means by looking at its neighbors. If "king" often appears near "crown," "throne," and "rule," we can infer its meaning from this context. Skip-Gram flips this: given "king," predict "crown," "throne," etc.
+
+**The Math (simplified):**
+- For each word pair (center, context), we want P(context|center) to be high
+- We use two embedding matrices: one for center words, one for context words
+- Probability comes from the dot product: P ∝ exp(u_context · v_center)
+
+**The Trick - Negative Sampling:**
+Computing softmax over a huge vocabulary is expensive. Instead, we:
+1. Maximize σ(u_pos · v) for the true context word
+2. Minimize σ(u_neg · v) for random "negative" samples
+
+The sigmoid σ(x) = 1/(1+e⁻ˣ) turns dot products into probabilities.
+
+**What I Found:**
+- Semantic clusters emerge naturally (royalty words group together, common people words group together)
+- Vector arithmetic works! king - man + woman ≈ queen
+- t-SNE visualization shows clear semantic structure
+
+The full notebook with code and visualizations is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/word2vec_skip_gram.ipynb
+
+---
+
+### 6. Facebook (< 500 chars)
+
+Ever wonder how computers understand that "king" and "queen" are related?
+
+I built a Word2Vec model that learns word meanings from context. The cool part: after training, the model discovers that king - man + woman = queen without being told!
+
+It works by predicting which words appear near each other. Words used in similar contexts end up with similar representations.
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/word2vec_skip_gram.ipynb
+
+---
+
+### 7. LinkedIn (< 1000 chars)
+
+**Building Word Embeddings from Scratch: A Deep Dive into Word2Vec Skip-Gram**
+
+I recently implemented the Word2Vec Skip-Gram architecture with negative sampling using pure NumPy to deepen my understanding of NLP fundamentals.
+
+**Technical Approach:**
+- Implemented the complete training pipeline: vocabulary building, training pair generation, gradient computation, and SGD optimization
+- Used negative sampling to approximate the expensive softmax, sampling from P(w) ∝ U(w)^(3/4)
+- Applied cosine similarity for word relationship analysis and t-SNE for embedding visualization
+
+**Key Results:**
+- Semantic clustering: Royalty terms (king, queen, prince, princess) and common people (man, woman, boy, girl) form distinct clusters
+- Analogical reasoning: The model successfully solves vector analogies like v_king - v_man + v_woman ≈ v_queen
+
+**Skills Demonstrated:**
+- Neural network implementation from first principles
+- Mathematical derivation of gradient updates
+- Dimensionality reduction and visualization techniques
+
+This exercise reinforced how distributed representations capture semantic relationships through co-occurrence statistics.
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/word2vec_skip_gram.ipynb
+
+---
+
+### 8. Instagram (< 500 chars)
+
+Word embeddings are beautiful.
+
+This visualization shows how Word2Vec learns to organize words by meaning - no labels provided, just patterns from text.
+
+Blue = royalty (king, queen, prince, princess)
+Green = people (man, woman, boy, girl)
+Orange = concepts (wisdom, power, grace)
+
+The magic? Vector math works on meaning:
+king - man + woman = queen
+
+20 dimensions compressed to 2D using t-SNE, trained on just 16 sentences.
+
+Sometimes the simplest models reveal the deepest structure.
+
+#NLP #MachineLearning #DataVisualization #Python #Word2Vec #AI #DeepLearning #DataScience
+
+===============================================================================

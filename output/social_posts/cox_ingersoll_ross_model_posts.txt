@@ -1,0 +1,201 @@
+===============================================================================
+COX-INGERSOLL-ROSS MODEL - SOCIAL MEDIA POSTS
+===============================================================================
+
+=====================================
+SHORT-FORM POSTS
+=====================================
+
+-------------------------------------
+1. TWITTER/X (< 280 chars)
+-------------------------------------
+
+Why can't interest rates go negative? The CIR model explains it with one elegant equation:
+
+dr = κ(θ - r)dt + σ√r dW
+
+The √r term is the magic—volatility shrinks as rates approach zero.
+
+#QuantFinance #Python #Math #Finance
+
+-------------------------------------
+2. BLUESKY (< 300 chars)
+-------------------------------------
+
+Implemented the Cox-Ingersoll-Ross interest rate model in Python. Key insight: the √r volatility term ensures rates stay non-negative when 2κθ ≥ σ² (Feller condition). Monte Carlo simulations confirm convergence to a Gamma stationary distribution.
+
+#QuantFinance #Python #Finance
+
+-------------------------------------
+3. THREADS (< 500 chars)
+-------------------------------------
+
+Ever wonder how banks model interest rates?
+
+The CIR model uses mean reversion: rates drift toward a long-term average θ.
+
+The equation: dr = κ(θ - r)dt + σ√r dW
+
+What makes it special:
+• κ controls how fast rates snap back
+• The √r term prevents negative rates
+• Must satisfy 2κθ ≥ σ² (Feller condition)
+
+Coded it in Python with exact simulation using non-central chi-squared sampling. The terminal distribution converges to a Gamma distribution!
+
+#Finance #Python #DataScience
+
+-------------------------------------
+4. MASTODON (< 500 chars)
+-------------------------------------
+
+New notebook: Cox-Ingersoll-Ross interest rate model
+
+The SDE: dr = κ(θ - r)dt + σ√r dW
+
+Implemented two simulation methods:
+1. Euler-Maruyama with reflection at zero
+2. Exact sampling via non-central χ² distribution
+
+Key math:
+• Conditional mean: E[r_{t+Δt}|r_t] = r_t·e^{-κΔt} + θ(1 - e^{-κΔt})
+• Stationary dist: Gamma(2κθ/σ², σ²/2κ)
+
+The Feller condition 2κθ ≥ σ² ensures non-negativity.
+
+#QuantFinance #Python #Stochastics #Finance
+
+
+=====================================
+LONG-FORM POSTS
+=====================================
+
+-------------------------------------
+5. REDDIT (r/learnpython or r/QuantFinance)
+-------------------------------------
+
+**Title:** I implemented the Cox-Ingersoll-Ross interest rate model in Python with exact simulation—here's what I learned
+
+**Body:**
+
+The Cox-Ingersoll-Ross (CIR) model is one of the most important models in quantitative finance for describing how interest rates evolve over time.
+
+**ELI5 Version:**
+
+Imagine interest rates are like a dog on a leash. The leash has a "home position" (the long-term mean θ). If rates wander too far from home, they get pulled back—this is mean reversion. The parameter κ controls how strong the leash is.
+
+But here's the clever bit: the model ensures rates can never go negative. How? The volatility (randomness) is proportional to √r. As rates approach zero, the randomness shrinks, preventing them from going negative.
+
+**The Math (Unicode version):**
+
+The model follows this stochastic differential equation:
+
+dr = κ(θ - r)dt + σ√r dW
+
+Where:
+- κ = speed of mean reversion
+- θ = long-term mean rate
+- σ = volatility
+- W = Brownian motion
+
+**What I Implemented:**
+
+1. **Euler-Maruyama simulation** - Simple but can produce negative values (needs reflection fix)
+2. **Exact simulation** - Uses non-central chi-squared distribution, no discretization error
+
+**Key Insight:**
+
+The Feller condition (2κθ ≥ σ²) must be satisfied for rates to stay strictly positive. In my simulation with κ=0.5, θ=5%, σ=0.1:
+
+2 × 0.5 × 0.05 = 0.05 ≥ 0.01 = σ² ✓
+
+**Results:**
+
+Monte Carlo with 1000 paths showed the terminal distribution converges to the theoretical Gamma distribution. The sample mean matched the theoretical mean θ = 5% closely.
+
+**View the full interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/cox_ingersoll_ross_model.ipynb
+
+Libraries used: NumPy, SciPy, Matplotlib
+
+-------------------------------------
+6. FACEBOOK (< 500 chars)
+-------------------------------------
+
+How do banks predict where interest rates are headed?
+
+One key model: Cox-Ingersoll-Ross (1985)
+
+The beautiful thing? It's built on a simple principle—rates naturally drift back toward a long-term average, but with randomness that shrinks as rates approach zero. This means the model can't produce impossible negative rates.
+
+I coded it in Python and ran 1000 simulations. The results match the theory perfectly—rates converge to a 5% equilibrium.
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/cox_ingersoll_ross_model.ipynb
+
+-------------------------------------
+7. LINKEDIN (< 1000 chars)
+-------------------------------------
+
+Excited to share my latest quantitative finance project: a complete Python implementation of the Cox-Ingersoll-Ross (CIR) interest rate model.
+
+**Why This Matters:**
+
+The CIR model is foundational in fixed-income analysis, derivative pricing, and risk management. It describes interest rate dynamics through a mean-reverting stochastic process that guarantees non-negative rates—a critical property for realistic modeling.
+
+**Technical Implementation:**
+
+• Implemented both Euler-Maruyama and exact simulation methods
+• The exact method uses non-central chi-squared sampling for zero discretization error
+• Validated theoretical moments against Monte Carlo simulation (1000 paths)
+• Conducted parameter sensitivity analysis for κ, θ, and σ
+
+**Key Mathematical Properties:**
+
+The model satisfies the Feller condition (2κθ ≥ σ²) and converges to a Gamma stationary distribution. The conditional expectation decays exponentially toward the long-term mean.
+
+**Skills Demonstrated:**
+
+Stochastic calculus, Monte Carlo methods, SciPy statistical distributions, financial modeling, data visualization
+
+View the full analysis with interactive code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/cox_ingersoll_ross_model.ipynb
+
+#QuantitativeFinance #Python #InterestRates #FinancialModeling #DataScience #RiskManagement
+
+-------------------------------------
+8. INSTAGRAM (< 500 chars)
+-------------------------------------
+
+Interest rates can't go negative... but why?
+
+The Cox-Ingersoll-Ross model explains it beautifully.
+
+The secret: volatility scales with √r
+→ As rates drop toward zero
+→ Randomness shrinks
+→ Rates bounce back up
+
+This 1985 model is still used today in:
+• Bond pricing
+• Options on interest rates
+• Credit risk modeling
+
+Swipe to see how 1000 simulated rate paths all converge to the same 5% equilibrium.
+
+The math is elegant.
+The code is Python.
+The results are satisfying.
+
+#QuantFinance
+#Python
+#DataVisualization
+#Finance
+#Mathematics
+#Stochastics
+#Coding
+#DataScience
+
+===============================================================================
+END OF POSTS
+===============================================================================

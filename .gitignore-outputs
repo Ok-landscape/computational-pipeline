@@ -1,0 +1,73 @@
+# ===== Split Repository: Private Outputs Content =====
+# This repo tracks output/, orchestration/, templates/, and workflow files
+# Public notebooks live in: computational-pipeline
+
+# === TRACK PRIVATE CONTENT ===
+# This file will be used when pushing to the outputs remote
+# Include: output/, orchestration/, templates/, *.py, *.sh, *.md
+
+# === DON'T TRACK NOTEBOOKS ===
+# Notebooks are tracked in the main public repo
+notebooks/
+!notebooks/.gitkeep
+
+# === Development Files ===
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+.DS_Store
+
+# === Python Cache ===
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# === Virtual Environments ===
+venv/
+env/
+ENV/
+.venv/
+
+# === IDE Files ===
+.vscode/
+.idea/
+*.sublime-*
+
+# === OS Files ===
+Thumbs.db
+.Trash-*/
+
+# === Secrets ===
+.env
+.env.local
+credentials.json
+secrets/
+*.key
+*.pem
+
+# === Build Directories ===
+build/
+dist/
+.build/
+
+# === Large/Binary Files ===
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# === Jupyter Checkpoints ===
+.ipynb_checkpoints/
+
+# === LaTeX Build Files ===
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz

@@ -1,0 +1,175 @@
+# Givens Rotation - Social Media Posts
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Givens rotations: the elegant way to zero out matrix elements one at a time. Perfect for QR decomposition when you need precision & parallelism.
+
+cos(θ)² + sin(θ)² = 1 keeps everything numerically stable.
+
+#Python #LinearAlgebra #Math #NumPy
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored Givens rotations for QR decomposition. These orthogonal 2D rotations zero out matrix elements while preserving norms.
+
+Key insight: choosing c = xᵢ/√(xᵢ² + xⱼ²), s = xⱼ/√(xᵢ² + xⱼ²) transforms [xᵢ, xⱼ]ᵀ → [r, 0]ᵀ
+
+Numerically stable and parallelizable.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Just built a QR decomposition using Givens rotations from scratch!
+
+The idea is beautifully simple: use 2D rotations to zero out matrix elements one by one. Each rotation only touches two rows, making it perfect for sparse matrices.
+
+The clever part? Computing c and s to zero element b:
+- If |b| > |a|: τ = -a/b, s = 1/√(1+τ²), c = s·τ
+- Otherwise: τ = -b/a, c = 1/√(1+τ²), s = c·τ
+
+This avoids overflow/underflow. Math is beautiful!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented Givens rotations for QR decomposition. These are n×n orthogonal matrices that rotate in a 2D subspace (i,j plane).
+
+Key properties:
+• Gᵀ G = I (orthogonal)
+• det(G) = 1 (proper rotation)
+• Only affects components i and j
+
+Complexity: O(mn²) for m×n matrix - more expensive than Householder but better for:
+- Sparse matrices (preserves structure)
+- Parallel architectures
+- Incremental updates
+
+The numerically stable formulation using τ = min/max avoids computing √(a² + b²) directly.
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Implemented QR Decomposition Using Givens Rotations - Here's How It Works
+
+**Body:**
+
+I've been exploring numerical linear algebra methods and just implemented QR decomposition using Givens rotations. Here's an ELI5 explanation:
+
+**What's a Givens Rotation?**
+
+Imagine you have a vector [3, 4]. A Givens rotation finds the angle θ that rotates this vector onto the x-axis, giving [5, 0]. The rotation matrix is:
+
+```
+[cos(θ)   sin(θ) ]
+[-sin(θ)  cos(θ)]
+```
+
+**Why use them for QR?**
+
+To decompose A = QR, we need R to be upper triangular (zeros below diagonal). Givens rotations let us zero out one element at a time by rotating pairs of rows.
+
+**The numerically stable trick:**
+
+Instead of computing √(a² + b²) directly (which can overflow), we use:
+- If |b| > |a|: τ = -a/b, then s = 1/√(1+τ²), c = s·τ
+
+This keeps τ ≤ 1, avoiding numerical issues.
+
+**Key findings:**
+- Applied 6 rotations to decompose a 4×3 matrix
+- ||A - QR|| ≈ 10⁻¹⁵ (machine precision!)
+- ||QᵀQ - I|| ≈ 10⁻¹⁵ (Q stays orthogonal)
+
+**When to use Givens over Householder:**
+- Sparse matrices (Givens preserves sparsity)
+- Parallel computing (rotations on different rows are independent)
+- Updating existing factorizations
+
+Check out the full notebook with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/givens_rotation.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how computers solve systems of equations so precisely?
+
+I explored Givens rotations - a beautiful technique that rotates vectors to zero out specific components. It's like aligning a 3D object one axis at a time.
+
+The cool part: each rotation preserves lengths (because cos²θ + sin²θ = 1), so errors don't accumulate. After just 6 rotations, I decomposed a 4×3 matrix with accuracy to 15 decimal places!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/givens_rotation.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+**Numerical Methods Deep Dive: Givens Rotations for QR Decomposition**
+
+Just completed an implementation of QR decomposition using Givens rotations, demonstrating key numerical linear algebra principles.
+
+**Technical Approach:**
+
+Givens rotations are orthogonal transformations that rotate vectors in a 2D subspace. By strategically applying these rotations, we can systematically zero out subdiagonal elements to obtain an upper triangular matrix R.
+
+**Key Implementation Details:**
+
+• Numerically stable computation of rotation parameters using τ = min(|a|,|b|)/max(|a|,|b|) to avoid overflow
+• O(mn²) complexity for m×n matrices
+• Achieved ||A - QR||_F ≈ 10⁻¹⁵ (machine precision)
+
+**Skills Demonstrated:**
+- Matrix decomposition algorithms
+- Numerical stability analysis
+- Scientific Python (NumPy, Matplotlib)
+- Technical visualization
+
+**When This Matters:**
+
+Givens rotations excel over Householder reflections for sparse matrices, parallel implementations, and incremental factorization updates - critical for real-time signal processing and adaptive filtering applications.
+
+Full notebook with code and visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/givens_rotation.ipynb
+
+#NumericalAnalysis #LinearAlgebra #Python #ScientificComputing #DataScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The geometry of precision
+
+Givens rotations: a simple idea with powerful results.
+
+Take a vector [3, 4]
+Rotate it by 53.13°
+Get [5, 0]
+
+That's it. The second component vanishes.
+
+Now do this systematically to zero out everything below a matrix diagonal.
+
+Result? QR decomposition with 15 digits of accuracy.
+
+The visualization shows:
+→ How one rotation aligns a vector
+→ The upper triangular result
+→ How quickly subdiagonal elements vanish
+→ Perfect orthogonality of Q
+
+Math that just works.
+
+#LinearAlgebra #Mathematics #Coding #Python #DataVisualization #Science #NumericalMethods
+
+--------------------------------------------------------------------------------

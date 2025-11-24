@@ -1,0 +1,59 @@
+# Social Media Posts: Lotka-Volterra Predator-Prey Simulation
+
+================================================================================
+POST 1: Twitter/X (280 chars max)
+================================================================================
+
+Simulated classic predator-prey dynamics using Lotka-Volterra equations:
+
+dx/dt = αx - βxy
+dy/dt = δxy - γy
+
+Closed orbits in phase space = sustained population cycles. Conservation law verified numerically.
+
+#ComputationalBiology #DifferentialEquations #Python
+
+[Characters: 277]
+
+================================================================================
+POST 2: Bluesky (300 chars max)
+================================================================================
+
+Explored Lotka-Volterra predator-prey dynamics with Python/SciPy. Key insight: populations oscillate in closed orbits around equilibrium (x*, y*) = (γ/δ, α/β).
+
+The conservation law V(x,y) = δx - γln(x) + βy - αln(y) stays constant, confirming periodic solutions.
+
+[Characters: 297]
+
+================================================================================
+POST 3: LinkedIn (Professional Summary)
+================================================================================
+
+Computational Study: Lotka-Volterra Predator-Prey Dynamics
+
+Just completed a numerical investigation of the classic Lotka-Volterra equations, a foundational model in mathematical ecology developed independently by Lotka (1925) and Volterra (1926).
+
+Key Technical Highlights:
+
+• Implemented the coupled ODE system:
+  - Prey: dx/dt = αx - βxy
+  - Predator: dy/dt = δxy - γy
+
+• Used scipy.integrate.odeint (LSODA algorithm) for numerical integration over 2000 time points
+
+• Verified the conservation law V(x,y) = δx - γln(x) + βy - αln(y) with <0.01% relative variation
+
+• Visualized phase portraits showing closed orbits around the coexistence equilibrium at (γ/δ, α/β)
+
+Scientific Insights:
+The model elegantly captures the quarter-period phase lag between prey and predator peaks—prey must increase before predators can respond. The closed orbits confirm this is a conservative system with sustained oscillations.
+
+While simplified (no carrying capacity, linear functional response), this remains essential for understanding more complex ecological models like Rosenzweig-MacArthur.
+
+Tools: Python, NumPy, SciPy, Matplotlib
+
+#ComputationalBiology #MathematicalModeling #ScientificComputing #Python #DifferentialEquations #Ecology
+
+[Characters: 1,198]
+
+================================================================================

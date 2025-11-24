@@ -1,0 +1,154 @@
+# Social Media Posts: QR Algorithm for Eigenvalue Computation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+The QR algorithm transforms any matrix into triangular form through repeated QR decompositions: A = QR → RQ. The magic? Eigenvalues appear on the diagonal!
+
+Shifted QR: 10x faster convergence.
+
+#Python #LinearAlgebra #NumericalMethods
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented the QR algorithm for computing matrix eigenvalues - the foundation of modern numerical linear algebra since 1961.
+
+Key insight: Each iteration Aₖ₊₁ = RₖQₖ preserves eigenvalues while driving the matrix toward triangular form.
+
+With Rayleigh quotient shifts: cubic convergence.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how computers actually find eigenvalues? The QR algorithm is the answer!
+
+Here's the beautiful idea: repeatedly decompose A = QR (orthogonal × triangular), then multiply backwards as RQ. Each iteration preserves eigenvalues but makes the matrix more triangular.
+
+The clever part? Adding "shifts" (μ) accelerates convergence dramatically - from linear to cubic rate for symmetric matrices!
+
+Tested on random 5×5 matrices: basic QR needed ~100 iterations, shifted QR only ~10.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented the QR algorithm for eigenvalue computation in Python.
+
+The math is elegant: given A = QR decomposition, form Aₖ₊₁ = RₖQₖ. Since Aₖ₊₁ = QₖᵀAₖQₖ, eigenvalues are preserved while off-diagonal elements decay at rate O(|λᵢ₊₁/λᵢ|ᵏ).
+
+Rayleigh quotient shift (μₖ = aₙₙ) achieves cubic convergence for symmetric matrices.
+
+My implementation: basic QR vs shifted QR shows 10x iteration reduction for 5×5 test cases.
+
+Code uses NumPy's QR decomposition with Frobenius norm convergence tracking.
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I implemented the QR Algorithm for eigenvalues from scratch - here's what I learned about this foundational numerical method
+
+**Body:**
+
+Just built an implementation of the QR algorithm, which is the backbone of how NumPy/LAPACK actually compute eigenvalues. Wanted to share what I learned!
+
+**The Core Idea (ELI5)**
+
+Finding eigenvalues means solving det(A - λI) = 0, but that polynomial approach is numerically unstable. Instead, the QR algorithm iteratively transforms the matrix:
+
+1. Decompose: A = QR (Q is orthogonal, R is upper triangular)
+2. Reverse multiply: A_new = RQ
+3. Repeat until A becomes triangular
+
+The eigenvalues magically appear on the diagonal!
+
+**Why It Works**
+
+Each iteration is a similarity transformation: A_{k+1} = QᵀAQ. Similar matrices have identical eigenvalues, but the off-diagonal elements shrink toward zero.
+
+**The Speed Hack: Shifts**
+
+Basic QR converges linearly (slow). By subtracting a "shift" μ before decomposition:
+- A - μI = QR
+- A_new = RQ + μI
+
+Using the Rayleigh quotient shift (μ = bottom-right element) gives CUBIC convergence for symmetric matrices. My tests showed ~100 iterations → ~10 iterations.
+
+**Key Takeaway**
+
+This algorithm from 1961 is still fundamental today. Modern implementations add Hessenberg preprocessing and implicit QR steps, but the core idea remains the same.
+
+**Interactive Notebook:** View and run the full implementation with visualizations here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/qr_algorithm_eigenvalues.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just explored how computers actually find eigenvalues - those special numbers that reveal a matrix's fundamental properties!
+
+The QR algorithm (from 1961!) iteratively transforms any matrix until the eigenvalues appear on the diagonal. It's like repeatedly rearranging a puzzle until the answer reveals itself.
+
+The cool part: adding a simple "shift" trick makes it converge 10x faster!
+
+Check out my interactive notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/qr_algorithm_eigenvalues.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Numerical Linear Algebra: The QR Algorithm for Eigenvalue Computation
+
+Recently implemented the QR algorithm from scratch to understand the numerical methods underlying production eigenvalue solvers.
+
+Key Technical Insights:
+
+• Algorithm Foundation: Iterative QR decomposition where each step Aₖ₊₁ = RₖQₖ preserves eigenvalues through similarity transformations
+
+• Convergence Analysis: Off-diagonal elements decay at rate O(|λᵢ₊₁/λᵢ|ᵏ), achieving linear convergence for basic implementation
+
+• Acceleration Technique: Rayleigh quotient shifts (μₖ = aₙₙ⁽ᵏ⁾) achieve cubic convergence for symmetric matrices - reducing iterations from ~100 to ~10 in testing
+
+• Practical Considerations: Modern implementations use Hessenberg reduction preprocessing and implicit QR to avoid explicit matrix products
+
+Skills Demonstrated: Python, NumPy, numerical methods, algorithm analysis, scientific visualization
+
+This 1961 algorithm remains the foundation of LAPACK's eigenvalue routines used throughout scientific computing.
+
+View the complete implementation and convergence visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/qr_algorithm_eigenvalues.ipynb
+
+#NumericalMethods #LinearAlgebra #Python #ScientificComputing #DataScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The QR Algorithm: How Computers Find Eigenvalues
+
+This visualization shows eigenvalue convergence in action.
+
+Top row: Watch diagonal elements converge to true eigenvalues (dashed lines)
+
+Bottom left: Shifted QR (red) converges WAY faster than basic QR (blue)
+
+Bottom right: Matrix structure after 10 iterations - nearly triangular!
+
+The beautiful math: each iteration A → RQ preserves eigenvalues while pushing the matrix toward triangular form.
+
+With shifts: 10x speedup!
+
+#math #python #datascience #linearalgebra #coding #numericalanalysis #visualization #science
+
+--------------------------------------------------------------------------------

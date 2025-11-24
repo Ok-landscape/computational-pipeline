@@ -1,0 +1,183 @@
+================================================================================
+DURATION AND CONVEXITY: BOND PRICE SENSITIVITY ANALYSIS
+Social Media Posts
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+Why do bond prices fall when rates rise? Duration tells you how much!
+
+Modified Duration = Macaulay Duration / (1 + y)
+
+Built a Python tool to visualize this key fixed income concept.
+
+#Python #Finance #Bonds #QuantFinance
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+Duration & Convexity: The essential bond risk measures every fixed income analyst needs.
+
+Duration gives the first-order price sensitivity: ΔP/P ≈ -D × Δy
+
+Convexity adds the second-order correction for large yield changes.
+
+Created Python visualizations demonstrating these relationships.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Just built an interactive Python notebook on Duration and Convexity - the fundamental measures for understanding bond price sensitivity to interest rates.
+
+Key insight: Duration alone underestimates price gains when yields fall and overestimates losses when yields rise. That's where convexity comes in - it captures the curvature of the price-yield relationship.
+
+For a 10-year, 6% coupon bond at 5% yield:
+• Modified Duration: 7.79
+• Convexity: 73.34
+
+Higher convexity = better for investors!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+Implemented bond duration and convexity calculations in Python.
+
+Macaulay Duration: D = (1/P) × Σ t × Cₜ/(1+y)ᵗ
+
+Modified Duration: Dₘₒₐ = D/(1+y)
+
+Convexity: C = (1/P) × Σ t(t+1) × Cₜ/(1+y)ᵗ⁺²
+
+Price change approximation:
+ΔP/P ≈ -Dₘₒₐ × Δy + ½C × (Δy)²
+
+The notebook includes portfolio duration/convexity calculations and an immunization example. Full Bond class with all methods included.
+
+#Python #QuantFinance #FixedIncome #Bonds
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/FinancialCareers)
+--------------------------------------------------------------------------------
+
+Title: Built a Python Bond Analytics Tool - Duration, Convexity, and Immunization
+
+Body:
+
+**What I Built**
+
+A comprehensive Jupyter notebook implementing duration and convexity calculations for fixed-income bonds. These are fundamental risk measures that tell you how sensitive a bond's price is to changes in interest rates.
+
+**ELI5: What are Duration and Convexity?**
+
+Imagine you're holding a bond. If interest rates go up, your bond becomes less attractive (why hold a 5% bond when new bonds pay 6%?), so its price drops. But by how much?
+
+- **Duration** answers: "For each 1% increase in yield, my bond price drops by approximately X%"
+- **Convexity** refines this: "Actually, the relationship is curved, not linear, so here's a correction factor"
+
+Think of duration as the slope of a curve, and convexity as how much that curve bends.
+
+**Key Formulas (in plain terms)**
+
+- Bond Price = Sum of all discounted cash flows
+- Macaulay Duration = Weighted average time to receive cash flows
+- Modified Duration = Macaulay Duration / (1 + yield per period)
+- Price Change ≈ -Modified Duration × Yield Change + ½ × Convexity × (Yield Change)²
+
+**What the Code Does**
+
+1. `Bond` class with methods for price, yield_to_maturity, duration, and convexity
+2. Comparison of duration-only vs duration+convexity approximations
+3. Visualization of price-yield curves and approximation errors
+4. Portfolio duration/convexity as weighted averages
+5. Duration immunization strategy example
+
+**Example Output**
+
+For a $1000 face value, 6% coupon, 10-year bond at 5% yield:
+- Price: $1,077.95
+- Macaulay Duration: 7.99 years
+- Modified Duration: 7.79
+- Convexity: 73.34
+
+**Key Takeaway**
+
+Duration alone underestimates gains and overestimates losses. Convexity captures why bonds with higher convexity are more valuable - they gain more when rates fall than they lose when rates rise.
+
+**View the Interactive Notebook**
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/duration_and_convexity.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder why bond prices move when interest rates change?
+
+I created a Python notebook exploring Duration and Convexity - the key measures that quantify this relationship.
+
+Duration tells you the percentage price change for a 1% yield shift. Convexity adds precision by capturing the curve's bend.
+
+Fun fact: Higher convexity is always good for bondholders - you gain more when rates fall than you lose when they rise!
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/duration_and_convexity.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+Sharing a computational finance project: Duration and Convexity Analysis in Python
+
+In fixed income portfolio management, duration and convexity are indispensable risk measures. This notebook implements both from first principles.
+
+Technical Highlights:
+• Object-oriented Bond class with full analytics suite
+• Numerical validation comparing approximations to actual price changes
+• Portfolio-level duration and convexity calculations
+• Duration immunization strategy for liability matching
+
+Key Results:
+For a 10-year, 6% semi-annual coupon bond at 5% YTM:
+- Modified Duration: 7.79
+- Convexity: 73.34
+- Dollar Duration: $8,402
+
+The analysis demonstrates that duration-only approximations can have significant errors for large yield changes (±200bp), while the duration+convexity approximation reduces errors to near-zero.
+
+Skills demonstrated: Python, NumPy, Matplotlib, fixed income analytics, quantitative finance, risk management.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/duration_and_convexity.ipynb
+
+#QuantitativeFinance #Python #FixedIncome #RiskManagement #Finance
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters)
+--------------------------------------------------------------------------------
+
+Duration & Convexity
+━━━━━━━━━━━━━━━━━━━
+
+The essential bond risk measures, visualized.
+
+Duration = how sensitive is the price to yield changes?
+Convexity = how curved is that relationship?
+
+Key insight from this analysis:
+
+Higher convexity = better for investors
+
+You gain more when yields fall than you lose when yields rise. That's the power of convexity!
+
+Built in Python with NumPy & Matplotlib
+
+#Python #Finance #DataVisualization #QuantFinance #Bonds #FixedIncome #CodingLife #LearnToCode
+
+================================================================================
+END OF POSTS
+================================================================================

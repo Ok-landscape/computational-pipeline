@@ -1,0 +1,157 @@
+================================================================================
+BESSEL FUNCTIONS - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Ever wondered how drums vibrate? 🥁 Bessel functions Jₙ(x) solve x²y'' + xy' + (x² - n²)y = 0 and appear everywhere - from heat conduction to quantum mechanics!
+
+Visualized in Python with scipy.special
+
+#Python #Math #Physics #Science
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Bessel functions are solutions to cylindrical differential equations and fundamental to physics.
+
+Explored Jₙ(x), Yₙ(x), and modified forms Iₙ(x), Kₙ(x) - verified recurrence relations and orthogonality numerically, then visualized vibrating membrane modes.
+
+Python + SciPy make this accessible.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Just dove deep into Bessel functions - one of math's most useful special functions!
+
+These solve: x²y'' + xy' + (x² - n²)y = 0
+
+Why care? They describe:
+• Drum vibrations
+• Electromagnetic waves in cables
+• Heat flow in pipes
+• Hydrogen atom wavefunctions
+
+Built an interactive notebook computing Jₙ(x), Yₙ(x), Iₙ(x), Kₙ(x), verified orthogonality relations, and visualized circular membrane modes.
+
+The math behind everyday physics is beautiful.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Created a computational notebook on Bessel functions.
+
+Covered:
+• Bessel's equation: x²y'' + xy' + (x² - n²)y = 0
+• Series expansion: Jₙ(x) = Σₘ (-1)ᵐ/(m!Γ(m+n+1)) × (x/2)^(2m+n)
+• Recurrence: Jₙ₋₁(x) + Jₙ₊₁(x) = (2n/x)Jₙ(x)
+• Orthogonality verification via numerical integration
+• Application: vibrating circular membrane modes
+
+All verified with scipy.special. The zeros of Jₙ(x) determine natural frequencies in physical systems.
+
+#Mathematics #Physics #Python #SciPy
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** Visualizing Bessel Functions in Python - From Theory to Vibrating Drum Modes
+
+**Body:**
+
+If you've taken differential equations or physics, you've probably encountered Bessel functions but maybe found them abstract. I built a notebook that makes them tangible.
+
+**What are Bessel functions?**
+
+They solve this differential equation:
+
+x²y'' + xy' + (x² - n²)y = 0
+
+Think of it as the "circular coordinate" version of sines and cosines. Just like sin/cos appear when you solve wave equations in Cartesian coordinates, Bessel functions Jₙ(x) and Yₙ(x) appear for cylindrical symmetry.
+
+**What the notebook covers:**
+
+1. **Four types of Bessel functions** - Jₙ(x), Yₙ(x), Iₙ(x), Kₙ(x) with their properties
+2. **Numerical verification** - Checked that recurrence relations like Jₙ₋₁(x) + Jₙ₊₁(x) = (2n/x)Jₙ(x) actually work
+3. **Orthogonality** - Verified ∫₀¹ x·Jₙ(αₙₘx)·Jₙ(αₙₖx)dx = 0 for m ≠ k
+4. **Physical application** - Visualized vibrating circular membrane modes (like a drum!)
+
+**Key insight:** The zeros of Jₙ(x) determine natural frequencies. This is why drums have their characteristic sound - each mode vibrates at a frequency proportional to these zeros.
+
+**Tools used:** numpy, scipy.special, matplotlib
+
+Explore the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bessel_functions.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder why drums sound the way they do?
+
+The answer involves Bessel functions - special mathematical solutions that describe how circular membranes vibrate.
+
+Created a Python notebook exploring these fascinating functions. The coolest part: visualizing the actual vibration patterns of a drum head. Those nodal lines where it stays still? They're determined by zeros of Bessel functions!
+
+Math isn't just abstract - it's the language describing the world around us.
+
+Explore it yourself: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bessel_functions.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Bessel Functions: Bridging Theory and Computation
+
+Just completed a comprehensive computational analysis of Bessel functions - fundamental solutions that appear throughout engineering and physics.
+
+**Technical Scope:**
+• Implemented visualization of all four Bessel function types: Jₙ(x), Yₙ(x), Iₙ(x), Kₙ(x)
+• Numerically verified recurrence relations and orthogonality properties
+• Computed zeros of Bessel functions with scipy.special.jn_zeros()
+• Applied theory to physical problem: vibrating circular membrane modes
+
+**Engineering Applications:**
+These functions are essential for:
+- Electromagnetic waveguide design
+- Heat transfer in cylindrical geometries
+- Acoustic analysis
+- Signal processing (FM synthesis)
+
+**Skills Demonstrated:**
+- Scientific Python (NumPy, SciPy, Matplotlib)
+- Numerical integration and verification
+- Mathematical physics modeling
+- Technical visualization
+
+The notebook verifies theoretical properties computationally, bridging mathematical rigor with practical implementation.
+
+Full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bessel_functions.ipynb
+
+#ScientificComputing #Python #Mathematics #Engineering #DataVisualization
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+
+The mathematics of drums 🥁
+
+These plots show Bessel functions - solutions that describe how circular membranes vibrate.
+
+Top left: Jₙ(x) oscillates like damped waves
+Top right: Yₙ(x) blows up at zero
+Bottom left: Modified versions for different physics
+Bottom right: Zeros that determine drum frequencies
+
+The colorful polar plots? Actual vibration modes of a drum head. Red = moving up, blue = moving down.
+
+Math makes music make sense.
+
+#Mathematics #Physics #Python #DataViz #Science #Visualization #Drums #WavePhysics
+
+================================================================================

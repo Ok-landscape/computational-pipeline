@@ -1,0 +1,167 @@
+================================================================================
+LIE ALGEBRAS: FOUNDATIONS AND COMPUTATIONAL EXAMPLES
+Social Media Posts
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Lie algebras reveal hidden symmetries in physics! The bracket [A,B] = AB - BA captures non-commutativity. so(3) generators satisfy [Lx,Ly] = Lz - the math behind 3D rotations.
+
+#Math #Physics #Python #LinearAlgebra #Science
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Lie algebras: the infinitesimal language of symmetry. Named after Sophus Lie (1870s), they describe continuous transformations through the bracket operation [X,Y] = XY - YX. Key to quantum mechanics, where su(2) and its Pauli matrices govern spin.
+
+#Mathematics #Physics #Science
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how physicists describe smooth rotations mathematically?
+
+Enter Lie algebras - vector spaces with a "bracket" operation [A,B] = AB - BA that captures when operations don't commute.
+
+The so(3) algebra describes 3D rotations. Its generators Lx, Ly, Lz satisfy beautiful relations like [Lx,Ly] = Lz.
+
+The exponential map exp(theta * L) turns these infinitesimal generators into actual rotation matrices!
+
+Built a Python notebook exploring this with NumPy. Math meets code.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented the foundations of Lie algebras in Python:
+
+- Lie bracket [A,B] = AB - BA (the commutator)
+- Verified the Jacobi identity: [X,[Y,Z]] + [Y,[Z,X]] + [Z,[X,Y]] = 0
+- Computed structure constants f^c_ab for so(3), yielding the Levi-Civita symbol
+- Demonstrated the exponential map so(3) -> SO(3) generating rotation matrices
+- Visualized Baker-Campbell-Hausdorff approximation errors
+
+The Killing form B(X,Y) = tr(ad_X * ad_Y) confirms so(3) is semisimple. Elegant mathematics!
+
+#math #physics #python #algebra
+
+--------------------------------------------------------------------------------
+5. REDDIT (Title + Body for r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** [Tutorial] Lie Algebras in Python: From Theory to Rotation Matrices with NumPy
+
+**Body:**
+
+Hey everyone!
+
+I built an interactive notebook exploring **Lie algebras** - the mathematical structures that describe continuous symmetries in physics. Here's what I learned:
+
+**What's a Lie algebra?**
+
+Think of it as a vector space with a special operation called the "bracket" [A,B] = AB - BA (for matrices, this is the commutator). This bracket must satisfy:
+
+1. Bilinearity (linear in both arguments)
+2. Antisymmetry: [X,Y] = -[Y,X]
+3. Jacobi identity: [X,[Y,Z]] + [Y,[Z,X]] + [Z,[X,Y]] = 0
+
+**The Cool Part: so(3)**
+
+The algebra so(3) consists of 3x3 skew-symmetric matrices. Its generators Lx, Ly, Lz satisfy:
+- [Lx, Ly] = Lz
+- [Ly, Lz] = Lx
+- [Lz, Lx] = Ly
+
+These are infinitesimal rotations! Using the exponential map exp(theta * L), you get actual rotation matrices in SO(3).
+
+**Code highlights:**
+
+```python
+def lie_bracket(A, B):
+    return A @ B - B @ A
+
+def verify_jacobi_identity(X, Y, Z):
+    term1 = lie_bracket(X, lie_bracket(Y, Z))
+    term2 = lie_bracket(Y, lie_bracket(Z, X))
+    term3 = lie_bracket(Z, lie_bracket(X, Y))
+    return np.allclose(term1 + term2 + term3, 0)
+```
+
+**Why it matters:**
+
+- so(3): Angular momentum in mechanics
+- su(2): Quantum spin (Pauli matrices!)
+- su(3): Quantum chromodynamics (the strong force)
+
+The notebook also covers structure constants, the Killing form for testing semisimplicity, and visualizes the Baker-Campbell-Hausdorff formula.
+
+**View the full notebook here:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lie_algebras_basics.ipynb
+
+Happy to answer questions!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+How do mathematicians describe smooth rotations and symmetries? With Lie algebras!
+
+Named after Norwegian mathematician Sophus Lie, these structures capture the "infinitesimal" building blocks of continuous transformations.
+
+The key insight: the bracket operation [A,B] = AB - BA tells us when operations don't commute - crucial for understanding quantum mechanics and 3D rotations.
+
+Built a Python notebook exploring this beautiful math!
+
+View it here: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lie_algebras_basics.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring the Mathematical Foundations of Symmetry: A Computational Approach to Lie Algebras
+
+I recently completed a technical deep-dive into Lie algebras - algebraic structures fundamental to modern physics and differential geometry.
+
+Key implementation highlights:
+
+- Developed functions for computing Lie brackets (commutators) and verifying the Jacobi identity
+- Implemented the so(3) Lie algebra with its standard basis generators
+- Computed structure constants programmatically using linear algebra techniques
+- Demonstrated the exponential map connecting Lie algebras to Lie groups
+- Analyzed the Baker-Campbell-Hausdorff approximation with error visualization
+- Implemented the Killing form to verify semisimplicity
+
+Technical stack: Python, NumPy, SciPy (matrix exponential), Matplotlib
+
+This work demonstrates proficiency in:
+- Abstract algebra and mathematical physics
+- Numerical linear algebra
+- Scientific visualization
+- Translating mathematical theory into working code
+
+The complete interactive notebook is available for review: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lie_algebras_basics.ipynb
+
+#Mathematics #Physics #Python #DataScience #ScientificComputing #LinearAlgebra
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused caption)
+--------------------------------------------------------------------------------
+
+The mathematics of symmetry, visualized.
+
+This plot shows:
+- Rotation orbits generated by so(3) Lie algebra elements (top left)
+- Non-commutativity of rotations - order matters! (top right)
+- Structure constants forming the Levi-Civita symbol (bottom left)
+- Baker-Campbell-Hausdorff approximation convergence (bottom right)
+
+Lie algebras describe infinitesimal symmetries. The bracket [A,B] = AB - BA captures when transformations don't commute.
+
+From quantum spin to 3D graphics, this math is everywhere.
+
+#mathematics #physics #python #dataviz #science #coding #visualization #algebra #symmetry
+
+================================================================================

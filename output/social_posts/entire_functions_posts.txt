@@ -1,0 +1,155 @@
+SOCIAL MEDIA POSTS: ENTIRE FUNCTIONS
+=====================================
+
+---
+1. TWITTER/X (< 280 chars)
+---
+
+Functions that work EVERYWHERE in the complex plane? Meet entire functions! 🔍
+
+z³-1, eᶻ, sin(z) all pass the test. They're complex differentiable at every point, with infinite series that never stop converging.
+
+#Python #ComplexAnalysis #Math #DataViz
+
+---
+2. BLUESKY (< 300 chars)
+---
+
+Visualizing entire functions through domain coloring: functions like z³-1, eᶻ, and sin(z) are analytic everywhere in ℂ. The color patterns reveal zeros, periodicity, and phase structure. Computational exploration confirms theoretical predictions about growth rates.
+
+---
+3. THREADS (< 500 chars)
+---
+
+Just explored entire functions—these are the "well-behaved" functions of complex analysis!
+
+An entire function is complex differentiable at every single point in ℂ. Think polynomials, eᶻ, sin(z), cos(z)... They can be written as power series that converge everywhere.
+
+The cool part? Domain coloring reveals their hidden structure: zeros appear where all colors meet, and you can actually SEE the periodicity of eᶻ in the imaginary direction.
+
+Liouville's theorem says if it's bounded AND entire, it must be constant. Mind-blowing! 🤯
+
+---
+4. MASTODON (< 500 chars)
+---
+
+Computational analysis of entire functions in complex analysis:
+
+• Domain coloring visualization of z³-1, eᶻ, sin(z), e⁻ᶻ²
+• Numerical verification of growth orders (polynomial vs exponential)
+• Visual confirmation of zeros and periodicity
+
+Every entire function has a power series representation with infinite radius of convergence. The order of growth ρ = lim sup (log log M(r))/(log r) distinguishes polynomial (ρ=0) from transcendental functions (ρ≥1).
+
+Liouville's theorem: bounded entire ⟹ constant.
+
+---
+5. REDDIT (Title + Body)
+---
+
+TITLE:
+I visualized entire functions in the complex plane using domain coloring [OC]
+
+BODY:
+**What are entire functions?**
+
+An entire function is a complex function that's "nice" everywhere—specifically, it's complex differentiable at every point in the complex plane ℂ. If you know calculus, think of them as the complex version of infinitely differentiable functions, but with even stricter requirements.
+
+Examples include:
+• All polynomials (like z³ - 1)
+• The exponential function eᶻ
+• Sine and cosine: sin(z), cos(z)
+• Gaussian-type functions: e⁻ᶻ²
+
+**Why are they interesting?**
+
+1. **Power series that work everywhere**: Every entire function can be written as a power series ∑aₙzⁿ that converges for all complex numbers (infinite radius of convergence).
+
+2. **Liouville's theorem**: If an entire function is bounded (doesn't blow up to infinity), it MUST be constant. This seems weird at first, but it leads to an elegant proof of the Fundamental Theorem of Algebra.
+
+3. **Growth rates**: Entire functions are classified by their "order"—how fast they grow as you move away from the origin. Polynomials have order 0, eᶻ has order 1, and eᶻ² has order 2.
+
+**What's domain coloring?**
+
+It's a technique for visualizing complex functions:
+• **Hue (color)** represents the argument/phase of f(z)
+• **Brightness** represents the magnitude |f(z)|
+
+When you see all colors converging at a point, that's a zero. The swirling patterns show how the function "winds" around in the complex plane.
+
+**What I learned:**
+
+• Polynomials like z³-1 have visible zeros at the cube roots of unity
+• eᶻ is periodic in the imaginary direction (period 2πi)—you can actually see horizontal stripes!
+• sin(z) has infinitely many zeros along the real axis (at integer multiples of π)
+• The Gaussian e⁻ᶻ² has no zeros and shows directional behavior—it decays in some directions and grows in others
+
+I computed the maximum modulus M(r) = max|f(z)| on circles |z|=r to verify theoretical growth rates. The numerical results match perfectly: polynomials grow algebraically, transcendental functions like eᶻ grow exponentially.
+
+**Tools used:** Python, NumPy, Matplotlib
+**Notebook with full code and theory:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/entire_functions.ipynb
+
+---
+6. FACEBOOK (< 500 chars)
+---
+
+Ever wonder what happens when you extend familiar functions like eˣ and sin(x) into the complex plane? 🤔
+
+I created a visual exploration of "entire functions"—functions that work perfectly everywhere in the complex number world. The domain coloring technique reveals stunning patterns: zeros where colors converge, periodic stripes in eᶻ, and intricate phase behavior.
+
+The coolest result? Liouville's theorem says any bounded entire function MUST be constant. Complex analysis is wild!
+
+Full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/entire_functions.ipynb
+
+---
+7. LINKEDIN (< 1000 chars)
+---
+
+Computational Exploration: Entire Functions in Complex Analysis
+
+I recently completed a computational notebook investigating entire functions—a fundamental class in complex analysis with applications in physics, engineering, and pure mathematics.
+
+**Technical approach:**
+
+• Implemented domain coloring visualization using HSV color space mapping (hue from phase, value from logarithmic magnitude)
+• Analyzed four representative entire functions: polynomial z³-1, exponential eᶻ, trigonometric sin(z), and Gaussian e⁻ᶻ²
+• Numerically verified growth rates by computing maximum modulus M(r) on circles of increasing radius
+• Generated log-log plots to distinguish polynomial (order 0) from exponential (order ≥1) growth
+
+**Key insights:**
+
+1. Power series representations with infinite convergence radius enable global behavior analysis
+2. Domain coloring makes abstract complex function theory visually intuitive
+3. Growth order classification (ρ = lim sup log log M(r) / log r) provides quantitative function characterization
+4. Liouville's theorem constrains the space of bounded entire functions to constants only
+
+**Skills demonstrated:** Complex analysis, Python (NumPy/Matplotlib), numerical methods, mathematical visualization, technical documentation
+
+View the complete computational notebook with reproducible code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/entire_functions.ipynb
+
+#Mathematics #ComplexAnalysis #DataVisualization #Python #ComputationalScience
+
+---
+8. INSTAGRAM (< 500 chars, visual-focused)
+---
+
+Visualizing entire functions in the complex plane ✨
+
+These are functions that are complex differentiable everywhere—think z³-1, eᶻ, sin(z). The colors reveal their hidden structure:
+
+🎨 Hue = phase angle
+💡 Brightness = magnitude
+
+Where all colors meet? That's a zero.
+The swirling patterns? That's the complex phase winding around.
+
+eᶻ shows horizontal stripes (it's periodic!)
+sin(z) has zeros along the real axis
+The Gaussian e⁻ᶻ² decays in some directions, grows in others
+
+Complex analysis meets data visualization 🔬
+
+#Math #ComplexAnalysis #DataViz #Python #Science #Visualization #MathArt #STEM

@@ -1,0 +1,68 @@
+================================================================================
+SOCIAL MEDIA POSTS: Damped Harmonic Oscillator Simulation
+Generated: 2024-11-22
+================================================================================
+
+--------------------------------------------------------------------------------
+POST 1: Twitter/X (280 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder why car suspensions don't bounce forever?
+
+The damped harmonic oscillator explains it all - from door closers to guitar strings.
+
+Three regimes: underdamped (oscillates), critical (optimal), overdamped (slow).
+
+Code + visuals in my notebook!
+
+#Physics #Python #SciPy
+
+--------------------------------------------------------------------------------
+POST 2: Bluesky (300 characters)
+--------------------------------------------------------------------------------
+
+New computational physics notebook: Damped Harmonic Oscillator
+
+The governing equation: d2x/dt2 + 2*gamma*dx/dt + omega_0^2*x = 0
+
+Explored all three damping regimes with scipy.integrate.odeint. Numerical solution matches analytical to 10^-9 precision!
+
+Phase space trajectories reveal fascinating dynamics.
+
+#Physics #Python
+
+--------------------------------------------------------------------------------
+POST 3: LinkedIn (Professional Summary)
+--------------------------------------------------------------------------------
+
+Computational Physics: Understanding Damped Harmonic Oscillators
+
+I've published a new Jupyter notebook exploring one of the most fundamental models in physics and engineering - the damped harmonic oscillator.
+
+KEY HIGHLIGHTS:
+
+Mathematical Foundation:
+The system follows the differential equation m*d2x/dt2 + c*dx/dt + k*x = 0, which describes everything from mechanical springs to electrical RLC circuits.
+
+Three Damping Regimes Explored:
+- Underdamped (gamma < omega_0): Oscillatory decay - seen in musical instruments
+- Critically damped (gamma = omega_0): Fastest return without overshoot - optimal for shock absorbers
+- Overdamped (gamma > omega_0): Slow exponential return - highly viscous systems
+
+Technical Approach:
+- Used scipy.integrate.odeint for numerical integration
+- Validated against analytical solutions (error ~ 10^-9)
+- Computed phase space trajectories and energy dissipation curves
+- Calculated Quality Factor Q = omega_0/(2*gamma) for oscillator characterization
+
+The Quality Factor quantifies energy storage vs. dissipation - a critical parameter in resonance design, from radio circuits to quantum systems.
+
+This analysis forms the foundation for understanding resonance phenomena, mechanical engineering design, and even quantum mechanics.
+
+Check out the full notebook with interactive code and visualizations!
+
+#ComputationalPhysics #Python #SciPy #DataScience #Engineering #Simulation #STEM
+
+================================================================================
+END OF POSTS
+================================================================================

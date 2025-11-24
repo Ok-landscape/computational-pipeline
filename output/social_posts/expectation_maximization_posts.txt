@@ -1,0 +1,183 @@
+# Social Media Posts: Expectation Maximization Algorithm
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Just implemented the EM algorithm for Gaussian Mixture Models in Python!
+
+The key insight: when direct optimization fails, iterate between E-step (compute responsibilities) and M-step (update parameters).
+
+Converges beautifully every time.
+
+#Python #MachineLearning #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored the Expectation Maximization algorithm today - a cornerstone of unsupervised learning since 1977.
+
+Applied it to fit a 3-component Gaussian Mixture Model to 500 data points. The monotonic convergence guarantee (via Jensen's inequality) is mathematically elegant.
+
+#Statistics #ML
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how algorithms find hidden patterns in unlabeled data?
+
+The Expectation Maximization (EM) algorithm does exactly this! It's been fundamental to machine learning since Dempster, Laird & Rubin formalized it in 1977.
+
+I implemented it for Gaussian Mixture Models:
+- E-step: Calculate probability each point belongs to each cluster
+- M-step: Update cluster parameters using weighted statistics
+
+The beautiful part? Log-likelihood is guaranteed to increase each iteration. Math that just works!
+
+#Python #DataScience #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented the EM algorithm for Gaussian Mixture Models from scratch in Python.
+
+The algorithm maximizes log-likelihood L(θ) = log p(X|θ) by iteratively:
+
+1. E-step: Compute responsibilities γᵢₖ = P(zᵢ=k|xᵢ,θ)
+2. M-step: Update μₖ, Σₖ, πₖ using weighted MLE
+
+Key insight: When the log contains a sum over latent variables, optimize a lower bound (Q-function) instead.
+
+Convergence follows from Jensen's inequality: L(θᵗ⁺¹) ≥ L(θᵗ)
+
+Code + visualizations in the notebook.
+
+#Statistics #MachineLearning #Python
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** Implemented Expectation Maximization for Gaussian Mixture Models from scratch - here's how it works
+
+**Body:**
+
+I just finished implementing the EM algorithm in Python and wanted to share what I learned!
+
+**The Problem**
+
+You have data points but no labels. You suspect they come from K different Gaussian distributions (clusters), but you don't know which point belongs to which cluster. How do you estimate the cluster parameters?
+
+**Why It's Hard**
+
+Direct maximum likelihood estimation fails because the log-likelihood has a sum over all possible cluster assignments inside the log:
+
+L(θ) = log Σ p(X, Z | θ)
+
+This is intractable to optimize directly.
+
+**The EM Solution (ELI5)**
+
+EM uses a clever two-step dance:
+
+1. **E-step**: Pretend you know the parameters. Calculate the probability each point belongs to each cluster (these are called "responsibilities")
+
+2. **M-step**: Pretend you know the cluster assignments. Update the parameters using weighted averages
+
+Repeat until convergence. The magic is that each iteration is guaranteed to improve (or maintain) the log-likelihood!
+
+**What I Implemented**
+
+- Generated 500 points from 3 Gaussians with known parameters
+- Ran EM to recover the parameters from unlabeled data
+- Visualized the clustering and convergence
+
+**Key Takeaways**
+
+- EM converges to a local maximum (not global) - use multiple random restarts
+- Initialization matters - k-means++ style init helps
+- Need to regularize covariances to prevent singularities
+
+The full notebook with code and math derivations is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/expectation_maximization.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just explored one of the most elegant algorithms in machine learning - Expectation Maximization!
+
+Imagine you have data points scattered in space, and you suspect they come from different groups, but you don't know which point belongs to which group. How do you figure it out?
+
+EM solves this by alternating between two steps: guessing group memberships, then updating group parameters. Rinse and repeat until it converges.
+
+I implemented it in Python to cluster data into 3 Gaussian groups - the results are surprisingly accurate!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/expectation_maximization.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+**Implementing the Expectation Maximization Algorithm: A Deep Dive into Unsupervised Learning**
+
+I recently implemented the EM algorithm from scratch to better understand this foundational technique in statistical machine learning.
+
+**The Challenge**
+Maximum likelihood estimation with latent variables is computationally intractable due to marginalization over hidden states. EM provides an elegant iterative solution.
+
+**Technical Approach**
+- E-step: Compute posterior responsibilities using Bayes' theorem
+- M-step: Update parameters via weighted maximum likelihood
+- Convergence guaranteed by Jensen's inequality: each iteration monotonically increases the log-likelihood bound
+
+**Implementation Highlights**
+- Applied to Gaussian Mixture Models with K=3 components
+- Handled numerical stability with covariance regularization
+- Achieved convergence in ~30 iterations on 500 samples
+
+**Skills Demonstrated**
+- Statistical inference and probabilistic modeling
+- NumPy/SciPy for numerical computation
+- Data visualization with Matplotlib
+- Algorithm implementation from mathematical specification
+
+The complete notebook with derivations and visualizations is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/expectation_maximization.ipynb
+
+#MachineLearning #DataScience #Python #Statistics #UnsupervisedLearning
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The beauty of unsupervised learning
+
+This visualization shows the Expectation Maximization algorithm in action - finding hidden structure in unlabeled data.
+
+Left: True clusters (what we're trying to recover)
+Middle: EM results with fitted Gaussians
+Right: Convergence - log-likelihood increasing every iteration
+
+The algorithm alternates between:
+- Computing cluster probabilities (E-step)
+- Updating cluster parameters (M-step)
+
+Each iteration gets closer to the truth.
+
+500 points. 3 clusters. Pure math.
+
+#DataVisualization #MachineLearning #Python #DataScience #Math #Algorithms #UnsupervisedLearning #Statistics #Clustering #CodeArt
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,177 @@
+=== ADAMS-BASHFORTH METHOD SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Why evaluate a function 4 times when once is enough?
+
+Adams-Bashforth methods solve ODEs using past values:
+y_{n+1} = y_n + h*(weighted sum of previous f values)
+
+4th-order accuracy, 1 function call per step!
+
+#NumericalMethods #Python #Math #Science
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Adams-Bashforth methods: the efficient approach to solving ODEs
+
+Instead of Runge-Kutta's multiple function evaluations per step, these multistep methods reuse past calculations.
+
+Result: 4th-order accuracy with just ONE function call per step.
+
+Implemented in Python with convergence verification.
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Ever wondered how to solve differential equations efficiently?
+
+Adams-Bashforth methods are brilliant: they remember previous steps and use that information to predict the next value through polynomial interpolation.
+
+The 4th-order formula:
+y_{n+1} = y_n + (h/24)*(55f_n - 59f_{n-1} + 37f_{n-2} - 9f_{n-3})
+
+One function evaluation per step, 4th-order accuracy. That's efficiency!
+
+Tested on exponential decay. Convergence plots confirm perfect O(h^k) behavior for k-th order methods.
+
+#Python #Math #NumericalAnalysis
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented Adams-Bashforth methods (orders 1-4) for ODE solving.
+
+Key insight: Instead of Runge-Kutta's multiple evaluations, AB methods use polynomial interpolation through previous f-values:
+
+y(t_{n+1}) = y(t_n) + ∫[t_n to t_{n+1}] P(t) dt
+
+where P interpolates f_n, f_{n-1}, f_{n-2}...
+
+Trade-offs:
+- Need RK4 for startup values
+- Smaller stability regions than implicit methods
+- Not suitable for stiff equations
+
+Verified O(h^k) convergence on exponential decay with λ=2.
+
+#NumericalMethods #Python #Mathematics #SciPy
+
+================================================================================
+REDDIT - r/learnpython or r/math
+================================================================================
+
+**Title:** Implemented Adams-Bashforth Methods for Solving ODEs - Here's How They Work
+
+**Body:**
+
+I created a Jupyter notebook implementing Adams-Bashforth methods (orders 1-4) and wanted to share what I learned.
+
+**What are Adams-Bashforth methods?**
+
+They're "multistep" methods for solving ordinary differential equations like dy/dt = f(t,y). Unlike Runge-Kutta which evaluates f multiple times per step, Adams-Bashforth methods are clever: they reuse function values from previous time steps.
+
+**The core idea:**
+
+To get y_{n+1}, integrate f from t_n to t_{n+1}. But instead of evaluating f at multiple points, fit a polynomial through the known values f_n, f_{n-1}, f_{n-2}, etc., and integrate that polynomial.
+
+**The formulas:**
+
+- AB1 (Forward Euler): y_{n+1} = y_n + h*f_n
+- AB2: y_{n+1} = y_n + (h/2)*(3*f_n - f_{n-1})
+- AB3: y_{n+1} = y_n + (h/12)*(23*f_n - 16*f_{n-1} + 5*f_{n-2})
+- AB4: y_{n+1} = y_n + (h/24)*(55*f_n - 59*f_{n-1} + 37*f_{n-2} - 9*f_{n-3})
+
+**What I learned:**
+
+1. Higher orders = much better accuracy for the same step size
+2. Only ONE function evaluation per step (after startup)
+3. You need a "starter" method (I used RK4) to get the first few values
+4. Convergence study confirms O(h^k) error for k-th order method
+
+The local truncation error follows predictable bounds:
+- AB1: O(h²)
+- AB2: O(h³)
+- AB3: O(h⁴)
+- AB4: O(h⁵)
+
+**Limitations:**
+
+- Smaller stability regions than implicit methods
+- Not great for stiff problems
+- Startup phase adds some complexity
+
+I tested on exponential decay (dy/dt = -2y, exact solution: e^(-2t)) and the convergence plots show each method hitting its theoretical accuracy.
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/adams_bashforth_method.ipynb
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+Just built something cool: Adams-Bashforth methods for solving differential equations!
+
+The clever trick? Instead of calculating everything fresh each step, these methods "remember" previous calculations and reuse them. Like how you'd estimate tomorrow's weather using the past few days' trends.
+
+Result: 4th-order accuracy with just one calculation per step. Pure efficiency!
+
+Tested it on exponential decay - the convergence plots show each method hitting its theoretical accuracy perfectly.
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/adams_bashforth_method.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+**Exploring Computational Efficiency in Numerical ODE Solvers**
+
+I recently implemented Adams-Bashforth methods (orders 1-4) for solving ordinary differential equations, demonstrating a fundamental trade-off in numerical computing.
+
+**The Methodology:**
+
+Adams-Bashforth methods are explicit linear multistep methods that achieve high-order accuracy with minimal computational cost per step. Unlike Runge-Kutta methods requiring multiple function evaluations, AB methods use polynomial interpolation of previous function values:
+
+y_{n+1} = y_n + h × (weighted sum of f_n, f_{n-1}, ...)
+
+**Key Implementation Details:**
+- Bootstrap values obtained via 4th-order Runge-Kutta
+- Comprehensive convergence analysis confirming O(h^k) global error
+- Clear visualization comparing all four orders
+
+**Results:**
+The convergence study demonstrates each method's order of accuracy. The 4th-order method achieves ~10⁻⁶ error with h=0.0125, compared to ~10⁻² for 1st-order.
+
+**Practical Insight:**
+These methods excel when function evaluation is expensive and stability constraints permit. For stiff problems, consider Adams-Moulton (implicit) or predictor-corrector schemes instead.
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/adams_bashforth_method.ipynb
+
+#NumericalAnalysis #Python #ScientificComputing #ComputationalMethods
+
+================================================================================
+INSTAGRAM (< 500 chars)
+================================================================================
+
+Numerical methods that learn from the past
+
+Adams-Bashforth methods solve differential equations by reusing previous calculations.
+
+Instead of computing everything fresh, they use past steps to predict the next - like forecasting based on trends.
+
+This visualization shows:
+• Top left: 4 methods solving exponential decay
+• Top right: Error evolution over time
+• Bottom left: Convergence (steeper slope = higher order)
+• Bottom right: Estimated convergence orders
+
+One function call per step.
+Fourth-order accuracy.
+Pure mathematical efficiency.
+
+#Mathematics #Python #NumericalMethods #Science #DataVisualization #Coding #Physics #STEM

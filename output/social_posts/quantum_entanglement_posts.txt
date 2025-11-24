@@ -1,0 +1,155 @@
+# Social Media Posts: Quantum Entanglement
+# Generated from notebook: quantum_entanglement.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Just simulated quantum entanglement and violated Bell's inequality!
+
+CHSH parameter S ≈ 2.83 > classical limit of 2
+
+Einstein's "spooky action at a distance" is real—and I have the code to prove it.
+
+#QuantumComputing #Python #Physics
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Simulated quantum entanglement from scratch in Python.
+
+Created Bell states |Φ⁺⟩, measured correlations E(a,b) = -cos(θ), and demonstrated CHSH inequality violation with S ≈ 2√2.
+
+Local hidden variables can't explain quantum mechanics—our universe is fundamentally non-local.
+
+#Science #QuantumPhysics
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Built a quantum entanglement simulator today and it's mind-bending.
+
+When you entangle two qubits into a Bell state like |Φ⁺⟩ = (|00⟩ + |11⟩)/√2, measuring one instantly determines the other—no matter the distance.
+
+The wild part? We can prove quantum mechanics beats classical physics. The CHSH inequality says classical correlations max out at 2, but our entangled qubits hit 2√2 ≈ 2.83.
+
+Einstein called it "spooky." I call it beautiful.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented a full quantum entanglement simulation in NumPy.
+
+Key results:
+• Constructed all 4 Bell states using H⊗I → CNOT circuit
+• Verified correlation E(a,b) = -cos(θ) for |Ψ⁻⟩
+• Achieved CHSH parameter |S| ≈ 2.83, exceeding classical bound of 2
+
+The Tsirelson bound of 2√2 represents the maximum quantum violation—and we reached it.
+
+This confirms quantum correlations cannot be explained by local hidden variable theories.
+
+#QuantumMechanics #Physics #Python #OpenScience
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (for r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+**Title:** I simulated quantum entanglement in pure NumPy and proved Bell's inequality violation
+
+**Body:**
+
+I built a quantum entanglement simulator from scratch using only NumPy and it really helped me understand why quantum mechanics is so weird.
+
+**ELI5 version:** Imagine two coins that are magically linked. When you flip one in New York and it lands heads, the other one in Tokyo instantly lands heads too—no matter the distance. That's entanglement.
+
+But here's the spooky part: before you look, neither coin has a definite state. They're in a "superposition" of both heads AND tails. The act of measuring forces them to "decide."
+
+**What I built:**
+- Created all four Bell states (maximally entangled two-qubit states)
+- Simulated measurements at different angles
+- Tested the CHSH inequality
+
+**The key result:** Classical physics says correlations between measurements can't exceed 2 (the CHSH bound). My quantum simulation consistently hits ~2.83, which equals 2√2—the maximum allowed by quantum mechanics.
+
+This proves local hidden variable theories (Einstein's preferred explanation) are wrong. Quantum correlations are genuinely non-local.
+
+**What this means:**
+This same principle powers quantum cryptography (unhackable communication), quantum teleportation, and quantum computing.
+
+View and run the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_entanglement.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just built something that demonstrates one of the strangest phenomena in physics: quantum entanglement.
+
+When two particles become entangled, measuring one instantly affects the other—even across the universe. Einstein famously called it "spooky action at a distance."
+
+My simulation proves this is real by violating Bell's inequality. Classical physics says correlations max out at 2. My entangled qubits hit 2.83.
+
+This is the foundation of quantum computing and unhackable encryption.
+
+Explore the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_entanglement.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Completed a computational study of quantum entanglement, implementing a full simulation of Bell states and CHSH inequality testing in Python.
+
+**Technical Methodology:**
+• Constructed two-qubit Bell states using Hadamard and CNOT gate operations
+• Implemented measurement simulation with proper state collapse and probability calculations
+• Computed quantum correlations E(a,b) = -cos(θ) for singlet states
+• Validated results against Tsirelson's bound (2√2 ≈ 2.828)
+
+**Key Findings:**
+The simulation successfully demonstrates CHSH parameter |S| ≈ 2.83, violating the classical bound of 2 and confirming that quantum correlations cannot be reproduced by any local hidden variable theory.
+
+**Applications:** This foundational quantum mechanics concept enables:
+- Quantum key distribution (QKD) for secure communications
+- Quantum teleportation protocols
+- Enhanced precision in quantum sensing
+- Quantum computing algorithms
+
+**Skills demonstrated:** Quantum computing fundamentals, numerical simulation, scientific Python (NumPy, SciPy, Matplotlib), technical communication.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_entanglement.ipynb
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Quantum entanglement visualized ✨
+
+Two particles, perfectly correlated across any distance.
+
+Measure one → the other responds instantly.
+
+Einstein called it "spooky action at a distance"
+
+Today's simulation proves it's real:
+• Built all 4 Bell states from scratch
+• Measured correlations at different angles
+• Violated Bell's inequality (S = 2.83 > classical limit of 2)
+
+This is the foundation of quantum computing, quantum cryptography, and quantum teleportation.
+
+The universe is stranger than we imagined.
+
+#QuantumPhysics #QuantumComputing #DataScience #Physics #Science #Python #Coding #STEM
+
+--------------------------------------------------------------------------------

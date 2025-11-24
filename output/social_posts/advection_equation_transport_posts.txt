@@ -1,0 +1,164 @@
+# Social Media Posts: Advection Equation Transport
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Simulated wave transport with the advection equation! Compared upwind vs Lax-Wendroff schemes:
+- Upwind: diffusive but stable
+- Lax-Wendroff: accurate but oscillatory
+
+CFL condition ν = cΔt/Δx ≤ 1 keeps it stable.
+
+#Python #ComputationalPhysics #PDE
+
+---
+
+### Bluesky (300 chars)
+Explored the advection equation ∂u/∂t + c·∂u/∂x = 0, which describes how quantities like temperature or concentration transport through space.
+
+Implemented upwind (1st order) and Lax-Wendroff (2nd order) schemes. Convergence verified: O(Δx) vs O(Δx²).
+
+#Science #Mathematics #Simulation
+
+---
+
+### Threads (500 chars)
+Ever wonder how pollutants spread in the atmosphere or how waves propagate?
+
+The advection equation is one of the simplest ways to model transport: ∂u/∂t + c·∂u/∂x = 0
+
+I implemented two numerical schemes:
+• Upwind: spreads the solution (numerical diffusion)
+• Lax-Wendroff: creates ripples near sharp edges (dispersion)
+
+The key insight? First-order schemes smear things out, second-order schemes create oscillations. Real applications need clever combinations of both!
+
+#CodingPhysics #Python #Math
+
+---
+
+### Mastodon (500 chars)
+Implemented numerical solvers for the 1D advection equation using Python/NumPy.
+
+Equation: ∂u/∂t + c·∂u/∂x = 0
+Solution: u(x,t) = u₀(x - ct)
+
+Schemes compared:
+• Upwind: u_j^(n+1) = u_j^n - ν(u_j^n - u_(j-1)^n)
+• Lax-Wendroff: 2nd-order accurate, uses centered differences + correction
+
+Key findings:
+- Upwind has O(Δx) convergence, numerical diffusion
+- Lax-Wendroff has O(Δx²) convergence, numerical dispersion
+- CFL condition ν ≤ 1 required for stability
+
+#ComputationalMath #PDE #NumericalMethods
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit
+
+**Title:** I built a Python simulation comparing numerical schemes for wave transport (advection equation) - here's what I learned about diffusion vs dispersion
+
+**Body:**
+
+Hey r/learnpython!
+
+I've been learning about partial differential equations and wanted to share a simulation I built that reveals something really interesting about numerical methods.
+
+**The Problem: How do things move?**
+
+The advection equation describes how a quantity (like dye in water, smoke in air, or temperature) gets carried along by a flow:
+
+∂u/∂t + c·∂u/∂x = 0
+
+The beautiful thing is this has an exact solution: whatever shape you start with just slides along at speed c without changing.
+
+**The Challenge: Computers can't do calculus directly**
+
+So we approximate derivatives using finite differences. But here's where it gets interesting - different approximations have wildly different behavior!
+
+**What I implemented:**
+
+1. **Upwind scheme** (1st order): Uses the point "upwind" from where information flows
+2. **Lax-Wendroff scheme** (2nd order): More accurate but more complex
+
+**The surprising result:**
+
+- Upwind scheme causes **diffusion** - peaks get shorter and spread out (like adding blur)
+- Lax-Wendroff causes **dispersion** - creates oscillations near sharp edges (like ringing artifacts)
+
+This explains why weather models, game physics, and CFD codes use sophisticated "high-resolution" schemes that combine the best of both approaches!
+
+**Technical details:**
+- Grid: 100 points, 100 time steps
+- Verified convergence rates match theory: O(Δx) for upwind, O(Δx²) for Lax-Wendroff
+- CFL stability condition: ν = cΔt/Δx ≤ 1
+
+View the full interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/advection_equation_transport.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+### Facebook (500 chars)
+
+Ever watched smoke drift through the air or dye spread in water? That's advection - one of the most fundamental ways things move in nature!
+
+I built a computer simulation to model this and discovered something cool: the way you approximate the math creates either "blur" (numerical diffusion) or "ripples" (numerical dispersion).
+
+This is why accurate weather prediction and video game physics are so hard - you need clever tricks to avoid these artifacts!
+
+Check out the full notebook with code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/advection_equation_transport.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Numerical Methods for Transport Phenomena: A Comparative Study**
+
+Recently completed a computational study comparing finite difference schemes for solving the advection equation, a fundamental PDE in fluid dynamics and atmospheric modeling.
+
+**Technical Approach:**
+Implemented and validated two classical schemes:
+• First-order upwind: Demonstrates numerical diffusion, O(Δx) convergence
+• Second-order Lax-Wendroff: Exhibits numerical dispersion, O(Δx²) convergence
+
+**Key Findings:**
+The study reveals the fundamental trade-off in numerical PDE methods: low-order schemes introduce artificial diffusion that smears solutions, while higher-order schemes generate dispersive oscillations near discontinuities.
+
+**Skills Demonstrated:**
+- PDE discretization and finite difference methods
+- Python/NumPy scientific computing
+- Numerical analysis (stability via CFL condition, convergence verification)
+- Data visualization with Matplotlib
+
+This work provides foundational understanding for more advanced methods like ENO/WENO schemes used in production CFD codes.
+
+Full implementation with convergence studies:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/advection_equation_transport.ipynb
+
+#ComputationalScience #NumericalMethods #Python #FluidDynamics #CFD
+
+---
+
+### Instagram (500 chars)
+
+Waves, smoke, and dye all follow the same equation when they drift through space.
+
+I simulated how different numerical methods handle this transport:
+
+→ First method: blurs everything (like a bad photo filter)
+→ Second method: creates ripples at edges (like digital ringing)
+
+Neither is perfect alone - real simulations combine clever tricks from both!
+
+The plot shows a Gaussian pulse and square wave being transported. Notice how the square wave's sharp edges really reveal the numerical artifacts.
+
+Science is beautiful when you can see the math come alive!
+
+#Python #Physics #CodingArt #Simulation #Mathematics #DataVisualization #ComputationalScience #PDEs #WaveEquation

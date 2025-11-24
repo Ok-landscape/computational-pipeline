@@ -1,0 +1,177 @@
+# Social Media Posts: Genus of Surfaces
+# Generated for: genus_of_surfaces.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+How many holes does your surface have? The genus (g) tells you!
+
+Sphere: g=0
+Torus (donut): g=1
+Double torus: g=2
+
+Euler characteristic: χ = 2 - 2g
+
+Topology is beautiful. #Math #Topology #Python #DataViz
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Explored the genus of surfaces today - the topological invariant that counts "handles" on a surface.
+
+Key insight: The Gauss-Bonnet theorem connects geometry (curvature) to topology (genus):
+∫K dA = 4π(1-g)
+
+Sphere → 4π, Torus → 0, Double torus → -4π
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Ever wondered how mathematicians classify surfaces?
+
+It all comes down to the GENUS - basically counting "donut holes."
+
+Sphere = 0 holes (g=0)
+Torus = 1 hole (g=1)
+Double torus = 2 holes (g=2)
+
+The magic formula: χ = 2 - 2g (Euler characteristic)
+
+The Gauss-Bonnet theorem then links this to curvature: ∫K dA = 2πχ
+
+So a sphere has total curvature 4π, but a torus has ZERO total curvature. Wild, right?
+
+Built some Python visualizations to see these surfaces in 3D.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented parametric visualizations of surfaces by genus in Python today.
+
+The Classification Theorem states every compact orientable surface ≅ Σ_g (connected sum of g tori).
+
+Verified Gauss-Bonnet numerically:
+- Sphere (g=0): ∫∫K dA ≈ 4π ✓
+- Torus (g=1): ∫∫K dA ≈ 0 ✓
+
+The homology perspective: H₁(Σ_g; ℤ) ≅ ℤ^(2g)
+First Betti number b₁ = 2g gives the number of independent cycles.
+
+Topology + differential geometry = beautiful unity.
+
+#Mathematics #Topology #Python #Visualization
+
+================================================================================
+REDDIT (r/learnpython or r/math)
+================================================================================
+
+Title: Visualizing Surface Genus with Python - From Spheres to Triple Tori
+
+---
+
+**What is genus?**
+
+In topology, the genus of a surface counts its "handles" or "holes." Think of it like this:
+- A sphere has genus 0 (no holes)
+- A donut (torus) has genus 1 (one hole)
+- A figure-8 pretzel shape has genus 2
+
+**Why does it matter?**
+
+The genus completely classifies orientable surfaces! Every compact, connected, orientable surface is topologically equivalent to a "g-holed torus."
+
+**The cool math:**
+
+The Euler characteristic χ relates to genus by: χ = 2 - 2g
+
+The Gauss-Bonnet theorem then gives us: ∫∫ K dA = 2πχ = 4π(1-g)
+
+This means:
+- Sphere: total curvature = 4π
+- Torus: total curvature = 0 (positive outside, negative inside, they cancel!)
+- Double torus: total curvature = -4π
+
+**The code:**
+
+I implemented parametric equations for spheres, tori, and multi-tori in Python using numpy and matplotlib. For the double torus, I used a figure-8 (lemniscate) path with a tube wrapped around it. The Gaussian curvature is color-mapped onto each surface.
+
+I also numerically verified Gauss-Bonnet by integrating K over the surface - sphere gives ~12.566 (4π), torus gives ~0.
+
+**View the full notebook:**
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/genus_of_surfaces.ipynb
+
+Happy to answer questions about the math or the implementation!
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+How do mathematicians tell surfaces apart?
+
+By counting holes! It's called the GENUS.
+
+A sphere has 0 holes. A donut has 1. That pretzel-looking thing? 2 or more.
+
+Here's the wild part: There's a theorem (Gauss-Bonnet) that says the total curvature of a surface is completely determined by how many holes it has.
+
+A sphere curves "outward" everywhere (total = 4π). But a donut's outside curves outward while the inside curves inward - they perfectly cancel to 0!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/genus_of_surfaces.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Topological Invariants: Surface Classification with Python
+
+This week I implemented visualizations of the genus - a fundamental topological invariant that classifies surfaces by their number of "handles."
+
+Key concepts demonstrated:
+
+1. Classification Theorem: Every compact orientable surface is homeomorphic to a g-holed torus (Σ_g)
+
+2. Euler Characteristic: χ = V - E + F = 2 - 2g connects combinatorial topology to the genus
+
+3. Gauss-Bonnet Theorem: ∫∫K dA = 2πχ links differential geometry (curvature) to topology (genus)
+
+Technical implementation:
+- Parametric surface equations for sphere, torus, double torus, and triple torus
+- Gaussian curvature computation and visualization using matplotlib colormaps
+- Numerical verification of Gauss-Bonnet theorem (sphere: 4π, torus: 0)
+
+Skills: Python, NumPy, Matplotlib, 3D visualization, differential geometry, algebraic topology
+
+This project demonstrates how computational tools can verify theoretical mathematics and create intuitive visualizations of abstract concepts.
+
+View the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/genus_of_surfaces.ipynb
+
+#Mathematics #Python #DataVisualization #Topology #STEM
+
+================================================================================
+INSTAGRAM (< 500 chars)
+================================================================================
+
+Topology is counting holes.
+
+Sphere → 0 holes
+Donut → 1 hole
+Pretzel → 2 holes
+
+The genus tells you everything about a surface.
+
+And here's the beautiful part: the total curvature of a surface depends ONLY on its genus.
+
+∫K dA = 4π(1-g)
+
+These visualizations show how curvature varies across each surface (red = positive, blue = negative).
+
+On a torus, the outside curves out (+) and inside curves in (-). They cancel perfectly. Total = 0.
+
+Math is art.
+
+#mathematics #topology #dataviz #python #visualization #mathisbeautiful #stem #science #coding

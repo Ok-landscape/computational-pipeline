@@ -1,0 +1,174 @@
+# Social Media Posts: Multigrid Method for Solving Elliptic PDEs
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Multigrid methods achieve O(N) complexity for solving PDEs - that's optimal!
+
+While Gauss-Seidel struggles with low-frequency errors, multigrid exploits multiple grid resolutions to converge in just ~10 iterations.
+
+#Python #NumericalMethods #Math #Science
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented a multigrid solver for the 2D Poisson equation.
+
+The key insight: low-frequency errors on a fine grid appear as high-frequency on coarser grids - which relaxation methods handle efficiently.
+
+Result: O(N) complexity vs O(N²) for classical iterative methods.
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Just built a multigrid PDE solver from scratch and the results are beautiful!
+
+The problem: Gauss-Seidel iteration is painfully slow for large grids because it can't eliminate low-frequency errors efficiently.
+
+The solution: Use multiple grid resolutions! Coarse grids "see" smooth errors as oscillatory, making them easy to dampen.
+
+My 64×64 grid converged in ~10 V-cycles while pure Gauss-Seidel was still grinding after 500 iterations.
+
+This is why multigrid is the gold standard for elliptic PDEs.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented a 2D multigrid V-cycle solver for the Poisson equation -∇²u = f.
+
+Components:
+→ Red-black Gauss-Seidel smoother
+→ Full-weighting restriction (fine→coarse)
+→ Bilinear interpolation prolongation (coarse→fine)
+
+The convergence rate ρ ≈ 0.1 is grid-independent, giving O(N) total complexity.
+
+Tested on u(x,y) = sin(πx)sin(πy) with second-order accuracy confirmed.
+
+10 iterations vs 500+ for pure Gauss-Seidel on a 64×64 grid.
+
+#NumericalAnalysis #PDE #Python #ComputationalScience
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I implemented a multigrid solver in Python - here's why it's 50x faster than basic iteration
+
+**Body:**
+
+I've been learning numerical methods and just finished implementing a multigrid solver for the 2D Poisson equation. The performance difference compared to classical methods blew my mind, so I wanted to share.
+
+**The Problem**
+
+When you discretize an elliptic PDE (like the Poisson equation -∇²u = f) on a grid, you get a huge sparse linear system. Classical iterative methods like Gauss-Seidel work, but they're painfully slow for large grids.
+
+Why? They're great at smoothing out high-frequency (oscillatory) errors, but terrible at eliminating low-frequency (smooth) errors. The damping factor for low modes is nearly 1, so those errors barely shrink each iteration.
+
+**The Multigrid Insight**
+
+Here's the brilliant idea: what looks like a smooth, low-frequency error on a fine grid appears as an oscillatory, high-frequency error on a coarser grid!
+
+So the algorithm does this (V-cycle):
+1. Smooth the error on the fine grid (pre-smoothing)
+2. Compute the residual r = f - Au
+3. Restrict to a coarser grid
+4. Solve/smooth on the coarse grid (recursively)
+5. Interpolate the correction back to fine grid
+6. Smooth again (post-smoothing)
+
+**Results**
+
+On a 64×64 grid:
+- Multigrid: ~10 iterations to converge
+- Gauss-Seidel: 500+ iterations and still not there
+
+The best part? The convergence rate is independent of grid size. Whether you have 16×16 or 128×128 points, multigrid converges in roughly the same number of iterations. That's O(N) total complexity!
+
+**What I Learned**
+
+- Grid transfer operators matter: full-weighting restriction and bilinear interpolation preserve accuracy
+- Red-black Gauss-Seidel ordering is more efficient than lexicographic
+- The coarse grid doesn't need to be solved exactly - a few smoothing sweeps work fine
+
+Explore the interactive notebook with full implementation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/multigrid_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just wrote a multigrid solver for partial differential equations and I'm amazed by the results!
+
+The classic approach (Gauss-Seidel) needed 500+ iterations on my test problem. Multigrid? Just 10.
+
+The trick: problems that look "hard" on a fine grid become "easy" on a coarser grid. By bouncing between resolutions, you solve in optimal O(N) time.
+
+This is real computational science - the algorithms powering everything from weather prediction to video game physics.
+
+Check out the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/multigrid_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Implemented a multigrid solver for 2D elliptic PDEs - demonstrating why this method is the gold standard in scientific computing.
+
+**Technical Approach:**
+• Discretized the Poisson equation using 5-point finite differences
+• Built a V-cycle multigrid with red-black Gauss-Seidel smoothing
+• Implemented full-weighting restriction and bilinear interpolation operators
+
+**Key Results:**
+• Grid-independent convergence rate (ρ ≈ 0.1)
+• O(N) computational complexity vs O(N²) for classical methods
+• 10 iterations vs 500+ for Gauss-Seidel on equivalent problems
+• Verified second-order spatial accuracy
+
+**Why This Matters:**
+Multigrid methods underpin modern computational tools in CFD, structural analysis, and electromagnetic simulation. Understanding these algorithms is essential for anyone working with large-scale numerical models.
+
+The core insight - that smooth errors become oscillatory on coarser grids - is elegant and generalizes to many problem classes.
+
+Skills demonstrated: numerical analysis, algorithm implementation, scientific Python, PDE theory.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/multigrid_method.ipynb
+
+#NumericalMethods #ScientificComputing #Python #ComputationalScience #PDEs
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Multigrid magic ✨
+
+This plot shows why multigrid methods are incredible for solving PDEs.
+
+Top left: Multigrid (blue) converges in ~10 iterations. Gauss-Seidel (red) is still grinding after 500.
+
+Top right: The convergence rate is the same regardless of grid size. That's O(N) complexity!
+
+Bottom left: Second-order accuracy confirmed.
+
+Bottom right: The solution to -∇²u = 2π²sin(πx)sin(πy).
+
+The secret? Low-frequency errors on fine grids become high-frequency on coarse grids - easy to eliminate.
+
+#NumericalMethods
+#Python
+#Math
+#Science
+#Coding
+#DataVisualization
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,190 @@
+# Social Media Posts: Lyapunov Exponent Calculation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Can you predict chaos? The Lyapunov exponent (λ) tells us how fast tiny errors explode. Computed λ ≈ 0.91 for the Lorenz system - predictions fail after just ~15 time units!
+
+#Python #Chaos #Science #Math #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Quantifying chaos: The Lyapunov exponent measures how quickly nearby trajectories diverge in dynamical systems.
+
+For the Lorenz attractor with σ=10, ρ=28, β=8/3:
+λ ≈ 0.91 (literature: 0.9056)
+
+This positive value confirms chaotic behavior with predictability horizon ~1.1 time units.
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why weather forecasts get worse over time?
+
+The Lyapunov exponent (λ) tells us! It measures how fast small errors grow in chaotic systems.
+
+I calculated λ for the famous Lorenz system:
+→ Result: λ ≈ 0.91
+→ Meaning: Errors grow by e^(0.91t)
+→ Prediction horizon: ~1/λ ≈ 1.1 time units
+
+Even with measurements accurate to 10⁻⁶, predictions become unreliable after ~15 time units.
+
+Chaos isn't randomness - it's deterministic unpredictability!
+
+#Science #Math #Python
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented the maximal Lyapunov exponent calculation for the Lorenz system using tangent space evolution with periodic renormalization.
+
+Algorithm:
+1. Integrate system + variational equations
+2. Renormalize perturbation vector periodically
+3. Accumulate: λ ≈ (1/T) Σ ln‖δᵢ‖
+
+Results for σ=10, ρ=28, β=8/3:
+λ = 0.9087 (literature: 0.9056)
+
+Also mapped λ vs ρ - chaos onset at ρ ≈ 24.7
+
+Code uses scipy.integrate.odeint with dt=0.01
+
+#Python #DynamicalSystems #Chaos #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/science)
+--------------------------------------------------------------------------------
+**Title:** Calculating the Lyapunov Exponent: How to Quantify Chaos in Python
+
+**Body:**
+
+**ELI5: What's a Lyapunov exponent?**
+
+Imagine you're tracking two butterflies that start almost at the same spot. In a calm room, they'd stay close together. But in a chaotic system (like weather), they quickly end up in completely different places. The Lyapunov exponent (λ) measures HOW FAST this separation happens.
+
+- λ > 0: Chaos! Trajectories diverge exponentially
+- λ = 0: Marginal - neither growing nor shrinking
+- λ < 0: Stable - trajectories converge
+
+**The Lorenz System**
+
+I computed λ for the famous Lorenz equations (the "butterfly effect" system):
+
+dx/dt = σ(y - x)
+dy/dt = x(ρ - z) - y
+dz/dt = xy - βz
+
+With standard parameters (σ=10, ρ=28, β=8/3), I got λ ≈ 0.91, matching the literature value of 0.9056.
+
+**The Algorithm**
+
+The trick is to evolve a tiny perturbation vector alongside your main trajectory:
+
+1. Start with a random unit vector δ
+2. Integrate both the system and dδ/dt = J·δ (where J is the Jacobian)
+3. Every so often, record ‖δ‖ and renormalize to unit length
+4. λ = (1/T) × sum of all ln‖δ‖
+
+This prevents numerical overflow from the exponential growth.
+
+**What I Learned**
+
+- Predictability horizon ≈ (1/λ) × ln(tolerance/error)
+- Even with 10⁻⁶ accuracy, Lorenz predictions fail after ~15 time units
+- Chaos kicks in around ρ ≈ 24.7 (I did a parameter scan!)
+
+The code uses NumPy and SciPy's odeint. Pretty straightforward once you understand the math.
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lyapunov_exponent_calculation.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Why can't we predict weather perfectly?
+
+The answer lies in the Lyapunov exponent - a number that tells us how fast tiny measurement errors explode into huge ones.
+
+I calculated this for the Lorenz system (the original "butterfly effect" equations) and got λ ≈ 0.91. This means even near-perfect measurements become useless after just ~15 time units!
+
+Chaos isn't random - it's deterministic but fundamentally unpredictable. Pretty mind-blowing when you think about it.
+
+Check out my notebook with full code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lyapunov_exponent_calculation.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Quantifying Chaos: Computing Lyapunov Exponents in Python**
+
+In dynamical systems analysis, the Lyapunov exponent provides a rigorous measure of sensitive dependence on initial conditions - the mathematical signature of chaos.
+
+**Project Overview**
+
+I implemented the standard algorithm for computing the maximal Lyapunov exponent (MLE) using tangent space evolution with periodic renormalization. The approach involves:
+
+• Solving the system ODEs alongside variational equations
+• Periodic Gram-Schmidt-style renormalization to prevent overflow
+• Accumulating logarithmic stretching factors over time
+
+**Technical Results**
+
+Applied to the Lorenz system (σ=10, ρ=28, β=8/3):
+• Computed MLE: λ = 0.9087
+• Literature value: λ = 0.9056
+• Relative error: < 0.4%
+
+Additionally performed parameter sensitivity analysis, identifying the chaos onset at ρ ≈ 24.7.
+
+**Key Insight**
+
+The prediction horizon scales as (1/λ)·ln(tolerance/error). For the Lorenz system, this means forecasts degrade to noise within ~15 characteristic time units regardless of measurement precision.
+
+**Tools:** Python, NumPy, SciPy, Matplotlib
+
+View the complete implementation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lyapunov_exponent_calculation.ipynb
+
+#DataScience #Python #ScientificComputing #DynamicalSystems #Chaos
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Quantifying the butterfly effect
+
+The Lyapunov exponent tells us how fast chaos amplifies tiny errors.
+
+For the famous Lorenz system:
+λ ≈ 0.91
+
+What this means:
+→ Nearby trajectories separate exponentially
+→ Errors multiply by e every ~1.1 time units
+→ Perfect prediction is impossible
+
+Even with incredibly precise measurements (10⁻⁶ accuracy), forecasts become meaningless after just 15 time units.
+
+This is why weather forecasting has fundamental limits - not because of bad models, but because of math.
+
+Swipe to see the beautiful Lorenz attractor
+
+#chaos #physics #math #python #datascience #science #coding #lorenz #butterfly
+
+--------------------------------------------------------------------------------

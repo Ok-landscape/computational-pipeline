@@ -1,0 +1,146 @@
+# Social Media Posts: GARCH Volatility Model
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Just implemented a GARCH(1,1) model from scratch in Python! Volatility clustering is real: σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁. With α+β ≈ 0.95, shocks persist for months. Essential for risk management. #Python #Quant #Finance #DataScience
+
+### Bluesky (300 chars)
+Built a GARCH(1,1) volatility model from first principles. The key insight: market volatility clusters—high volatility follows high volatility. The variance equation σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁ captures this beautifully. Parameter estimation via maximum likelihood in pure Python/NumPy.
+
+### Threads (500 chars)
+Ever notice how market turbulence comes in waves? That's volatility clustering, and GARCH models capture it perfectly.
+
+I just implemented a GARCH(1,1) model from scratch:
+σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁
+
+The persistence (α+β ≈ 0.95) means a volatility shock today still affects markets months later!
+
+The news impact curve shows how both positive and negative shocks increase future volatility symmetrically. Fat tails in returns? GARCH explains them.
+
+Pure Python implementation—no black boxes.
+
+### Mastodon (500 chars)
+Implemented GARCH(1,1) for volatility modeling from scratch.
+
+The variance recursion: σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁
+
+Key findings:
+- Estimated parameters match true values closely
+- Persistence α+β ≈ 0.95 indicates highly persistent volatility shocks
+- Unconditional variance: E[σ²ₜ] = ω/(1-α-β)
+- Half-life of shocks: log(0.5)/log(α+β)
+
+Maximum likelihood estimation with L-BFGS-B optimization. Standardized residuals show proper mean=0, std=1, confirming model adequacy.
+
+#Python #Econometrics #Finance
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/quant)
+
+**Title:** I built a GARCH(1,1) volatility model from scratch in Python - here's what I learned about why market turbulence comes in waves
+
+**Body:**
+
+I've been studying financial econometrics and wanted to really understand GARCH models, so I implemented one from first principles using only NumPy and SciPy.
+
+**What is GARCH?**
+
+GARCH (Generalized Autoregressive Conditional Heteroskedasticity) models time-varying volatility. The key observation is that volatility clusters—big market moves tend to follow big market moves.
+
+**The Math (in Unicode since Reddit doesn't render LaTeX):**
+
+The GARCH(1,1) variance equation:
+σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁
+
+Where:
+- ω > 0: baseline variance
+- α ≥ 0: ARCH effect (how yesterday's shock affects today's variance)
+- β ≥ 0: GARCH effect (persistence of variance)
+- α + β < 1: stationarity condition
+
+**What I implemented:**
+
+1. Simulation function to generate synthetic GARCH returns
+2. Maximum likelihood estimation to recover parameters
+3. Volatility forecasting that reverts to long-run average
+
+**Key results:**
+
+- My estimated parameters matched the true simulation values closely
+- Persistence (α+β) ≈ 0.95 means volatility shocks are very persistent
+- The unconditional variance is ω/(1-α-β)
+- Returns show excess kurtosis (fat tails) even with normal innovations
+
+**The "aha" moment:**
+
+The news impact curve! It shows σ²ₜ as a function of εₜ₋₁. It's a parabola—both positive AND negative shocks increase volatility equally. This is why the basic GARCH is symmetric (unlike EGARCH or GJR-GARCH which capture leverage effects).
+
+**View the full notebook with interactive code:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/garch_volatility_model.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+### Facebook (500 chars)
+
+Ever wonder why stock market turbulence seems to come in waves?
+
+I just built a model that explains this! It's called GARCH, and it shows that volatility clusters—periods of chaos follow chaos, calm follows calm.
+
+The math is elegant: today's uncertainty depends on yesterday's surprises AND yesterday's uncertainty. With typical parameters, a market shock today still ripples through for months.
+
+Check out my Python implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/garch_volatility_model.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Understanding Market Volatility: A GARCH Model Implementation**
+
+I recently completed a from-scratch implementation of the GARCH(1,1) model—a cornerstone of financial econometrics used in risk management, option pricing, and portfolio optimization.
+
+**Technical Highlights:**
+
+The conditional variance follows: σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁
+
+Key implementation components:
+- Monte Carlo simulation of GARCH processes
+- Maximum likelihood estimation via L-BFGS-B optimization
+- Multi-step volatility forecasting with mean reversion
+- Diagnostic testing (Ljung-Box on squared residuals)
+
+**Results:**
+- Parameter recovery: Estimated values closely match simulation truth
+- Persistence: α+β ≈ 0.95 indicates highly persistent volatility shocks
+- The news impact curve demonstrates symmetric response to positive/negative shocks
+
+**Skills demonstrated:** Python, NumPy, SciPy optimization, financial econometrics, statistical modeling, data visualization
+
+This exercise reinforced the importance of understanding models at a foundational level rather than relying solely on library implementations.
+
+Full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/garch_volatility_model.ipynb
+
+#QuantitativeFinance #Python #RiskManagement #Econometrics #DataScience
+
+---
+
+### Instagram (500 chars)
+
+The math behind market chaos
+
+This plot shows GARCH in action—a model that explains why volatility clusters.
+
+The bottom-right panel is my favorite: the "news impact curve." It shows how shocks affect future uncertainty.
+
+Notice it's symmetric? Both good and bad surprises increase volatility equally. That's a key insight for risk management.
+
+σ²ₜ = ω + αε²ₜ₋₁ + βσ²ₜ₋₁
+
+Built from scratch in Python.
+No libraries, just math.
+
+#python #quant #finance #datascience #volatility #riskmanagement #coding #mathematics

@@ -1,0 +1,149 @@
+# Social Media Posts: Simulated Annealing Optimization
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+Simulated Annealing: teach your algorithm to "cool down" like metal! 🔥→❄️
+
+At high temps, accept bad moves to escape local minima. As T→0, converge to global optimum.
+
+Found f(x)≈0.0 on the nasty Rastrigin function!
+
+#Python #Optimization #MachineLearning
+
+---
+
+### Bluesky (300 chars)
+Implemented Simulated Annealing to tackle the Rastrigin function—a notoriously tricky multimodal optimization problem.
+
+The Metropolis criterion: P(accept) = exp(-ΔE/T) when ΔE > 0
+
+Watched the algorithm escape countless local minima before converging to the global optimum at x* = (0, 0).
+
+---
+
+### Threads (500 chars)
+Just built a Simulated Annealing optimizer from scratch and it's fascinating to watch!
+
+The idea: mimic how metals cool to find low-energy states. Start "hot" (accept worse solutions freely), then gradually cool down (get pickier).
+
+Applied it to the Rastrigin function—covered in local minima like a spiky egg carton. The algorithm navigated this brutal landscape and found f(x) ≈ 0 at the global minimum.
+
+The key? That acceptance probability: exp(-ΔE/T). Pure elegance.
+
+---
+
+### Mastodon (500 chars)
+New notebook: Simulated Annealing optimization with full mathematical derivation.
+
+Tackled the 2D Rastrigin function:
+f(x) = 10n + Σ[xᵢ² - 10·cos(2πxᵢ)]
+
+Metropolis acceptance criterion:
+P = exp(-ΔE/T) for uphill moves
+
+Used geometric cooling: T_{k+1} = α·T_k with α=0.9995
+
+Convergence is beautiful—high acceptance at hot temps (exploration), declining as we cool (exploitation). Found global min at (0,0) with f≈0.
+
+Code in Python with NumPy/Matplotlib. #Python #Optimization #SciPy
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/compsci)
+
+**Title:** I implemented Simulated Annealing from scratch and finally understand why it works so well
+
+**Body:**
+
+Just finished building a Simulated Annealing optimizer and wanted to share what I learned.
+
+**The concept (ELI5):** Imagine you're blindfolded on a bumpy landscape trying to find the lowest valley. If you only ever walk downhill, you'll get stuck in the first dip you find. But what if you occasionally accept uphill steps? You might escape that small dip and find a much deeper valley elsewhere.
+
+That's SA in a nutshell. The "temperature" controls how willing you are to accept worse solutions:
+- Hot = adventurous (explore everywhere)
+- Cold = conservative (only accept improvements)
+
+**The math:** When we find a worse solution with energy change ΔE > 0, we accept it with probability:
+
+P = exp(-ΔE/T)
+
+As temperature T drops, this probability shrinks toward zero.
+
+**What I tested it on:** The Rastrigin function—a classic optimization nightmare with hundreds of local minima arranged like an egg carton. Global minimum is at (0, 0) with f = 0.
+
+**Results:** Starting from a random point, the algorithm successfully navigated the minefield and found f(x) ≈ 0.0. The convergence plot shows the classic SA pattern—wild fluctuations at high temps, then smooth descent as we cool.
+
+**Key takeaways:**
+1. Cooling rate matters: too fast and you get stuck, too slow and it takes forever
+2. Initial temperature should be high enough to accept most moves initially
+3. The acceptance rate naturally decays—that's the exploration→exploitation transition
+
+Full notebook with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/simulated_annealing_optimization.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+### Facebook (500 chars)
+
+Ever wonder how computers solve really hard optimization problems?
+
+I just explored Simulated Annealing—an algorithm inspired by metalworking! When blacksmiths heat and slowly cool metal, atoms settle into a perfect crystalline structure. SA does the same for math problems.
+
+The cool part: it intentionally accepts "bad" moves early on to avoid getting trapped. Then it gradually gets pickier until it finds the best solution.
+
+Applied it to a function with hundreds of fake minimums—and it found the true global optimum!
+
+Check out the full notebook with code and visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/simulated_annealing_optimization.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+Exploring Metaheuristic Optimization: A Deep Dive into Simulated Annealing
+
+Just completed a comprehensive implementation of Simulated Annealing (SA), demonstrating its effectiveness on the challenging Rastrigin benchmark function.
+
+Key technical highlights:
+
+• Metropolis acceptance criterion: P(accept) = exp(-ΔE/T) enables probabilistic escape from local minima
+
+• Geometric cooling schedule with α=0.9995 balances exploration and exploitation
+
+• Adaptive step size proportional to temperature ensures efficient search at all stages
+
+The Rastrigin function presents a highly multimodal landscape—the perfect stress test for global optimization algorithms. Despite hundreds of local minima, SA successfully identified the global optimum at x* = (0, 0).
+
+This work demonstrates competencies in:
+- Algorithm design and implementation
+- Mathematical modeling and analysis
+- Scientific visualization (3D surfaces, contour plots, convergence analysis)
+- Python scientific computing (NumPy, Matplotlib)
+
+SA remains highly relevant for hyperparameter tuning, combinatorial optimization, and any problem where gradient information is unavailable or unreliable.
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/simulated_annealing_optimization.ipynb
+
+#Optimization #MachineLearning #Python #DataScience #Algorithms
+
+---
+
+### Instagram (500 chars)
+
+The art of imperfection in optimization ✨
+
+This visualization shows Simulated Annealing tackling one of the hardest test functions in optimization—the Rastrigin function (that spiky surface in the top left).
+
+The secret? Sometimes accepting worse solutions helps you find the best one.
+
+Like cooling molten metal into perfect crystals, the algorithm starts chaotic and gradually settles into the global minimum.
+
+Watch the trajectory trace across the contour plot—from random wandering to precise convergence.
+
+Built with Python
+NumPy + Matplotlib
+
+#Python #Optimization #DataScience #Mathematics #Coding #Algorithm #Visualization #Science #MachineLearning #STEM

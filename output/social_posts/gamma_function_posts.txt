@@ -1,0 +1,185 @@
+=============================================================
+SOCIAL MEDIA POSTS: The Gamma Function
+=============================================================
+
+-------------------------------------------------------------
+1. TWITTER/X (280 chars max)
+-------------------------------------------------------------
+
+The Gamma function Γ(z) extends factorials beyond integers!
+
+Γ(n+1) = n!
+Γ(1/2) = √π
+
+It's everywhere: probability, quantum mechanics, string theory.
+
+#Python #Math #Science #SpecialFunctions
+
+-------------------------------------------------------------
+2. BLUESKY (300 chars max)
+-------------------------------------------------------------
+
+Exploring the Gamma function Γ(z) - the smooth extension of factorials to all complex numbers.
+
+Key insight: Γ(z) = ∫₀^∞ t^(z-1) e^(-t) dt
+
+Verified numerically: recurrence relation, reflection formula, and connection to the Beta function.
+
+#Mathematics #Python
+
+-------------------------------------------------------------
+3. THREADS (500 chars max)
+-------------------------------------------------------------
+
+Ever wondered what 0.5! means?
+
+The Gamma function has the answer: Γ(1/2) = √π ≈ 1.77
+
+This remarkable function extends factorials to ALL numbers (except 0 and negative integers, where it has poles).
+
+Key properties I verified with Python:
+- Γ(n+1) = n! for integers
+- Γ(z+1) = z·Γ(z) (recurrence)
+- Γ(z)Γ(1-z) = π/sin(πz) (reflection)
+
+It appears in probability distributions, quantum mechanics, and even string theory!
+
+-------------------------------------------------------------
+4. MASTODON (500 chars max)
+-------------------------------------------------------------
+
+Computational exploration of the Gamma function Γ(z).
+
+Definition: Γ(z) = ∫₀^∞ t^(z-1) e^(-t) dt
+
+Verified properties with SciPy:
+- Factorial relation: Γ(n+1) = n!
+- Recurrence: Γ(z+1) = z·Γ(z)
+- Reflection: Γ(z)Γ(1-z) = π/sin(πz)
+- Duplication: Γ(z)Γ(z+1/2) = √π·Γ(2z)/2^(2z-1)
+
+Also explored Stirling's approximation and the Beta function connection: B(a,b) = Γ(a)Γ(b)/Γ(a+b)
+
+All verified to machine precision. #Mathematics #Python #SciPy
+
+-------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+-------------------------------------------------------------
+
+Title: Exploring the Gamma Function with Python - Extending Factorials to All Numbers
+
+Body:
+
+**What is the Gamma Function?**
+
+The Gamma function Γ(z) is one of mathematics' most important special functions. It answers the question: what is 0.5 factorial?
+
+**The Definition**
+
+Γ(z) = ∫₀^∞ t^(z-1) e^(-t) dt
+
+This integral converges for any z with positive real part.
+
+**Key Properties**
+
+1. **Factorial Connection**: Γ(n+1) = n! for positive integers
+2. **Recurrence**: Γ(z+1) = z·Γ(z)
+3. **Special Value**: Γ(1/2) = √π ≈ 1.7725
+4. **Reflection Formula**: Γ(z)Γ(1-z) = π/sin(πz)
+5. **Duplication Formula**: Γ(z)Γ(z+1/2) = √π·Γ(2z)/2^(2z-1)
+
+**What I Learned**
+
+- The function has poles (singularities) at 0, -1, -2, -3, ...
+- Between poles, it alternates between positive and negative
+- Stirling's approximation works well for large values
+- The Beta function B(a,b) = Γ(a)Γ(b)/Γ(a+b)
+
+**Why It Matters**
+
+The Gamma function appears everywhere:
+- Gamma probability distribution
+- Quantum mechanics wave functions
+- String theory amplitudes
+- Generalizing binomial coefficients
+
+**View the full notebook with interactive code:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gamma_function.ipynb
+
+-------------------------------------------------------------
+6. FACEBOOK (500 chars max)
+-------------------------------------------------------------
+
+What's 0.5 factorial? Sounds impossible, right?
+
+The Gamma function Γ(z) answers this! It extends factorials to ALL numbers.
+
+Cool facts:
+- Γ(1/2) = √π ≈ 1.77
+- Γ(n+1) = n! for integers
+- It appears in probability, quantum physics, and string theory
+
+I built a Python notebook exploring this function, verifying its elegant mathematical properties numerically.
+
+View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gamma_function.ipynb
+
+-------------------------------------------------------------
+7. LINKEDIN (1000 chars max)
+-------------------------------------------------------------
+
+Computational Exploration: The Gamma Function
+
+I recently completed a numerical investigation of the Gamma function Γ(z), one of the most important special functions in applied mathematics.
+
+**Technical Approach**
+
+Using Python with NumPy and SciPy, I:
+- Visualized the function across real and complex domains
+- Verified the recurrence relation Γ(z+1) = z·Γ(z) to machine precision
+- Confirmed Euler's reflection formula Γ(z)Γ(1-z) = π/sin(πz)
+- Validated Legendre's duplication formula
+- Compared with Stirling's asymptotic approximation
+- Explored the Beta function relationship B(a,b) = Γ(a)Γ(b)/Γ(a+b)
+
+**Key Insight**
+
+The Gamma function extends factorials beyond integers: Γ(1/2) = √π demonstrates how mathematical structures can be generalized while preserving their essential properties.
+
+**Applications**
+
+This function is foundational in probability theory (Gamma distributions), quantum mechanics (wave function normalization), and even string theory (Veneziano amplitude).
+
+View the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gamma_function.ipynb
+
+#Mathematics #Python #DataScience #ScientificComputing #NumericalAnalysis
+
+-------------------------------------------------------------
+8. INSTAGRAM (500 chars max)
+-------------------------------------------------------------
+
+The Gamma Function: Where Factorials Meet Infinity
+
+Ever wondered what happens between 1!, 2!, 3!...?
+
+The Gamma function Γ(z) fills in ALL the gaps.
+
+Mind-blowing fact:
+Γ(1/2) = √π
+
+This elegant curve connects discrete factorials into a continuous function - with poles at every non-positive integer creating this dramatic visualization.
+
+From probability to quantum physics, this function is everywhere in science.
+
+Swipe to see:
+→ The smooth interpolation of factorials
+→ Poles at negative integers
+→ Stirling's approximation
+→ Euler's reflection formula verified
+
+#mathematics #python #dataviz #science #coding #specialfunctions #calculus
+
+=============================================================
+END OF POSTS
+=============================================================

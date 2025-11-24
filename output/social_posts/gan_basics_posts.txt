@@ -1,0 +1,174 @@
+===========================================
+SOCIAL MEDIA POSTS: GAN Basics
+===========================================
+
+-------------------------------------------
+1. TWITTER/X (< 280 chars)
+-------------------------------------------
+
+Two neural networks walk into a bar. One generates fake data, the other calls it out. Together they learn to create perfect forgeries.
+
+That's a GAN - and we built one from scratch in NumPy.
+
+#MachineLearning #GAN #Python #DeepLearning
+
+-------------------------------------------
+2. BLUESKY (< 300 chars)
+-------------------------------------------
+
+Implemented a Generative Adversarial Network from scratch using only NumPy.
+
+The minimax game: Generator maps latent z → data x, Discriminator classifies real vs fake.
+
+At equilibrium: D(x) ≈ 0.5 everywhere, meaning G perfectly learned the data distribution.
+
+#MachineLearning #Python
+
+-------------------------------------------
+3. THREADS (< 500 chars)
+-------------------------------------------
+
+Built a GAN from scratch in pure NumPy to understand the math!
+
+The core idea: Two networks compete in a minimax game
+• Generator: tries to create realistic samples
+• Discriminator: tries to spot the fakes
+
+The magic happens when they reach equilibrium - the generator learns to perfectly mimic a bimodal Gaussian mixture.
+
+Key insight: The optimal discriminator outputs D*(x) = p_data(x) / (p_data(x) + p_g(x))
+
+When training succeeds, this approaches 0.5 everywhere!
+
+#AI #DeepLearning
+
+-------------------------------------------
+4. MASTODON (< 500 chars)
+-------------------------------------------
+
+Implemented GANs from first principles in NumPy.
+
+The minimax objective:
+min_G max_D V(D,G) = E[log D(x)] + E[log(1 - D(G(z)))]
+
+Key theoretical results:
+• Optimal discriminator: D*(x) = p_data/(p_data + p_g)
+• Global optimum: C(G) = -log(4) when p_g = p_data
+• Objective reformulates as Jensen-Shannon divergence
+
+The code trains on a bimodal Gaussian - watching the generator learn to split its output across both modes is deeply satisfying.
+
+#MachineLearning #GAN #Python #Science
+
+-------------------------------------------
+5. REDDIT
+-------------------------------------------
+
+**Title:** I built a GAN from scratch in NumPy to really understand how they work - here's what I learned
+
+**Body:**
+
+**TL;DR:** Implemented a Generative Adversarial Network using only NumPy (no PyTorch/TensorFlow) to learn a bimodal distribution. The math is beautiful.
+
+**What's a GAN?**
+
+Imagine two neural networks playing a game:
+- **Generator (G):** Creates fake data samples from random noise
+- **Discriminator (D):** Tries to tell real samples from fake ones
+
+They compete: G tries to fool D, while D tries to catch G. Through this adversarial process, G eventually learns to generate samples indistinguishable from real data.
+
+**The Math (simplified)**
+
+The training objective is a minimax game:
+
+min_G max_D V(D,G) = E[log D(x)] + E[log(1 - D(G(z)))]
+
+Where:
+- E[log D(x)] = how well D identifies real samples
+- E[log(1 - D(G(z)))] = how well D catches fakes
+
+**Cool Theoretical Results**
+
+1. The optimal discriminator is: D*(x) = p_data(x) / (p_data(x) + p_g(x))
+
+2. When training succeeds perfectly, D outputs 0.5 for everything (can't tell the difference!)
+
+3. The global optimum loss is -log(4) ≈ -1.386
+
+**What I Learned**
+
+- The generator doesn't directly see real data - it only gets gradients through the discriminator
+- Mode collapse is real - early training often gets stuck generating samples in just one mode
+- The non-saturating loss (-log D(G(z)) instead of log(1-D(G(z)))) provides much better gradients
+
+**Interactive Notebook**
+
+You can run the full code yourself: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gan_basics.ipynb
+
+Happy to answer questions about the implementation!
+
+-------------------------------------------
+6. FACEBOOK (< 500 chars)
+-------------------------------------------
+
+Ever wonder how AI creates realistic images and data?
+
+I built a Generative Adversarial Network from scratch to find out. It's like a forger vs. detective game:
+
+• The Generator creates fake samples
+• The Discriminator tries to catch them
+• They get better together until the fakes are perfect
+
+The coolest part? When training succeeds, the discriminator literally can't tell the difference anymore - it outputs 50/50 for everything!
+
+See the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gan_basics.ipynb
+
+-------------------------------------------
+7. LINKEDIN (< 1000 chars)
+-------------------------------------------
+
+Implemented a Generative Adversarial Network from First Principles
+
+Understanding deep learning architectures requires going beyond API calls. I built a complete GAN implementation in pure NumPy to internalize the mathematical foundations.
+
+**Technical Approach:**
+• Implemented forward/backward passes for both generator and discriminator networks
+• Used leaky ReLU activations and manual gradient computation
+• Trained on a bimodal Gaussian mixture to visualize mode learning
+
+**Key Mathematical Insights:**
+• The minimax objective reformulates as Jensen-Shannon divergence minimization
+• Optimal discriminator: D*(x) = p_data(x) / (p_data(x) + p_g(x))
+• Global optimum achieved when generator distribution matches data distribution
+
+**Results:**
+The implementation successfully learned the bimodal target distribution, with the discriminator converging toward D(x) ≈ 0.5 - indicating the generator produces samples indistinguishable from real data.
+
+**Skills Demonstrated:** NumPy, Neural Network Implementation, Backpropagation, Generative Models, Mathematical Analysis
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gan_basics.ipynb
+
+#MachineLearning #DeepLearning #Python #DataScience #AI
+
+-------------------------------------------
+8. INSTAGRAM (< 500 chars)
+-------------------------------------------
+
+Two networks, one goal: create perfect fakes
+
+This is a GAN (Generative Adversarial Network) learning to generate data from scratch.
+
+The red and blue histograms show how the generator's output evolves from random noise to matching the true bimodal distribution.
+
+When training succeeds, even the discriminator can't tell what's real anymore.
+
+Built from scratch in NumPy - no frameworks, just math.
+
+—
+
+#MachineLearning #GAN #DeepLearning #Python #AI #DataScience #NeuralNetworks #Coding #Tech #Mathematics
+
+===========================================
+END OF POSTS
+===========================================

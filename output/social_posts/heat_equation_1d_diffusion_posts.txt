@@ -1,0 +1,181 @@
+================================================================================
+HEAT EQUATION 1D DIFFUSION - SOCIAL MEDIA POSTS
+================================================================================
+
+================================================================================
+1. TWITTER/X (< 280 characters)
+================================================================================
+
+Watch heat vanish! Simulated a 100°C Gaussian pulse diffusing through a 1m rod. Width grows as √t, amplitude drops as 1/√t. The math: ∂u/∂t = α·∂²u/∂x². ~2% error vs analytical solution.
+
+#Python #Physics #HeatEquation #PDE #Science
+
+================================================================================
+2. BLUESKY (< 300 characters)
+================================================================================
+
+Solved the 1D heat equation using FTCS finite differences. A 100°C Gaussian pulse in a rod diffuses outward while the peak decays as 1/√t. Von Neumann stability: Fourier number r ≤ 0.5. Achieved ~2% error vs analytical solution.
+
+Physics + Python = beautiful visualizations.
+
+#ComputationalPhysics #Python
+
+================================================================================
+3. THREADS (< 500 characters)
+================================================================================
+
+Ever wonder how heat spreads through a metal rod?
+
+I simulated the 1D heat equation: ∂u/∂t = α·∂²u/∂x²
+
+Started with a hot 100°C Gaussian pulse in the center, ends held at 0°C. The result? Heat spreads wider (proportional to √t) while the peak drops (proportional to 1/√t).
+
+Key insight: the FTCS method only works when αΔt/Δx² ≤ 0.5. Violate this and your simulation explodes!
+
+Same equation models ink diffusion, Brownian motion, and even stock prices (Black-Scholes).
+
+#Physics #Python #Math
+
+================================================================================
+4. MASTODON (< 500 characters)
+================================================================================
+
+Implemented 1D heat equation solver: ∂u/∂t = α·∂²u/∂x²
+
+Details:
+- FTCS finite difference scheme
+- Gaussian initial condition (A=100°C, σ=0.05m)
+- Dirichlet BCs: u(0,t) = u(L,t) = 0°C
+- Stability: r = αΔt/Δx² = 0.4 ≤ 0.5
+
+Compared to analytical solution for infinite domain. Max relative error ~2% (boundary effects).
+
+Characteristic diffusion length at t=2s: L_diff = √(2αt) = 0.2m = 20% of rod length.
+
+Heat flux analysis shows energy exits through boundaries.
+
+#ComputationalPhysics #PDE #Python #Science
+
+================================================================================
+5. REDDIT (r/learnpython or r/physics)
+================================================================================
+
+TITLE: Visualizing 1D Heat Diffusion: From 100°C Pulse to Equilibrium
+
+BODY:
+
+**What I built:**
+A Python simulation of the heat equation—the fundamental PDE describing thermal diffusion.
+
+**The equation:**
+∂u/∂t = α·∂²u/∂x²
+
+In plain English: temperature changes proportionally to how "curved" the temperature profile is. Hot peaks cool down, cold valleys warm up.
+
+**ELI5:**
+Imagine touching a hot lighter to the middle of a metal rod. The heat equation predicts exactly how that hot spot spreads outward. Pointy temperature profiles smooth out fast; flat ones change slowly.
+
+**Setup:**
+- 1-meter rod, both ends held at 0°C
+- Initial condition: Gaussian pulse (100°C peak, σ=0.05m)
+- Thermal diffusivity α = 0.01 m²/s
+- FTCS finite difference method
+
+**Key Results:**
+1. Pulse width grows as √t (characteristic of diffusion)
+2. Peak temperature decays as 1/√t
+3. Heat flux is maximum where ∂u/∂x is steepest
+4. Total thermal energy decreases as heat exits through boundaries
+5. ~2% max error vs analytical solution (boundary effects)
+
+**Critical Stability Constraint:**
+The Fourier number r = αΔt/Δx² must be ≤ 0.5. I used r = 0.4. Go above 0.5 and you get numerical instability!
+
+**Why this matters:**
+Same equation describes mass diffusion (Fick's law), probability spreading (Brownian motion), and financial derivatives (Black-Scholes). Master this and you understand a huge class of physical phenomena.
+
+Full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/heat_equation_1d_diffusion.ipynb
+
+================================================================================
+6. FACEBOOK (< 500 characters)
+================================================================================
+
+Ever wonder how heat spreads through metal?
+
+I simulated exactly this! Starting with a 100°C hot spot in the center of a rod (ends at 0°C), you can watch the heat spread outward and fade away.
+
+The cool part: the math predicts exactly how fast it spreads (width grows as √t) and how the peak drops (as 1/√t).
+
+This same 200-year-old equation describes everything from ink diffusing in water to wildfire spreading!
+
+Explore the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/heat_equation_1d_diffusion.ipynb
+
+================================================================================
+7. LINKEDIN (< 1000 characters)
+================================================================================
+
+**Numerical Analysis: 1D Heat Equation with FTCS Method**
+
+Completed a comprehensive simulation of thermal diffusion, demonstrating core computational physics skills.
+
+**Technical Implementation:**
+- Governing equation: ∂u/∂t = α·∂²u/∂x²
+- Method: Forward-Time Central-Space (FTCS) finite differences
+- Von Neumann stability analysis: Fourier number r = 0.4 ≤ 0.5
+- Validation: ~2% max error vs analytical Gaussian solution
+
+**Key Findings:**
+- Diffusive scaling confirmed: width ~ √t, amplitude ~ 1/√t
+- Characteristic diffusion length: L_diff = √(2αt) = 0.2m at t=2s
+- Heat flux analysis via Fourier's Law: q = -k·∂u/∂x
+- Boundary conditions drive energy dissipation
+
+**Applications:**
+Thermal engineering, materials processing, geophysics, and quantitative finance (Black-Scholes shares identical mathematical structure).
+
+**Skills:** Python (NumPy, Matplotlib), numerical PDE methods, stability analysis, scientific visualization, physical modeling.
+
+View interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/heat_equation_1d_diffusion.ipynb
+
+#NumericalMethods #Python #ComputationalPhysics #Engineering #DataScience #STEM
+
+================================================================================
+8. INSTAGRAM (< 500 characters)
+================================================================================
+
+Heat diffusion, visualized.
+
+Started: 100°C hot spot.
+Ended: almost nothing.
+
+Watch a Gaussian pulse spread and fade on a 1-meter rod.
+
+The physics:
+∂u/∂t = α·∂²u/∂x²
+
+Translation: heat flows from hot to cold, smoothing everything out.
+
+The math predicts:
+→ Width grows as √t
+→ Peak drops as 1/√t
+
+Same equation describes:
+- Ink spreading in water
+- Smells diffusing through air
+- Stock price models
+
+One equation. Infinite applications.
+
+#Physics
+#Python
+#HeatEquation
+#Simulation
+#Science
+#Coding
+#Math
+#DataViz
+#Engineering
+#STEM
+
+================================================================================

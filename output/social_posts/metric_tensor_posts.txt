@@ -1,0 +1,186 @@
+================================================================================
+METRIC TENSOR - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+How do you measure distance on a curved surface?
+
+The metric tensor g_μν tells you: ds² = g_μν dx^μ dx^ν
+
+Built a Python class to compute distances, angles & curvature on spheres, tori & hyperbolic space
+
+#Math #DifferentialGeometry #Python
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+The metric tensor is the foundation of differential geometry - it generalizes the Pythagorean theorem to curved spaces.
+
+Implemented a Python class computing:
+- Line elements ds² = g_μν dx^μ dx^ν
+- Gaussian curvature K = 1/R² for spheres
+- Geodesic distances
+
+Visualization included.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wondered how GPS knows the shortest path between two cities on a curved Earth?
+
+The answer: the metric tensor.
+
+It's a mathematical object that tells you how to measure distances on ANY surface - flat, spherical, or wildly curved like a donut.
+
+I coded up a Python implementation that computes:
+- Distance elements
+- Angles between vectors
+- Gaussian curvature
+- Path lengths
+
+The visualization shows how "unit circles" distort across different geometries. Pretty wild how a sphere has constant curvature K=1/R² everywhere!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented the metric tensor g_μν in Python for differential geometry computations.
+
+Key features:
+- Line element: ds² = g_μν dx^μ dx^ν
+- Inverse metric via g^μλ g_λν = δ^μ_ν
+- Christoffel symbols: Γ^λ_μν = ½g^λσ(∂_μ g_νσ + ∂_ν g_μσ - ∂_σ g_μν)
+- Gaussian curvature from Riemann tensor
+
+Tested on: Euclidean, polar, sphere (K=1), torus (variable K), Poincaré disk (hyperbolic).
+
+Numerical validation confirms K=1 for unit sphere.
+
+#DifferentialGeometry #Python #Mathematics
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** I built a Python class to compute metric tensors, Christoffel symbols, and Gaussian curvature - here's what I learned
+
+**Body:**
+
+Hey everyone! I've been diving into differential geometry and decided to implement the core concepts in Python.
+
+**What's a metric tensor?**
+
+Think of it as a generalization of the Pythagorean theorem. In flat space, distance is just ds² = dx² + dy². But on a curved surface like a sphere, the formula becomes:
+
+ds² = g_μν dx^μ dx^ν
+
+The metric tensor g_μν encodes how distances and angles work at every point.
+
+**What I implemented:**
+
+1. A `MetricTensor` class that computes:
+   - Line elements (infinitesimal distances)
+   - Vector norms and inner products
+   - Angles between vectors
+   - Area elements via √det(g)
+
+2. Several standard metrics:
+   - Euclidean (flat space)
+   - Polar coordinates (still flat, but metric varies with r)
+   - Sphere: ds² = R²(dθ² + sin²θ dφ²)
+   - Torus: non-uniform curvature!
+   - Poincaré disk (hyperbolic geometry)
+
+3. Numerical computation of:
+   - Christoffel symbols Γ^λ_μν (using finite differences)
+   - Gaussian curvature K from the Riemann tensor
+
+**Cool results:**
+
+- Unit sphere gives K = 1.0000 (exactly as predicted!)
+- Flat space in polar coordinates gives K ≈ 0 (numerical precision)
+- The visualization shows how "unit circles" become ellipses in curved coordinates
+
+**Why this matters:**
+
+This is the mathematical foundation for General Relativity. Spacetime has a metric tensor, and gravity IS the curvature of that metric.
+
+Notebook with full code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/metric_tensor.ipynb
+
+Happy to answer questions!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+How do you measure distance on a curved surface like Earth?
+
+Regular geometry doesn't work - the "straight line" between two cities curves around the globe!
+
+The answer is the metric tensor: a mathematical tool that generalizes the Pythagorean theorem to ANY surface.
+
+I created a Python notebook that visualizes how distances and angles work on spheres, donuts (tori), and even hyperbolic space (where parallel lines diverge forever).
+
+Full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/metric_tensor.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Understanding the Metric Tensor: A Computational Approach
+
+I recently completed a deep-dive into differential geometry, implementing the metric tensor from scratch in Python.
+
+The metric tensor g_μν is fundamental to:
+- Measuring distances on curved manifolds
+- General Relativity (gravity = spacetime curvature)
+- Computer graphics and mesh processing
+- Machine learning on non-Euclidean data
+
+Technical Implementation:
+
+Built a MetricTensor class supporting:
+- Line element computation: ds² = g_μν dx^μ dx^ν
+- Inverse metric calculation
+- Inner products and vector norms
+- Numerical Christoffel symbols via finite differences
+- Gaussian curvature from the Riemann tensor
+
+Validated on multiple geometries:
+- Sphere: K = 1/R² (constant positive curvature)
+- Torus: Variable curvature (positive outside, negative inside)
+- Poincaré disk: Constant negative curvature (hyperbolic)
+
+Key insight: The visualization of metric ellipses across coordinate space reveals how local geometry varies - essential for understanding geodesics and parallel transport.
+
+Full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/metric_tensor.ipynb
+
+#DifferentialGeometry #Python #Mathematics #DataScience #MachineLearning
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual caption for plot.png)
+--------------------------------------------------------------------------------
+
+the geometry of curved spaces, visualized
+
+each ellipse shows how distance works at that point - when they're stretched, space is "warped"
+
+top left: polar coordinates (flat, but r matters)
+top right: sphere (constant curvature everywhere)
+bottom left: torus/donut (curvature varies!)
+bottom right: hyperbolic space (distances explode near the edge)
+
+this is the metric tensor in action
+
+the foundation of Einstein's General Relativity
+
+built in Python with numpy + matplotlib
+
+#math #physics #dataviz #python #science #geometry #coding #visualization #einstein #relativity

@@ -1,0 +1,165 @@
+# Social Media Posts: Compound Interest Calculator
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+The math behind wealth building: A = P(1 + r/n)^(nt)
+
+Built a Python calculator exploring compound interest, the Rule of 72, and why time beats timing.
+
+Your money's best friend? Exponential growth.
+
+#Python #Finance #Math #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored compound interest mathematics in Python today.
+
+Key insight: The formula A = P(1 + r/n)^(nt) shows why compounding frequency matters less than time in the market.
+
+At 7% annual returns, monthly vs annual compounding adds only ~0.3% to your effective rate. Time is the real multiplier.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Just built a compound interest calculator in Python and the visualizations are eye-opening.
+
+The gap between simple and compound interest over 30 years is massive. At 7%, $10K becomes:
+- Simple: $31K
+- Compound: $76K+
+
+That purple shaded area in my plot? That's the "free money" from compounding.
+
+Also validated the Rule of 72: divide 72 by your interest rate to estimate doubling time. At 8%, your money doubles in ~9 years. Math checks out!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New notebook: Compound Interest Calculator
+
+Implemented the core formulas:
+- Discrete: A = P(1 + r/n)^(nt)
+- Continuous: A = Pe^(rt)
+- EAR: (1 + r/n)^n - 1
+
+Interesting finding: As n → ∞, the difference between daily and continuous compounding becomes negligible. At 5% over 10 years, daily gives $16,486.65 vs continuous $16,487.21.
+
+Also analyzed Rule of 72 accuracy - error stays under 2.4% for rates between 6-10%.
+
+Code: numpy + matplotlib
+#Python #Mathematics #Finance
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/personalfinance)
+--------------------------------------------------------------------------------
+**Title:** Built a Compound Interest Calculator in Python - Here's What I Learned About Exponential Growth
+
+**Body:**
+
+I created a Jupyter notebook to explore compound interest mathematics, and wanted to share some insights that surprised me.
+
+**The Core Formula**
+
+Future Value = P(1 + r/n)^(nt)
+
+Where P is principal, r is annual rate, n is compounding frequency, and t is time.
+
+**Key Findings:**
+
+1. **Compounding frequency has diminishing returns** - Going from annual to monthly compounding at 5% increases your effective rate from 5% to 5.116%. But monthly to daily? Only 5.116% to 5.127%. The jump to continuous compounding (using e^(rt)) adds just another 0.001%.
+
+2. **The Rule of 72 actually works** - Divide 72 by your interest rate percentage to estimate doubling time. At 8%, money doubles in ~9 years. I tested this against the exact formula ln(2)/ln(1+r) and the error stays under 3% for reasonable rates.
+
+3. **Time beats everything** - The visualization of simple vs compound interest over 30 years is striking. At 7%, $10K grows to ~$31K with simple interest but $76K+ with compound. That's the power of exponential growth.
+
+**Technical Implementation:**
+
+- Used numpy for calculations and matplotlib for visualizations
+- Created functions for discrete compounding, continuous compounding, EAR, and present value
+- Generated 4-panel figure comparing frequencies, rates, doubling times, and simple vs compound
+
+**View the full notebook with interactive code:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/compound_interest_calculator.ipynb
+
+The visualizations really help internalize why Einstein (allegedly) called compound interest the "eighth wonder of the world."
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why financial advisors always say "start investing early"?
+
+I built a calculator to visualize compound interest, and the results are striking.
+
+At 7% annual returns over 30 years:
+- $10,000 with simple interest → $31,000
+- $10,000 with compound interest → $76,000+
+
+That extra $45K comes purely from your interest earning interest. Time is literally money.
+
+Also learned the Rule of 72: divide 72 by your interest rate to see how long until your money doubles.
+
+See the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/compound_interest_calculator.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Compound Interest: A Mathematical Deep Dive
+
+I recently built a Python-based compound interest calculator to explore the mathematics behind wealth accumulation. The project reinforced several key principles:
+
+**Technical Implementation:**
+- Developed functions for discrete compounding A = P(1 + r/n)^(nt) and continuous compounding A = Pe^(rt)
+- Calculated Effective Annual Rates to compare different compounding frequencies
+- Validated the Rule of 72 approximation against exact doubling time calculations
+
+**Key Quantitative Insights:**
+
+1. Diminishing returns on compounding frequency: At 5% APR, moving from annual to daily compounding increases EAR by only 0.127 percentage points
+
+2. Rule of 72 accuracy: Error remains below 2.4% for interest rates between 6-10%, making it a reliable mental math tool
+
+3. Exponential vs linear: Over 30 years at 7%, compound interest yields 145% more than simple interest on the same principal
+
+**Skills Demonstrated:** NumPy, Matplotlib, financial mathematics, data visualization
+
+The full notebook with code and visualizations is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/compound_interest_calculator.ipynb
+
+#FinancialAnalysis #Python #DataScience #Mathematics
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The math of wealth building, visualized.
+
+A = P(1 + r/n)^(nt)
+
+This formula shows how $10K becomes $76K+ over 30 years at 7% interest.
+
+The purple shaded area in this plot? That's the difference between simple and compound interest - essentially "free money" from letting your returns generate their own returns.
+
+Key insight: Time matters more than timing. Start early, stay consistent.
+
+Built this calculator in Python to explore the Rule of 72 and why Einstein called compound interest the "eighth wonder of the world."
+
+.
+.
+.
+#compound #interest #investing #python #dataviz #mathematics #finance #wealthbuilding #financialliteracy #coding
+
+--------------------------------------------------------------------------------

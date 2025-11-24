@@ -1,0 +1,191 @@
+# Social Media Posts: Reinforcement Learning Q-Learning
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Taught an AI to navigate a maze using Q-Learning!
+
+The agent learns: Q(s,a) ← Q(s,a) + α[r + γ·max Q(s',a') - Q(s,a)]
+
+After 1000 episodes: 100% success rate finding the optimal path.
+
+#Python #ReinforcementLearning #MachineLearning #AI
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented Q-Learning from scratch in Python to solve a gridworld navigation problem.
+
+Key insight: The agent learns action values Q(s,a) through temporal difference updates, balancing exploration (ε-greedy) with exploitation.
+
+Result: 100% success rate after training.
+
+#AI #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Just built a Q-Learning agent that teaches itself to navigate a maze!
+
+Here's the magic: the agent starts knowing nothing, then learns by trial and error. Each time it takes an action, it updates its knowledge using:
+
+Q(s,a) ← Q(s,a) + α[reward + γ·max Q(next state) - Q(s,a)]
+
+The ε-greedy policy helps it explore early on, then exploit what it learned.
+
+After 1000 episodes of training: 100% success rate, optimal path every time.
+
+Reinforcement learning is like watching a robot figure out a puzzle on its own!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented tabular Q-Learning for gridworld navigation.
+
+Algorithm details:
+• Model-free, off-policy TD learning
+• Update rule: Q(s,a) ← Q(s,a) + α[r + γ·max_a' Q(s',a') - Q(s,a)]
+• ε-greedy exploration with decay (1.0 → 0.01)
+• Hyperparams: α=0.1, γ=0.99
+
+Results after 1000 episodes:
+• 100% goal-reaching success rate
+• Optimal 8-step path discovered
+• TD error converged to near-zero
+
+The Bellman optimality equation in action: Q*(s,a) = E[r + γ·max Q*(s',a')]
+
+#ReinforcementLearning #Python #MachineLearning
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** I implemented Q-Learning from scratch to solve a gridworld maze - here's what I learned about RL fundamentals
+
+**Body:**
+
+I built a tabular Q-Learning agent in Python that learns to navigate from start to goal in a 5x5 gridworld with walls and traps. Wanted to share my implementation and key takeaways.
+
+**The Core Idea**
+
+Q-Learning finds the optimal action-value function Q*(s,a) without needing a model of the environment. The agent learns by interacting with the world and updating its Q-table using temporal difference (TD) learning:
+
+Q(s,a) ← Q(s,a) + α[r + γ·max Q(s',a') - Q(s,a)]
+
+Where:
+- α (0.1) = learning rate
+- γ (0.99) = discount factor
+- r = immediate reward
+- max Q(s',a') = best estimated future value
+
+**Exploration vs Exploitation**
+
+Used ε-greedy policy starting at ε=1.0 (100% random) decaying to 0.01. This lets the agent explore early, then exploit learned knowledge.
+
+**Results**
+
+After 1000 training episodes:
+- 100% success rate reaching the goal
+- Optimal path found (8 steps)
+- Average reward improved from negative to ~92
+
+**Key Takeaways**
+
+1. The discount factor γ determines how "far-sighted" the agent is
+2. Sufficient exploration is critical - without it, the agent gets stuck in local optima
+3. Watching TD error converge is satisfying - it shows the Q-values stabilizing
+
+The code includes visualizations of the learning curve, policy arrows, Q-value heatmap, and TD error convergence.
+
+**Interactive Notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/reinforcement_learning_q_learning.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Taught an AI to solve a maze using reinforcement learning!
+
+The Q-Learning algorithm is fascinating - the agent starts with zero knowledge, then learns through trial and error. Each time it moves, it updates its "memory" of how good each action is in each position.
+
+After 1000 practice runs, it achieved 100% success rate and found the optimal 8-step path every time.
+
+It's like watching a robot figure out a puzzle completely on its own!
+
+Check out the interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/reinforcement_learning_q_learning.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Reinforcement Learning Implementation: Q-Learning for Gridworld Navigation
+
+I recently implemented a tabular Q-Learning agent from scratch in Python, demonstrating fundamental RL concepts through a gridworld navigation task.
+
+**Technical Approach:**
+- Model-free, off-policy temporal difference learning
+- ε-greedy exploration strategy with exponential decay
+- Bellman optimality equation: Q*(s,a) = E[r + γ·max Q*(s',a')]
+
+**Hyperparameters:**
+- Learning rate (α): 0.1
+- Discount factor (γ): 0.99
+- Exploration decay: 0.995 per episode
+
+**Results:**
+- 100% goal-reaching success rate after 1000 episodes
+- Optimal policy discovered (8-step path)
+- Clear TD error convergence demonstrating algorithm stability
+
+**Key Skills Demonstrated:**
+- Reinforcement learning algorithm implementation
+- NumPy for efficient array operations
+- Matplotlib for comprehensive result visualization
+- Understanding of exploration-exploitation tradeoffs
+
+This project reinforces why understanding foundational algorithms matters - modern Deep RL builds directly on these principles.
+
+View the complete implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/reinforcement_learning_q_learning.ipynb
+
+#ReinforcementLearning #MachineLearning #Python #DataScience #AI
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Teaching an AI to solve mazes
+
+Built a Q-Learning agent that learns purely through trial and error.
+
+The magic formula:
+Q(state, action) updates based on:
+reward + future value estimate
+
+Starting point: completely random
+After 1000 episodes: 100% success rate
+
+The visualization shows:
+- Learning curve (rewards over time)
+- Optimal policy (arrows showing best moves)
+- Q-value heatmap (state importance)
+- Exploration decay (random → strategic)
+
+Reinforcement learning is how we teach machines to make decisions.
+
+#ReinforcementLearning #MachineLearning #Python #AI #DataScience #Coding #Tech #Programming #ArtificialIntelligence #DeepLearning
+
+--------------------------------------------------------------------------------

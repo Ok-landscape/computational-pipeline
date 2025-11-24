@@ -1,0 +1,170 @@
+# Social Media Posts: The Secant Method for Root Finding
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+The Secant Method finds roots WITHOUT derivatives! It approximates f'(x) using finite differences:
+
+x_{n+1} = x_n - f(x_n)·(x_n - x_{n-1})/(f(x_n) - f(x_{n-1}))
+
+Converges at the golden ratio φ ≈ 1.618
+
+#Python #NumericalMethods #Math
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Exploring the Secant Method: a clever root-finding algorithm that skips derivative computation by using secant lines instead.
+
+Convergence order? The golden ratio φ = (1+√5)/2 ≈ 1.618
+
+Found √2 in just 6 iterations with 10⁻¹⁵ precision.
+
+#Mathematics #ScientificComputing #Python
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever needed to find where f(x) = 0 but didn't want to compute derivatives?
+
+The Secant Method has you covered! Instead of using f'(x) like Newton's method, it approximates the slope using two points:
+
+f'(x) ≈ (f(x_n) - f(x_{n-1})) / (x_n - x_{n-1})
+
+The beautiful part? It converges at the golden ratio φ ≈ 1.618 - not as fast as Newton (order 2) but way faster than bisection (order 1).
+
+Found √2 to 15 decimal places in just 6 iterations!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented the Secant Method for root finding in Python.
+
+Key insight: Replace Newton's derivative with a finite difference approximation:
+
+x_{n+1} = x_n - f(x_n)·(x_n - x_{n-1})/(f(x_n) - f(x_{n-1}))
+
+Convergence analysis confirms order p = φ ≈ 1.618 (golden ratio).
+
+Test results:
+- √2: 6 iterations, error < 10⁻¹⁵
+- x - cos(x) = 0: 6 iterations
+
+Trade-off: One function eval per iteration vs Newton's two (f and f'), but slower convergence.
+
+#NumericalAnalysis #Python #SciPy #Mathematics
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Implemented the Secant Method in Python - Here's why its convergence rate is the Golden Ratio
+
+**Body:**
+
+I just built a Python implementation of the Secant Method for root finding, and the math behind it is fascinating!
+
+**The Problem:** You want to solve f(x) = 0 but computing derivatives is expensive or impossible.
+
+**The Solution:** Instead of Newton's method (which needs f'(x)), approximate the derivative using two points:
+
+f'(x) ≈ (f(x_n) - f(x_{n-1})) / (x_n - x_{n-1})
+
+This gives us the iteration formula:
+x_{n+1} = x_n - f(x_n) · (x_n - x_{n-1}) / (f(x_n) - f(x_{n-1}))
+
+**Why it works:** Geometrically, you're drawing a line through two points on the curve and finding where it crosses zero. That's your next guess!
+
+**The cool part:** The convergence order is φ = (1 + √5)/2 ≈ 1.618 - literally the golden ratio! This means:
+- Faster than bisection (order 1)
+- Slower than Newton (order 2)
+- But only ONE function evaluation per iteration
+
+**Results:**
+- Finding √2: Converged in 6 iterations to 15 decimal places
+- Finding root of x - cos(x) = 0: Also 6 iterations
+
+The visualization shows how secant lines progressively approach the root. Pretty elegant!
+
+**View the full notebook with code and plots:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/secant_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just explored a clever math trick: the Secant Method!
+
+Imagine you need to find where a curve crosses zero, but calculating slopes is too hard. Solution? Draw a line through two nearby points and see where IT crosses zero. Repeat until you nail it!
+
+The wild part - this method converges at the golden ratio φ ≈ 1.618. Found √2 to 15 decimal places in just 6 steps!
+
+Check out the interactive notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/secant_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Numerical Methods Deep Dive: The Secant Method
+
+Just completed an implementation of the Secant Method for root-finding problems - a technique that elegantly balances computational efficiency with convergence speed.
+
+Key Technical Insights:
+
+The method approximates derivatives using finite differences, transforming Newton-Raphson's formula into a derivative-free algorithm. This is particularly valuable when:
+- Analytical derivatives are unavailable
+- Function evaluations are expensive
+- Working with black-box systems
+
+Performance Analysis:
+- Convergence order: φ ≈ 1.618 (the golden ratio)
+- Function evaluations per iteration: 1 (vs Newton's 2)
+- Test case (√2): 6 iterations to machine precision
+
+The implementation includes comprehensive error analysis, geometric visualization of the secant line construction, and convergence order verification.
+
+Trade-offs to consider:
+- Requires two initial guesses (vs one for Newton)
+- No guaranteed convergence (vs bisection)
+- Superlinear but not quadratic convergence
+
+Skills demonstrated: Python, NumPy, Matplotlib, numerical analysis, algorithm implementation, technical documentation.
+
+Full implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/secant_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The Secant Method: Finding roots without derivatives
+
+What you're seeing: Secant lines converging to √2
+
+The idea is beautifully simple:
+Draw a line through two points on a curve
+Find where it hits zero
+That's your new guess
+Repeat
+
+Why it's special:
+- No calculus needed
+- Converges at the golden ratio φ ≈ 1.618
+- Found √2 in just 6 steps
+
+Sometimes the elegant solution isn't the most complex one.
+
+#Mathematics #Python #DataVisualization #NumericalMethods #Coding #STEM #ScienceEducation #GoldenRatio
+
+--------------------------------------------------------------------------------

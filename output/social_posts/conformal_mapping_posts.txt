@@ -1,0 +1,167 @@
+=== SOCIAL MEDIA POSTS: CONFORMAL MAPPING ===
+
+================================================================================
+1. TWITTER/X (280 characters max)
+================================================================================
+
+Just visualized conformal mappings in complex analysis! 🎯 Functions like w = e^z preserve angles while transforming grids into beautiful curved patterns. Perfect for fluid dynamics & electrostatics.
+
+#Python #Mathematics #ComplexAnalysis #ScienceCoding
+
+================================================================================
+2. BLUESKY (300 characters max)
+================================================================================
+
+Explored conformal mapping: transformations that preserve local angles. The exponential function e^z turns rectangular grids into polar patterns, while Möbius transformations map the upper half-plane to a unit disk. Fundamental for solving PDEs in physics & engineering.
+
+================================================================================
+3. THREADS (500 characters max)
+================================================================================
+
+Ever wonder how mathematicians transform complex shapes while preserving angles? Just coded up conformal mappings in Python!
+
+These special functions (like w = e^z and w = z²) take grid patterns and warp them into circles, spirals, and curves - but angles between lines stay the same. It's not just pretty math; engineers use this to solve fluid flow problems and design airfoils.
+
+The visualizations show how rectangles become polar grids under exponential mapping. Mind-bending stuff! 📐
+
+================================================================================
+4. MASTODON (500 characters max)
+================================================================================
+
+Implemented conformal mapping visualizations in Python using complex analysis. Key findings:
+
+• Functions analytic at z₀ with f'(z₀) ≠ 0 preserve angles locally
+• Exponential mapping e^z converts horizontal strips to annular sectors
+• Möbius transformations (az+b)/(cz+d) map upper half-plane to unit disk
+• Numerical verification shows angle preservation to machine precision
+
+Applications: 2D potential flow, electrostatics, Riemann mapping theorem. The Jacobian has rotation matrix form, confirming geometric interpretation.
+
+================================================================================
+5. REDDIT (Title + Body)
+================================================================================
+
+TITLE:
+[OC] Visualizing Conformal Mappings: How Complex Functions Preserve Angles While Warping Space
+
+BODY:
+I created an interactive exploration of conformal mapping in complex analysis using Python and NumPy. Here's what I learned:
+
+**What is Conformal Mapping?**
+
+A conformal mapping is a transformation of the complex plane that preserves angles between curves. If you have two lines intersecting at 45°, after the transformation they'll still intersect at 45° - even though the lines themselves might be curved into circles or spirals.
+
+**The Math (ELI5 version):**
+
+For a function w = f(z) to be conformal at a point z₀, two things must be true:
+1. The function must be analytic (smooth in a complex sense) at z₀
+2. The derivative f'(z₀) cannot be zero
+
+The derivative's magnitude |f'(z₀)| tells you how much the mapping stretches or shrinks distances, but the key insight is that it stretches equally in all directions - that's why angles are preserved.
+
+**Three Classic Examples I Visualized:**
+
+1. **Exponential Mapping (w = e^z)**: Horizontal lines become circles, vertical lines become rays from the origin. It's like converting rectangular coordinates to polar coordinates, but in a continuous, smooth way.
+
+2. **Square Mapping (w = z²)**: Doubles angles and squares distances. A grid gets warped into a curved mesh, but perpendicular lines stay perpendicular.
+
+3. **Möbius Transformation (w = (z-i)/(z+i))**: This one's wild - it maps the entire upper half of the complex plane into a unit disk. The real axis wraps around to form the circle's boundary.
+
+**Why This Matters:**
+
+Conformal mappings are used in:
+- **Fluid dynamics**: Solving flow around airfoils (Joukowsky transformation)
+- **Electrostatics**: Finding electric fields in complex geometries
+- **Cartography**: Map projections that preserve angles (Mercator projection)
+- **Pure math**: The Riemann Mapping Theorem says any simply connected domain can be mapped to a unit disk
+
+**Numerical Verification:**
+
+I tested angle preservation numerically by computing angles between horizontal and vertical directions before and after transformation. The angles matched to within 10⁻⁹ radians - basically machine precision.
+
+**View the interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/conformal_mapping.ipynb
+
+The code is self-contained with matplotlib visualizations showing grid transformations. The beauty of conformal mapping is that it connects pure mathematics with practical applications in physics and engineering.
+
+What other complex analysis topics would you like to see explored?
+
+================================================================================
+6. FACEBOOK (500 characters, general audience)
+================================================================================
+
+🔬 Just explored one of the coolest concepts in mathematics: conformal mapping!
+
+Imagine drawing a grid on a rubber sheet, then stretching and bending it - but with one special rule: angles between lines must stay the same. That's what conformal mappings do in the complex number plane.
+
+I visualized three classic transformations: exponential functions that turn rectangles into spirals, squaring that warps grids, and Möbius transformations that bend entire half-planes into circles.
+
+Used in: airplane wing design, map projections, and solving physics equations!
+
+🔗 View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/conformal_mapping.ipynb
+
+================================================================================
+7. LINKEDIN (1000 characters, professional tone)
+================================================================================
+
+Conformal Mapping: Angle-Preserving Transformations in Complex Analysis
+
+I recently implemented a computational exploration of conformal mappings using Python, demonstrating key concepts in complex analysis with practical applications in engineering and physics.
+
+**Technical Overview:**
+
+Conformal mappings are complex functions w = f(z) that preserve angles locally. For a mapping to be conformal at z₀:
+• f must be analytic at z₀
+• f'(z₀) ≠ 0
+
+The Cauchy-Riemann equations ensure the Jacobian matrix has the form of a scaled rotation, confirming angle preservation.
+
+**Implementations:**
+
+1. Exponential mapping (w = e^z): Converts rectangular grids to polar patterns
+2. Square mapping (w = z²): Doubles angles while preserving orthogonality
+3. Möbius transformation: Maps upper half-plane to unit disk
+
+**Real-World Applications:**
+
+• Aerodynamics: Joukowsky transformation for airfoil design
+• Electrostatics: Solving Laplace's equation in complex geometries
+• Cartography: Angle-preserving map projections
+• Riemann Mapping Theorem: Fundamental result in geometric function theory
+
+**Methodology:**
+
+Numerical verification confirms angle preservation to 10⁻⁹ radian precision. Grid visualization demonstrates geometric properties of analytic functions.
+
+🔗 Full computational notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/conformal_mapping.ipynb
+
+#Mathematics #Python #ComplexAnalysis #ComputationalScience #Engineering
+
+================================================================================
+8. INSTAGRAM (500 characters, visual-focused)
+================================================================================
+
+🎨 CONFORMAL MAPPING IN ACTION
+
+[Image shows three grid transformations side-by-side]
+
+Ever seen math turn straight lines into perfect circles while keeping all angles intact? That's conformal mapping ✨
+
+✦ LEFT: Exponential function e^z
+Rectangles → polar spirals
+
+✦ MIDDLE: Square function z²
+Grids → curved meshes
+
+✦ RIGHT: Möbius transformation
+Half-plane → unit disk
+
+These aren't just pretty patterns - engineers use them to design airplane wings and solve physics equations 🛩️
+
+The secret? Functions that preserve angles even while warping space.
+
+#Mathematics #Python #ComplexAnalysis #DataVisualization #STEM #ScienceArt #Coding #MathArt
+
+================================================================================

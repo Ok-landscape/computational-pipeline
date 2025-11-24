@@ -1,0 +1,175 @@
+================================================================================
+BINOMIAL OPTIONS PRICING - SOCIAL MEDIA POSTS
+================================================================================
+
+================================================================================
+1. TWITTER/X (< 280 characters)
+================================================================================
+
+How do you price an option before it expires?
+
+The binomial model breaks time into steps where prices go UP or DOWN. Work backwards from payoff to find fair value.
+
+American put premium: $0.11 over European!
+
+#QuantFinance #Python #Options
+
+================================================================================
+2. BLUESKY (< 300 characters)
+================================================================================
+
+Implemented the Cox-Ross-Rubinstein binomial options pricing model in Python.
+
+Key insight: price can only move up (u = e^(σ√Δt)) or down (d = 1/u) at each step.
+
+With 300 steps, European options converge to Black-Scholes within $0.001.
+
+American puts show early exercise premium of ~$0.11.
+
+================================================================================
+3. THREADS (< 500 characters)
+================================================================================
+
+Ever wonder how traders price options before they expire?
+
+The binomial model is beautifully simple: at each time step, the stock price either goes UP or DOWN by a fixed factor.
+
+Starting from the final payoff (max(S-K, 0) for calls), you work backwards using risk-neutral probabilities to find today's fair price.
+
+The magic: as you add more steps, it converges to the famous Black-Scholes formula!
+
+Built this in Python with numpy - American puts show a $0.11 early exercise premium over European puts.
+
+================================================================================
+4. MASTODON (< 500 characters)
+================================================================================
+
+New notebook: Binomial Options Pricing Model
+
+Implemented the CRR parameterization where:
+• u = e^(σ√Δt), d = 1/u
+• Risk-neutral probability: p = (e^(rΔt) - d)/(u - d)
+
+Key findings with S₀=K=$100, σ=20%, r=5%, T=1yr:
+• European call: $10.4506 (vs BS: $10.4506)
+• American put premium: $0.1104 over European
+• Convergence rate: O(1/N)
+
+American calls = European calls (no dividend case).
+
+#QuantFinance #Python #ComputationalFinance
+
+================================================================================
+5. REDDIT (r/learnpython or r/QuantFinance)
+================================================================================
+
+Title: Built a Binomial Options Pricing Model in Python - Here's What I Learned
+
+Body:
+
+**What is it?**
+
+The Binomial Options Pricing Model is a way to calculate what an option should cost today. Think of it like this: imagine a stock price that can only go UP or DOWN at each time step (like a coin flip, but weighted). Starting from the final payoff at expiration, you work backwards to find today's fair price.
+
+**The Math (simplified)**
+
+At each step Δt:
+- Price goes up by factor u = e^(σ√Δt)
+- Price goes down by factor d = 1/u
+- Risk-neutral probability: p = (e^(rΔt) - d)/(u - d)
+
+Then discount back: V = e^(-rΔt) × [p × V_up + (1-p) × V_down]
+
+**What I Implemented**
+
+- Full binomial tree with backward induction
+- Both European and American options (calls and puts)
+- Black-Scholes comparison for validation
+
+**Key Results**
+
+With S₀ = $100, K = $100, T = 1 year, r = 5%, σ = 20%:
+
+| Option Type | Binomial (N=300) | Black-Scholes |
+|------------|-----------------|---------------|
+| European Call | $10.4506 | $10.4506 |
+| European Put | $5.5735 | $5.5735 |
+| American Put | $5.6839 | N/A |
+
+**Interesting Findings**
+
+1. American calls = European calls (for non-dividend stocks) because it's never optimal to exercise early
+2. American puts have an early exercise premium (~$0.11) because you might want to exercise early if the stock crashes
+3. Convergence is ~O(1/N), so 300 steps gets you within $0.001 of Black-Scholes
+
+**View the Full Notebook**
+
+You can run and modify this code directly in your browser:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/binomial_options_pricing.ipynb
+
+The visualization shows convergence plots and the early exercise premium for American puts.
+
+================================================================================
+6. FACEBOOK (< 500 characters)
+================================================================================
+
+How do financial markets price options?
+
+The Binomial Model breaks it down elegantly: at each moment, a stock can only go UP or DOWN. By working backwards from the expiration payoff, we find today's fair price.
+
+Cool finding: American put options are worth MORE than European puts ($5.68 vs $5.57) because you can exercise early if the stock crashes!
+
+Built this model in Python - watch it converge to the famous Black-Scholes formula.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/binomial_options_pricing.ipynb
+
+================================================================================
+7. LINKEDIN (< 1000 characters)
+================================================================================
+
+Implementing the Binomial Options Pricing Model: A Computational Finance Exercise
+
+I recently built a Python implementation of the Cox-Ross-Rubinstein (1979) binomial options pricing model, demonstrating fundamental concepts in derivatives valuation.
+
+Technical Implementation:
+• Vectorized NumPy computation for efficient backward induction
+• Risk-neutral pricing framework: p = (e^(rΔt) - d)/(u - d)
+• Support for both European and American-style options
+
+Key Validation Results (S₀=K=$100, σ=20%, r=5%, T=1yr):
+• European options converge to Black-Scholes within $0.001 at N=300 steps
+• American put early exercise premium: $0.11 (reflecting optimal stopping)
+• Convergence rate approximately O(1/N)
+
+The model illustrates core principles: no-arbitrage pricing, risk-neutral valuation, and the relationship between discrete and continuous-time models.
+
+Skills demonstrated: Python, NumPy, SciPy, financial mathematics, Monte Carlo alternatives, computational efficiency.
+
+View the complete analysis and code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/binomial_options_pricing.ipynb
+
+#QuantitativeFinance #Python #DerivativesPricing #ComputationalFinance #FinancialEngineering
+
+================================================================================
+8. INSTAGRAM (< 500 characters)
+================================================================================
+
+Options Pricing Demystified
+
+The binomial model shows how options get their value:
+
+At each time step, stock prices can only go UP or DOWN
+
+Work backwards from the final payoff to find today's price
+
+As steps → ∞, it becomes the famous Black-Scholes formula
+
+Built this in Python with full convergence analysis
+
+American puts are worth MORE than European puts because early exercise has value when stocks crash
+
+Swipe to see the convergence plots!
+
+#QuantFinance #Python #DataScience #Finance #Coding #Mathematics #Trading #Options #Algorithms
+
+================================================================================

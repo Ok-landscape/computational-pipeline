@@ -1,0 +1,155 @@
+# Social Media Posts: Duffing Oscillator
+
+================================================================================
+## TWITTER/X (< 280 chars)
+================================================================================
+
+Chaos from a simple equation! The Duffing oscillator: ẍ + δẋ + αx + βx³ = γcos(ωt)
+
+A double-well potential creates unpredictable motion between two stable states.
+
+#Chaos #Python #NonlinearDynamics #Physics #Math
+
+================================================================================
+## BLUESKY (< 300 chars)
+================================================================================
+
+The Duffing oscillator demonstrates how deterministic equations produce chaos.
+
+With a double-well potential (α < 0, β > 0), the system hops unpredictably between stable points at x = ±1.
+
+The strange attractor reveals order within chaos.
+
+#Physics #Chaos #Python
+
+================================================================================
+## THREADS (< 500 chars)
+================================================================================
+
+Ever wonder how simple physics can create unpredictable chaos?
+
+The Duffing oscillator is a driven pendulum with a twist - its restoring force has a cubic term: ẍ + δẋ + αx + βx³ = γcos(ωt)
+
+When you set α < 0 and β > 0, you get a double-well potential - like a ball rolling between two valleys. Add periodic forcing and the system goes chaotic!
+
+The trajectory never repeats, yet it's bounded by a beautiful strange attractor. Deterministic but unpredictable.
+
+#Chaos #Physics #Math
+
+================================================================================
+## MASTODON (< 500 chars)
+================================================================================
+
+Implemented the Duffing oscillator to explore chaotic dynamics.
+
+Equation: ẍ + δẋ + αx + βx³ = γcos(ωt)
+
+Parameters for chaos:
+• δ = 0.3 (damping)
+• α = -1.0 (negative → double-well)
+• β = 1.0 (cubic stiffness)
+• γ = 0.5 (driving amplitude)
+• ω = 1.2 (driving frequency)
+
+The Poincaré section reveals the strange attractor's structure - sampling at T = 2π/ω shows fractal geometry.
+
+#Physics #Chaos #Python #NonlinearDynamics #Simulation
+
+================================================================================
+## REDDIT (Title + Body)
+================================================================================
+
+**Title:** [OC] Visualizing chaos with the Duffing Oscillator - Python simulation showing strange attractors
+
+**Body:**
+
+I created a Python notebook exploring the Duffing oscillator, a classic example of deterministic chaos.
+
+**What is it?**
+
+The Duffing equation describes a driven, damped oscillator with nonlinear stiffness:
+
+ẍ + δẋ + αx + βx³ = γcos(ωt)
+
+Think of it like a pendulum, but instead of a simple spring, you have a weird spring that gets stiffer (or softer) as you stretch it more.
+
+**Why is it interesting?**
+
+When you set α < 0 and β > 0, you create a "double-well potential" - imagine a ball that can rest in either of two valleys. Add periodic driving force and something magical happens: the ball hops between valleys in a completely unpredictable pattern!
+
+This is chaos - the system is deterministic (same equations, same initial conditions → same result), but tiny changes in starting position lead to wildly different outcomes.
+
+**What the plots show:**
+
+1. **Time series** - The displacement never repeats the same pattern
+2. **Phase portrait** - The strange attractor emerges as the trajectory traces a fractal pattern
+3. **Poincaré section** - Sampling at the driving period reveals the attractor's structure
+4. **Double-well potential** - The bistable energy landscape with minima at x = ±1
+
+**Code:** Used scipy.integrate.solve_ivp with RK45 method. The notebook is self-contained with numpy, scipy, and matplotlib.
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/duffing_oscillator.ipynb
+
+This system models real phenomena like buckled beams, ship rolling, and MEMS devices. Happy to answer questions about nonlinear dynamics!
+
+================================================================================
+## FACEBOOK (< 500 chars)
+================================================================================
+
+How can a simple equation create complete unpredictability?
+
+I simulated the Duffing oscillator - a system where a ball rolls between two valleys, pushed by a periodic force. Despite being completely deterministic, the motion becomes chaotic and never repeats!
+
+The "strange attractor" in the phase portrait shows the hidden order within chaos - trajectories are bounded but infinitely complex.
+
+This models real systems like ship rolling and vibrating beams.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/duffing_oscillator.ipynb
+
+================================================================================
+## LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Nonlinear Dynamics: The Duffing Oscillator
+
+I developed a computational analysis of the Duffing oscillator, a foundational model in nonlinear dynamics that exhibits chaotic behavior.
+
+**Technical Approach:**
+• Implemented the driven, damped oscillator equation with cubic nonlinearity
+• Used scipy's solve_ivp with adaptive Runge-Kutta (RK45) integration
+• Generated multiple visualization perspectives: time series, phase portraits, and Poincaré sections
+
+**Key Findings:**
+The double-well potential configuration (α = -1, β = 1) with periodic forcing (γ = 0.5, ω = 1.2) produces a strange attractor - a bounded but non-repeating trajectory in phase space.
+
+**Engineering Applications:**
+This model applies to structural dynamics (buckled beams), naval architecture (ship roll motion), and MEMS device design.
+
+**Skills Demonstrated:**
+• Numerical methods for ODEs
+• Dynamical systems analysis
+• Scientific visualization with matplotlib
+• Self-contained reproducible research
+
+View the complete notebook with code: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/duffing_oscillator.ipynb
+
+#Python #Physics #DataScience #Engineering #Simulation
+
+================================================================================
+## INSTAGRAM (< 500 chars)
+================================================================================
+
+Chaos is beautiful.
+
+This is the Duffing oscillator - a simple equation that creates infinite complexity.
+
+A ball rolling between two valleys, pushed by a rhythmic force. It never settles, never repeats, but never escapes.
+
+The swirling pattern is a "strange attractor" - order hidden within chaos.
+
+Top left: Time series
+Top right: Phase portrait
+Bottom left: Poincaré section
+Bottom right: Double-well potential
+
+#chaos #physics #mathematics #dataviz #python #science #nonlineardynamics #strangeattractor #simulation #coding

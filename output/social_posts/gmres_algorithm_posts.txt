@@ -1,0 +1,170 @@
+# Social Media Posts: GMRES Algorithm
+# Generated from: gmres_algorithm.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+GMRES: The iterative solver that tames non-symmetric matrices.
+
+Minimizes ||b - Ax||₂ over Krylov subspaces using Arnoldi + Givens rotations.
+
+Built one from scratch in Python - see how eigenvalue clustering drives convergence!
+
+#Python #Math #NumericalMethods #LinearAlgebra
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented GMRES (Generalized Minimal Residual) from scratch.
+
+This 1986 algorithm by Saad & Schultz solves Ax = b for non-symmetric systems by minimizing residuals over Krylov subspaces: K_k(A, r₀) = span{r₀, Ar₀, A²r₀, ...}
+
+Eigenvalue distribution matters more than you'd think for convergence.
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how computers solve massive systems of equations that aren't symmetric?
+
+GMRES is the answer. It builds an orthonormal basis using the Arnoldi process, then finds the solution that minimizes ||r_k||₂ at each step.
+
+The magic: Givens rotations turn the problem into a simple triangular solve.
+
+I tested it on convection-diffusion problems - when convection strength increases, eigenvalues spread into the complex plane and convergence slows. Clustering eigenvalues away from zero is key!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+New notebook: GMRES algorithm implementation from scratch.
+
+Key insight: GMRES minimizes ||b - Ax||₂ over Krylov subspace K_k(A, r₀).
+
+The algorithm:
+1. Arnoldi iteration builds orthonormal basis V_k
+2. Forms upper Hessenberg matrix: AV_k = V_{k+1}H̄_k
+3. Givens rotations solve min ||βe₁ - H̄_k y||₂
+
+Tested on 1D convection-diffusion: -εu'' + cu' = f
+
+Convergence bound: ||r_k||/||r₀|| ≤ min over polynomials p(λ) where p(0)=1
+
+Full code + analysis: link in bio
+
+#NumericalAnalysis #Python #Mathematics
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Implemented GMRES from scratch - here's what I learned about solving non-symmetric linear systems
+
+**Body:**
+
+I just finished implementing the GMRES (Generalized Minimal Residual) algorithm in Python, and wanted to share some insights.
+
+**What is GMRES?**
+
+When you have a system Ax = b where A isn't symmetric (so you can't use Conjugate Gradient), GMRES is your friend. It's an iterative method that finds the solution minimizing ||b - Ax||₂.
+
+**The core idea (ELI5):**
+
+Imagine you're searching for treasure in a field. Instead of searching everywhere, GMRES cleverly expands its search area step by step using something called a Krylov subspace: K_k = span{r₀, Ar₀, A²r₀, ...}
+
+At each step, it guarantees finding the best possible approximation in its current search space.
+
+**Key components I implemented:**
+
+1. **Arnoldi iteration** - Builds an orthonormal basis using modified Gram-Schmidt
+2. **Givens rotations** - Efficiently solves the least squares problem
+3. **Convergence monitoring** - Residual decreases monotonically (guaranteed!)
+
+**What I learned:**
+
+- Eigenvalue distribution matters hugely. When I tested on convection-diffusion problems (-εu'' + cu' = f), increasing convection c spread eigenvalues into the complex plane and slowed convergence
+- Eigenvalue clustering away from zero = faster convergence
+- Memory grows as O(nk) for k iterations - that's why restarted GMRES exists
+
+The math is beautiful: the convergence bound involves finding the optimal polynomial p(λ) with p(0)=1 that minimizes max|p(λ)| over all eigenvalues.
+
+**Interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gmres_algorithm.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just built a classic numerical algorithm from scratch: GMRES!
+
+When engineers and scientists need to solve huge systems of equations (think millions of variables), they can't just hit "solve" - they need clever iterative methods.
+
+GMRES finds approximate solutions that get better and better, minimizing the error at each step. The cool part? It handles "asymmetric" problems that simpler methods can't touch.
+
+Tested it on fluid-flow-type equations and visualized how the solution converges.
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gmres_algorithm.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Implemented the GMRES (Generalized Minimal Residual) algorithm from scratch to deepen my understanding of iterative methods for sparse linear systems.
+
+**Technical highlights:**
+
+GMRES solves Ax = b for non-symmetric matrices by minimizing ||b - Ax||₂ over Krylov subspaces. The implementation includes:
+
+- Arnoldi iteration with modified Gram-Schmidt orthogonalization
+- Givens rotations for efficient least squares solution
+- Convergence analysis with eigenvalue visualization
+
+**Key findings from numerical experiments:**
+
+Tested on 1D convection-diffusion problems (-εu'' + cu' = f). Results show:
+- Convergence rate strongly depends on eigenvalue distribution
+- Increased convection coefficient spreads spectrum into complex plane
+- Clustering eigenvalues away from zero accelerates convergence
+
+**Skills demonstrated:** Python, NumPy, SciPy, numerical linear algebra, algorithm implementation, scientific visualization
+
+This foundational algorithm (Saad & Schultz, 1986) remains essential in computational science, from CFD to machine learning preconditioners.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gmres_algorithm.ipynb
+
+#NumericalMethods #Python #ScientificComputing #LinearAlgebra #ComputationalScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+GMRES: Solving the Unsolvable
+
+When matrices aren't symmetric, you need GMRES.
+
+This algorithm iteratively finds solutions to Ax = b by:
+
+→ Building orthonormal bases (Arnoldi)
+→ Minimizing residual ||b - Ax||₂
+→ Using Givens rotations for efficiency
+
+The plot shows how eigenvalue distribution affects convergence - more spread in the complex plane means slower solving.
+
+Built from scratch in Python.
+Tested on convection-diffusion equations.
+Verified against SciPy.
+
+Swipe to see the math in action →
+
+#Python #Math #CodingLife #NumericalMethods #DataScience #STEM #Algorithm #LinearAlgebra #Science #LearnToCode
+
+--------------------------------------------------------------------------------

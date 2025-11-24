@@ -1,0 +1,173 @@
+# Social Media Posts: Vasicek Interest Rate Model
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Interest rates don't wander randomly—they're pulled back to equilibrium like a spring!
+
+The Vasicek model: dr = κ(θ - r)dt + σdW
+
+Built a Python simulation showing mean reversion in action.
+
+#Python #QuantFinance #Finance #Math
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Explored the Vasicek interest rate model—a foundational 1977 framework for modeling how rates evolve over time.
+
+Key insight: rates exhibit mean reversion, gravitating toward long-term equilibrium θ.
+
+Implemented exact simulation and Euler-Maruyama methods in Python with full visualization.
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why interest rates don't just keep going up or down forever?
+
+The Vasicek model explains this with mean reversion—rates get "pulled back" to an equilibrium level, like a spring.
+
+The math: dr = κ(θ - r)dt + σdW
+
+Where κ controls how fast rates snap back, θ is the target level, and σ is volatility.
+
+I simulated 100 rate paths over 10 years. They all cluster around 5%—exactly as the model predicts.
+
+Pretty cool to see theory match simulation!
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented the Vasicek short-rate model in Python.
+
+The SDE: dr = κ(θ - r)dt + σdW
+
+Key properties:
+• Mean reversion with speed κ
+• Stationary distribution: N(θ, σ²/2κ)
+• Closed-form bond pricing: P(t,T) = A(t,T)·exp(-B(t,T)·r)
+
+Used both exact simulation (exploiting the analytical solution) and Euler-Maruyama for comparison. Also derived yield curves showing convexity adjustment.
+
+Limitation: allows negative rates (CIR fixes this).
+
+#QuantFinance #Python #Stochastics #Finance
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/QuantFinance)
+--------------------------------------------------------------------------------
+**Title:** Implemented the Vasicek Interest Rate Model in Python—here's what I learned about mean reversion
+
+**Body:**
+
+I just built a simulation of the Vasicek model, one of the foundational models in quantitative finance for understanding how interest rates behave over time.
+
+**ELI5 Version:**
+Imagine interest rates as a ball attached to a spring. The spring always tries to pull the ball back to a resting position (the long-term average rate). The Vasicek model captures this "mean reversion" mathematically.
+
+**The Math (simplified):**
+The rate r changes according to: dr = κ(θ - r)dt + σdW
+
+- κ (kappa) = how strong the spring is (speed of mean reversion)
+- θ (theta) = where the spring wants to rest (long-term mean)
+- σ (sigma) = random noise (volatility)
+- dW = random Brownian motion
+
+**What I implemented:**
+1. Exact simulation using the closed-form solution
+2. Euler-Maruyama discretization for comparison
+3. Zero-coupon bond pricing using the analytical formula
+4. Yield curve generation showing term structure
+
+**Key findings:**
+- With κ=0.5, θ=5%, σ=2%, starting at 3%, rates converge to ~5% over time
+- The stationary distribution is Normal(θ, σ²/2κ)
+- Bond prices have closed-form solutions, making this model analytically tractable
+
+**Limitations:**
+The normal distribution means negative rates are possible—the CIR model fixes this but loses some analytical tractability.
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/vasicek_interest_rate_model.ipynb
+
+Happy to answer questions about the implementation or the math!
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just built a simulation showing how interest rates evolve over time using the Vasicek model from 1977.
+
+The cool insight: rates don't wander randomly—they get "pulled back" to an equilibrium level, like a spring. Start at 3%, and over time they gravitate toward 5%.
+
+The visualization shows 100 different possible rate paths, and they all cluster around that target. Math predicting reality!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/vasicek_interest_rate_model.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Quantitative Finance: Implementing the Vasicek Interest Rate Model**
+
+I recently implemented a comprehensive Python simulation of the Vasicek model—a foundational framework in fixed income modeling introduced in 1977.
+
+**Technical Implementation:**
+• Exact path simulation using the closed-form solution
+• Euler-Maruyama discretization scheme for comparison
+• Zero-coupon bond pricing with analytical formulas
+• Yield curve derivation showing convexity adjustment
+
+**Key Mathematical Properties:**
+The model describes rate dynamics as: dr = κ(θ - r)dt + σdW
+
+This captures mean reversion—rates gravitate toward long-term equilibrium θ with speed κ, while σ introduces stochastic volatility.
+
+**Skills Demonstrated:**
+- Stochastic differential equations
+- Monte Carlo simulation
+- Financial derivatives pricing
+- Scientific visualization with matplotlib
+
+**Practical Application:**
+The model provides closed-form bond prices P(t,T) = A(t,T)·exp(-B(t,T)·r), enabling efficient pricing of fixed income instruments.
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/vasicek_interest_rate_model.ipynb
+
+#QuantitativeFinance #Python #FinancialModeling #DataScience
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Interest rates are like springs—always trying to snap back to equilibrium.
+
+This visualization shows 100 simulated interest rate paths using the Vasicek model (1977).
+
+Notice how they all cluster around 5%? That's mean reversion in action.
+
+The model:
+dr = κ(θ - r)dt + σdW
+
+κ = how fast rates snap back
+θ = target rate (5%)
+σ = volatility
+
+Starting at 3%, rates get pulled up.
+Starting at 8%, they'd get pulled down.
+
+One of the first models to capture this behavior mathematically.
+
+#QuantFinance #Python #DataVisualization #Finance #Math #Coding
+
+--------------------------------------------------------------------------------

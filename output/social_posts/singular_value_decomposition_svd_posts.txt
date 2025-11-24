@@ -1,0 +1,155 @@
+# Social Media Posts: Singular Value Decomposition (SVD)
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+SVD decomposes ANY matrix into A = UΣVᵀ: rotation → scaling → rotation
+
+This reveals hidden structure in data and enables powerful compression. Just 5 singular values can capture 90%+ of a matrix's information!
+
+#Python #LinearAlgebra #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Singular Value Decomposition breaks any matrix into three parts: A = UΣVᵀ
+
+Each singular value σᵢ quantifies how "important" that component is. The rapid decay means you often need just a few values to represent most of the data—the foundation of modern compression and ML.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how image compression actually works?
+
+It's SVD—Singular Value Decomposition.
+
+Any matrix A can be written as A = UΣVᵀ, where Σ contains singular values that decay rapidly. The magic: keeping only the largest values gives you an optimal low-rank approximation.
+
+In my notebook, rank-5 approximation captured 90% of a matrix's energy. That's storing a fraction of the data while keeping most of the information.
+
+This same math powers Netflix recommendations and noise reduction!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented SVD analysis in Python using NumPy.
+
+Key results:
+• A = UΣVᵀ decomposition verified with reconstruction error ~10⁻¹⁴
+• U and V orthogonality confirmed (error ~10⁻¹⁵)
+• Singular values decay rapidly—rank 5 captures 90% energy for a noisy rank-5 matrix
+• Demonstrated image compression: rank 20 uses only 41% storage
+
+The Eckart-Young-Mirsky theorem guarantees this is the BEST rank-k approximation in Frobenius norm. Foundational for PCA, recommender systems, and signal processing.
+
+#Python #LinearAlgebra #Mathematics #DataScience
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I built an interactive notebook exploring Singular Value Decomposition (SVD) - here's what I learned
+
+**Body:**
+
+SVD is one of those topics that sounds intimidating but is actually beautifully intuitive once you see it in action.
+
+**The core idea:** Any matrix A can be decomposed as A = UΣVᵀ, which breaks a linear transformation into three simple operations:
+1. Rotate/reflect the input (Vᵀ)
+2. Scale along coordinate axes (Σ)
+3. Rotate/reflect to output (U)
+
+**What surprised me:**
+
+The singular values σᵢ decay incredibly fast. I created a noisy rank-5 matrix and found that just 5 singular values captured ~90% of the total "energy." This is why SVD is so powerful for compression—you can throw away most components and barely lose information.
+
+**The Eckart-Young-Mirsky theorem** proves this rank-k approximation is mathematically optimal. No other method can do better (in Frobenius norm).
+
+**Practical demo:**
+
+I compressed a synthetic image using SVD. Results:
+- Rank 1: 4% storage (barely recognizable)
+- Rank 5: 11% storage (main features visible)
+- Rank 10: 21% storage (good quality)
+- Rank 20: 41% storage (nearly indistinguishable)
+
+The notebook includes visualizations of the singular value spectrum, cumulative energy curves, and approximation errors.
+
+**View the full notebook here:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/singular_value_decomposition_svd.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just finished a deep dive into SVD (Singular Value Decomposition)—the math behind image compression, Netflix recommendations, and noise reduction!
+
+The core insight: any data matrix can be broken into components ranked by importance. Keep the top few, discard the rest, and you've compressed your data with minimal loss.
+
+In my demo, just 5 components captured 90% of a matrix's information. Pretty remarkable!
+
+Check out the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/singular_value_decomposition_svd.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Singular Value Decomposition (SVD): A Fundamental Tool in Data Science
+
+I recently completed an implementation exploring SVD, one of the most powerful matrix factorization techniques in linear algebra.
+
+**Technical Overview:**
+
+SVD decomposes any m×n matrix A into A = UΣVᵀ, where U and V are orthogonal matrices and Σ contains singular values. This reveals the intrinsic geometric structure of linear transformations.
+
+**Key Findings:**
+
+• Reconstruction achieved machine precision (error ~10⁻¹⁴)
+• Singular value decay enables efficient low-rank approximation
+• Rank-5 approximation captured 90% of matrix energy
+• Demonstrated practical image compression achieving 4× reduction with minimal quality loss
+
+**Applications:**
+- Dimensionality reduction (PCA)
+- Recommender systems
+- Signal denoising
+- Natural language processing (LSA)
+
+The Eckart-Young-Mirsky theorem guarantees SVD provides the optimal low-rank approximation—a mathematically provable best solution.
+
+Full notebook with code and visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/singular_value_decomposition_svd.ipynb
+
+#DataScience #LinearAlgebra #MachineLearning #Python #Mathematics
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The mathematics of compression ✨
+
+This visualization shows how Singular Value Decomposition breaks down data into ranked components.
+
+The singular values (blue bars) decay rapidly—meaning most information is captured in just the first few.
+
+In this demo:
+→ Rank 5 captures 90% of data
+→ Rank 10 captures 99%
+
+This is why your JPEGs are small but still look good. SVD finds the optimal way to keep what matters and discard the rest.
+
+Math that actually works in the real world.
+
+#DataScience #LinearAlgebra #Mathematics #Python #Visualization #MachineLearning #Coding
+
+--------------------------------------------------------------------------------

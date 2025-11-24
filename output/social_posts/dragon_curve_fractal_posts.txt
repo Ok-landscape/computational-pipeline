@@ -1,0 +1,169 @@
+# Dragon Curve Fractal - Social Media Posts
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Ever folded paper in half repeatedly? That's a Dragon Curve! This fractal has dimension D=2 (space-filling!) yet never crosses itself.
+
+Simple rule → infinite complexity.
+
+#Fractals #Python #Math #ScienceTwitter
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+The Dragon Curve: where paper folding meets fractal mathematics.
+
+Each iteration doubles the segments using: Sₙ = Sₙ₋₁ + R + reverse(flip(Sₙ₋₁))
+
+Result: a space-filling curve (D=2) that never self-intersects. Four copies tile the plane perfectly.
+
+#Mathematics #Fractals #Python
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Folding a strip of paper in half repeatedly, then unfolding to 90° angles, creates the Dragon Curve - one of math's most beautiful fractals!
+
+What makes it special:
+→ Fractal dimension D = 2 (it's space-filling!)
+→ Never crosses itself
+→ Four copies tile the entire plane
+→ Simple L-system: X → X+YF+, Y → -FX-Y
+
+From NASA physicists in the 1960s to Jurassic Park - this curve has captured imaginations for decades.
+
+#Math #Fractals #Python #Coding
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented the Dragon Curve fractal using the turn sequence method.
+
+The elegance: Sₙ = Sₙ₋₁ + R + reverse(flip(Sₙ₋₁))
+
+Key findings:
+• Fractal dimension D ≈ 2 (space-filling limit)
+• 2ⁿ segments at iteration n
+• Self-similar: Cₙ₊₁ = Cₙ ∪ R₉₀°(Cₙ)
+• Four curves tile the plane
+
+Generated 32,768 segments at iteration 15. The bounding area scaling analysis confirms D approaches 2.
+
+Code uses numpy + matplotlib LineCollection for efficient rendering.
+
+#Fractals #Python #Mathematics #ScienceMastodon
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Visualizing the Dragon Curve Fractal in Python - Space-Filling Curves with Simple Rules
+
+**Body:**
+
+**ELI5:** Imagine folding a strip of paper in half over and over, then unfolding it so every crease makes a 90° angle. The shape you get is a Dragon Curve!
+
+**What I learned building this:**
+
+The Dragon Curve is a fractal discovered by NASA physicists in the 1960s (and featured in Jurassic Park!). The mind-blowing part: it has a fractal dimension of D=2, meaning it's *space-filling* in the limit - yet it never crosses itself.
+
+**The math (simplified):**
+
+The turn sequence at iteration n follows:
+Sₙ = Sₙ₋₁ + R + reverse(flip(Sₙ₋₁))
+
+So you take the previous sequence, add a right turn, then append the reversed and flipped version of the previous sequence.
+
+**Cool properties:**
+- At iteration n, you get 2ⁿ segments
+- Self-similar: two copies make the next iteration (rotated 90°)
+- Four copies tile the entire plane perfectly
+
+**Implementation highlights:**
+- Used numpy for coordinate generation
+- matplotlib LineCollection for efficient segment rendering
+- Color gradient shows progression through the curve
+
+At iteration 15, the curve has 32,768 segments!
+
+**View and run the notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/dragon_curve_fractal.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+The Dragon Curve - one of math's most beautiful secrets!
+
+Here's the wild part: if you fold a strip of paper in half over and over, then unfold it at 90° angles, you create this fractal. It fills space completely (dimension = 2) but NEVER crosses itself.
+
+Even cooler? Four Dragon Curves fit together to tile the entire plane.
+
+Simple rules creating infinite complexity - that's the magic of fractal geometry.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/dragon_curve_fractal.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Exploring Fractal Geometry: The Dragon Curve
+
+Just completed an implementation of the Dragon Curve fractal - a space-filling curve with fascinating mathematical properties.
+
+**Technical Approach:**
+• Generated curves using the turn sequence method: Sₙ = Sₙ₋₁ + R + reverse(flip(Sₙ₋₁))
+• Implemented L-system representation with production rules
+• Visualized evolution across iterations (1 to 15)
+• Analyzed scaling behavior to confirm fractal dimension D ≈ 2
+
+**Key Findings:**
+• Exponential growth: 2ⁿ segments at iteration n
+• Self-similarity enables recursive construction
+• Four-fold rotational tiling property
+• Bounding area scales with curve length, confirming space-filling nature
+
+**Tools Used:** Python, NumPy, Matplotlib (LineCollection for efficient rendering of 32,768+ segments)
+
+The Dragon Curve exemplifies how complex structures emerge from simple recursive rules - a principle applicable from algorithm design to understanding natural patterns.
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/dragon_curve_fractal.ipynb
+
+#Python #DataVisualization #Mathematics #Fractals #ComputationalScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+The Dragon Curve Fractal 🐉
+
+Fold paper in half repeatedly.
+Unfold at 90° angles.
+Get this.
+
+What makes it magical:
+↳ Fractal dimension = 2 (space-filling!)
+↳ Never crosses itself
+↳ Four copies tile the plane
+↳ 32,768 segments in this image
+
+Simple rule: Sₙ = Sₙ₋₁ + R + reverse(flip(Sₙ₋₁))
+
+From a 1960s NASA discovery to Jurassic Park - proof that math creates the most beautiful art.
+
+.
+.
+.
+#fractal #mathematics #python #generativeart #mathart #coding #visualization #dragoncurve #geometry #dataviz
+
+--------------------------------------------------------------------------------

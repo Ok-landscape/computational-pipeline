@@ -1,0 +1,165 @@
+# Social Media Posts: Braid Groups
+# Topic: Braid Groups - An Introduction to Algebraic Topology
+# Generated from: notebooks/published/braid_groups.ipynb
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Braid groups are the math behind tangled strands! B_n describes how n strands can intertwine without breaking.
+
+Fun fact: The Yang-Baxter equation (sigma_i sigma_{i+1} sigma_i = sigma_{i+1} sigma_i sigma_{i+1}) connects braids to quantum physics!
+
+#Math #Topology #Python
+
+--------------------------------------------------------------------------------
+BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Explored braid groups today - algebraic structures that capture how strands intertwine.
+
+Key insight: Every knot can be represented as a closed braid (Alexander's theorem). The trefoil knot is just the closure of sigma_1 cubed!
+
+Built visualizations in Python to demonstrate the Yang-Baxter relation.
+
+--------------------------------------------------------------------------------
+THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Just built a Python visualization of braid groups and I'm fascinated!
+
+Braid groups (B_n) describe how n strands can cross over and under each other. The beautiful part? They follow just two simple rules:
+- Distant crossings commute
+- The Yang-Baxter relation: sigma_i sigma_{i+1} sigma_i = sigma_{i+1} sigma_i sigma_{i+1}
+
+Every knot you've ever seen can be represented as a closed braid. The trefoil? Just sigma_1 cubed, closed into a loop.
+
+Math is wild.
+
+--------------------------------------------------------------------------------
+MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented braid group visualizations in Python!
+
+B_n is presented by generators sigma_1, ..., sigma_{n-1} with relations:
+- sigma_i sigma_j = sigma_j sigma_i for |i-j| >= 2
+- sigma_i sigma_{i+1} sigma_i = sigma_{i+1} sigma_i sigma_{i+1} (Yang-Baxter)
+
+The kernel of the map B_n -> S_n (symmetric group) gives us pure braids P_n.
+
+Explored computationally: braid word growth is exponential (4^L for B_3), but pure braids grow much slower.
+
+#Mathematics #Topology #AlgebraicTopology #Python
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+Title: I built a Python visualization of Braid Groups - here's what I learned about the math of tangled strands
+
+Body:
+
+**What are Braid Groups?**
+
+Imagine n strands hanging from a bar. A braid is what happens when you let them cross over and under each other (always moving downward) and then look at the pattern. Braid groups capture ALL possible ways to do this mathematically.
+
+**The Math (ELI5 version):**
+
+- B_n = the braid group on n strands
+- sigma_i = crossing strand i over strand i+1
+- Two rules govern everything:
+  1. If crossings are far apart, order doesn't matter
+  2. sigma_i sigma_{i+1} sigma_i = sigma_{i+1} sigma_i sigma_{i+1} (the famous Yang-Baxter equation!)
+
+**Cool Discovery:**
+
+Every knot can be written as a closed braid (Alexander's theorem). The trefoil knot? Just sigma_1 cubed, bent into a loop!
+
+**What I Built:**
+
+- A `Braid` class that tracks generators and computes permutations
+- Visualizations showing how strands cross
+- Braid closure drawings to see knots
+- Counting analysis: braid words grow as 4^L, but pure braids (strands return home) are much rarer
+
+**Why This Matters:**
+
+Braid groups appear in:
+- Cryptography (some encryption schemes use them)
+- Quantum computing (topological quantum computers!)
+- Statistical mechanics (Yang-Baxter equation)
+
+Check out the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/braid_groups.ipynb
+
+--------------------------------------------------------------------------------
+FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wondered about the mathematics of braiding hair or tangled cables?
+
+Braid groups are the answer! They capture exactly how strands can intertwine.
+
+Here's the cool part: mathematicians proved that EVERY knot - from your shoelaces to the most complex tangles - can be represented as a braid bent into a loop.
+
+I built some Python visualizations to explore this, and the patterns are beautiful!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/braid_groups.ipynb
+
+--------------------------------------------------------------------------------
+LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Computational Exploration of Braid Groups: Where Topology Meets Algebra
+
+I recently completed a computational study of braid groups (B_n), fundamental algebraic structures with applications spanning cryptography, quantum computing, and statistical physics.
+
+Key Technical Accomplishments:
+
+- Implemented a Braid class in Python supporting group operations (multiplication, inverse) and permutation computation
+- Built visualization tools for braid diagrams and closures
+- Verified the Yang-Baxter relation computationally
+- Analyzed braid word growth: exponential in total count (4^L for B_3), with pure braids forming a sparse subset
+
+Insights Gained:
+
+The connection between braids and knots (Alexander's theorem) provides an algorithmic approach to knot classification. The short exact sequence 1 -> P_n -> B_n -> S_n -> 1 elegantly captures how braid structure extends beyond permutations.
+
+Tools: Python, NumPy, Matplotlib
+
+This project demonstrates the power of computational methods in exploring abstract algebraic structures.
+
+View the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/braid_groups.ipynb
+
+#Mathematics #ComputationalScience #Python #Topology #DataVisualization
+
+--------------------------------------------------------------------------------
+INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+The mathematics of tangles.
+
+Braid groups capture how strands can weave over and under each other - and they're surprisingly deep.
+
+This visualization shows elementary generators (how single crossings work) and the Yang-Baxter relation (a rule that connects braids to quantum physics!).
+
+Best part? Every knot is secretly a closed braid.
+
+Built with Python + Matplotlib.
+
+.
+.
+.
+#mathematics #topology #dataviz #python #coding #mathisbeautiful #visualization #science #abstractmath
+
+================================================================================
+END OF POSTS
+================================================================================

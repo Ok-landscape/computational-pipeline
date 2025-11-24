@@ -1,0 +1,176 @@
+# Social Media Posts: Perceptron Neural Network
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (280 chars)
+
+Built a Perceptron from scratch in Python!
+
+The OG neural network (1958) learns with one simple rule:
+w <- w + n(y - y)x
+
+Achieved 100% accuracy on linearly separable data—but fails on XOR. That's why we need deep learning!
+
+#Python #MachineLearning #NeuralNetworks
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (300 chars)
+
+Implemented the Perceptron algorithm—the foundation of all neural networks.
+
+Key insight: It finds a hyperplane w·x + b = 0 that separates classes.
+
+Guaranteed to converge for linearly separable data, but can't solve XOR. This limitation sparked the deep learning revolution.
+
+#Science #AI #Python
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (500 chars)
+
+Just built a Perceptron from scratch and it's fascinating how simple the "original neural network" really is!
+
+The algorithm:
+1. Compute z = w·x + b
+2. Apply step function: output 1 if z >= 0, else 0
+3. Update: w <- w + n(error)x
+
+It achieved 100% accuracy separating two point clusters. But here's the catch—it completely fails on XOR because no single line can separate those points.
+
+This exact limitation is what drove researchers to create multi-layer networks and backpropagation!
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (500 chars)
+
+Implemented the Perceptron learning algorithm from 1958—still elegant after all these years.
+
+Mathematical core:
+- Net input: z = sum of wi*xi + b
+- Output: y = 1 if z >= 0, else 0
+- Update rule: wj <- wj + n(y - y)xj
+
+Convergence theorem guarantees it finds a solution for linearly separable data in finite steps.
+
+The XOR problem (not linearly separable) demonstrates its fundamental limitation—no single hyperplane can classify it correctly.
+
+#MachineLearning #Python #Science
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/MachineLearning)
+
+**Title:** I built a Perceptron from scratch—the algorithm that started neural networks (with code walkthrough)
+
+**Body:**
+
+Hey everyone! I just implemented the Perceptron algorithm and wanted to share what I learned.
+
+**What is a Perceptron?**
+
+It's the simplest neural network—just one neuron! Invented by Frank Rosenblatt in 1958, it's a binary classifier that works like this:
+
+1. Take inputs x = (x1, x2, ..., xn)
+2. Compute weighted sum: z = w1*x1 + w2*x2 + ... + b
+3. Apply step function: output 1 if z >= 0, else 0
+
+**The Learning Rule (ELI5)**
+
+When the perceptron makes a mistake:
+- If it predicted 0 but should be 1 -> increase weights
+- If it predicted 1 but should be 0 -> decrease weights
+
+Mathematically: w <- w + n*(actual - predicted)*x
+
+**Cool Result**
+
+On linearly separable data (two separate clusters), it converged in just 4 epochs to 100% accuracy!
+
+**The Famous Limitation**
+
+It completely fails on XOR—stuck at 50% accuracy. Why? No single straight line can separate (0,0)/(1,1) from (0,1)/(1,0). This limitation nearly killed neural network research until multi-layer networks and backpropagation came along!
+
+**Interactive Notebook**
+
+You can run the full code and experiment with it here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/perceptron_neural_network.ipynb
+
+Happy to answer any questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (500 chars)
+
+Ever wonder how the first "artificial brain" worked?
+
+In 1958, Frank Rosenblatt created the Perceptron—a single artificial neuron that could learn to classify things!
+
+The idea is simple: draw a line to separate two groups. The perceptron figures out where that line should go through trial and error.
+
+I coded one from scratch and it learned to separate data perfectly! But it fails on some problems (like XOR) because not everything can be divided by a straight line. That's why we needed deep learning!
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/perceptron_neural_network.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (1000 chars)
+
+**Revisiting Fundamentals: Implementing the Perceptron Algorithm**
+
+Understanding modern deep learning requires appreciating its foundations. I recently implemented the Perceptron—the 1958 algorithm that pioneered neural networks.
+
+**Technical Highlights:**
+
+- Architecture: Single-layer binary classifier
+- Core equation: y = phi(w·x + b) where phi is the Heaviside step function
+- Learning: Gradient-free update rule w <- w + n(y - y)x
+- Guarantee: Convergence theorem ensures finite-step solution for linearly separable data
+
+**Key Implementation Details:**
+
+- Used NumPy for vectorized operations
+- Achieved 100% training accuracy on separable 2D clusters
+- Demonstrated the XOR limitation (50% accuracy) showing why multi-layer architectures became necessary
+
+**Skills Demonstrated:**
+
+- Algorithm implementation from mathematical specifications
+- Data visualization with Matplotlib
+- Understanding of optimization and convergence properties
+
+The full implementation with visualizations is available for review:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/perceptron_neural_network.ipynb
+
+#MachineLearning #Python #DataScience #NeuralNetworks #AI
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (500 chars)
+
+The birth of AI in one equation
+
+w <- w + n*(y - y)*x
+
+This is the Perceptron learning rule from 1958—the ancestor of every neural network today!
+
+How it works:
+- Take inputs
+- Multiply by weights
+- If sum >= 0, output 1
+- Otherwise, output 0
+- Learn from mistakes
+
+I coded one from scratch and watched it draw a perfect line separating two data clusters
+
+But it can't solve everything—the XOR problem broke it completely
+
+That failure pushed scientists to create deep learning
+
+Sometimes limitations drive the biggest breakthroughs
+
+#Python #MachineLearning #AI #DataScience #NeuralNetworks #Coding #Science #Tech

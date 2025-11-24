@@ -1,0 +1,176 @@
+# Social Media Posts: Finite Difference Method
+# Generated for: finite_difference_method.ipynb
+
+================================================================================
+TWITTER/X (280 chars)
+================================================================================
+
+Solved y'' - y = -x using finite differences!
+
+Turn calculus into linear algebra: derivatives become (f(x+h) - 2f(x) + f(x-h))/h²
+
+Achieved O(h²) convergence with 10⁻⁵ error using just 50 grid points.
+
+#Python #NumPy #NumericalMethods #Math
+
+================================================================================
+BLUESKY (300 chars)
+================================================================================
+
+Finite Difference Methods: transforming differential equations into solvable linear systems.
+
+Implemented central differences for a boundary value problem y'' - y = -x. The tridiagonal matrix structure makes it computationally efficient.
+
+Result: second-order O(h²) convergence confirmed.
+
+#Science #Math #Python
+
+================================================================================
+THREADS (500 chars)
+================================================================================
+
+Ever wonder how computers solve differential equations they can't integrate analytically?
+
+The Finite Difference Method is beautifully simple: replace smooth derivatives with discrete differences.
+
+For y'' - y = -x, I approximated the second derivative as:
+(y_{i+1} - 2y_i + y_{i-1})/h²
+
+This turns calculus into a tridiagonal linear system Ay = b that NumPy solves instantly.
+
+With 50 grid points, the maximum error was ~10⁻⁵, and halving the step size reduces error by 4x. That's the power of O(h²) convergence!
+
+================================================================================
+MASTODON (500 chars)
+================================================================================
+
+Implemented the Finite Difference Method for solving boundary value problems in Python.
+
+Problem: y'' - y = -x with y(0) = y(1) = 0
+Analytical solution: y(x) = x - sinh(x)/sinh(1)
+
+Using central differences:
+• First derivative: [f(x+h) - f(x-h)]/(2h)
+• Second derivative: [f(x+h) - 2f(x) + f(x-h)]/h²
+
+Results with N=50 interior points:
+• Max error: 10⁻⁵
+• Convergence rate: 2.0 (as expected for O(h²))
+
+The tridiagonal system has condition number ~1000, ensuring numerical stability.
+
+#NumericalAnalysis #Python #SciPy #ComputationalMath
+
+================================================================================
+REDDIT (r/learnpython or r/math)
+================================================================================
+
+**Title:** How to Solve Differential Equations with Python: Finite Difference Method Explained
+
+**Body:**
+
+I created a Jupyter notebook demonstrating the Finite Difference Method (FDM) - a fundamental numerical technique for solving differential equations that can't be solved analytically.
+
+**The Basic Idea (ELI5):**
+
+Imagine you want to find a curve, but you only know rules about how the curve bends. Calculus gives us derivatives to describe this bending, but computers can't do calculus directly.
+
+FDM's trick: approximate the "bendiness" (derivative) by looking at nearby points. If you know y at x-h, x, and x+h, you can estimate y'' as:
+
+y'' ≈ (y(x+h) - 2y(x) + y(x-h)) / h²
+
+**What the notebook covers:**
+
+1. Taylor series derivation of forward, backward, and central differences
+2. Setting up the tridiagonal matrix system Ay = b
+3. Solving y'' - y = -x with boundary conditions y(0) = y(1) = 0
+4. Convergence analysis showing O(h²) error reduction
+
+**Key results:**
+
+- With 50 interior grid points: max error ≈ 10⁻⁵
+- Doubling grid points → error drops by factor of 4
+- Convergence rate measured at 2.0 (confirming second-order accuracy)
+
+**What I learned:**
+
+The beauty of FDM is how it converts calculus into linear algebra. The resulting tridiagonal matrix is sparse and well-conditioned, making it efficient to solve even for large grids.
+
+**View the full notebook here:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/finite_difference_method.ipynb
+
+Libraries used: NumPy, SciPy, Matplotlib
+
+================================================================================
+FACEBOOK (500 chars)
+================================================================================
+
+How do computers solve equations that have no exact solution?
+
+One powerful method: Finite Differences!
+
+Instead of working with smooth curves, we use a grid of points. We approximate how the curve "bends" by comparing neighboring values.
+
+I just built a Python notebook that solves y'' - y = -x this way. With only 50 grid points, the answer is accurate to 0.00001!
+
+The visualization shows the solution, error distribution, and proof that finer grids give exponentially better results.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/finite_difference_method.ipynb
+
+================================================================================
+LINKEDIN (1000 chars)
+================================================================================
+
+Numerical Methods in Practice: Implementing the Finite Difference Method
+
+I recently developed a computational notebook demonstrating the Finite Difference Method (FDM) for solving boundary value problems - a foundational technique in scientific computing and engineering simulation.
+
+**Technical Approach:**
+
+The notebook solves y'' - y = -x with Dirichlet boundary conditions by:
+• Discretizing the domain into N interior grid points
+• Approximating the second derivative using central differences: O(h²) truncation error
+• Constructing a tridiagonal linear system Ay = b
+• Solving efficiently using scipy.linalg.solve
+
+**Quantitative Results:**
+
+• Grid: 50 interior points
+• Maximum error: 10⁻⁵
+• Verified second-order convergence rate (2.0)
+• Matrix condition number: ~1000 (numerically stable)
+
+**Skills Demonstrated:**
+
+• Numerical analysis and error quantification
+• Scientific Python (NumPy, SciPy, Matplotlib)
+• Algorithm implementation from mathematical foundations
+• Convergence analysis and validation against analytical solutions
+
+This methodology extends to heat transfer, structural mechanics, and fluid dynamics simulations.
+
+Full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/finite_difference_method.ipynb
+
+#NumericalMethods #Python #ScientificComputing #Engineering #DataScience
+
+================================================================================
+INSTAGRAM (500 chars)
+================================================================================
+
+From calculus to code
+
+The Finite Difference Method turns impossible equations into solvable ones.
+
+The secret? Approximate derivatives using nearby grid points.
+
+y'' ≈ (y_{i+1} - 2y_i + y_{i-1})/h²
+
+This transforms a differential equation into a matrix equation that Python solves instantly.
+
+Results:
+• 50 grid points
+• Error: 0.00001
+• Second-order convergence
+
+Swipe to see the solution curve, error analysis, and the beautiful tridiagonal matrix structure that makes it all work.
+
+#NumericalMethods #Python #Math #Science #Coding #DataScience #STEM #Learning #Visualization
