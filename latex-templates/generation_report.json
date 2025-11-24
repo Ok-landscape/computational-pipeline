@@ -1,0 +1,360 @@
+{
+  "timestamp": "2025-11-24T20:19:46.653504",
+  "total_templates": 194,
+  "total_categories": 62,
+  "total_gaps": 193,
+  "top_gaps": [
+    [
+      "mathematics",
+      7
+    ],
+    [
+      "computer-science",
+      6
+    ],
+    [
+      "thermodynamics",
+      6
+    ],
+    [
+      "chemistry",
+      5
+    ],
+    [
+      "data-science",
+      5
+    ],
+    [
+      "earth-science",
+      5
+    ],
+    [
+      "economics",
+      5
+    ],
+    [
+      "electrical-engineering",
+      5
+    ],
+    [
+      "fluid-dynamics",
+      5
+    ],
+    [
+      "machine-learning",
+      5
+    ]
+  ],
+  "category_status": {
+    "mechanical-engineering": {
+      "current": 5,
+      "target": 8,
+      "progress": "5/8"
+    },
+    "computational-biology": {
+      "current": 4,
+      "target": 7,
+      "progress": "4/7"
+    },
+    "marine-biology": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "atmospheric-science": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "oceanography": {
+      "current": 2,
+      "target": 5,
+      "progress": "2/5"
+    },
+    "fluid-dynamics": {
+      "current": 1,
+      "target": 6,
+      "progress": "1/6"
+    },
+    "neuroscience": {
+      "current": 3,
+      "target": 7,
+      "progress": "3/7"
+    },
+    "thermodynamics": {
+      "current": 0,
+      "target": 6,
+      "progress": "0/6"
+    },
+    "numerical-methods": {
+      "current": 4,
+      "target": 8,
+      "progress": "4/8"
+    },
+    "data-science": {
+      "current": 3,
+      "target": 8,
+      "progress": "3/8"
+    },
+    "aerospace": {
+      "current": 5,
+      "target": 8,
+      "progress": "5/8"
+    },
+    "earth-science": {
+      "current": 1,
+      "target": 6,
+      "progress": "1/6"
+    },
+    "bioinformatics": {
+      "current": 4,
+      "target": 7,
+      "progress": "4/7"
+    },
+    "nuclear-physics": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "plasma-physics": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "quantum-computing": {
+      "current": 3,
+      "target": 7,
+      "progress": "3/7"
+    },
+    "photonics": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "medical-physics": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "electromagnetics": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "nlp": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "quantum-mechanics": {
+      "current": 4,
+      "target": 7,
+      "progress": "4/7"
+    },
+    "astrophysics": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "cognitive-science": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "biomedical": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "robotics": {
+      "current": 3,
+      "target": 7,
+      "progress": "3/7"
+    },
+    "systems-biology": {
+      "current": 2,
+      "target": 6,
+      "progress": "2/6"
+    },
+    "topology": {
+      "current": 0,
+      "target": 5,
+      "progress": "0/5"
+    },
+    "probability": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "hydrology": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "cryptography": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "semiconductor": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "particle-physics": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "game-development": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "financial-math": {
+      "current": 4,
+      "target": 7,
+      "progress": "4/7"
+    },
+    "simulations": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "statistics": {
+      "current": 3,
+      "target": 8,
+      "progress": "3/8"
+    },
+    "geochemistry": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "acoustics": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "image-processing": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "chemistry": {
+      "current": 1,
+      "target": 6,
+      "progress": "1/6"
+    },
+    "chemical-engineering": {
+      "current": 4,
+      "target": 7,
+      "progress": "4/7"
+    },
+    "computer-science": {
+      "current": 2,
+      "target": 8,
+      "progress": "2/8"
+    },
+    "electrical-engineering": {
+      "current": 2,
+      "target": 7,
+      "progress": "2/7"
+    },
+    "cosmology": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "machine-learning": {
+      "current": 5,
+      "target": 10,
+      "progress": "5/10"
+    },
+    "optics": {
+      "current": 6,
+      "target": 6,
+      "progress": "6/6"
+    },
+    "astronomy": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "mathematics": {
+      "current": 3,
+      "target": 10,
+      "progress": "3/10"
+    },
+    "signal-processing": {
+      "current": 3,
+      "target": 7,
+      "progress": "3/7"
+    },
+    "epidemiology": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "geophysics": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "psychophysics": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "operations-research": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "economics": {
+      "current": 2,
+      "target": 7,
+      "progress": "2/7"
+    },
+    "materials-science": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "ecology": {
+      "current": 4,
+      "target": 6,
+      "progress": "4/6"
+    },
+    "biology": {
+      "current": 5,
+      "target": 6,
+      "progress": "5/6"
+    },
+    "control-theory": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "climate-science": {
+      "current": 2,
+      "target": 6,
+      "progress": "2/6"
+    },
+    "relativity": {
+      "current": 3,
+      "target": 5,
+      "progress": "3/5"
+    },
+    "civil-engineering": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    },
+    "power-systems": {
+      "current": 3,
+      "target": 6,
+      "progress": "3/6"
+    }
+  }
+}

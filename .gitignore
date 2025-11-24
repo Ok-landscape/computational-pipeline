@@ -1,14 +1,125 @@
-# Ignore everything
-*
+# ===== LaTeX-Templates Repository .gitignore =====
+# Enhanced version with comprehensive exclusions
 
-# Except notebooks directory
-!notebooks/
+# Notebooks - publish only published notebooks
+notebooks/drafts/
+notebooks/temp/
+notebooks/**/.ipynb_checkpoints/
+
+# Only publish the notebooks/published/ directory
 !notebooks/published/
 !notebooks/published/*.ipynb
 
-# Except latex-templates directory
+# LaTeX Templates - allow all templates and documentation
 !latex-templates/
 !latex-templates/**
 
-# And README
+# But exclude build artifacts within latex-templates
+latex-templates/**/*.aux
+latex-templates/**/*.log
+latex-templates/**/*.out
+latex-templates/**/*.toc
+latex-templates/**/*.bbl
+latex-templates/**/*.blg
+latex-templates/**/*.bcf
+latex-templates/**/*.run.xml
+latex-templates/**/*.fls
+latex-templates/**/*.fdb_latexmk
+latex-templates/**/*.synctex.gz
+latex-templates/**/*.nav
+latex-templates/**/*.snm
+latex-templates/**/*.vrb
+latex-templates/**/*.pytxcode
+latex-templates/**/pythontex-files-*/
+latex-templates/**/*.pytxmcr
+latex-templates/**/*.pytxpyg
+latex-templates/**/*.sagetex.sage
+latex-templates/**/*.sagetex.py
+latex-templates/**/*.sagetex.scmd
+latex-templates/**/*.sout
+latex-templates/**/*.Rout
+latex-templates/**/.Rhistory
+latex-templates/**/.RData
+latex-templates/**/*-concordance.tex
+latex-templates/**/figure/
+latex-templates/logs/*.log
+latex-templates/logs/*.txt
+
+# Keep these essential files
+!latex-templates/templates/**/*.tex
+!latex-templates/templates/**/*.Rnw
+!latex-templates/templates/**/*.bib
+!latex-templates/templates/**/*.cls
+!latex-templates/templates/**/*.sty
+!latex-templates/output/*.pdf
+!latex-templates/*.md
+!latex-templates/*.txt
+!latex-templates/Makefile
+!latex-templates/scripts/
+!latex-templates/config/
+!latex-templates/*.sh
+!latex-templates/*.py
+
+# Development and temporary files
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+Thumbs.db
+.Trash-*/
+
+# Git-related
+*.orig
+*.rej
+
+# Secrets and credentials (extra safety)
+.env
+.env.local
+credentials.json
+secrets/
+*.key
+*.pem
+
+# Build directories
+build/
+dist/
+.build/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Allow README and documentation
 !README.md
+!CONTRIBUTING.md
+!LICENSE
+!CHANGELOG.md
+!docs/
