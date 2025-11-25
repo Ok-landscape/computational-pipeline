@@ -13,6 +13,10 @@
 *.pem
 *.key
 
+# Implementation reports may contain sensitive data from testing
+social-media-automation/IMPLEMENTATION_REPORT.md
+social-media-automation/INCIDENT_REPORT_*.md
+
 # === Private Repository Clone ===
 # The repo-data directory is the private repository clone
 # NEVER commit it to the public repo
