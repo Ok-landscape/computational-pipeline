@@ -13,21 +13,23 @@
 *.pem
 *.key
 
-# Implementation reports may contain sensitive data from testing
-social-media-automation/IMPLEMENTATION_REPORT.md
-social-media-automation/INCIDENT_REPORT_*.md
+# === PRIVATE: Social Media Automation ===
+# The entire social-media-automation directory is PRIVATE and should never be in the public repo
+# It contains sensitive automation code, credentials, and private data
+social-media-automation/
 
-# === Private Repository Clone ===
-# The repo-data directory is the private repository clone
-# NEVER commit it to the public repo
-social-media-automation/repo-data/
+# Legacy specific exclusions (now covered by above)
+# Implementation reports may contain sensitive data from testing
+# social-media-automation/IMPLEMENTATION_REPORT.md
+# social-media-automation/INCIDENT_REPORT_*.md
+# social-media-automation/repo-data/
+# social-media-automation/data/
+# social-media-automation/media/
+# social-media-automation/extracted_images/
+# social-media-automation/test_images/
 
 # === Generated Content and Outputs ===
 # These belong in the private repository only
-social-media-automation/data/
-social-media-automation/media/
-social-media-automation/extracted_images/
-social-media-automation/test_images/
 *.backup
 
 # Notebook outputs (clean notebooks only in public repo)
