@@ -1,5 +1,37 @@
 # Public Educational Repository
-# Contains only notebooks and LaTeX templates
+# Contains code, documentation, and clean notebooks (no outputs)
+# Executed notebooks and outputs are in the private repo
+
+# === CRITICAL: Security and Sensitive Files ===
+# Never commit actual environment variables or secrets
+.env
+.env.local
+.env.*.local
+*credentials*.json
+*secrets*.json
+*token*.json
+*.pem
+*.key
+
+# === Private Repository Clone ===
+# The repo-data directory is the private repository clone
+# NEVER commit it to the public repo
+social-media-automation/repo-data/
+
+# === Generated Content and Outputs ===
+# These belong in the private repository only
+social-media-automation/data/
+social-media-automation/media/
+social-media-automation/extracted_images/
+social-media-automation/test_images/
+*.backup
+
+# Notebook outputs (clean notebooks only in public repo)
+notebooks/published/*.png
+notebooks/published/*.pdf
+notebooks/published/*.jpg
+notebooks/published/*.svg
+notebooks/published/.*.sage-*
 
 # === Notebook Management ===
 # Ignore notebook checkpoints
@@ -32,15 +64,32 @@ latex-templates/**/*.syncdb
 *.bak
 .DS_Store
 Thumbs.db
+*.sage-chat
+*.sage-jupyter*
 
 # === Python Cache ===
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
 
 # === IDE Files ===
 .vscode/
 .idea/
+*.code-workspace
 
 # === OS Files ===
 .Trash-*/
+
+# === Test and Debug Files ===
+test_output/
+debug/
+logs/
+*.log
+
+# === Temporary Files ===
+notebooks_needing_fixes.txt
