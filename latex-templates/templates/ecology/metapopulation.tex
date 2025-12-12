@@ -10,8 +10,9 @@
 \usepackage{pythontex}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{natbib}
 
-\title{Metapopulation Dynamics\\Patch Models}
+\title{Metapopulation Dynamics: Patch Occupancy Models and Spatial Population Persistence}
 \author{Ecology Research Group}
 \date{\today}
 
@@ -19,205 +20,877 @@
 \maketitle
 
 \begin{abstract}
-Spatial population dynamics and connectivity.
+Metapopulation theory provides a framework for understanding how spatial population structure influences persistence in fragmented landscapes. We analyze the classical Levins model of patch occupancy dynamics, where local populations experience colonization and extinction at the patch level. Using computational simulations, we examine equilibrium occupancy patterns, extinction thresholds, and the critical colonization-extinction ratio that determines metapopulation viability. Our analysis reveals that the metapopulation equilibrium $p^* = 1 - e/c$ requires colonization rates ($c$) to exceed extinction rates ($e$) for persistence, with spatial connectivity playing a crucial role in maintaining population networks. We extend the analysis to source-sink dynamics, incidence functions dependent on patch characteristics, and extinction debt following habitat loss. Results demonstrate that metapopulations can persist regionally despite local extinctions when sufficient patch connectivity maintains colonization-extinction balance, but face collapse when habitat destruction reduces metapopulation capacity below critical thresholds.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of metapopulation.
+Habitat fragmentation has become one of the most pervasive threats to biodiversity, creating landscapes where species persist as collections of local populations connected by dispersal rather than as single continuous populations \citep{hanski1999metapopulation, fahrig2003effects}. Metapopulation theory, pioneered by \citet{levins1969some}, provides a mathematical framework for understanding how populations survive in fragmented landscapes through the balance of local extinction and recolonization.
+
+In classical metapopulation models, a species occupies a network of discrete habitat patches, each supporting a local population that faces some probability of extinction. Regional persistence depends not on the permanence of any single local population, but on the rate at which extinct patches are recolonized from occupied patches. This fundamental insight—that populations can persist regionally despite local instability—has profound implications for conservation in fragmented landscapes \citep{hanski1998metapopulation}.
+
+The simplest metapopulation model, proposed by Levins, tracks the fraction of occupied patches $p(t)$ through time. Occupied patches generate colonists at rate $c$ that establish new populations in empty patches, while occupied patches go extinct at rate $e$. This yields the differential equation:
+\begin{equation}
+\frac{dp}{dt} = cp(1-p) - ep
+\end{equation}
+
+This deceptively simple model reveals critical thresholds for persistence and provides a foundation for understanding more complex spatial population dynamics.
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
+from scipy.integrate import odeint
+from scipy.optimize import fsolve
+import matplotlib.patches as mpatches
+
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
+plt.rcParams['font.size'] = 10
 
+# Levins model parameters
+colonization_rate = 0.15  # colonization rate per patch
+extinction_rate = 0.05    # extinction rate per patch
+time_horizon = 200        # years
+
+# Initial conditions for different scenarios
+initial_occupancy_low = 0.1
+initial_occupancy_high = 0.9
 \end{pycode}
 
-\section{Mathematical Framework}
+\section{The Levins Metapopulation Model}
+
+The Levins model describes metapopulation dynamics in terms of patch occupancy rather than population sizes. Let $p(t)$ represent the fraction of patches occupied at time $t$. The model assumes:
+
+\begin{enumerate}
+\item All patches are identical and equally connected
+\item Colonization rate is proportional to both occupied patches (source of colonists) and empty patches (targets for colonization)
+\item Extinction occurs at constant rate $e$ per occupied patch
+\item Dynamics are much faster at the patch level than at the metapopulation level
+\end{enumerate}
+
+\subsection{Model Derivation and Equilibrium}
+
+The rate of change in patch occupancy has two components:
+\begin{itemize}
+\item \textbf{Colonization}: Empty patches $(1-p)$ are colonized at rate $cp$, where $c$ is the colonization coefficient
+\item \textbf{Extinction}: Occupied patches $p$ go extinct at rate $e$
+\end{itemize}
+
+This yields:
+\begin{equation}
+\frac{dp}{dt} = \underbrace{cp(1-p)}_{\text{colonization}} - \underbrace{ep}_{\text{extinction}}
+\end{equation}
+
+At equilibrium, $\frac{dp}{dt} = 0$, giving:
+\begin{equation}
+cp^*(1-p^*) = ep^*
+\end{equation}
+
+This has two solutions:
+\begin{enumerate}
+\item $p^* = 0$ (extinction)
+\item $p^* = 1 - \frac{e}{c}$ (coexistence)
+\end{enumerate}
+
+The coexistence equilibrium exists only when $c > e$, revealing a critical threshold: \textbf{the colonization rate must exceed the extinction rate for metapopulation persistence}.
 
 \begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
+# Levins model differential equation
+def levins_model(p, t, c, e):
+    """
+    Levins metapopulation model
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
+    Parameters:
+    p : float - fraction of patches occupied
+    t : float - time
+    c : float - colonization rate
+    e : float - extinction rate
+
+    Returns:
+    dpdt : float - rate of change in patch occupancy
+    """
+    dpdt = c * p * (1 - p) - e * p
+    return dpdt
+
+# Time array
+time_points = np.linspace(0, time_horizon, 1000)
+
+# Solve for different initial conditions
+trajectory_low = odeint(levins_model, initial_occupancy_low, time_points,
+                       args=(colonization_rate, extinction_rate))
+trajectory_high = odeint(levins_model, initial_occupancy_high, time_points,
+                        args=(colonization_rate, extinction_rate))
+
+# Calculate equilibrium
+equilibrium_occupancy = 1 - extinction_rate / colonization_rate
+
+# Extinction threshold (c = e)
+extinction_threshold = extinction_rate
+
+# Create figure showing Levins model dynamics
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Panel A: Time series from different initial conditions
+ax1.plot(time_points, trajectory_low, 'b-', linewidth=2, label='Initial $p_0 = 0.1$')
+ax1.plot(time_points, trajectory_high, 'r-', linewidth=2, label='Initial $p_0 = 0.9$')
+ax1.axhline(equilibrium_occupancy, color='black', linestyle='--', linewidth=1.5,
+           label=f'Equilibrium $p^* = {equilibrium_occupancy:.3f}$')
+ax1.set_xlabel('Time (years)', fontsize=12)
+ax1.set_ylabel('Patch Occupancy Fraction $p(t)$', fontsize=12)
+ax1.set_title('Levins Model: Convergence to Equilibrium', fontsize=13, weight='bold')
+ax1.legend(loc='best', fontsize=10)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, time_horizon)
+ax1.set_ylim(0, 1)
+
+# Panel B: Phase portrait showing dp/dt vs p
+p_range = np.linspace(0, 1, 200)
+dpdt_range = colonization_rate * p_range * (1 - p_range) - extinction_rate * p_range
+
+ax2.plot(p_range, dpdt_range, 'darkgreen', linewidth=2.5)
+ax2.axhline(0, color='black', linestyle='-', linewidth=0.8)
+ax2.axvline(equilibrium_occupancy, color='red', linestyle='--', linewidth=1.5,
+           label=f'Stable equilibrium $p^* = {equilibrium_occupancy:.3f}$')
+ax2.axvline(0, color='gray', linestyle='--', linewidth=1.5, alpha=0.5,
+           label='Unstable equilibrium (extinction)')
+ax2.fill_between(p_range, 0, dpdt_range, where=(dpdt_range > 0),
+                alpha=0.2, color='green', label='$dp/dt > 0$ (increasing)')
+ax2.fill_between(p_range, 0, dpdt_range, where=(dpdt_range < 0),
+                alpha=0.2, color='red', label='$dp/dt < 0$ (decreasing)')
+ax2.set_xlabel('Patch Occupancy $p$', fontsize=12)
+ax2.set_ylabel('Rate of Change $dp/dt$', fontsize=12)
+ax2.set_title('Phase Portrait: Colonization-Extinction Balance', fontsize=13, weight='bold')
+ax2.legend(loc='best', fontsize=9)
+ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
-plt.savefig('metapopulation_plot1.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('metapopulation_levins_dynamics.pdf', dpi=300, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{metapopulation_plot1.pdf}
-\caption{Primary analysis results.}
+\includegraphics[width=0.98\textwidth]{metapopulation_levins_dynamics.pdf}
+\caption{Levins metapopulation model dynamics with colonization rate $c = \py{colonization_rate}$ and extinction rate $e = \py{extinction_rate}$. \textbf{Left panel}: Time trajectories from different initial occupancy levels converge to the stable equilibrium $p^* = \py{f'{equilibrium_occupancy:.3f}'}$, demonstrating that metapopulation persistence depends on the colonization-extinction balance rather than initial conditions. \textbf{Right panel}: Phase portrait showing the rate of change in patch occupancy as a function of current occupancy. The system has two equilibria: an unstable extinction state at $p = 0$ and a stable coexistence equilibrium at $p^* = 1 - e/c = \py{f'{equilibrium_occupancy:.3f}'}$. Green shading indicates regions where patch occupancy increases (colonization exceeds extinction), while red shading shows where occupancy decreases. The stable equilibrium represents a balance where colonization of empty patches exactly compensates for extinction of occupied patches.}
 \end{figure}
 
-\section{Secondary Analysis}
+\subsection{Extinction Threshold and Metapopulation Capacity}
+
+The critical condition for persistence, $c > e$, can be interpreted in terms of metapopulation capacity. When colonization rates fall below extinction rates, the only stable equilibrium is complete extinction. This threshold has important conservation implications: habitat destruction that reduces connectivity (and thus colonization rates) can push metapopulations below the extinction threshold even when suitable habitat remains.
 
 \begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
+# Analyze extinction threshold
+colonization_range = np.linspace(0, 0.3, 100)
+equilibria = np.zeros_like(colonization_range)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
+for i, c in enumerate(colonization_range):
+    if c > extinction_rate:
+        equilibria[i] = 1 - extinction_rate / c
+    else:
+        equilibria[i] = 0  # extinction
+
+# Create threshold analysis figure
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# Plot equilibrium occupancy vs colonization rate
+ax.plot(colonization_range, equilibria, 'b-', linewidth=3, label='Equilibrium occupancy $p^*$')
+ax.axvline(extinction_rate, color='red', linestyle='--', linewidth=2,
+          label=f'Extinction threshold $c = e = {extinction_rate}$')
+ax.axhline(equilibrium_occupancy, color='green', linestyle=':', linewidth=2,
+          label=f'Current equilibrium $p^* = {equilibrium_occupancy:.3f}$')
+
+# Shade regions
+ax.fill_between(colonization_range, 0, 1,
+                where=(colonization_range <= extinction_rate),
+                alpha=0.2, color='red', label='Extinction region ($c < e$)')
+ax.fill_between(colonization_range, 0, equilibria,
+                where=(colonization_range > extinction_rate),
+                alpha=0.2, color='green', label='Persistence region ($c > e$)')
+
+ax.set_xlabel('Colonization Rate $c$ (per patch per year)', fontsize=12)
+ax.set_ylabel('Equilibrium Patch Occupancy $p^*$', fontsize=12)
+ax.set_title('Extinction Threshold: Metapopulation Viability vs Colonization Rate',
+            fontsize=13, weight='bold')
+ax.legend(loc='lower right', fontsize=10)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 0.3)
+ax.set_ylim(0, 1)
+
+# Add annotation
+ax.annotate('Metapopulation\ncollapse',
+           xy=(extinction_rate * 0.5, 0.05), fontsize=11,
+           ha='center', color='darkred', weight='bold')
+ax.annotate('Stable\npersistence',
+           xy=(0.22, 0.8), fontsize=11,
+           ha='center', color='darkgreen', weight='bold')
+
+plt.tight_layout()
+plt.savefig('metapopulation_extinction_threshold.pdf', dpi=300, bbox_inches='tight')
+plt.close()
+
+# Calculate some key metrics
+critical_ratio = colonization_rate / extinction_rate
+doubling_time_approx = np.log(2) / (colonization_rate - extinction_rate)
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{metapopulation_extinction_threshold.pdf}
+\caption{Extinction threshold in the Levins metapopulation model showing equilibrium patch occupancy as a function of colonization rate. When colonization rate $c$ exceeds extinction rate $e = \py{extinction_rate}$, the metapopulation persists at equilibrium occupancy $p^* = 1 - e/c$. Below this critical threshold (red shaded region), the only stable state is complete extinction ($p^* = 0$). The current parameter set yields a colonization-extinction ratio of $c/e = \py{f'{critical_ratio:.2f}'}$, supporting metapopulation persistence at $p^* = \py{f'{equilibrium_occupancy:.3f}'}$ occupancy. This demonstrates that habitat fragmentation affecting colonization rates can drive metapopulation collapse even when local extinction rates remain constant, a phenomenon critical to understanding species decline in fragmented landscapes.}
+\end{figure}
+
+\section{Patch Size Effects and Incidence Functions}
+
+Real metapopulations violate the Levins assumption of patch homogeneity. Larger patches typically support larger populations with lower extinction probabilities, while isolation reduces colonization probability. These effects can be captured through \textbf{incidence functions} that predict patch occupancy based on patch characteristics.
+
+\subsection{Area-Dependent Extinction and Colonization}
+
+Extinction probability typically decreases with patch area (larger populations are more stable), while colonization probability increases with patch connectivity. We can model these effects as:
+
+\begin{align}
+\text{Extinction rate: } & e_i = e_0 \cdot A_i^{-x} \\
+\text{Colonization rate: } & c_i = c_0 \cdot S_i \cdot A_i^{y}
+\end{align}
+
+where $A_i$ is patch area, $S_i$ is a connectivity metric, and $x, y$ are scaling exponents.
+
+\begin{pycode}
+# Simulate patch network with heterogeneous sizes
+np.random.seed(42)
+num_patches = 50
+patch_areas = np.random.gamma(2, 2, num_patches)  # heterogeneous patch sizes
+patch_distances = np.random.uniform(0.5, 5, num_patches)  # isolation distances
+
+# Area-dependent extinction rates (smaller patches = higher extinction)
+extinction_exponent = 0.5
+baseline_extinction = 0.1
+patch_extinction_rates = baseline_extinction * patch_areas**(-extinction_exponent)
+
+# Distance-dependent colonization (isolated patches = lower colonization)
+distance_decay = 0.5
+baseline_colonization = 0.2
+patch_connectivity = np.exp(-distance_decay * patch_distances)
+patch_colonization_rates = baseline_colonization * patch_connectivity * patch_areas**0.3
+
+# Calculate expected incidence (equilibrium occupancy probability) for each patch
+patch_incidence = np.zeros(num_patches)
+for i in range(num_patches):
+    if patch_colonization_rates[i] > patch_extinction_rates[i]:
+        patch_incidence[i] = 1 - patch_extinction_rates[i] / patch_colonization_rates[i]
+    else:
+        patch_incidence[i] = 0
+
+# Sort by patch area for visualization
+sort_idx = np.argsort(patch_areas)
+sorted_areas = patch_areas[sort_idx]
+sorted_incidence = patch_incidence[sort_idx]
+sorted_extinction = patch_extinction_rates[sort_idx]
+sorted_colonization = patch_colonization_rates[sort_idx]
+
+# Create incidence function plot
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
+
+# Panel A: Extinction rate vs patch area
+ax1.scatter(patch_areas, patch_extinction_rates, c='red', s=60, alpha=0.6, edgecolors='darkred')
+area_range = np.linspace(0.5, max(patch_areas), 100)
+predicted_extinction = baseline_extinction * area_range**(-extinction_exponent)
+ax1.plot(area_range, predicted_extinction, 'r--', linewidth=2,
+        label=f'$e(A) = {baseline_extinction:.2f} \\cdot A^{{-{extinction_exponent}}}$')
+ax1.set_xlabel('Patch Area (ha)', fontsize=11)
+ax1.set_ylabel('Extinction Rate (per year)', fontsize=11)
+ax1.set_title('A) Area-Dependent Extinction', fontsize=12, weight='bold')
+ax1.legend(loc='upper right', fontsize=10)
 ax1.grid(True, alpha=0.3)
 
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
+# Panel B: Colonization rate vs isolation
+ax2.scatter(patch_distances, patch_colonization_rates, c='blue', s=60, alpha=0.6, edgecolors='darkblue')
+dist_range = np.linspace(min(patch_distances), max(patch_distances), 100)
+predicted_connectivity = np.exp(-distance_decay * dist_range)
+ax2.plot(dist_range, baseline_colonization * predicted_connectivity * np.mean(patch_areas)**0.3,
+        'b--', linewidth=2, label=f'$c(d) \\propto e^{{-{distance_decay} d}}$')
+ax2.set_xlabel('Isolation Distance (km)', fontsize=11)
+ax2.set_ylabel('Colonization Rate (per year)', fontsize=11)
+ax2.set_title('B) Distance-Dependent Colonization', fontsize=12, weight='bold')
+ax2.legend(loc='upper right', fontsize=10)
 ax2.grid(True, alpha=0.3)
+
+# Panel C: Incidence function
+ax3.scatter(sorted_areas, sorted_incidence, c=sorted_incidence, cmap='RdYlGn',
+           s=80, alpha=0.7, edgecolors='black', vmin=0, vmax=1)
+ax3.axhline(0.5, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+ax3.set_xlabel('Patch Area (ha)', fontsize=11)
+ax3.set_ylabel('Occupancy Probability (Incidence)', fontsize=11)
+ax3.set_title('C) Incidence Function: Occupancy vs Area', fontsize=12, weight='bold')
+ax3.grid(True, alpha=0.3)
+ax3.set_ylim(-0.05, 1.05)
+
+# Panel D: Colonization-extinction ratio
+ce_ratio = patch_colonization_rates / patch_extinction_rates
+ax4.scatter(patch_areas, ce_ratio, c=patch_incidence, cmap='RdYlGn',
+           s=80, alpha=0.7, edgecolors='black', vmin=0, vmax=1)
+ax4.axhline(1, color='red', linestyle='--', linewidth=2, label='Extinction threshold ($c/e = 1$)')
+ax4.set_xlabel('Patch Area (ha)', fontsize=11)
+ax4.set_ylabel('Colonization/Extinction Ratio ($c/e$)', fontsize=11)
+ax4.set_title('D) Viability Threshold by Patch Size', fontsize=12, weight='bold')
+ax4.legend(loc='upper left', fontsize=10)
+ax4.grid(True, alpha=0.3)
+ax4.set_yscale('log')
+
 plt.tight_layout()
-plt.savefig('metapopulation_plot2.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('metapopulation_incidence_functions.pdf', dpi=300, bbox_inches='tight')
 plt.close()
+
+# Calculate summary statistics
+mean_patch_area = np.mean(patch_areas)
+viable_patch_fraction = np.sum(patch_incidence > 0) / num_patches
+mean_incidence = np.mean(patch_incidence[patch_incidence > 0])
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{metapopulation_plot2.pdf}
-\caption{Secondary analysis comparison.}
+\includegraphics[width=0.98\textwidth]{metapopulation_incidence_functions.pdf}
+\caption{Incidence functions showing how patch characteristics affect metapopulation dynamics in a heterogeneous landscape of \py{num_patches} habitat patches. \textbf{Panel A}: Extinction rate decreases with patch area following a power law $e(A) \propto A^{-0.5}$, as larger patches support larger, more stable populations. \textbf{Panel B}: Colonization rate declines exponentially with isolation distance due to reduced dispersal success. \textbf{Panel C}: Equilibrium occupancy probability (incidence) increases with patch area, with small or isolated patches showing near-zero occupancy while large, connected patches approach certainty of occupancy. \textbf{Panel D}: The colonization-extinction ratio $c/e$ determines patch viability; patches below the threshold (red line, $c/e = 1$) cannot sustain populations independently. In this simulated landscape, \py{f'{viable_patch_fraction*100:.1f}'}\% of patches have positive incidence, with mean occupancy probability \py{f'{mean_incidence:.3f}'} for viable patches, demonstrating that landscape heterogeneity creates a gradient of patch quality rather than uniform occupancy patterns.}
 \end{figure}
 
-\section{Parameter Study}
+\section{Source-Sink Dynamics and Rescue Effects}
+
+In heterogeneous landscapes, some patches may have negative intrinsic growth rates (sinks) but persist through immigration from high-quality patches (sources). This \textbf{source-sink dynamics} extends classical metapopulation theory by recognizing that occupied patches may depend on dispersal for persistence, not just recolonization after extinction.
+
+\subsection{The Rescue Effect}
+
+High immigration rates can reduce effective extinction probability through demographic rescue, where immigrants prevent small populations from stochastic extinction. This creates a positive feedback: high patch occupancy increases connectivity, which reduces extinction rates, which maintains high occupancy.
 
 \begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
+# Source-sink metapopulation model
+def source_sink_dynamics(state, t, patch_quality, connectivity_matrix, base_extinction):
+    """
+    Metapopulation model with source-sink dynamics and rescue effect
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
+    Parameters:
+    state : array - occupancy probability for each patch
+    t : float - time
+    patch_quality : array - intrinsic growth rate for each patch
+    connectivity_matrix : array - dispersal connectivity between patches
+    base_extinction : float - baseline extinction rate
+
+    Returns:
+    dpdt : array - rate of change for each patch
+    """
+    n_patches = len(state)
+    dpdt = np.zeros(n_patches)
+
+    for i in range(n_patches):
+        # Colonization from all occupied patches
+        colonization = 0
+        for j in range(n_patches):
+            if i != j:
+                colonization += connectivity_matrix[j, i] * state[j]
+
+        # Extinction with rescue effect (immigration reduces extinction)
+        immigration = np.sum(connectivity_matrix[:, i] * state)
+        rescue_factor = 1 - 0.7 * min(immigration, 1)  # immigration reduces extinction
+        extinction = base_extinction * rescue_factor
+
+        # Dynamics including patch quality
+        if state[i] > 0.01:  # if occupied
+            dpdt[i] = colonization * (1 - state[i]) + patch_quality[i] * state[i] - extinction * state[i]
+        else:
+            dpdt[i] = colonization * (1 - state[i])
+
+    return dpdt
+
+# Create patch network with sources and sinks
+n_patches_network = 20
+patch_quality_gradient = np.linspace(-0.05, 0.1, n_patches_network)  # some negative (sinks)
+
+# Connectivity matrix (distance-based dispersal)
+connectivity_strength = 0.08
+connectivity_matrix = np.zeros((n_patches_network, n_patches_network))
+for i in range(n_patches_network):
+    for j in range(n_patches_network):
+        if i != j:
+            distance = abs(i - j)
+            connectivity_matrix[i, j] = connectivity_strength * np.exp(-0.3 * distance)
+
+# Simulate dynamics
+time_network = np.linspace(0, 300, 1000)
+initial_state = np.random.uniform(0.3, 0.7, n_patches_network)
+trajectory_network = odeint(source_sink_dynamics, initial_state, time_network,
+                           args=(patch_quality_gradient, connectivity_matrix, 0.08))
+
+# Identify sources and sinks at equilibrium
+equilibrium_state = trajectory_network[-1, :]
+source_patches = patch_quality_gradient > 0
+sink_patches = patch_quality_gradient < 0
+
+# Create source-sink visualization
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
+
+# Panel A: Patch quality gradient
+patch_ids = np.arange(n_patches_network)
+colors = ['red' if q < 0 else 'green' for q in patch_quality_gradient]
+ax1.bar(patch_ids, patch_quality_gradient, color=colors, alpha=0.6, edgecolor='black')
+ax1.axhline(0, color='black', linestyle='-', linewidth=1)
+ax1.set_xlabel('Patch ID', fontsize=11)
+ax1.set_ylabel('Intrinsic Growth Rate $r_i$', fontsize=11)
+ax1.set_title('A) Source-Sink Gradient', fontsize=12, weight='bold')
+ax1.grid(True, alpha=0.3, axis='y')
+sink_patch = mpatches.Patch(color='red', alpha=0.6, label='Sink patches ($r < 0$)')
+source_patch = mpatches.Patch(color='green', alpha=0.6, label='Source patches ($r > 0$)')
+ax1.legend(handles=[source_patch, sink_patch], loc='lower right')
+
+# Panel B: Occupancy time series for sources vs sinks
+source_mean = np.mean(trajectory_network[:, source_patches], axis=1)
+sink_mean = np.mean(trajectory_network[:, sink_patches], axis=1)
+ax2.plot(time_network, source_mean, 'g-', linewidth=2.5, label='Source patches (mean)')
+ax2.plot(time_network, sink_mean, 'r-', linewidth=2.5, label='Sink patches (mean)')
+ax2.set_xlabel('Time (years)', fontsize=11)
+ax2.set_ylabel('Mean Patch Occupancy', fontsize=11)
+ax2.set_title('B) Source vs Sink Dynamics', fontsize=12, weight='bold')
+ax2.legend(loc='best', fontsize=10)
+ax2.grid(True, alpha=0.3)
+ax2.set_ylim(0, 1)
+
+# Panel C: Equilibrium occupancy vs patch quality
+ax3.scatter(patch_quality_gradient[source_patches], equilibrium_state[source_patches],
+           c='green', s=100, alpha=0.7, edgecolors='black', label='Source patches')
+ax3.scatter(patch_quality_gradient[sink_patches], equilibrium_state[sink_patches],
+           c='red', s=100, alpha=0.7, edgecolors='black', label='Sink patches')
+ax3.axvline(0, color='black', linestyle='--', linewidth=1.5)
+ax3.set_xlabel('Intrinsic Growth Rate $r_i$', fontsize=11)
+ax3.set_ylabel('Equilibrium Occupancy Probability', fontsize=11)
+ax3.set_title('C) Occupancy vs Patch Quality', fontsize=12, weight='bold')
+ax3.legend(loc='best', fontsize=10)
+ax3.grid(True, alpha=0.3)
+
+# Panel D: Connectivity network diagram
+ax4.set_xlim(-1, n_patches_network)
+ax4.set_ylim(-0.5, 1.5)
+y_pos = equilibrium_state
+for i in range(n_patches_network):
+    color = 'green' if patch_quality_gradient[i] > 0 else 'red'
+    ax4.scatter(i, 1, s=y_pos[i]*500, c=color, alpha=0.7, edgecolors='black', linewidth=2)
+
+    # Draw connections
+    for j in range(i+1, min(i+4, n_patches_network)):
+        if connectivity_matrix[i, j] > 0.01:
+            ax4.plot([i, j], [1, 1], 'gray', alpha=0.3, linewidth=connectivity_matrix[i, j]*50)
+
+ax4.set_xlabel('Patch Position', fontsize=11)
+ax4.set_title('D) Network Structure (circle size = occupancy)', fontsize=12, weight='bold')
+ax4.set_yticks([])
+ax4.grid(True, alpha=0.3, axis='x')
+
 plt.tight_layout()
-plt.savefig('metapopulation_plot3.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('metapopulation_source_sink.pdf', dpi=300, bbox_inches='tight')
 plt.close()
+
+# Calculate source-sink statistics
+source_occupancy = np.mean(equilibrium_state[source_patches])
+sink_occupancy = np.mean(equilibrium_state[sink_patches])
+num_sinks = np.sum(sink_patches)
+num_sources = np.sum(source_patches)
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{metapopulation_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
+\includegraphics[width=0.98\textwidth]{metapopulation_source_sink.pdf}
+\caption{Source-sink metapopulation dynamics in a landscape with heterogeneous patch quality. \textbf{Panel A}: Patch quality gradient showing \py{num_sources} source patches (positive intrinsic growth, green) and \py{num_sinks} sink patches (negative intrinsic growth, red) where local populations cannot persist without immigration. \textbf{Panel B}: Time series showing source patches maintain higher mean occupancy (\py{f'{source_occupancy:.3f}'}) than sink patches (\py{f'{sink_occupancy:.3f}'}), but sinks persist through continuous immigration rather than going extinct. \textbf{Panel C}: Equilibrium occupancy increases with patch quality, but sink patches show non-zero occupancy due to rescue effects from dispersal. \textbf{Panel D}: Network connectivity structure where circle size represents occupancy probability and gray lines show dispersal connections. This demonstrates that metapopulation persistence depends not only on suitable habitat area but on spatial configuration that allows source populations to subsidize demographic sinks, a critical consideration for reserve network design.}
 \end{figure}
 
-\section{2D Visualization}
+\section{Extinction Debt and Habitat Loss}
+
+When habitat destruction reduces the number of patches, metapopulation occupancy does not decline instantly to the new equilibrium. Instead, there is a transient period during which patch occupancy exceeds the sustainable level for the reduced habitat network. This creates an \textbf{extinction debt}: species that appear viable are actually committed to future decline.
 
 \begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
+# Simulate habitat loss scenario
+def habitat_loss_dynamics(t):
+    """
+    Simulate gradual habitat loss reducing colonization rate
+    """
+    if t < 100:
+        return colonization_rate  # initial rate
+    elif t < 120:
+        # Gradual habitat loss over 20 years
+        loss_fraction = (t - 100) / 20
+        return colonization_rate * (1 - 0.6 * loss_fraction)
+    else:
+        return colonization_rate * 0.4  # 60% habitat loss
 
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
+def levins_habitat_loss(p, t, e):
+    """Levins model with time-varying colonization due to habitat loss"""
+    c_t = habitat_loss_dynamics(t)
+    dpdt = c_t * p * (1 - p) - e * p
+    return dpdt
+
+# Simulate extinction debt
+time_extinction_debt = np.linspace(0, 300, 2000)
+initial_p = equilibrium_occupancy
+trajectory_habitat_loss = odeint(levins_habitat_loss, initial_p, time_extinction_debt,
+                                args=(extinction_rate,))
+
+# Calculate new equilibrium after habitat loss
+new_colonization = colonization_rate * 0.4
+if new_colonization > extinction_rate:
+    new_equilibrium = 1 - extinction_rate / new_colonization
+else:
+    new_equilibrium = 0
+
+# Calculate extinction debt (difference between current and equilibrium occupancy)
+extinction_debt = np.zeros_like(time_extinction_debt)
+for i, t in enumerate(time_extinction_debt):
+    if t < 100:
+        target_equilibrium = equilibrium_occupancy
+    else:
+        target_equilibrium = new_equilibrium
+    extinction_debt[i] = max(0, trajectory_habitat_loss[i, 0] - target_equilibrium)
+
+# Time to half-life of debt
+if new_equilibrium > 0:
+    half_debt_occupancy = (trajectory_habitat_loss[2000, 0] + new_equilibrium) / 2
+    half_life_idx = np.where(trajectory_habitat_loss[1000:, 0] < half_debt_occupancy)[0]
+    if len(half_life_idx) > 0:
+        half_life_time = time_extinction_debt[1000 + half_life_idx[0]] - 120
+    else:
+        half_life_time = np.inf
+else:
+    half_life_time = np.inf
+
+# Create extinction debt figure
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+
+# Panel A: Occupancy trajectory with habitat loss
+ax1.plot(time_extinction_debt, trajectory_habitat_loss, 'b-', linewidth=2.5, label='Patch occupancy $p(t)$')
+ax1.axhline(equilibrium_occupancy, color='green', linestyle='--', linewidth=2,
+           label=f'Pre-disturbance equilibrium $p^* = {equilibrium_occupancy:.3f}$')
+ax1.axhline(new_equilibrium, color='red', linestyle='--', linewidth=2,
+           label=f'Post-loss equilibrium $p^* = {new_equilibrium:.3f}$')
+ax1.axvline(100, color='orange', linestyle=':', linewidth=2, alpha=0.7,
+           label='Habitat loss begins')
+ax1.axvline(120, color='orange', linestyle=':', linewidth=2, alpha=0.7)
+ax1.fill_between([100, 120], 0, 1, alpha=0.1, color='orange', label='Habitat loss period')
+ax1.set_xlabel('Time (years)', fontsize=12)
+ax1.set_ylabel('Patch Occupancy Fraction $p(t)$', fontsize=12)
+ax1.set_title('A) Extinction Debt Following Habitat Loss', fontsize=13, weight='bold')
+ax1.legend(loc='upper right', fontsize=10)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 300)
+ax1.set_ylim(0, 1)
+
+# Annotate regions
+ax1.annotate('Stable state', xy=(50, equilibrium_occupancy + 0.05),
+            fontsize=10, ha='center', color='green', weight='bold')
+ax1.annotate('Transient excess\n(extinction debt)',
+            xy=(180, (trajectory_habitat_loss[1200, 0] + new_equilibrium) / 2),
+            fontsize=10, ha='center', color='red', weight='bold',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+# Panel B: Extinction debt magnitude over time
+ax2.fill_between(time_extinction_debt, 0, extinction_debt, alpha=0.4, color='red',
+                label='Extinction debt (excess occupancy)')
+ax2.plot(time_extinction_debt, extinction_debt, 'r-', linewidth=2)
+ax2.axvline(100, color='orange', linestyle=':', linewidth=2, alpha=0.7)
+ax2.axvline(120, color='orange', linestyle=':', linewidth=2, alpha=0.7)
+ax2.set_xlabel('Time (years)', fontsize=12)
+ax2.set_ylabel('Extinction Debt\n(Occupancy - Equilibrium)', fontsize=12)
+ax2.set_title('B) Magnitude of Extinction Debt', fontsize=13, weight='bold')
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, 300)
+ax2.legend(loc='upper right', fontsize=10)
+
+# Add half-life annotation if calculable
+if half_life_time < 200:
+    ax2.annotate(f'Half-life: {half_life_time:.1f} years',
+                xy=(120 + half_life_time, extinction_debt[1000 + half_life_idx[0]]),
+                xytext=(180, 0.25), fontsize=10,
+                arrowprops=dict(arrowstyle='->', color='black', lw=1.5),
+                bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7))
+
 plt.tight_layout()
-plt.savefig('metapopulation_plot4.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('metapopulation_extinction_debt.pdf', dpi=300, bbox_inches='tight')
 plt.close()
+
+# Calculate debt statistics
+max_debt = np.max(extinction_debt)
+debt_at_200yrs = extinction_debt[np.argmin(np.abs(time_extinction_debt - 200))]
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{metapopulation_plot4.pdf}
-\caption{Two-dimensional field visualization.}
+\includegraphics[width=0.95\textwidth]{metapopulation_extinction_debt.pdf}
+\caption{Extinction debt dynamics following habitat loss in a Levins metapopulation. At year 100, habitat destruction begins, reducing colonization rate by 60\% over a 20-year period (orange shaded region). \textbf{Panel A}: Patch occupancy (blue line) declines gradually from the original equilibrium $p^* = \py{f'{equilibrium_occupancy:.3f}'}$ toward the new sustainable level $p^* = \py{f'{new_equilibrium:.3f}'}$. The delayed response creates a transient period where current occupancy exceeds the carrying capacity of the degraded landscape, representing populations "committed to extinction" despite appearing viable. \textbf{Panel B}: The magnitude of extinction debt (red shading) peaks immediately after habitat loss at \py{f'{max_debt:.3f}'} and decays slowly as patches go extinct. After 200 years, an extinction debt of \py{f'{debt_at_200yrs:.3f}'} remains, indicating that habitat loss effects can persist for centuries. This delayed response has critical implications for conservation: species may appear stable for decades after habitat destruction while actually undergoing cryptic decline toward a lower equilibrium.}
 \end{figure}
 
-\section{Distribution Analysis}
+\section{Metapopulation Capacity and Reserve Networks}
+
+The concept of \textbf{metapopulation capacity} $\lambda_M$ extends the Levins model to realistic landscapes by incorporating spatial structure. The metapopulation capacity is the dominant eigenvalue of the colonization-extinction matrix for the patch network, providing a threshold condition for persistence analogous to $c > e$ in the simple Levins model.
+
+For persistence, the metapopulation capacity must exceed the extinction rate: $\lambda_M > e$. This allows quantitative assessment of reserve network designs.
 
 \begin{pycode}
-# Statistical distribution
-np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
+# Simulate reserve network design scenarios
+np.random.seed(123)
+
+def calculate_metapopulation_capacity(areas, distances, colonization_coef, distance_decay):
+    """
+    Calculate metapopulation capacity for a patch network
+
+    Based on Hanski & Ovaskainen (2000) formula:
+    Capacity is largest eigenvalue of M where M_ij = A_i^α A_j^β exp(-d_ij/δ)
+    """
+    n = len(areas)
+    M = np.zeros((n, n))
+
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                # Colonization from j to i
+                M[i, j] = colonization_coef * areas[i]**0.5 * areas[j]**0.5 * \
+                         np.exp(-distance_decay * distances[i, j])
+
+    eigenvalues = np.linalg.eigvals(M)
+    capacity = np.max(np.real(eigenvalues))
+    return capacity
+
+# Scenario 1: Current reserve network (moderate fragmentation)
+n_reserves_current = 15
+reserve_areas_current = np.random.gamma(3, 2, n_reserves_current)
+
+# Generate distance matrix
+reserve_positions = np.random.uniform(0, 50, n_reserves_current)
+distance_matrix_current = np.abs(reserve_positions[:, np.newaxis] - reserve_positions[np.newaxis, :])
+
+capacity_current = calculate_metapopulation_capacity(reserve_areas_current, distance_matrix_current,
+                                                    colonization_coef=0.15, distance_decay=0.2)
+
+# Scenario 2: Further fragmentation (smaller, more isolated reserves)
+reserve_areas_fragmented = reserve_areas_current * 0.5  # halve areas
+distance_matrix_fragmented = distance_matrix_current * 1.5  # increase isolation
+
+capacity_fragmented = calculate_metapopulation_capacity(reserve_areas_fragmented,
+                                                       distance_matrix_fragmented,
+                                                       colonization_coef=0.15, distance_decay=0.2)
+
+# Scenario 3: Adding corridors (reduced effective distance)
+distance_matrix_corridors = distance_matrix_current * 0.7  # corridors reduce effective distance
+
+capacity_corridors = calculate_metapopulation_capacity(reserve_areas_current,
+                                                      distance_matrix_corridors,
+                                                      colonization_coef=0.15, distance_decay=0.2)
+
+# Scenario 4: Larger reserves (double area)
+reserve_areas_enlarged = reserve_areas_current * 2
+
+capacity_enlarged = calculate_metapopulation_capacity(reserve_areas_enlarged,
+                                                     distance_matrix_current,
+                                                     colonization_coef=0.15, distance_decay=0.2)
+
+# Create comparison figure
+scenarios = ['Current\nNetwork', 'Fragmentation\n(50% area)',
+            'Add Corridors\n(30% closer)', 'Enlarge Reserves\n(2x area)']
+capacities = [capacity_current, capacity_fragmented, capacity_corridors, capacity_enlarged]
+colors_scenario = ['gray', 'red', 'green', 'blue']
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Panel A: Metapopulation capacity comparison
+bars = ax1.bar(scenarios, capacities, color=colors_scenario, alpha=0.7, edgecolor='black', linewidth=2)
+ax1.axhline(extinction_rate, color='red', linestyle='--', linewidth=2.5,
+           label=f'Extinction threshold $\\lambda_M = e = {extinction_rate:.2f}$')
+ax1.set_ylabel('Metapopulation Capacity $\\lambda_M$', fontsize=12)
+ax1.set_title('A) Reserve Network Scenarios', fontsize=13, weight='bold')
+ax1.legend(loc='upper left', fontsize=10)
+ax1.grid(True, alpha=0.3, axis='y')
+ax1.set_ylim(0, max(capacities) * 1.2)
+
+# Add viability labels
+for i, (cap, scenario) in enumerate(zip(capacities, scenarios)):
+    if cap > extinction_rate:
+        label = 'VIABLE'
+        color = 'green'
+    else:
+        label = 'EXTINCT'
+        color = 'red'
+    ax1.text(i, cap + 0.005, label, ha='center', fontsize=9, weight='bold', color=color)
+
+# Panel B: Reserve network spatial layout (current vs fragmented)
+ax2_inset = ax2.inset_axes([0.05, 0.55, 0.4, 0.4])
+
+# Main plot: current network
+for i in range(n_reserves_current):
+    circle_size = reserve_areas_current[i] * 100
+    ax2.scatter(reserve_positions[i], 1, s=circle_size, c='gray', alpha=0.6,
+               edgecolors='black', linewidth=1.5)
+
+    # Draw connections for strong links
+    for j in range(i+1, n_reserves_current):
+        connection_strength = 0.15 * reserve_areas_current[i]**0.5 * \
+                            reserve_areas_current[j]**0.5 * \
+                            np.exp(-0.2 * distance_matrix_current[i, j])
+        if connection_strength > 0.05:
+            ax2.plot([reserve_positions[i], reserve_positions[j]], [1, 1],
+                    'gray', alpha=0.3, linewidth=connection_strength*30)
+
+ax2.set_xlim(-5, 55)
+ax2.set_ylim(0.5, 1.5)
+ax2.set_xlabel('Spatial Position (km)', fontsize=11)
+ax2.set_title('B) Current Network Connectivity', fontsize=12, weight='bold')
+ax2.set_yticks([])
+ax2.text(25, 1.3, f'$\\lambda_M = {capacity_current:.3f}$', fontsize=12, ha='center',
+        bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
+
+# Inset: fragmented network
+for i in range(n_reserves_current):
+    circle_size = reserve_areas_fragmented[i] * 100
+    ax2_inset.scatter(reserve_positions[i], 1, s=circle_size, c='red', alpha=0.6,
+                     edgecolors='darkred', linewidth=1)
+
+ax2_inset.set_xlim(-5, 55)
+ax2_inset.set_ylim(0.5, 1.5)
+ax2_inset.set_title('Fragmented (smaller, isolated)', fontsize=9)
+ax2_inset.set_xticks([])
+ax2_inset.set_yticks([])
+ax2_inset.text(25, 1.25, f'$\\lambda_M = {capacity_fragmented:.3f}$', fontsize=9, ha='center',
+              bbox=dict(boxstyle='round', facecolor='pink', alpha=0.7))
+
 plt.tight_layout()
-plt.savefig('metapopulation_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('metapopulation_capacity_scenarios.pdf', dpi=300, bbox_inches='tight')
 plt.close()
+
+# Calculate relative changes
+capacity_change_fragmented = ((capacity_fragmented - capacity_current) / capacity_current) * 100
+capacity_change_corridors = ((capacity_corridors - capacity_current) / capacity_current) * 100
+capacity_change_enlarged = ((capacity_enlarged - capacity_current) / capacity_current) * 100
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{metapopulation_plot5.pdf}
-\caption{Statistical distribution analysis.}
-\end{figure}
-
-\section{Time Series}
-
-\begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
-
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('metapopulation_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{metapopulation_plot6.pdf}
-\caption{Time series visualization.}
+\includegraphics[width=0.98\textwidth]{metapopulation_capacity_scenarios.pdf}
+\caption{Metapopulation capacity ($\lambda_M$) for alternative reserve network designs. \textbf{Panel A}: Comparison of four management scenarios showing how landscape configuration affects viability. The current network maintains $\lambda_M = \py{f'{capacity_current:.3f}'}$ above the extinction threshold ($e = \py{extinction_rate}$), ensuring metapopulation persistence. Fragmenting reserves by reducing area 50\% causes a \py{f'{abs(capacity_change_fragmented):.1f}'}\% decline to $\lambda_M = \py{f'{capacity_fragmented:.3f}'}$, potentially pushing the metapopulation below viability. Adding habitat corridors that reduce effective isolation by 30\% increases capacity by \py{f'{capacity_change_corridors:.1f}'}\% to $\lambda_M = \py{f'{capacity_corridors:.3f}'}$, while doubling reserve areas yields a \py{f'{capacity_change_enlarged:.1f}'}\% increase to $\lambda_M = \py{f'{capacity_enlarged:.3f}'}$. \textbf{Panel B}: Spatial configuration of the current reserve network (circle size proportional to area, gray lines show strong connectivity). Inset shows the fragmented scenario with smaller, more isolated patches and reduced connectivity. This demonstrates that metapopulation viability depends on the entire landscape configuration, not just total habitat area, with corridors and patch size having quantifiable effects on persistence probability.}
 \end{figure}
 
 \section{Results Summary}
 
-\begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
+Our computational analysis of metapopulation dynamics reveals fundamental principles governing population persistence in fragmented landscapes:
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+\begin{enumerate}
+\item \textbf{Colonization-Extinction Balance}: The Levins model equilibrium $p^* = 1 - e/c$ demonstrates that metapopulation persistence requires colonization rate ($c = \py{colonization_rate}$) to exceed extinction rate ($e = \py{extinction_rate}$), yielding equilibrium occupancy of \py{f'{equilibrium_occupancy:.3f}'} for our parameter set.
+
+\item \textbf{Extinction Threshold}: Metapopulations face an abrupt transition to extinction when the colonization-extinction ratio falls below unity ($c/e < 1$). Our current system maintains $c/e = \py{f'{critical_ratio:.2f}'}$, well above the critical threshold.
+
+\item \textbf{Patch Heterogeneity}: In realistic landscapes with heterogeneous patch sizes and isolation, incidence functions show that \py{f'{viable_patch_fraction*100:.1f}'}\% of patches support viable populations, with mean equilibrium occupancy of \py{f'{mean_incidence:.3f}'} for occupied patches.
+
+\item \textbf{Source-Sink Dynamics}: High-quality source patches (mean occupancy \py{f'{source_occupancy:.3f}'}) subsidize demographic sinks (mean occupancy \py{f'{sink_occupancy:.3f}'}), demonstrating that regional persistence can exceed predictions based on local population viability alone.
+
+\item \textbf{Extinction Debt}: Following 60\% habitat loss, the metapopulation carries an extinction debt that peaks at \py{f'{max_debt:.3f}'} excess occupancy and persists for centuries (debt of \py{f'{debt_at_200yrs:.3f}'} after 200 years), indicating delayed responses to environmental change.
+
+\item \textbf{Metapopulation Capacity}: Reserve network design critically affects viability through metapopulation capacity $\lambda_M$. Fragmenting the current network reduces capacity by \py{f'{abs(capacity_change_fragmented):.1f}'}\%, while corridors increase it by \py{f'{capacity_change_corridors:.1f}'}\% and larger reserves by \py{f'{capacity_change_enlarged:.1f}'}\%.
+\end{enumerate}
+
+\begin{pycode}
+# Generate summary table
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Key Metapopulation Dynamics Parameters and Results}')
+print(r'\begin{tabular}{@{}lcc@{}}')
+print(r'\toprule')
+print(r'\textbf{Parameter/Result} & \textbf{Value} & \textbf{Interpretation} \\')
+print(r'\midrule')
+print(f"Colonization rate $c$ & {colonization_rate:.3f} yr$^{{-1}}$ & Patch colonization coefficient \\\\")
+print(f"Extinction rate $e$ & {extinction_rate:.3f} yr$^{{-1}}$ & Local extinction probability \\\\")
+print(f"Equilibrium occupancy $p^*$ & {equilibrium_occupancy:.3f} & Levins model equilibrium \\\\")
+print(f"$c/e$ ratio & {critical_ratio:.2f} & Exceeds threshold (viable) \\\\")
+print(r'\midrule')
+print(f"Viable patch fraction & {viable_patch_fraction*100:.1f}\\% & Heterogeneous landscape \\\\")
+print(f"Source patch occupancy & {source_occupancy:.3f} & High-quality patches \\\\")
+print(f"Sink patch occupancy & {sink_occupancy:.3f} & Immigration-dependent \\\\")
+print(r'\midrule')
+print(f"Max extinction debt & {max_debt:.3f} & Post-habitat loss \\\\")
+print(f"Debt at 200 years & {debt_at_200yrs:.3f} & Long-term legacy \\\\")
+print(r'\midrule')
+print(f"Current $\\lambda_M$ & {capacity_current:.3f} & Viable network \\\\")
+print(f"Fragmented $\\lambda_M$ & {capacity_fragmented:.3f} & Reduced viability \\\\")
+print(f"Corridor effect & +{capacity_change_corridors:.1f}\\% & Improved connectivity \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
 \end{pycode}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to metapopulation.
+This computational analysis demonstrates that metapopulation persistence in fragmented landscapes depends fundamentally on the balance between colonization and extinction at the patch scale. The classical Levins model reveals that regional persistence requires colonization rates to exceed extinction rates ($c > e$), yielding an equilibrium occupancy of $p^* = \py{f'{equilibrium_occupancy:.3f}'}$ for our parameter set with $c = \py{colonization_rate}$ and $e = \py{extinction_rate}$. This threshold structure implies that habitat loss reducing colonization rates can trigger abrupt metapopulation collapse when the colonization-extinction ratio falls below unity, even when substantial habitat remains.
+
+Extensions to heterogeneous landscapes reveal that patch-specific characteristics create incidence functions where only \py{f'{viable_patch_fraction*100:.1f}'}\% of patches maintain positive equilibrium occupancy. Source-sink dynamics demonstrate that high-quality patches (mean occupancy \py{f'{source_occupancy:.3f}'}) can subsidize populations in demographic sinks (occupancy \py{f'{sink_occupancy:.3f}'}), extending metapopulation range beyond areas capable of supporting self-sustaining populations. However, this spatial subsidy depends on maintained connectivity, which habitat fragmentation systematically erodes.
+
+Perhaps most critically for conservation, the extinction debt phenomenon shows that metapopulation responses to habitat loss are delayed, not instantaneous. Following 60\% habitat destruction in our simulation, excess occupancy peaked at \py{f'{max_debt:.3f}'} and persisted for centuries (debt \py{f'{debt_at_200yrs:.3f}'} after 200 years), indicating that species may appear stable for decades while undergoing cryptic decline toward lower equilibria. This temporal lag complicates conservation assessment and may lead to systematic underestimation of extinction risk.
+
+The metapopulation capacity framework provides a quantitative tool for reserve network design, showing that current configuration maintains $\lambda_M = \py{f'{capacity_current:.3f}'}$ above the extinction threshold. However, further fragmentation reducing patch areas by 50\% would decrease capacity by \py{f'{abs(capacity_change_fragmented):.1f}'}\%, potentially pushing the system below viability. Conversely, habitat corridors reducing effective isolation increase capacity by \py{f'{capacity_change_corridors:.1f}'}\%, demonstrating that connectivity restoration can be as effective as habitat expansion for metapopulation conservation.
+
+These results underscore that persistence in fragmented landscapes requires not just sufficient total habitat area, but appropriate spatial configuration maintaining colonization-extinction balance across patch networks. Conservation strategies must account for metapopulation dynamics when designing reserves, prioritizing both patch size (to reduce extinction rates) and connectivity (to maintain colonization rates) to ensure long-term population viability.
+
+\bibliographystyle{ecology}
+\begin{thebibliography}{99}
+
+\bibitem{levins1969some}
+Levins, R. (1969). Some demographic and genetic consequences of environmental heterogeneity for biological control. \textit{Bulletin of the Entomological Society of America}, 15(3), 237--240.
+
+\bibitem{hanski1999metapopulation}
+Hanski, I. (1999). \textit{Metapopulation Ecology}. Oxford University Press, Oxford.
+
+\bibitem{fahrig2003effects}
+Fahrig, L. (2003). Effects of habitat fragmentation on biodiversity. \textit{Annual Review of Ecology, Evolution, and Systematics}, 34, 487--515.
+
+\bibitem{hanski1998metapopulation}
+Hanski, I. (1998). Metapopulation dynamics. \textit{Nature}, 396(6706), 41--49.
+
+\bibitem{hanski2000metapopulation}
+Hanski, I., \& Ovaskainen, O. (2000). The metapopulation capacity of a fragmented landscape. \textit{Nature}, 404(6779), 755--758.
+
+\bibitem{tilman1994habitat}
+Tilman, D., May, R. M., Lehman, C. L., \& Nowak, M. A. (1994). Habitat destruction and the extinction debt. \textit{Nature}, 371(6492), 65--66.
+
+\bibitem{pulliam1988sources}
+Pulliam, H. R. (1988). Sources, sinks, and population regulation. \textit{American Naturalist}, 132(5), 652--661.
+
+\bibitem{brown2001turnover}
+Brown, J. H., \& Kodric-Brown, A. (1977). Turnover rates in insular biogeography: effect of immigration on extinction. \textit{Ecology}, 58(2), 445--449.
+
+\bibitem{harrison1991local}
+Harrison, S. (1991). Local extinction in a metapopulation context: an empirical evaluation. \textit{Biological Journal of the Linnean Society}, 42(1-2), 73--88.
+
+\bibitem{hanski1994practical}
+Hanski, I., Pakkala, T., Kuussaari, M., \& Lei, G. (1995). Metapopulation persistence of an endangered butterfly in a fragmented landscape. \textit{Oikos}, 72(1), 21--28.
+
+\bibitem{sjogren1991extinction}
+Sj\"ogren-Gulve, P. (1994). Distribution and extinction patterns within a northern metapopulation of the pool frog, \textit{Rana lessonae}. \textit{Ecology}, 75(5), 1357--1367.
+
+\bibitem{moilanen1998metapopulation}
+Moilanen, A. (1999). Patch occupancy models of metapopulation dynamics: efficient parameter estimation using implicit statistical inference. \textit{Ecology}, 80(3), 1031--1043.
+
+\bibitem{etienne2004estimating}
+Etienne, R. S., ter Braak, C. J., \& Vos, C. C. (2004). Application of stochastic patch occupancy models to real metapopulations. In I. Hanski \& O. E. Gaggiotti (Eds.), \textit{Ecology, Genetics and Evolution of Metapopulations} (pp. 105--132). Academic Press.
+
+\bibitem{ovaskainen2002metapopulation}
+Ovaskainen, O., \& Hanski, I. (2002). Transient dynamics in metapopulation response to perturbation. \textit{Theoretical Population Biology}, 61(3), 285--295.
+
+\bibitem{wahlberg2002metapopulation}
+Wahlberg, N., Klemetti, T., \& Hanski, I. (2002). Dynamic populations in a dynamic landscape: the metapopulation structure of the marsh fritillary butterfly. \textit{Ecography}, 25(2), 224--232.
+
+\bibitem{clinchy2002predator}
+Clinchy, M., Haydon, D. T., \& Smith, A. T. (2002). Pattern does not equal process: what does patch occupancy really tell us about metapopulation dynamics? \textit{The American Naturalist}, 159(4), 351--362.
+
+\bibitem{keyghobadi2005metapopulation}
+Keyghobadi, N., Roland, J., \& Strobeck, C. (2005). Genetic differentiation and gene flow among populations of the alpine butterfly, \textit{Parnassius smintheus}, vary with landscape connectivity. \textit{Molecular Ecology}, 14(7), 1897--1909.
+
+\bibitem{matter2003determinants}
+Matter, S. F. (2003). Determinants of local extinction and colonization in a metapopulation of the checkered white butterfly \textit{Pontia protodice}. \textit{Oecologia}, 135(2), 151--156.
+
+\bibitem{kindvall1996habitat}
+Kindvall, O. (1996). Habitat heterogeneity and survival in a bush cricket metapopulation. \textit{Ecology}, 77(1), 207--214.
+
+\bibitem{fleishman2002influence}
+Fleishman, E., Ray, C., Sj\"ogren-Gulve, P., Boggs, C. L., \& Murphy, D. D. (2002). Assessing the roles of patch quality, area, and isolation in predicting metapopulation dynamics. \textit{Conservation Biology}, 16(3), 706--716.
+
+\end{thebibliography}
 
 \end{document}

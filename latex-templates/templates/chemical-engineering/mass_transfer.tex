@@ -11,7 +11,7 @@
 \usepackage{hyperref}
 \usepackage{float}
 
-\title{Mass Transfer\\Diffusion and Convection}
+\title{Mass Transfer\\Diffusion and Convective Transport}
 \author{Chemical Engineering Research Group}
 \date{\today}
 
@@ -19,12 +19,22 @@
 \maketitle
 
 \begin{abstract}
-Mass transfer operations including diffusion, convection, and film theory.
+Mass transfer describes the movement of chemical species due to concentration gradients (diffusion) and bulk fluid motion (convection). This computational analysis examines Fick's laws of diffusion, film theory mass transfer coefficients, and packed column design for gas-liquid absorption. Applications include chemical reactors, separation processes, and biological systems. We present transient diffusion solutions, dimensionless correlations for mass transfer coefficients, and design calculations for industrial absorption columns.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of mass transfer.
+Mass transfer is fundamental to chemical engineering unit operations including distillation, absorption, extraction, adsorption, and membrane separation. The driving force for mass transfer is the chemical potential gradient, which for ideal systems reduces to a concentration gradient. Transport occurs by molecular diffusion (random thermal motion) and convective diffusion (bulk fluid motion enhancing contact). This analysis presents:
+
+\begin{itemize}
+    \item Fick's first and second laws for steady and transient diffusion
+    \item Film theory and two-resistance model for interfacial mass transfer
+    \item Dimensionless correlations for liquid and gas-phase coefficients
+    \item Packed column design using transfer unit concepts (NTU-HTU method)
+    \item Transient diffusion solutions using error function and similarity variables
+\end{itemize}
+
+These computational tools enable design of separation equipment, prediction of mass transfer rates, and optimization of process conditions for enhanced transport.
 
 \begin{pycode}
 
@@ -32,24 +42,60 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.optimize import fsolve
+from scipy.special import erfc
+import scipy.stats as stats
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
 \end{pycode}
 
-\section{Mathematical Framework}
+\section{Fick's Law of Diffusion}
+
+Fick's first law relates molar flux $J_A$ to the concentration gradient:
+\begin{equation}
+J_A = -D_{AB} \frac{dC_A}{dx}
+\end{equation}
+where $D_{AB}$ is the binary diffusivity (\si{m^2/s}). For steady-state diffusion through a stagnant film:
 
 \begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
+# Fick's law: steady-state diffusion through film
+L = 0.01  # film thickness (m)
+x = np.linspace(0, L, 100)  # distance coordinate
+D_AB = 1.5e-9  # diffusivity of solute in water (m²/s)
+C_0 = 1000  # concentration at x=0 (mol/m³)
+C_L = 100   # concentration at x=L (mol/m³)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
+# Linear concentration profile (steady-state)
+C = C_0 - (C_0 - C_L) * (x / L)
+
+# Molar flux (constant in steady state)
+J_A = -D_AB * (C_L - C_0) / L  # mol/(m²·s)
+
+# Store for inline reporting
+avg_C = np.mean(C)
+J_A_value = abs(J_A)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Concentration profile
+ax1.plot(x * 1e3, C, 'b-', linewidth=2.5, label='Steady-state profile')
+ax1.axhline(C_0, color='r', linestyle='--', alpha=0.5, label='$C_0$')
+ax1.axhline(C_L, color='g', linestyle='--', alpha=0.5, label='$C_L$')
+ax1.set_xlabel('Distance (mm)', fontsize=12)
+ax1.set_ylabel('Concentration (mol/m$^3$)', fontsize=12)
+ax1.set_title("Fick's First Law: Steady Diffusion", fontsize=13, weight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Flux visualization (constant)
+ax2.axhline(J_A_value * 1e6, color='purple', linewidth=3, label=f'$J_A$ = {J_A_value*1e6:.3f} µmol/(m²·s)')
+ax2.fill_between(x * 1e3, 0, J_A_value * 1e6, alpha=0.3, color='purple')
+ax2.set_xlabel('Distance (mm)', fontsize=12)
+ax2.set_ylabel('Molar Flux (µmol/(m²·s))', fontsize=12)
+ax2.set_title('Constant Flux in Steady State', fontsize=13, weight='bold')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
 plt.savefig('mass_transfer_plot1.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -57,29 +103,68 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{mass_transfer_plot1.pdf}
-\caption{Primary analysis results.}
+\includegraphics[width=0.95\textwidth]{mass_transfer_plot1.pdf}
+\caption{Fick's first law for steady-state diffusion through a stagnant liquid film. Left: linear concentration profile from \py{f'{C_0:.0f}'} to \py{f'{C_L:.0f}'} mol/m³ over \py{f'{L*1e3:.1f}'} mm. Right: constant molar flux of \py{f'{J_A_value*1e6:.3f}'} µmol/(m²·s). The gradient $dC/dx$ is constant, resulting in uniform flux throughout the film. This model applies to absorption of sparingly soluble gases into liquids.}
 \end{figure}
 
-\section{Secondary Analysis}
+\section{Transient Diffusion: Fick's Second Law}
+
+Fick's second law describes unsteady diffusion:
+\begin{equation}
+\frac{\partial C_A}{\partial t} = D_{AB} \frac{\partial^2 C_A}{\partial x^2}
+\end{equation}
+
+For semi-infinite medium with constant surface concentration, the solution involves the error function:
+\begin{equation}
+\frac{C_A - C_0}{C_s - C_0} = \text{erfc}\left(\frac{x}{2\sqrt{D_{AB}t}}\right)
+\end{equation}
 
 \begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
+# Transient diffusion into semi-infinite medium
+x_trans = np.linspace(0, 0.05, 200)  # distance (m)
+D_AB = 1.5e-9  # diffusivity (m²/s)
+C_0 = 0  # initial concentration (mol/m³)
+C_s = 1000  # surface concentration (mol/m³)
+
+# Time snapshots
+times = [60, 300, 900, 3600, 14400]  # seconds
+colors = ['blue', 'green', 'orange', 'red', 'purple']
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
 
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
+# Concentration profiles at different times
+for t, color in zip(times, colors):
+    eta = x_trans / (2 * np.sqrt(D_AB * t))  # similarity variable
+    C = C_0 + (C_s - C_0) * erfc(eta)
+    ax1.plot(x_trans * 1e3, C, color=color, linewidth=2.5,
+             label=f't = {t/60:.1f} min' if t < 3600 else f't = {t/3600:.1f} hr')
+
+ax1.set_xlabel('Distance from surface (mm)', fontsize=12)
+ax1.set_ylabel('Concentration (mol/m$^3$)', fontsize=12)
+ax1.set_title("Transient Diffusion Profiles", fontsize=13, weight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim([0, 50])
+
+# Penetration depth (distance to 1% of surface concentration)
+penetration = []
+for t in times:
+    # erfc(eta) = 0.01 when eta ≈ 1.82
+    depth = 1.82 * 2 * np.sqrt(D_AB * t)
+    penetration.append(depth * 1e3)  # convert to mm
+
+ax2.plot(np.array(times)/60, penetration, 'o-', color='darkblue',
+         linewidth=2.5, markersize=8, label='Penetration depth')
+ax2.set_xlabel('Time (min)', fontsize=12)
+ax2.set_ylabel('Penetration depth (mm)', fontsize=12)
+ax2.set_title('Diffusion Penetration (99\% criterion)', fontsize=13, weight='bold')
 ax2.grid(True, alpha=0.3)
+ax2.legend()
+
+# Store for reporting
+max_penetration = penetration[-1]
+max_time = times[-1] / 3600
+
 plt.tight_layout()
 plt.savefig('mass_transfer_plot2.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -88,24 +173,71 @@ plt.close()
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{mass_transfer_plot2.pdf}
-\caption{Secondary analysis comparison.}
+\caption{Transient diffusion governed by Fick's second law with error function solution. Left: concentration profiles evolving from uniform initial state ($C_0$ = \py{f'{C_0:.0f}'} mol/m³) toward surface concentration ($C_s$ = \py{f'{C_s:.0f}'} mol/m³). Right: penetration depth grows as $\sqrt{t}$, reaching \py{f'{max_penetration:.2f}'} mm after \py{f'{max_time:.1f}'} hours. This analysis applies to drug diffusion in tissue, gas absorption in polymers, and contaminant transport in soil.}
 \end{figure}
 
-\section{Parameter Study}
+\section{Film Theory and Mass Transfer Coefficients}
+
+The two-film theory models interfacial mass transfer as diffusion through stagnant films on each side of the interface. Mass transfer coefficients are defined as:
+\begin{equation}
+k_L = \frac{D_{AB}}{\delta_L} \quad \text{(liquid)}, \quad k_G = \frac{D_{AB}}{\delta_G} \quad \text{(gas)}
+\end{equation}
+
+For gas-liquid systems with Henry's law equilibrium ($y^* = m x$), the overall coefficient is:
+\begin{equation}
+\frac{1}{K_{OG}} = \frac{1}{k_G} + \frac{m}{k_L}
+\end{equation}
 
 \begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
+# Film theory: mass transfer coefficients
+# Physical properties for CO2 absorption in water at 25°C
+D_L = 1.92e-9  # CO2 diffusivity in water (m²/s)
+D_G = 1.64e-5  # CO2 diffusivity in air (m²/s)
+m = 0.83       # Henry's law constant (dimensionless)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
+# Film thicknesses (varied)
+delta_L_range = np.linspace(10e-6, 500e-6, 100)  # 10-500 microns
+delta_G = 100e-6  # fixed gas film (100 microns)
+
+# Mass transfer coefficients
+k_L = D_L / delta_L_range  # liquid-phase coefficient (m/s)
+k_G = D_G / delta_G * np.ones_like(delta_L_range)  # gas-phase (constant)
+
+# Overall coefficient (gas-phase basis)
+K_OG = 1 / (1/k_G + m/k_L)
+
+# Resistance fractions
+R_gas = (1/k_G) / (1/k_G + m/k_L)  # gas-side resistance fraction
+R_liq = (m/k_L) / (1/k_G + m/k_L)  # liquid-side resistance fraction
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Mass transfer coefficients
+ax1.plot(delta_L_range * 1e6, k_L * 1e5, 'b-', linewidth=2.5, label='$k_L$ (liquid)')
+ax1.plot(delta_L_range * 1e6, k_G * 1e5, 'r--', linewidth=2.5, label='$k_G$ (gas)')
+ax1.plot(delta_L_range * 1e6, K_OG * 1e5, 'g-', linewidth=3, label='$K_{OG}$ (overall)')
+ax1.set_xlabel('Liquid film thickness (µm)', fontsize=12)
+ax1.set_ylabel('Mass transfer coefficient (cm/s)', fontsize=12)
+ax1.set_title('Film Theory Coefficients', fontsize=13, weight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.set_yscale('log')
+
+# Resistance distribution
+ax2.plot(delta_L_range * 1e6, R_gas * 100, 'r-', linewidth=2.5, label='Gas-side')
+ax2.plot(delta_L_range * 1e6, R_liq * 100, 'b-', linewidth=2.5, label='Liquid-side')
+ax2.axhline(50, color='gray', linestyle='--', alpha=0.5)
+ax2.set_xlabel('Liquid film thickness (µm)', fontsize=12)
+ax2.set_ylabel('Resistance fraction (\%)', fontsize=12)
+ax2.set_title('Controlling Resistance Analysis', fontsize=13, weight='bold')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+ax2.set_ylim([0, 100])
+
+# Store for reporting
+k_L_ref = D_L / (100e-6)  # at 100 micron film
+K_OG_ref = 1 / (1/k_G[0] + m/k_L_ref)
+
 plt.tight_layout()
 plt.savefig('mass_transfer_plot3.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -113,23 +245,86 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{mass_transfer_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
+\includegraphics[width=0.95\textwidth]{mass_transfer_plot3.pdf}
+\caption{Film theory analysis for CO$_2$ absorption in water at 25°C. Left: mass transfer coefficients versus liquid film thickness. Gas-phase coefficient $k_G$ = \py{f'{k_G[0]*1e5:.3f}'} cm/s is constant, while liquid-phase $k_L$ varies inversely with $\delta_L$. Overall coefficient $K_{OG}$ = \py{f'{K_OG_ref*1e5:.3f}'} cm/s at 100 µm film. Right: resistance distribution shows transition from liquid-controlled (thick films) to gas-controlled (thin films). For sparingly soluble gases like CO$_2$, liquid-side resistance dominates.}
 \end{figure}
 
-\section{2D Visualization}
+\section{Packed Column Design: NTU-HTU Method}
+
+Absorption column design uses the transfer unit concept. Number of transfer units (NTU):
+\begin{equation}
+N_{OG} = \int_{y_2}^{y_1} \frac{dy}{y - y^*} = \frac{1}{1 - m/A} \ln\left[\frac{y_1 - mx_2}{y_2 - mx_2}\left(1 - \frac{m}{A}\right) + \frac{m}{A}\right]
+\end{equation}
+
+Height of transfer unit (HTU):
+\begin{equation}
+H_{OG} = \frac{G}{K_{OG} a P}
+\end{equation}
+
+Column height: $Z = N_{OG} \times H_{OG}$
 
 \begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
+# Packed column design for CO2 absorption
+# Design conditions
+y1 = 0.10  # inlet gas mole fraction CO2
+y2 = 0.01  # outlet gas mole fraction CO2
+x2 = 0.0   # inlet liquid mole fraction (pure water)
+m = 0.83   # Henry's law slope
+A = 1.5    # absorption factor L/(mG)
 
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
+# Number of transfer units (Kremser equation)
+if abs(A - m) > 0.01:
+    N_OG = (1/(1 - m/A)) * np.log((y1 - m*x2)/(y2 - m*x2) * (1 - m/A) + m/A)
+else:
+    N_OG = (y1 - y2) / (y2 - m*x2)  # simplified for A ≈ m
+
+# Operating conditions
+G = 1.5  # gas velocity (kmol/(m²·s))
+P = 101325  # total pressure (Pa)
+K_OG_design = 0.05  # overall coefficient (kmol/(m²·s))
+a = 200  # specific area (m²/m³)
+
+# Height of transfer unit
+H_OG = G / (K_OG_design * a * P) * 1e3  # convert to m
+
+# Column height
+Z = N_OG * H_OG
+
+# Operating line and equilibrium
+x_op = np.linspace(x2, x2 + (y1 - y2)/(A*m), 100)
+y_op = y2 + A * m * (x_op - x2)
+y_eq = m * x_op
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# McCabe-Thiele diagram
+ax1.plot(x_op, y_op, 'b-', linewidth=2.5, label=f'Operating line (A={A:.1f})')
+ax1.plot(x_op, y_eq, 'r--', linewidth=2.5, label=f'Equilibrium ($y^* = {m:.2f}x$)')
+ax1.plot([x2, x2], [y2, y1], 'go', markersize=10, label='Terminal points')
+ax1.fill_between(x_op, y_op, y_eq, where=(y_op >= y_eq), alpha=0.2, color='green', label='Driving force')
+ax1.set_xlabel('Liquid mole fraction (x)', fontsize=12)
+ax1.set_ylabel('Gas mole fraction (y)', fontsize=12)
+ax1.set_title('McCabe-Thiele Diagram', fontsize=13, weight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim([0, max(x_op)*1.1])
+ax1.set_ylim([0, y1*1.1])
+
+# Column profile (gas composition vs height)
+z_profile = np.linspace(0, Z, 50)
+# Approximate exponential profile
+y_profile = y2 + (y1 - y2) * np.exp(-z_profile / (Z/N_OG))
+
+ax2.plot(y_profile * 100, z_profile, 'b-', linewidth=2.5)
+ax2.axhline(Z, color='r', linestyle='--', linewidth=2, label=f'Total height = {Z:.2f} m')
+ax2.axhline(H_OG, color='g', linestyle='--', linewidth=2, label=f'$H_{{OG}}$ = {H_OG:.2f} m')
+ax2.set_xlabel('CO$_2$ concentration (\%)', fontsize=12)
+ax2.set_ylabel('Height (m)', fontsize=12)
+ax2.set_title('Axial Concentration Profile', fontsize=13, weight='bold')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+ax2.invert_yaxis()
+
 plt.tight_layout()
 plt.savefig('mass_transfer_plot4.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -137,29 +332,74 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{mass_transfer_plot4.pdf}
-\caption{Two-dimensional field visualization.}
+\includegraphics[width=0.95\textwidth]{mass_transfer_plot4.pdf}
+\caption{Packed column design for CO$_2$ absorption using NTU-HTU method. Left: McCabe-Thiele diagram showing operating line (absorption factor $A$ = \py{f'{A:.1f}'}) and equilibrium curve. Green shaded area represents driving force $(y - y^*)$. Right: axial concentration profile showing CO$_2$ removal from \py{f'{y1*100:.1f}'}\% to \py{f'{y2*100:.1f}'}\%. Column requires $N_{OG}$ = \py{f'{N_OG:.2f}'} transfer units with $H_{OG}$ = \py{f'{H_OG:.2f}'} m, yielding total height $Z$ = \py{f'{Z:.2f}'} m.}
 \end{figure}
 
-\section{Distribution Analysis}
+\section{Dimensionless Correlations for Mass Transfer}
+
+Empirical correlations predict mass transfer coefficients from dimensionless groups. Sherwood number:
+\begin{equation}
+Sh = \frac{k_L d}{D_{AB}} = a \cdot Re^b \cdot Sc^c
+\end{equation}
+where $Re = \rho u d / \mu$ (Reynolds), $Sc = \mu / (\rho D_{AB})$ (Schmidt).
+
+For flow past spheres (Frossling correlation):
+\begin{equation}
+Sh = 2 + 0.6 Re^{1/2} Sc^{1/3}
+\end{equation}
 
 \begin{pycode}
-# Statistical distribution
-np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
+# Dimensionless correlations: flow past spheres
+# Physical properties (water at 25°C)
+rho = 997  # density (kg/m³)
+mu = 8.9e-4  # viscosity (Pa·s)
+D_AB_corr = 1.5e-9  # diffusivity (m²/s)
+
+Sc = mu / (rho * D_AB_corr)  # Schmidt number
+
+# Particle diameter and velocity ranges
+d_particle = 1e-3  # particle diameter (1 mm)
+u_range = np.logspace(-3, 0, 50)  # velocity 0.001 to 1 m/s
+
+# Reynolds and Sherwood numbers
+Re = rho * u_range * d_particle / mu
+Sh = 2 + 0.6 * Re**0.5 * Sc**(1/3)  # Frossling correlation
+
+# Mass transfer coefficient
+k_L_corr = Sh * D_AB_corr / d_particle
+
+# Compare to stagnant case
+k_L_stagnant = 2 * D_AB_corr / d_particle  # Sh = 2
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Sherwood vs Reynolds
+ax1.loglog(Re, Sh, 'b-', linewidth=2.5, label='Frossling correlation')
+ax1.axhline(2, color='r', linestyle='--', linewidth=2, label='Stagnant limit (Sh=2)')
+ax1.set_xlabel('Reynolds number (Re)', fontsize=12)
+ax1.set_ylabel('Sherwood number (Sh)', fontsize=12)
+ax1.set_title('Dimensionless Mass Transfer Correlation', fontsize=13, weight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3, which='both')
+ax1.text(0.05, 0.95, f'Sc = {Sc:.0f}', transform=ax1.transAxes,
+         fontsize=11, verticalalignment='top',
+         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+# Enhancement factor vs velocity
+enhancement = k_L_corr / k_L_stagnant
+ax2.semilogx(u_range, enhancement, 'g-', linewidth=2.5)
+ax2.set_xlabel('Velocity (m/s)', fontsize=12)
+ax2.set_ylabel('Enhancement factor ($k_L / k_{L,stagnant}$)', fontsize=12)
+ax2.set_title('Convection Enhancement over Diffusion', fontsize=13, weight='bold')
+ax2.grid(True, alpha=0.3)
+ax2.axhline(1, color='r', linestyle='--', alpha=0.5)
+
+# Store for reporting
+Re_ref = rho * 0.1 * d_particle / mu
+Sh_ref = 2 + 0.6 * Re_ref**0.5 * Sc**(1/3)
+enhancement_ref = Sh_ref / 2
+
 plt.tight_layout()
 plt.savefig('mass_transfer_plot5.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -168,21 +408,75 @@ plt.close()
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{mass_transfer_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\caption{Frossling correlation for mass transfer to spherical particles in water (Schmidt number $Sc$ = \py{f'{Sc:.0f}'}). Left: Sherwood number versus Reynolds number showing deviation from stagnant limit ($Sh = 2$) as convection intensifies. Right: enhancement factor quantifies improvement over pure diffusion. At $u$ = 0.1 m/s ($Re$ = \py{f'{Re_ref:.1f}'}), convection enhances mass transfer by \py{f'{enhancement_ref:.1f}'}× relative to stagnant conditions. This analysis applies to dissolution, crystallization, and heterogeneous catalysis.}
 \end{figure}
 
-\section{Time Series}
+\section{Batch Absorption: Time-Dependent Uptake}
+
+For gas absorption into a well-mixed liquid batch with first-order reaction:
+\begin{equation}
+\frac{dC_L}{dt} = k_L a (C^* - C_L) - k_1 C_L
+\end{equation}
+where $k_L a$ is volumetric mass transfer coefficient and $k_1$ is reaction rate constant.
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+# Batch absorption with chemical reaction
+def batch_absorption(C, t, k_L_a, C_star, k_rxn):
+    """ODE for batch gas absorption with first-order reaction"""
+    dCdt = k_L_a * (C_star - C) - k_rxn * C
+    return dCdt
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
+# Parameters
+k_L_a = 0.01  # volumetric coefficient (1/s)
+C_star = 50   # saturation concentration (mol/m³)
+k_rxn_values = [0, 0.005, 0.01, 0.02]  # reaction rates (1/s)
+C_0 = 0  # initial concentration
+
+# Time span
+t_batch = np.linspace(0, 600, 500)  # 0-600 seconds
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+colors_rxn = ['blue', 'green', 'orange', 'red']
+for k_rxn, color in zip(k_rxn_values, colors_rxn):
+    C_batch = odeint(batch_absorption, C_0, t_batch, args=(k_L_a, C_star, k_rxn))
+
+    label = 'Physical absorption' if k_rxn == 0 else f'$k_1$ = {k_rxn} s$^{{-1}}$'
+    ax1.plot(t_batch/60, C_batch, color=color, linewidth=2.5, label=label)
+
+ax1.axhline(C_star, color='gray', linestyle='--', linewidth=2, alpha=0.5, label='$C^*$ (saturation)')
+ax1.set_xlabel('Time (min)', fontsize=12)
+ax1.set_ylabel('Liquid concentration (mol/m$^3$)', fontsize=12)
+ax1.set_title('Batch Absorption with Reaction', fontsize=13, weight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+
+# Enhancement factor vs reaction rate
+k_rxn_range = np.logspace(-3, -1, 50)
+# Hatta number: sqrt(k_rxn * D_AB) / k_L
+D_AB_batch = 1.5e-9
+delta_L_batch = 100e-6
+k_L_batch = D_AB_batch / delta_L_batch
+Ha = np.sqrt(k_rxn_range * D_AB_batch) / k_L_batch
+
+# Enhancement factor (simplified for fast reaction)
+E = np.where(Ha < 0.3, 1 + Ha**2/2, Ha)  # asymptotic limits
+
+ax2.loglog(Ha, E, 'b-', linewidth=2.5)
+ax2.axhline(1, color='r', linestyle='--', linewidth=2, label='No enhancement')
+ax2.set_xlabel('Hatta number (Ha)', fontsize=12)
+ax2.set_ylabel('Enhancement factor (E)', fontsize=12)
+ax2.set_title('Chemical Reaction Enhancement', fontsize=13, weight='bold')
+ax2.legend()
+ax2.grid(True, alpha=0.3, which='both')
+ax2.text(0.05, 0.95, 'Slow rxn: $E \\approx 1$\nFast rxn: $E \\approx Ha$',
+         transform=ax2.transAxes, fontsize=10, verticalalignment='top',
+         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+# Store for reporting
+steady_state_physical = C_star
+steady_state_reactive = C_star * k_L_a / (k_L_a + k_rxn_values[-1])
+
 plt.tight_layout()
 plt.savefig('mass_transfer_plot6.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -191,34 +485,119 @@ plt.close()
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{mass_transfer_plot6.pdf}
-\caption{Time series visualization.}
+\caption{Batch gas absorption with simultaneous chemical reaction. Left: liquid concentration evolution for different reaction rates. Physical absorption approaches saturation ($C^*$ = \py{f'{C_star:.0f}'} mol/m³), while reactive absorption reaches lower steady state due to consumption. At $k_1$ = \py{f'{k_rxn_values[-1]}'} s$^{-1}$, equilibrium drops to \py{f'{steady_state_reactive:.1f}'} mol/m³. Right: Hatta number analysis shows transition from diffusion-limited (Ha $<$ 0.3) to reaction-limited (Ha $>$ 3) regimes. Chemical reaction enhances effective mass transfer.}
 \end{figure}
 
 \section{Results Summary}
 
 \begin{pycode}
 results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
+    ['Fick diffusivity $D_{AB}$', f'{D_AB*1e9:.2f}', 'nm$^2$/s'],
+    ['Film thickness $\\delta_L$', f'{L*1e3:.1f}', 'mm'],
+    ['Molar flux $J_A$', f'{J_A_value*1e6:.3f}', r'$\mu$mol/(m$^2$$\cdot$s)'],
+    ['Liquid coefficient $k_L$', f'{k_L_ref*1e5:.3f}', 'cm/s'],
+    ['Gas coefficient $k_G$', f'{k_G[0]*1e5:.3f}', 'cm/s'],
+    ['Overall coefficient $K_{OG}$', f'{K_OG_ref*1e5:.3f}', 'cm/s'],
+    ['Schmidt number $Sc$', f'{Sc:.0f}', '--'],
+    ['Transfer units $N_{OG}$', f'{N_OG:.2f}', '--'],
+    ['HTU $H_{OG}$', f'{H_OG:.2f}', 'm'],
+    ['Column height $Z$', f'{Z:.2f}', 'm'],
 ]
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Summary of Mass Transfer Calculations}')
+print(r'\begin{tabular}{@{}lcc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value & Unit \\')
+print(r'\midrule')
 for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+    print(f"{row[0]} & {row[1]} & {row[2]} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
 \end{pycode}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to mass transfer.
+This computational analysis demonstrates fundamental mass transfer phenomena relevant to chemical process design:
+
+\begin{itemize}
+    \item \textbf{Fick's laws:} Steady-state diffusion through a \py{f'{L*1e3:.1f}'} mm film yields constant flux of \py{f'{J_A_value*1e6:.3f}'} µmol/(m²·s). Transient diffusion exhibits characteristic $\sqrt{Dt}$ penetration depth, critical for design of batch processes and unsteady operations.
+
+    \item \textbf{Film theory:} Two-resistance model identifies controlling regime. For CO$_2$-water system, liquid-side resistance dominates ($k_L$ = \py{f'{k_L_ref*1e5:.3f}'} cm/s $<$ $k_G$ = \py{f'{k_G[0]*1e5:.3f}'} cm/s), motivating liquid-phase intensification strategies.
+
+    \item \textbf{Dimensionless correlations:} Frossling correlation predicts enhancement from convection. At Reynolds number \py{f'{Re_ref:.1f}'}, Sherwood number reaches \py{f'{Sh_ref:.2f}'}, representing \py{f'{enhancement_ref:.1f}'}× improvement over stagnant diffusion.
+
+    \item \textbf{Packed column design:} NTU-HTU method yields \py{f'{Z:.2f}'} m column height for 90\% CO$_2$ removal (\py{f'{N_OG:.2f}'} transfer units, $H_{OG}$ = \py{f'{H_OG:.2f}'} m). McCabe-Thiele analysis reveals driving force distribution along column height.
+
+    \item \textbf{Reactive absorption:} Chemical reaction enhances mass transfer via Hatta number mechanism. Fast reactions shift regime from diffusion-limited to reaction-limited, enabling process intensification through chemistry rather than hydrodynamics.
+\end{itemize}
+
+These computational methods enable rapid screening of operating conditions, equipment sizing, and process optimization without extensive pilot-plant trials. The Python-based framework integrates transport theory, thermodynamic equilibrium, and chemical kinetics for comprehensive mass transfer analysis.
+
+\begin{thebibliography}{99}
+
+\bibitem{bird2007}
+R.B. Bird, W.E. Stewart, E.N. Lightfoot, \textit{Transport Phenomena}, 2nd ed., Wiley (2007).
+
+\bibitem{treybal1980}
+R.E. Treybal, \textit{Mass Transfer Operations}, 3rd ed., McGraw-Hill (1980).
+
+\bibitem{cussler2009}
+E.L. Cussler, \textit{Diffusion: Mass Transfer in Fluid Systems}, 3rd ed., Cambridge University Press (2009).
+
+\bibitem{sherwood1975}
+T.K. Sherwood, R.L. Pigford, C.R. Wilke, \textit{Mass Transfer}, McGraw-Hill (1975).
+
+\bibitem{geankoplis2003}
+C.J. Geankoplis, \textit{Transport Processes and Separation Process Principles}, 4th ed., Prentice Hall (2003).
+
+\bibitem{seader2016}
+J.D. Seader, E.J. Henley, D.K. Roper, \textit{Separation Process Principles}, 4th ed., Wiley (2016).
+
+\bibitem{incropera2007}
+F.P. Incropera, D.P. DeWitt, T.L. Bergman, A.S. Lavine, \textit{Fundamentals of Heat and Mass Transfer}, 6th ed., Wiley (2007).
+
+\bibitem{deen2012}
+W.M. Deen, \textit{Analysis of Transport Phenomena}, 2nd ed., Oxford University Press (2012).
+
+\bibitem{welty2008}
+J.R. Welty, C.E. Wicks, R.E. Wilson, G.L. Rorrer, \textit{Fundamentals of Momentum, Heat, and Mass Transfer}, 5th ed., Wiley (2008).
+
+\bibitem{benitez2009}
+J. Benitez, \textit{Principles and Modern Applications of Mass Transfer Operations}, 2nd ed., Wiley (2009).
+
+\bibitem{higbie1935}
+R. Higbie, ``The rate of absorption of a pure gas into a still liquid during short periods of exposure,'' Trans. AIChE \textbf{31}, 365-389 (1935).
+
+\bibitem{danckwerts1951}
+P.V. Danckwerts, ``Significance of liquid-film coefficients in gas absorption,'' Ind. Eng. Chem. \textbf{43}, 1460-1467 (1951).
+
+\bibitem{astarita1967}
+G. Astarita, \textit{Mass Transfer with Chemical Reaction}, Elsevier (1967).
+
+\bibitem{taylor1993}
+R. Taylor, R. Krishna, \textit{Multicomponent Mass Transfer}, Wiley (1993).
+
+\bibitem{poling2001}
+B.E. Poling, J.M. Prausnitz, J.P. O'Connell, \textit{The Properties of Gases and Liquids}, 5th ed., McGraw-Hill (2001).
+
+\bibitem{wilke1955}
+C.R. Wilke, C.Y. Lee, ``Estimation of diffusion coefficients for gases and vapors,'' Ind. Eng. Chem. \textbf{47}, 1253-1257 (1955).
+
+\bibitem{onda1968}
+K. Onda, H. Takeuchi, Y. Okumoto, ``Mass transfer coefficients between gas and liquid phases in packed columns,'' J. Chem. Eng. Japan \textbf{1}, 56-62 (1968).
+
+\bibitem{frossling1938}
+N. Frossling, ``Uber die Verdunstung fallender Tropfen,'' Gerlands Beitr. Geophys. \textbf{52}, 170-216 (1938).
+
+\bibitem{vankrevelen1948}
+D.W. van Krevelen, P.J. Hoftijzer, ``Kinetics of gas-liquid reactions,'' Rec. Trav. Chim. Pays-Bas \textbf{67}, 563-586 (1948).
+
+\bibitem{westerterp1984}
+K.R. Westerterp, W.P.M. van Swaaij, A.A.C.M. Beenackers, \textit{Chemical Reactor Design and Operation}, Wiley (1984).
+
+\end{thebibliography}
 
 \end{document}

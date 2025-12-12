@@ -1,223 +1,858 @@
-\documentclass[11pt,a4paper]{article}
+% Fisheries Population Models Template
+% Topics: Stock-recruitment, surplus production, MSY, age-structured models, overfishing
+% Style: Fisheries management report with computational analysis
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{geometry}
-\geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 
-\title{Fisheries Models\\Stock-Recruitment}
-\author{Marine Biology Research Group}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Fisheries Population Models:\\Stock-Recruitment Dynamics and Sustainable Harvesting}
+\author{Marine Biology and Fisheries Management Group}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Fish population dynamics and management.
+This report presents a comprehensive computational analysis of fisheries population models
+used in sustainable fisheries management. We examine surplus production models including
+the Schaefer and Fox formulations, calculate maximum sustainable yield (MSY) and optimal
+fishing effort, analyze stock-recruitment relationships through Beverton-Holt and Ricker
+models, and investigate age-structured population dynamics. The analysis demonstrates
+critical thresholds for overfishing, equilibrium biomass levels, and yield-per-recruit
+optimization for effective fisheries conservation.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of fisheries models.
+Fisheries population models provide the scientific foundation for sustainable fisheries
+management. These models describe how fish stocks respond to fishing pressure and
+environmental variation, enabling managers to set harvest limits that balance economic
+productivity with long-term population viability. Understanding stock dynamics is crucial
+for preventing overfishing and ensuring food security for coastal communities worldwide.
+
+\begin{definition}[Sustainable Yield]
+The sustainable yield is the harvest rate that can be maintained indefinitely without
+depleting the stock. Maximum sustainable yield (MSY) represents the largest average catch
+that can be taken from a stock under existing environmental conditions.
+\end{definition}
+
+\section{Surplus Production Models}
+
+Surplus production models describe population biomass dynamics without explicit age
+structure. These models assume that fish populations grow logistically until limited by
+carrying capacity, and that fishing removes a portion of the biomass proportional to
+fishing effort and stock size.
+
+\subsection{The Schaefer Model}
+
+\begin{definition}[Schaefer Model]
+The Schaefer model assumes logistic population growth with fishing mortality proportional
+to effort and biomass:
+\begin{equation}
+\frac{dB}{dt} = rB\left(1 - \frac{B}{K}\right) - qEB
+\end{equation}
+where $B$ is biomass (tonnes), $r$ is intrinsic growth rate (year$^{-1}$), $K$ is carrying
+capacity (tonnes), $E$ is fishing effort (boat-days), and $q$ is catchability coefficient
+(boat-days$^{-1}$).
+\end{definition}
+
+\begin{theorem}[Maximum Sustainable Yield]
+At equilibrium ($dB/dt = 0$), the Schaefer model yields:
+\begin{equation}
+MSY = \frac{rK}{4}, \quad B_{MSY} = \frac{K}{2}, \quad E_{MSY} = \frac{r}{2q}
+\end{equation}
+The maximum sustainable yield occurs at half the carrying capacity with fishing effort
+equal to half the intrinsic growth rate divided by catchability.
+\end{theorem}
+
+\subsection{The Fox Model}
+
+\begin{definition}[Fox Model]
+The Fox model assumes Gompertz growth rather than logistic:
+\begin{equation}
+\frac{dB}{dt} = rB\ln\left(\frac{K}{B}\right) - qEB
+\end{equation}
+This formulation better describes populations with compensatory mortality at low densities.
+\end{definition}
+
+\section{Computational Analysis: Surplus Production}
+
+We implement the Schaefer and Fox models to analyze a hypothetical demersal fish stock
+under varying fishing pressure. The analysis demonstrates how fishing effort affects
+equilibrium biomass, sustainable yield, and the risk of stock collapse. Understanding
+these relationships is essential for setting total allowable catch (TAC) limits in
+fisheries management plans.
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy.integrate import odeint
+from scipy.optimize import fsolve, minimize_scalar
 
-\end{pycode}
+np.random.seed(42)
 
-\section{Mathematical Framework}
+# Schaefer model parameters (typical demersal fish stock)
+r = 0.8  # intrinsic growth rate (year^-1)
+K = 100000  # carrying capacity (tonnes)
+q = 0.0001  # catchability coefficient (boat-days^-1)
 
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
+# Calculate MSY analytically
+MSY = r * K / 4
+B_MSY = K / 2
+E_MSY = r / (2 * q)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
+print(f"Schaefer Model Parameters:")
+print(f"MSY = {MSY:.0f} tonnes/year")
+print(f"Biomass at MSY = {B_MSY:.0f} tonnes")
+print(f"Optimal effort = {E_MSY:.0f} boat-days/year")
+
+# Schaefer differential equation
+def schaefer(B, t, r, K, q, E):
+    dBdt = r * B * (1 - B / K) - q * E * B
+    return dBdt
+
+# Fox differential equation
+def fox(B, t, r, K, q, E):
+    if B <= 0:
+        return 0
+    dBdt = r * B * np.log(K / B) - q * E * B
+    return dBdt
+
+# Time array
+t = np.linspace(0, 50, 500)
+
+# Different fishing effort levels
+effort_levels = np.array([0, 2000, 4000, 6000, 8000, 10000])
+
+# Initial biomass (virgin stock)
+B0 = K
+
+# Simulate trajectories
+schaefer_trajectories = {}
+fox_trajectories = {}
+
+for E in effort_levels:
+    B_schaefer = odeint(schaefer, B0, t, args=(r, K, q, E))
+    B_fox = odeint(fox, B0, t, args=(r, K, q, E))
+    schaefer_trajectories[E] = B_schaefer.flatten()
+    fox_trajectories[E] = B_fox.flatten()
+
+# Equilibrium biomass and yield curves
+effort_range = np.linspace(0, 12000, 200)
+B_eq_schaefer = K * (1 - q * effort_range / r)
+B_eq_schaefer[B_eq_schaefer < 0] = 0
+yield_schaefer = q * effort_range * B_eq_schaefer
+
+# Fox equilibrium (numerical solution)
+def fox_equilibrium(B, E, r, K, q):
+    if B <= 0:
+        return 1e10
+    return r * np.log(K / B) - q * E
+
+B_eq_fox = []
+for E in effort_range:
+    if E < r / q:
+        B_eq_fox.append(fsolve(fox_equilibrium, K/2, args=(E, r, K, q))[0])
+    else:
+        B_eq_fox.append(0)
+B_eq_fox = np.array(B_eq_fox)
+yield_fox = q * effort_range * B_eq_fox
+
+# Create first figure: biomass trajectories and equilibrium curves
+fig = plt.figure(figsize=(14, 10))
+
+# Plot 1: Schaefer biomass trajectories
+ax1 = fig.add_subplot(2, 3, 1)
+colors = plt.cm.viridis(np.linspace(0, 0.9, len(effort_levels)))
+for i, E in enumerate(effort_levels):
+    ax1.plot(t, schaefer_trajectories[E], linewidth=2, color=colors[i],
+             label=f'E = {E:.0f}')
+ax1.axhline(y=B_MSY, color='red', linestyle='--', linewidth=1.5, alpha=0.7,
+            label=f'$B_{{MSY}}$ = {B_MSY:.0f}')
+ax1.set_xlabel('Time (years)', fontsize=11)
+ax1.set_ylabel('Biomass (tonnes)', fontsize=11)
+ax1.set_title('Schaefer Model: Biomass Trajectories', fontsize=12, fontweight='bold')
+ax1.legend(fontsize=8, loc='right')
+ax1.grid(True, alpha=0.3)
+ax1.set_ylim(0, K * 1.1)
+
+# Plot 2: Equilibrium biomass vs effort
+ax2 = fig.add_subplot(2, 3, 2)
+ax2.plot(effort_range, B_eq_schaefer, 'b-', linewidth=2.5, label='Schaefer')
+ax2.plot(effort_range, B_eq_fox, 'g-', linewidth=2.5, label='Fox')
+ax2.axhline(y=B_MSY, color='red', linestyle='--', linewidth=1.5, alpha=0.7)
+ax2.axvline(x=E_MSY, color='red', linestyle='--', linewidth=1.5, alpha=0.7)
+ax2.fill_between(effort_range, 0, B_eq_schaefer, where=(B_eq_schaefer < 0.2 * K),
+                  alpha=0.2, color='red', label='Overfished')
+ax2.set_xlabel('Fishing Effort (boat-days/year)', fontsize=11)
+ax2.set_ylabel('Equilibrium Biomass (tonnes)', fontsize=11)
+ax2.set_title('Equilibrium Stock Size', fontsize=12, fontweight='bold')
+ax2.legend(fontsize=9)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Yield vs effort (production curve)
+ax3 = fig.add_subplot(2, 3, 3)
+ax3.plot(effort_range, yield_schaefer, 'b-', linewidth=2.5, label='Schaefer')
+ax3.plot(effort_range, yield_fox, 'g-', linewidth=2.5, label='Fox')
+ax3.axhline(y=MSY, color='red', linestyle='--', linewidth=1.5, alpha=0.7,
+            label=f'MSY = {MSY:.0f}')
+ax3.axvline(x=E_MSY, color='red', linestyle='--', linewidth=1.5, alpha=0.7)
+ax3.scatter([E_MSY], [MSY], s=150, c='red', marker='*', zorder=5, edgecolor='black')
+ax3.set_xlabel('Fishing Effort (boat-days/year)', fontsize=11)
+ax3.set_ylabel('Sustainable Yield (tonnes/year)', fontsize=11)
+ax3.set_title('Production Curve', fontsize=12, fontweight='bold')
+ax3.legend(fontsize=9)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Yield vs biomass
+ax4 = fig.add_subplot(2, 3, 4)
+ax4.plot(B_eq_schaefer, yield_schaefer, 'b-', linewidth=2.5, label='Schaefer')
+ax4.plot(B_eq_fox, yield_fox, 'g-', linewidth=2.5, label='Fox')
+ax4.scatter([B_MSY], [MSY], s=150, c='red', marker='*', zorder=5, edgecolor='black',
+            label='MSY point')
+ax4.axvline(x=0.2*K, color='orange', linestyle=':', linewidth=2, alpha=0.7,
+            label='Overfished threshold')
+ax4.set_xlabel('Stock Biomass (tonnes)', fontsize=11)
+ax4.set_ylabel('Sustainable Yield (tonnes/year)', fontsize=11)
+ax4.set_title('Yield vs Stock Size', fontsize=12, fontweight='bold')
+ax4.legend(fontsize=9)
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Fishing mortality rate
+ax5 = fig.add_subplot(2, 3, 5)
+F_range = q * effort_range
+F_MSY = q * E_MSY
+ax5.plot(F_range, yield_schaefer, 'b-', linewidth=2.5)
+ax5.axvline(x=F_MSY, color='red', linestyle='--', linewidth=1.5, alpha=0.7,
+            label=f'$F_{{MSY}}$ = {F_MSY:.3f}')
+ax5.axvline(x=r, color='orange', linestyle=':', linewidth=2, alpha=0.7,
+            label=f'$F = r$ (collapse)')
+ax5.fill_between(F_range, 0, yield_schaefer, where=(F_range > r),
+                  alpha=0.3, color='red', label='Overfishing')
+ax5.set_xlabel('Fishing Mortality Rate (year$^{-1}$)', fontsize=11)
+ax5.set_ylabel('Sustainable Yield (tonnes/year)', fontsize=11)
+ax5.set_title('Yield vs Fishing Mortality', fontsize=12, fontweight='bold')
+ax5.legend(fontsize=9)
+ax5.grid(True, alpha=0.3)
+ax5.set_xlim(0, 1.2)
+
+# Plot 6: Stock depletion levels
+ax6 = fig.add_subplot(2, 3, 6)
+depletion = B_eq_schaefer / K * 100
+ax6.plot(effort_range, depletion, 'b-', linewidth=2.5)
+ax6.axhline(y=50, color='red', linestyle='--', linewidth=1.5, alpha=0.7,
+            label='50% (MSY)')
+ax6.axhline(y=20, color='orange', linestyle='--', linewidth=1.5, alpha=0.7,
+            label='20% (overfished)')
+ax6.axhline(y=10, color='darkred', linestyle='--', linewidth=1.5, alpha=0.7,
+            label='10% (critical)')
+ax6.fill_between(effort_range, 0, depletion, where=(depletion < 20),
+                  alpha=0.3, color='red')
+ax6.set_xlabel('Fishing Effort (boat-days/year)', fontsize=11)
+ax6.set_ylabel('Stock Depletion Level (\\%)', fontsize=11)
+ax6.set_title('Depletion vs Effort', fontsize=12, fontweight='bold')
+ax6.legend(fontsize=8, loc='upper right')
+ax6.grid(True, alpha=0.3)
+ax6.set_ylim(0, 105)
+
 plt.tight_layout()
-plt.savefig('fisheries_models_plot1.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('fisheries_models_production.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{fisheries_models_plot1.pdf}
-\caption{Primary analysis results.}
+\includegraphics[width=\textwidth]{fisheries_models_production.pdf}
+\caption{Surplus production model analysis showing biomass trajectories under different
+fishing effort levels, equilibrium relationships between effort and stock size, and the
+classic dome-shaped production curve. The Schaefer model predicts MSY at 50\% of carrying
+capacity with effort = \py{f"{E_MSY:.0f}"} boat-days/year. The red shaded regions indicate
+overfished conditions where stock biomass falls below 20\% of carrying capacity, risking
+recruitment failure and economic collapse of the fishery.}
+\label{fig:production}
 \end{figure}
 
-\section{Secondary Analysis}
+The surplus production analysis reveals that fishing effort above \py{f"{E_MSY:.0f}"}
+boat-days/year drives the stock below the MSY biomass level, reducing long-term catch.
+At extreme effort levels exceeding \py{f"{r/q:.0f}"} boat-days/year, the fishing
+mortality rate surpasses the intrinsic growth rate, causing inevitable stock collapse.
+This demonstrates the biological and economic irrationality of overfishing.
+
+\section{Stock-Recruitment Relationships}
+
+Stock-recruitment models describe how spawning stock biomass (SSB) determines the
+abundance of recruits entering the fishery. These models capture density-dependent
+mortality in early life stages and are essential for understanding population resilience.
+
+\subsection{The Beverton-Holt Model}
+
+\begin{definition}[Beverton-Holt Recruitment]
+The Beverton-Holt model describes asymptotic recruitment with density dependence:
+\begin{equation}
+R = \frac{\alpha S}{1 + \beta S}
+\end{equation}
+where $R$ is recruitment, $S$ is spawning stock biomass, $\alpha$ is maximum recruits
+per spawner at low density, and $\beta$ controls density dependence.
+\end{definition}
+
+\subsection{The Ricker Model}
+
+\begin{definition}[Ricker Recruitment]
+The Ricker model allows for overcompensation at high spawning stock:
+\begin{equation}
+R = \alpha S e^{-\beta S}
+\end{equation}
+This formulation can produce a recruitment maximum at intermediate spawning stock levels
+due to cannibalism or disease transmission.
+\end{definition}
+
+\section{Computational Analysis: Stock-Recruitment}
+
+We analyze stock-recruitment relationships to identify critical thresholds for population
+replacement and assess the risk of recruitment overfishing. The comparison of Beverton-Holt
+and Ricker models illustrates how different density-dependent mechanisms affect population
+stability and optimal spawning stock levels.
 
 \begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
+# Stock-recruitment parameters
+alpha_BH = 50  # recruits per tonne SSB at low density
+beta_BH = 0.01  # density dependence (tonne^-1)
+alpha_Ricker = 20  # low-density productivity
+beta_Ricker = 0.00005  # density dependence
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
+# Spawning stock biomass range
+SSB = np.linspace(0, 50000, 500)
+
+# Beverton-Holt recruitment
+R_BH = (alpha_BH * SSB) / (1 + beta_BH * SSB)
+
+# Ricker recruitment
+R_Ricker = alpha_BH * SSB * np.exp(-beta_Ricker * SSB)
+
+# Replacement line (R = S with survival rate)
+survival_rate = 0.05  # fraction of recruits surviving to spawn
+replacement = SSB / survival_rate
+
+# Find equilibrium points
+def find_equilibria(SSB_range, R_model, survival):
+    equil_points = []
+    R_vals = R_model(SSB_range) if callable(R_model) else R_model
+    for i in range(len(SSB_range) - 1):
+        if (R_vals[i] * survival - SSB_range[i]) * (R_vals[i+1] * survival - SSB_range[i+1]) < 0:
+            equil_points.append(SSB_range[i])
+    return equil_points
+
+# Spawning potential ratio (SPR) analysis
+fishing_mortality = np.linspace(0, 2.0, 100)
+SPR = np.exp(-fishing_mortality)  # simplified SPR
+reference_SPR = np.exp(-0.4)  # F40% reference point
+
+# Calculate recruits per spawning stock (R/S)
+R_per_S_BH = R_BH / (SSB + 1e-6)
+R_per_S_Ricker = R_Ricker / (SSB + 1e-6)
+
+# Find Ricker optimum
+SSB_opt_Ricker = 1 / beta_Ricker
+R_opt_Ricker = alpha_BH * SSB_opt_Ricker * np.exp(-1)
+
+# Create second figure: stock-recruitment
+fig2 = plt.figure(figsize=(14, 10))
+
+# Plot 1: Stock-recruitment curves
+ax1 = fig2.add_subplot(2, 3, 1)
+ax1.plot(SSB, R_BH, 'b-', linewidth=2.5, label='Beverton-Holt')
+ax1.plot(SSB, R_Ricker, 'g-', linewidth=2.5, label='Ricker')
+ax1.plot(SSB, replacement, 'r--', linewidth=2, alpha=0.7, label='Replacement')
+ax1.scatter([SSB_opt_Ricker], [R_opt_Ricker], s=150, c='green', marker='o',
+            zorder=5, edgecolor='black', label='Ricker optimum')
+ax1.set_xlabel('Spawning Stock Biomass (tonnes)', fontsize=11)
+ax1.set_ylabel('Recruitment (millions of individuals)', fontsize=11)
+ax1.set_title('Stock-Recruitment Relationships', fontsize=12, fontweight='bold')
+ax1.legend(fontsize=9)
 ax1.grid(True, alpha=0.3)
 
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
+# Plot 2: Recruits per spawner
+ax2 = fig2.add_subplot(2, 3, 2)
+ax2.plot(SSB, R_per_S_BH, 'b-', linewidth=2.5, label='Beverton-Holt')
+ax2.plot(SSB, R_per_S_Ricker, 'g-', linewidth=2.5, label='Ricker')
+ax2.axhline(y=1/survival_rate, color='red', linestyle='--', linewidth=2, alpha=0.7,
+            label='Replacement level')
+ax2.set_xlabel('Spawning Stock Biomass (tonnes)', fontsize=11)
+ax2.set_ylabel('Recruits per Tonne SSB', fontsize=11)
+ax2.set_title('Density-Dependent Recruitment', fontsize=12, fontweight='bold')
+ax2.legend(fontsize=9)
 ax2.grid(True, alpha=0.3)
+ax2.set_ylim(0, 60)
+
+# Plot 3: Phase diagram (SSB dynamics)
+ax3 = fig2.add_subplot(2, 3, 3)
+SSB_next_BH = R_BH * survival_rate
+SSB_next_Ricker = R_Ricker * survival_rate
+ax3.plot(SSB, SSB_next_BH, 'b-', linewidth=2.5, label='Beverton-Holt')
+ax3.plot(SSB, SSB_next_Ricker, 'g-', linewidth=2.5, label='Ricker')
+ax3.plot(SSB, SSB, 'r--', linewidth=2, alpha=0.7, label='1:1 line')
+ax3.fill_between(SSB, 0, SSB_next_BH, where=(SSB_next_BH > SSB),
+                  alpha=0.2, color='green', label='Increasing')
+ax3.fill_between(SSB, 0, SSB_next_BH, where=(SSB_next_BH < SSB),
+                  alpha=0.2, color='red', label='Decreasing')
+ax3.set_xlabel('Current SSB (tonnes)', fontsize=11)
+ax3.set_ylabel('Next Generation SSB (tonnes)', fontsize=11)
+ax3.set_title('Population Dynamics Phase Diagram', fontsize=12, fontweight='bold')
+ax3.legend(fontsize=8, loc='upper left')
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Spawning potential ratio
+ax4 = fig2.add_subplot(2, 3, 4)
+ax4.plot(fishing_mortality, SPR * 100, 'b-', linewidth=2.5)
+ax4.axhline(y=40, color='red', linestyle='--', linewidth=2, alpha=0.7,
+            label='F40% reference')
+ax4.axhline(y=20, color='orange', linestyle='--', linewidth=2, alpha=0.7,
+            label='F20% limit')
+ax4.fill_between(fishing_mortality, 0, SPR * 100, where=(SPR * 100 < 20),
+                  alpha=0.3, color='red', label='Overfished')
+ax4.set_xlabel('Fishing Mortality Rate (year$^{-1}$)', fontsize=11)
+ax4.set_ylabel('Spawning Potential Ratio (\\%)', fontsize=11)
+ax4.set_title('SPR-Based Reference Points', fontsize=12, fontweight='bold')
+ax4.legend(fontsize=9)
+ax4.grid(True, alpha=0.3)
+ax4.set_xlim(0, 2)
+
+# Plot 5: Recruitment with environmental stochasticity
+ax5 = fig2.add_subplot(2, 3, 5)
+np.random.seed(123)
+n_years = 50
+SSB_sim = np.zeros(n_years)
+R_sim = np.zeros(n_years)
+SSB_sim[0] = 20000
+sigma_R = 0.4  # recruitment variability
+
+for year in range(n_years - 1):
+    R_mean = (alpha_BH * SSB_sim[year]) / (1 + beta_BH * SSB_sim[year])
+    R_sim[year] = R_mean * np.exp(sigma_R * np.random.randn() - 0.5 * sigma_R**2)
+    SSB_sim[year + 1] = R_sim[year] * survival_rate * 0.7  # with fishing
+
+ax5.plot(range(n_years), SSB_sim, 'b-', linewidth=2, label='SSB')
+ax5_twin = ax5.twinx()
+ax5_twin.bar(range(n_years - 1), R_sim[:-1], alpha=0.5, color='green', label='Recruitment')
+ax5.axhline(y=B_MSY/5, color='red', linestyle='--', linewidth=1.5, alpha=0.7,
+            label='Limit reference')
+ax5.set_xlabel('Year', fontsize=11)
+ax5.set_ylabel('SSB (tonnes)', color='blue', fontsize=11)
+ax5_twin.set_ylabel('Recruitment (millions)', color='green', fontsize=11)
+ax5.set_title('Stochastic Recruitment Simulation', fontsize=12, fontweight='bold')
+ax5.legend(loc='upper left', fontsize=9)
+ax5_twin.legend(loc='upper right', fontsize=9)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Allee effect threshold
+ax6 = fig2.add_subplot(2, 3, 6)
+# Modified Ricker with Allee effect
+SSB_allee = np.linspace(0, 50000, 500)
+S_critical = 5000  # critical depensation threshold
+allee_factor = SSB_allee / (SSB_allee + S_critical)
+R_allee = alpha_BH * SSB_allee * np.exp(-beta_Ricker * SSB_allee) * allee_factor
+
+ax6.plot(SSB_allee, R_allee * survival_rate, 'purple', linewidth=2.5,
+         label='With Allee effect')
+ax6.plot(SSB, R_Ricker * survival_rate, 'g--', linewidth=2, alpha=0.6,
+         label='Without Allee effect')
+ax6.plot(SSB_allee, SSB_allee, 'r--', linewidth=2, alpha=0.7, label='Replacement')
+ax6.axvline(x=S_critical, color='orange', linestyle=':', linewidth=2, alpha=0.7,
+            label=f'Critical threshold')
+ax6.fill_between(SSB_allee, 0, 50000, where=(SSB_allee < S_critical),
+                  alpha=0.2, color='red', label='Collapse risk')
+ax6.set_xlabel('Spawning Stock Biomass (tonnes)', fontsize=11)
+ax6.set_ylabel('Next Generation SSB (tonnes)', fontsize=11)
+ax6.set_title('Depensation and Allee Effects', fontsize=12, fontweight='bold')
+ax6.legend(fontsize=8, loc='upper left')
+ax6.grid(True, alpha=0.3)
+
 plt.tight_layout()
-plt.savefig('fisheries_models_plot2.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('fisheries_models_recruitment.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{fisheries_models_plot2.pdf}
-\caption{Secondary analysis comparison.}
+\includegraphics[width=\textwidth]{fisheries_models_recruitment.pdf}
+\caption{Stock-recruitment analysis demonstrating density-dependent recruitment dynamics
+in fish populations. The Beverton-Holt model shows asymptotic recruitment approaching a
+maximum, while the Ricker model exhibits overcompensation with peak recruitment at
+\py{f"{SSB_opt_Ricker:.0f}"} tonnes of spawning stock. Phase diagrams reveal stable
+equilibria and population trajectories under fishing. The spawning potential ratio (SPR)
+framework identifies F40\% as a precautionary reference point maintaining recruitment
+capacity. Stochastic simulations show recruitment variability's impact on stock dynamics,
+while Allee effect analysis demonstrates critical thresholds below \py{f"{S_critical:.0f}"}
+tonnes where recruitment failure becomes likely.}
+\label{fig:recruitment}
 \end{figure}
 
-\section{Parameter Study}
+Stock-recruitment analysis demonstrates that maintaining spawning stock above critical
+thresholds is essential for population persistence. The Beverton-Holt formulation suggests
+resilience to overfishing, while the Ricker model with Allee effects reveals collapse
+risk when spawning biomass falls below \py{f"{S_critical:.0f}"} tonnes.
+
+\section{Age-Structured Models: Yield-Per-Recruit}
+
+Age-structured models explicitly track cohorts through their life history, accounting
+for size-dependent growth, natural mortality, and fishing selectivity. Yield-per-recruit
+(YPR) analysis optimizes fishing patterns to maximize lifetime catch from each cohort.
 
 \begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
+# Age-structured model parameters
+ages = np.arange(0, 21)  # age classes 0-20 years
+L_inf = 80  # asymptotic length (cm)
+K_growth = 0.15  # von Bertalanffy growth coefficient
+t0 = -1.0  # theoretical age at zero length
+a_length_weight = 0.01  # length-weight coefficient
+b_length_weight = 3.0  # length-weight exponent
+M = 0.2  # natural mortality (year^-1)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
+# Fishing mortality rates to test
+F_values = np.linspace(0, 1.5, 100)
+
+# Selectivity (logistic with 50% selection at age 3)
+age_50 = 3.0
+selectivity_slope = 1.5
+selectivity = 1 / (1 + np.exp(-selectivity_slope * (ages - age_50)))
+
+# von Bertalanffy growth
+lengths = L_inf * (1 - np.exp(-K_growth * (ages - t0)))
+weights = a_length_weight * lengths**b_length_weight / 1000  # kg
+
+# Calculate yield-per-recruit for different F
+YPR = np.zeros(len(F_values))
+SPR_values = np.zeros(len(F_values))
+
+for i, F in enumerate(F_values):
+    survivors = np.zeros(len(ages))
+    survivors[0] = 1.0  # start with 1 recruit
+
+    cumulative_catch = 0
+    cumulative_spawners = 0
+
+    for age_idx in range(1, len(ages)):
+        F_age = F * selectivity[age_idx]
+        Z = M + F_age  # total mortality
+        survivors[age_idx] = survivors[age_idx - 1] * np.exp(-Z)
+        catch = survivors[age_idx - 1] * (F_age / Z) * (1 - np.exp(-Z))
+        cumulative_catch += catch * weights[age_idx]
+        cumulative_spawners += survivors[age_idx] * weights[age_idx]
+
+    YPR[i] = cumulative_catch
+    SPR_values[i] = cumulative_spawners
+
+# Find F_max and F_0.1
+F_max_idx = np.argmax(YPR)
+F_max = F_values[F_max_idx]
+
+# F_0.1: fishing mortality where slope is 10% of origin slope
+origin_slope = (YPR[1] - YPR[0]) / (F_values[1] - F_values[0])
+target_slope = 0.1 * origin_slope
+slopes = np.diff(YPR) / np.diff(F_values)
+F_01_idx = np.argmin(np.abs(slopes - target_slope))
+F_01 = F_values[F_01_idx]
+
+# F_40: fishing mortality giving 40% SPR
+SPR_unfished = SPR_values[0]
+SPR_40_target = 0.4 * SPR_unfished
+F_40_idx = np.argmin(np.abs(SPR_values - SPR_40_target))
+F_40 = F_values[F_40_idx]
+
+# Create third figure: age-structured analysis
+fig3 = plt.figure(figsize=(14, 10))
+
+# Plot 1: Growth curve
+ax1 = fig3.add_subplot(2, 3, 1)
+ax1.plot(ages, lengths, 'b-', linewidth=2.5)
+ax1.axhline(y=L_inf, color='red', linestyle='--', linewidth=1.5, alpha=0.7,
+            label=f'$L_\\infty$ = {L_inf} cm')
+ax1.scatter(ages[::2], lengths[::2], s=50, c='blue', edgecolor='black', zorder=5)
+ax1.set_xlabel('Age (years)', fontsize=11)
+ax1.set_ylabel('Length (cm)', fontsize=11)
+ax1.set_title('von Bertalanffy Growth Curve', fontsize=12, fontweight='bold')
+ax1.legend(fontsize=9)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Weight-at-age
+ax2 = fig3.add_subplot(2, 3, 2)
+ax2.plot(ages, weights, 'g-', linewidth=2.5)
+ax2.scatter(ages[::2], weights[::2], s=50, c='green', edgecolor='black', zorder=5)
+ax2.set_xlabel('Age (years)', fontsize=11)
+ax2.set_ylabel('Weight (kg)', fontsize=11)
+ax2.set_title('Weight-at-Age', fontsize=12, fontweight='bold')
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Selectivity curve
+ax3 = fig3.add_subplot(2, 3, 3)
+ax3.plot(ages, selectivity, 'purple', linewidth=2.5)
+ax3.axhline(y=0.5, color='gray', linestyle=':', linewidth=1.5, alpha=0.7)
+ax3.axvline(x=age_50, color='gray', linestyle=':', linewidth=1.5, alpha=0.7,
+            label=f'$a_{{50}}$ = {age_50} years')
+ax3.set_xlabel('Age (years)', fontsize=11)
+ax3.set_ylabel('Selectivity', fontsize=11)
+ax3.set_title('Fishing Gear Selectivity', fontsize=12, fontweight='bold')
+ax3.legend(fontsize=9)
+ax3.grid(True, alpha=0.3)
+ax3.set_ylim(0, 1.1)
+
+# Plot 4: Yield-per-recruit curve
+ax4 = fig3.add_subplot(2, 3, 4)
+ax4.plot(F_values, YPR, 'b-', linewidth=2.5)
+ax4.scatter([F_max], [YPR[F_max_idx]], s=200, c='red', marker='*', zorder=5,
+            edgecolor='black', label=f'$F_{{max}}$ = {F_max:.3f}')
+ax4.scatter([F_01], [YPR[F_01_idx]], s=150, c='orange', marker='o', zorder=5,
+            edgecolor='black', label=f'$F_{{0.1}}$ = {F_01:.3f}')
+ax4.axvline(x=F_max, color='red', linestyle='--', linewidth=1.5, alpha=0.5)
+ax4.axvline(x=F_01, color='orange', linestyle='--', linewidth=1.5, alpha=0.5)
+ax4.axvline(x=F_40, color='green', linestyle='--', linewidth=1.5, alpha=0.5,
+            label=f'$F_{{40}}$ = {F_40:.3f}')
+ax4.set_xlabel('Fishing Mortality (year$^{-1}$)', fontsize=11)
+ax4.set_ylabel('Yield-per-Recruit (kg)', fontsize=11)
+ax4.set_title('Yield-per-Recruit Analysis', fontsize=12, fontweight='bold')
+ax4.legend(fontsize=9, loc='upper right')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Spawning potential ratio
+ax5 = fig3.add_subplot(2, 3, 5)
+ax5.plot(F_values, SPR_values / SPR_unfished * 100, 'g-', linewidth=2.5)
+ax5.axhline(y=40, color='red', linestyle='--', linewidth=2, alpha=0.7,
+            label='40% SPR reference')
+ax5.axhline(y=20, color='orange', linestyle='--', linewidth=2, alpha=0.7,
+            label='20% SPR limit')
+ax5.axvline(x=F_40, color='green', linestyle='--', linewidth=1.5, alpha=0.5)
+ax5.fill_between(F_values, 0, SPR_values / SPR_unfished * 100,
+                  where=(SPR_values / SPR_unfished * 100 < 20),
+                  alpha=0.3, color='red', label='Overfished')
+ax5.set_xlabel('Fishing Mortality (year$^{-1}$)', fontsize=11)
+ax5.set_ylabel('Spawning Potential Ratio (\\%)', fontsize=11)
+ax5.set_title('SPR vs Fishing Mortality', fontsize=12, fontweight='bold')
+ax5.legend(fontsize=9)
+ax5.grid(True, alpha=0.3)
+ax5.set_xlim(0, 1.5)
+
+# Plot 6: Cohort survival
+ax6 = fig3.add_subplot(2, 3, 6)
+F_test_values = [0, 0.2, 0.5, 1.0]
+colors_cohort = plt.cm.plasma(np.linspace(0.2, 0.9, len(F_test_values)))
+
+for i, F in enumerate(F_test_values):
+    survivors_cohort = np.zeros(len(ages))
+    survivors_cohort[0] = 1000  # cohort size
+    for age_idx in range(1, len(ages)):
+        F_age = F * selectivity[age_idx]
+        Z = M + F_age
+        survivors_cohort[age_idx] = survivors_cohort[age_idx - 1] * np.exp(-Z)
+    ax6.plot(ages, survivors_cohort, linewidth=2.5, color=colors_cohort[i],
+             label=f'F = {F:.2f}')
+
+ax6.set_xlabel('Age (years)', fontsize=11)
+ax6.set_ylabel('Cohort Survivors', fontsize=11)
+ax6.set_title('Cohort Survival Curves', fontsize=12, fontweight='bold')
+ax6.legend(fontsize=9)
+ax6.grid(True, alpha=0.3)
+ax6.set_yscale('log')
+
 plt.tight_layout()
-plt.savefig('fisheries_models_plot3.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('fisheries_models_age_structured.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\textwidth]{fisheries_models_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
+\includegraphics[width=\textwidth]{fisheries_models_age_structured.pdf}
+\caption{Age-structured fisheries analysis incorporating von Bertalanffy growth,
+weight-at-age relationships, and logistic gear selectivity. Yield-per-recruit (YPR)
+analysis identifies optimal fishing mortality at F\textsubscript{max} = \py{f"{F_max:.3f}"}
+year\textsuperscript{-1}, though the more precautionary F\textsubscript{0.1} reference
+point of \py{f"{F_01:.3f}"} is recommended to account for recruitment uncertainty.
+Spawning potential ratio (SPR) analysis shows that F\textsubscript{40} = \py{f"{F_40:.3f}"}
+maintains 40\% of unfished spawning biomass. Cohort survival curves demonstrate the
+exponential decay of abundance with age under different fishing pressure levels, with
+natural mortality M = \py{f"{M:.2f}"} year\textsuperscript{-1} representing baseline
+mortality from predation, disease, and senescence.}
+\label{fig:age_structured}
 \end{figure}
 
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('fisheries_models_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{fisheries_models_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
-np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
-
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
-plt.tight_layout()
-plt.savefig('fisheries_models_plot5.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{fisheries_models_plot5.pdf}
-\caption{Statistical distribution analysis.}
-\end{figure}
-
-\section{Time Series}
-
-\begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
-
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('fisheries_models_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{fisheries_models_plot6.pdf}
-\caption{Time series visualization.}
-\end{figure}
+Yield-per-recruit analysis demonstrates that fishing mortality of \py{f"{F_max:.3f}"}
+year\textsuperscript{-1} maximizes catch per cohort, but the F\textsubscript{0.1}
+reference point of \py{f"{F_01:.3f}"} provides a more sustainable target that maintains
+spawning potential and accounts for recruitment variability in fluctuating environments.
 
 \section{Results Summary}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
-
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Key Fisheries Reference Points and Model Parameters}")
+print(r"\begin{tabular}{llc}")
+print(r"\toprule")
+print(r"Model & Parameter & Value \\")
+print(r"\midrule")
+print(f"Schaefer & MSY & {MSY:.0f} tonnes/year \\\\")
+print(f" & Biomass at MSY & {B_MSY:.0f} tonnes \\\\")
+print(f" & Optimal effort & {E_MSY:.0f} boat-days/year \\\\")
+print(f" & Fishing mortality at MSY & {q * E_MSY:.3f} year$^{{-1}}$ \\\\")
+print(r"\midrule")
+print(f"Stock-Recruitment & Beverton-Holt $\\alpha$ & {alpha_BH:.1f} recruits/tonne \\\\")
+print(f" & Critical SSB threshold & {S_critical:.0f} tonnes \\\\")
+print(f" & Ricker optimum SSB & {SSB_opt_Ricker:.0f} tonnes \\\\")
+print(r"\midrule")
+print(f"Age-Structured & $F_{{max}}$ & {F_max:.3f} year$^{{-1}}$ \\\\")
+print(f" & $F_{{0.1}}$ & {F_01:.3f} year$^{{-1}}$ \\\\")
+print(f" & $F_{{40\\%}}$ (SPR) & {F_40:.3f} year$^{{-1}}$ \\\\")
+print(f" & Age at 50\\% selectivity & {age_50:.1f} years \\\\")
+print(f" & Natural mortality & {M:.2f} year$^{{-1}}$ \\\\")
+print(f" & Asymptotic length & {L_inf:.0f} cm \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:reference_points}")
+print(r"\end{table}")
 \end{pycode}
+
+\section{Discussion and Management Implications}
+
+\begin{remark}[Precautionary Approach]
+Modern fisheries management adopts precautionary reference points that account for
+scientific uncertainty. While F\textsubscript{max} maximizes yield-per-recruit, the
+F\textsubscript{0.1} and F\textsubscript{40\%} reference points provide buffers against
+recruitment failure and environmental variability. The comparison reveals that sustainable
+fishing mortality should be approximately \py{f"{F_01:.3f}"} year\textsuperscript{-1},
+substantially below levels that would maximize short-term catch.
+\end{remark}
+
+\begin{example}[Rebuilding Overfished Stocks]
+For a stock depleted to 15\% of carrying capacity (below the overfished threshold of 20\%),
+managers must reduce fishing effort from current levels to allow biomass recovery. Setting
+effort below \py{f"{E_MSY/2:.0f}"} boat-days/year creates positive population growth,
+enabling stock rebuilding to MSY biomass levels within 10-15 years depending on
+recruitment strength.
+\end{example}
+
+\subsection{Climate Change Considerations}
+
+Climate-driven changes in ocean temperature and productivity affect all model parameters.
+Warming waters may increase growth rates (higher $r$ and $K$) for some species while
+reducing carrying capacity for others. Stock-recruitment relationships become more
+variable as environmental stochasticity increases, necessitating lower target fishing
+mortality rates to maintain resilience.
+
+\subsection{Ecosystem-Based Fisheries Management}
+
+Single-species models provide essential guidance but ignore predator-prey interactions,
+habitat degradation, and multispecies harvesting effects. Integrated ecosystem models
+extending these frameworks account for trophic dynamics, making harvest recommendations
+that sustain ecosystem function rather than maximizing yield from individual species.
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to fisheries models.
+This comprehensive analysis of fisheries population models demonstrates:
+
+\begin{enumerate}
+\item The Schaefer surplus production model predicts maximum sustainable yield of
+\py{f"{MSY:.0f}"} tonnes/year at optimal fishing effort of \py{f"{E_MSY:.0f}"}
+boat-days/year, with equilibrium biomass at 50\% of carrying capacity
+
+\item Stock-recruitment analysis reveals critical spawning biomass thresholds below which
+recruitment fails, with the Allee effect creating a collapse threshold at
+\py{f"{S_critical:.0f}"} tonnes for this stock
+
+\item Yield-per-recruit analysis identifies F\textsubscript{0.1} = \py{f"{F_01:.3f}"}
+year\textsuperscript{-1} as the precautionary fishing mortality target, maintaining
+spawning potential while approaching maximum catch efficiency
+
+\item Age-structured models incorporating growth, selectivity, and natural mortality
+provide more realistic management advice than biomass-only models, particularly for
+long-lived species with delayed maturity
+\end{enumerate}
+
+Sustainable fisheries management requires maintaining spawning stock above critical
+thresholds, limiting fishing mortality to precautionary levels below F\textsubscript{MSY},
+and adapting to environmental change through regular stock assessments. The models
+presented here form the scientific foundation for Total Allowable Catch (TAC) limits,
+effort restrictions, and rebuilding plans that sustain both fish populations and fishing
+communities.
+
+\section*{References}
+
+\begin{itemize}
+\item Schaefer, M. B. (1954). Some aspects of the dynamics of populations important to
+the management of commercial marine fisheries. \textit{Bulletin of the Inter-American
+Tropical Tuna Commission}, 1(2), 27-56.
+
+\item Beverton, R. J. H., \& Holt, S. J. (1957). \textit{On the Dynamics of Exploited
+Fish Populations}. Chapman and Hall, London.
+
+\item Ricker, W. E. (1954). Stock and recruitment. \textit{Journal of the Fisheries
+Research Board of Canada}, 11(5), 559-623.
+
+\item Hilborn, R., \& Walters, C. J. (1992). \textit{Quantitative Fisheries Stock
+Assessment: Choice, Dynamics and Uncertainty}. Chapman and Hall, New York.
+
+\item Quinn, T. J., \& Deriso, R. B. (1999). \textit{Quantitative Fish Dynamics}.
+Oxford University Press, Oxford.
+
+\item Fox, W. W. (1970). An exponential surplus-yield model for optimizing exploited
+fish populations. \textit{Transactions of the American Fisheries Society}, 99(1), 80-88.
+
+\item Clark, C. W. (1990). \textit{Mathematical Bioeconomics: The Optimal Management
+of Renewable Resources}, 2nd ed. Wiley-Interscience, New York.
+
+\item Haddon, M. (2011). \textit{Modelling and Quantitative Methods in Fisheries}, 2nd ed.
+Chapman \& Hall/CRC Press, Boca Raton.
+
+\item Walters, C., \& Martell, S. J. D. (2004). \textit{Fisheries Ecology and Management}.
+Princeton University Press, Princeton.
+
+\item Mace, P. M., \& Sissenwine, M. P. (1993). How much spawning per recruit is enough?
+\textit{Canadian Special Publication of Fisheries and Aquatic Sciences}, 120, 101-118.
+
+\item Punt, A. E., \& Smith, A. D. M. (1999). Harvest strategy evaluation for the
+eastern stock of gemfish (\textit{Rexea solandri}). \textit{ICES Journal of Marine
+Science}, 56(6), 860-875.
+
+\item Goodyear, C. P. (1993). Spawning stock biomass per recruit in fisheries management:
+foundation and current use. \textit{Canadian Special Publication of Fisheries and Aquatic
+Sciences}, 120, 67-81.
+
+\item Myers, R. A., Barrowman, N. J., Hutchings, J. A., \& Rosenberg, A. A. (1995).
+Population dynamics of exploited fish stocks at low population levels. \textit{Science},
+269(5227), 1106-1108.
+
+\item Hilborn, R. (2007). Managing fisheries is managing people: what has been learned?
+\textit{Fish and Fisheries}, 8(4), 285-296.
+
+\item Pauly, D., Christensen, V., Guénette, S., et al. (2002). Towards sustainability
+in world fisheries. \textit{Nature}, 418(6898), 689-695.
+
+\item Worm, B., Hilborn, R., Baum, J. K., et al. (2009). Rebuilding global fisheries.
+\textit{Science}, 325(5940), 578-585.
+
+\item Costello, C., Ovando, D., Hilborn, R., et al. (2012). Status and solutions for
+the world's unassessed fisheries. \textit{Science}, 338(6106), 517-520.
+
+\item Thorson, J. T., Minto, C., Minte-Vera, C. V., Kleisner, K. M., \& Longo, C. (2013).
+A new role for effort dynamics in the theory of harvested populations and data-poor stock
+assessment. \textit{Canadian Journal of Fisheries and Aquatic Sciences}, 70(12), 1829-1844.
+
+\item Free, C. M., Thorson, J. T., Pinsky, M. L., et al. (2019). Impacts of historical
+warming on marine fisheries production. \textit{Science}, 363(6430), 979-983.
+
+\item Froese, R., Winker, H., Coro, G., et al. (2018). Status and rebuilding of European
+fisheries. \textit{Marine Policy}, 93, 159-170.
+\end{itemize}
 
 \end{document}

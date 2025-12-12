@@ -1,223 +1,628 @@
-\documentclass[11pt,a4paper]{article}
+% General Relativity: Einstein Field Equations and Geodesic Analysis
+% Topics: Schwarzschild metric, orbital precession, gravitational waves, cosmology
+% Style: Theoretical physics report with computational analysis
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{geometry}
-\geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 
-\title{General Relativity\\Geodesics}
-\author{Relativity Research Group}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{General Relativity: Computational Analysis of Curved Spacetime and Gravitational Phenomena}
+\author{Theoretical Physics Laboratory}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Curved spacetime and gravitation.
+This report presents a comprehensive computational analysis of Einstein's general relativity,
+exploring the curvature of spacetime and its observational consequences. We examine the
+Schwarzschild metric for spherically symmetric spacetimes, compute geodesic trajectories
+to analyze orbital precession (including Mercury's anomalous perihelion advance of 43
+arcseconds per century), model gravitational wave signals from binary mergers, and
+investigate cosmological solutions via the Friedmann-Lema\^{i}tre-Robertson-Walker metric.
+Computational methods demonstrate how mass-energy curves spacetime geometry, producing
+testable predictions from black hole event horizons to the large-scale structure of the universe.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of general relativity.
+General relativity revolutionized our understanding of gravity by describing it not as a force,
+but as the curvature of four-dimensional spacetime. The theory's central insight is that
+mass-energy determines the geometry of spacetime, which in turn governs the motion of
+particles and light through geodesic equations.
+
+\begin{definition}[Einstein Field Equations]
+The relationship between spacetime curvature and mass-energy is expressed as:
+\begin{equation}
+G_{\mu\nu} + \Lambda g_{\mu\nu} = \frac{8\pi G}{c^4} T_{\mu\nu}
+\end{equation}
+where $G_{\mu\nu} = R_{\mu\nu} - \frac{1}{2}Rg_{\mu\nu}$ is the Einstein tensor, $R_{\mu\nu}$
+is the Ricci curvature tensor, $R$ is the Ricci scalar, $g_{\mu\nu}$ is the metric tensor,
+$\Lambda$ is the cosmological constant, and $T_{\mu\nu}$ is the stress-energy tensor.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Schwarzschild Metric}
+
+\begin{theorem}[Schwarzschild Solution]
+For a spherically symmetric, non-rotating mass $M$ in vacuum, the metric takes the form:
+\begin{equation}
+ds^2 = -\left(1 - \frac{r_s}{r}\right)c^2dt^2 + \left(1 - \frac{r_s}{r}\right)^{-1}dr^2 + r^2(d\theta^2 + \sin^2\theta\,d\phi^2)
+\end{equation}
+where $r_s = 2GM/c^2$ is the Schwarzschild radius (event horizon for black holes).
+\end{theorem}
+
+The metric coefficients reveal profound physics. The temporal component $g_{tt} = -(1-r_s/r)$
+vanishes at $r=r_s$, indicating gravitational time dilation becomes infinite at the event
+horizon. The radial component $g_{rr} = (1-r_s/r)^{-1}$ diverges at the same location,
+demonstrating coordinate singularity (though spacetime itself remains regular in proper coordinates).
+
+\subsection{Geodesic Equations}
+
+\begin{definition}[Geodesic Motion]
+Particles in free-fall follow geodesics, curves that extremize proper time:
+\begin{equation}
+\frac{d^2x^\mu}{d\tau^2} + \Gamma^\mu_{\alpha\beta}\frac{dx^\alpha}{d\tau}\frac{dx^\beta}{d\tau} = 0
+\end{equation}
+where $\tau$ is proper time and $\Gamma^\mu_{\alpha\beta}$ are Christoffel symbols encoding curvature.
+\end{definition}
+
+For the Schwarzschild metric, the effective potential for radial motion is:
+\begin{equation}
+V_{eff}(r) = -\frac{GM}{r} + \frac{L^2}{2r^2} - \frac{GML^2}{c^2r^3}
+\end{equation}
+
+The final term represents a general relativistic correction absent in Newtonian gravity,
+producing orbital precession. For Mercury, this yields the famous 43 arcseconds per century
+perihelion advance that confirmed Einstein's theory in 1915.
+
+\subsection{Gravitational Waves}
+
+\begin{theorem}[Linearized Gravity]
+For weak gravitational fields, $g_{\mu\nu} = \eta_{\mu\nu} + h_{\mu\nu}$ where $|h_{\mu\nu}| \ll 1$,
+the wave equation becomes:
+\begin{equation}
+\Box \bar{h}_{\mu\nu} = -\frac{16\pi G}{c^4}T_{\mu\nu}
+\end{equation}
+where $\bar{h}_{\mu\nu} = h_{\mu\nu} - \frac{1}{2}\eta_{\mu\nu}h$ and $\Box$ is the d'Alembertian.
+\end{theorem}
+
+Gravitational waves propagate at the speed of light, carrying two polarization states ($+$ and $\times$).
+The strain amplitude from a binary merger scales as $h \sim (GM/c^2r)(v/c)^2$, where $M$ is the
+chirp mass and $r$ is the distance to the source. LIGO's 2015 detection of GW150914 measured
+strain amplitudes $h \sim 10^{-21}$, confirming this prediction.
+
+\subsection{Cosmology: FLRW Metric}
+
+\begin{definition}[Friedmann-Lema\^{i}tre-Robertson-Walker Metric]
+For a homogeneous, isotropic universe:
+\begin{equation}
+ds^2 = -c^2dt^2 + a^2(t)\left[\frac{dr^2}{1-kr^2} + r^2(d\theta^2 + \sin^2\theta\,d\phi^2)\right]
+\end{equation}
+where $a(t)$ is the scale factor and $k \in \{-1, 0, +1\}$ determines spatial curvature.
+\end{definition}
+
+The Einstein equations reduce to the Friedmann equations:
+\begin{align}
+H^2 &= \left(\frac{\dot{a}}{a}\right)^2 = \frac{8\pi G}{3}\rho - \frac{kc^2}{a^2} + \frac{\Lambda c^2}{3} \\
+\frac{\ddot{a}}{a} &= -\frac{4\pi G}{3}\left(\rho + \frac{3p}{c^2}\right) + \frac{\Lambda c^2}{3}
+\end{align}
+
+These equations govern cosmic expansion, with the cosmological constant $\Lambda$ driving
+accelerated expansion observed via Type Ia supernovae (1998 Nobel Prize discovery).
+
+\section{Computational Analysis}
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy.integrate import odeint, solve_ivp
+from scipy.optimize import fsolve
 
-\end{pycode}
-
-\section{Mathematical Framework}
-
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('general_relativity_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{general_relativity_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
-
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
-ax2.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('general_relativity_plot2.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{general_relativity_plot2.pdf}
-\caption{Secondary analysis comparison.}
-\end{figure}
-
-\section{Parameter Study}
-
-\begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('general_relativity_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{general_relativity_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('general_relativity_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{general_relativity_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
 np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+# Physical constants
+G = 6.67430e-11  # m^3 kg^-1 s^-2
+c = 299792458    # m/s
+M_sun = 1.989e30 # kg
+au = 1.496e11    # meters (astronomical unit)
+year = 365.25 * 24 * 3600  # seconds
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Schwarzschild radius function
+def schwarzschild_radius(mass):
+    """Calculate Schwarzschild radius in meters"""
+    return 2 * G * mass / c**2
+
+# Schwarzschild metric coefficients
+def metric_coefficients(r, M):
+    """Return g_tt and g_rr for Schwarzschild metric"""
+    r_s = schwarzschild_radius(M)
+    if r <= r_s:
+        return 0, np.inf
+    g_tt = -(1 - r_s/r)
+    g_rr = 1 / (1 - r_s/r)
+    return g_tt, g_rr
+
+# Effective potential for orbital motion
+def effective_potential(r, M, L, relativistic=True):
+    """Effective potential for radial motion in Schwarzschild metric"""
+    r_s = schwarzschild_radius(M)
+    V_newton = -G*M/r + L**2/(2*r**2)
+    if relativistic:
+        V_gr = -G*M*L**2/(c**2 * r**3)
+        return V_newton + V_gr
+    return V_newton
+
+# Geodesic equations for orbital motion
+def geodesic_equations(t, y, M):
+    """
+    Geodesic equations in Schwarzschild spacetime
+    y = [r, phi, p_r, p_phi]
+    """
+    r, phi, p_r, p_phi = y
+    r_s = schwarzschild_radius(M)
+
+    if r <= r_s * 1.01:  # Near horizon cutoff
+        return [0, 0, 0, 0]
+
+    # Energy and angular momentum (constants of motion)
+    E = 1.0  # Normalized energy
+    L = p_phi  # Angular momentum
+
+    # Geodesic equations
+    dr_dt = p_r * (1 - r_s/r)
+    dphi_dt = L / r**2
+
+    # Radial acceleration
+    dp_r_dt = L**2 / r**3 - G*M / r**2 + 3*G*M*L**2/(c**2 * r**4)
+    dp_phi_dt = 0  # Angular momentum conserved
+
+    return [dr_dt, dphi_dt, dp_r_dt, dp_phi_dt]
+
+# Mercury orbital parameters
+M_mercury = 3.285e23  # kg
+a_mercury = 57.9e9    # semi-major axis (m)
+e_mercury = 0.2056    # eccentricity
+period_mercury = 87.97 * 24 * 3600  # orbital period (s)
+
+# Calculate perihelion precession
+def perihelion_precession_rate(a, e, M_central):
+    """
+    Calculate perihelion precession in arcseconds per orbit
+    a: semi-major axis
+    e: eccentricity
+    M_central: central mass
+    """
+    # GR prediction
+    delta_phi = 6 * np.pi * G * M_central / (c**2 * a * (1 - e**2))
+    # Convert to arcseconds per orbit
+    arcsec_per_orbit = delta_phi * 180 / np.pi * 3600
+    return arcsec_per_orbit
+
+# Gravitational wave from binary merger
+def gravitational_wave_strain(t, M_chirp, distance, f_initial):
+    """
+    Simplified chirp waveform for inspiraling binary
+    M_chirp: chirp mass in solar masses
+    distance: luminosity distance in Mpc
+    f_initial: initial frequency in Hz
+    """
+    M_chirp_kg = M_chirp * M_sun
+    distance_m = distance * 3.086e22  # Convert Mpc to meters
+
+    # Frequency evolution (leading order)
+    tau = t - t[-1]  # Time to coalescence
+    tau[tau >= 0] = -1e-6  # Avoid singularity
+
+    f_t = f_initial * (1 - 256/5 * (np.pi * f_initial)**(8/3) *
+                       (G * M_chirp_kg / c**3)**(5/3) * tau)**(-3/8)
+    f_t[f_t < 0] = 0
+
+    # Strain amplitude
+    h_0 = (4 / distance_m) * (G * M_chirp_kg / c**2)**(5/3) * (np.pi * f_t / c)**(2/3)
+    h_plus = h_0 * np.cos(2 * np.pi * f_t * t)
+
+    return h_plus, f_t
+
+# FLRW cosmology - scale factor evolution
+def friedmann_equations(a, t, Omega_m, Omega_lambda):
+    """
+    Friedmann equation for flat universe (k=0)
+    """
+    H_0 = 2.2e-18  # Hubble constant in s^-1 (roughly 67 km/s/Mpc)
+
+    # Friedmann equation
+    H_squared = H_0**2 * (Omega_m * a**(-3) + Omega_lambda)
+
+    if H_squared < 0:
+        return 0
+
+    da_dt = a * np.sqrt(H_squared)
+    return da_dt
+
+# Compute black hole properties
+masses_bh = np.array([1, 10, 1e6, 4.3e6]) * M_sun  # Solar, stellar, SMBH, Sgr A*
+r_schwarzschild = schwarzschild_radius(masses_bh)
+
+# Plot 1: Schwarzschild metric coefficients
+fig = plt.figure(figsize=(14, 12))
+
+ax1 = fig.add_subplot(3, 3, 1)
+M_test = 10 * M_sun
+r_s_test = schwarzschild_radius(M_test)
+r_range = np.linspace(1.5 * r_s_test, 10 * r_s_test, 500)
+
+g_tt_vals = -(1 - r_s_test/r_range)
+g_rr_vals = 1 / (1 - r_s_test/r_range)
+
+ax1.plot(r_range/r_s_test, -g_tt_vals, 'b-', linewidth=2, label='$-g_{tt}$')
+ax1.plot(r_range/r_s_test, g_rr_vals, 'r-', linewidth=2, label='$g_{rr}$')
+ax1.axvline(x=1, color='black', linestyle='--', linewidth=1.5, label='Event Horizon')
+ax1.set_xlabel('$r/r_s$', fontsize=11)
+ax1.set_ylabel('Metric Coefficient', fontsize=11)
+ax1.set_title('Schwarzschild Metric Components', fontsize=11)
+ax1.legend(fontsize=9)
+ax1.grid(True, alpha=0.3)
+ax1.set_ylim(0, 5)
+
+# Plot 2: Effective potential comparison
+ax2 = fig.add_subplot(3, 3, 2)
+M_central = M_sun
+L_test = 3e40  # Angular momentum (kg m^2/s)
+r_pot = np.linspace(1e9, 5e10, 500)
+
+V_newtonian = effective_potential(r_pot, M_central, L_test, relativistic=False)
+V_gr = effective_potential(r_pot, M_central, L_test, relativistic=True)
+
+ax2.plot(r_pot/au, V_newtonian/1e8, 'b--', linewidth=2, label='Newtonian')
+ax2.plot(r_pot/au, V_gr/1e8, 'r-', linewidth=2, label='General Relativity')
+ax2.set_xlabel('$r$ (AU)', fontsize=11)
+ax2.set_ylabel('$V_{eff}/10^8$ (J/kg)', fontsize=11)
+ax2.set_title('Effective Potential: GR vs Newtonian', fontsize=11)
+ax2.legend(fontsize=9)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Orbital precession
+ax3 = fig.add_subplot(3, 3, 3)
+
+# Solve geodesic equations for precessing orbit
+r0 = a_mercury * (1 - e_mercury)  # Perihelion
+v0 = np.sqrt(G * M_sun * (1 + e_mercury) / (a_mercury * (1 - e_mercury)))
+L_mercury = r0 * v0
+
+y0 = [r0, 0, v0, L_mercury]
+t_span = (0, 5 * period_mercury)
+t_eval = np.linspace(0, 5 * period_mercury, 5000)
+
+sol = solve_ivp(geodesic_equations, t_span, y0, args=(M_sun,),
+                t_eval=t_eval, method='RK45', rtol=1e-8)
+
+r_orbit = sol.y[0]
+phi_orbit = sol.y[1]
+
+x_orbit = r_orbit * np.cos(phi_orbit)
+y_orbit = r_orbit * np.sin(phi_orbit)
+
+ax3.plot(x_orbit/au, y_orbit/au, 'b-', linewidth=1, alpha=0.7)
+ax3.plot(0, 0, 'yo', markersize=12, label='Sun')
+ax3.set_xlabel('$x$ (AU)', fontsize=11)
+ax3.set_ylabel('$y$ (AU)', fontsize=11)
+ax3.set_title('Orbital Precession (Mercury-like)', fontsize=11)
+ax3.axis('equal')
+ax3.grid(True, alpha=0.3)
+ax3.legend(fontsize=9)
+
+# Plot 4: Perihelion precession rates
+ax4 = fig.add_subplot(3, 3, 4)
+
+planets = ['Mercury', 'Venus', 'Earth', 'Mars']
+semi_major = np.array([57.9, 108.2, 149.6, 227.9]) * 1e9  # meters
+eccentricity = np.array([0.2056, 0.0068, 0.0167, 0.0934])
+
+precession_rates = [perihelion_precession_rate(a, e, M_sun)
+                   for a, e in zip(semi_major, eccentricity)]
+
+# Convert to arcsec/century
+orbits_per_century = 100 * year / (2 * np.pi * np.sqrt(semi_major**3 / (G * M_sun)))
+precession_per_century = np.array(precession_rates) * orbits_per_century
+
+ax4.bar(planets, precession_per_century, color='steelblue', edgecolor='black', linewidth=1.5)
+ax4.axhline(y=43, color='red', linestyle='--', linewidth=2, label='Mercury Observed')
+ax4.set_ylabel('Precession (arcsec/century)', fontsize=11)
+ax4.set_title('Perihelion Precession: GR Prediction', fontsize=11)
+ax4.legend(fontsize=9)
+ax4.grid(True, alpha=0.3, axis='y')
+
+# Plot 5: Light deflection angle
+ax5 = fig.add_subplot(3, 3, 5)
+
+# Deflection angle as function of impact parameter
+b_range = np.linspace(r_s_test, 100*r_s_test, 500)
+deflection_angle = 4 * G * M_test / (c**2 * b_range)  # radians
+
+# Convert to arcseconds
+deflection_arcsec = deflection_angle * 180 / np.pi * 3600
+
+ax5.loglog(b_range/r_s_test, deflection_arcsec, 'b-', linewidth=2)
+ax5.axhline(y=1.75, color='red', linestyle='--', linewidth=1.5,
+           label='Solar limb deflection (1.75\")')
+ax5.set_xlabel('Impact Parameter $b/r_s$', fontsize=11)
+ax5.set_ylabel('Deflection Angle (arcsec)', fontsize=11)
+ax5.set_title('Gravitational Light Deflection', fontsize=11)
+ax5.legend(fontsize=9)
+ax5.grid(True, alpha=0.3, which='both')
+
+# Plot 6: Gravitational wave chirp
+ax6 = fig.add_subplot(3, 3, 6)
+
+M_chirp_gw = 30  # Solar masses (like GW150914)
+distance_gw = 410  # Mpc
+f_initial_gw = 35  # Hz
+
+t_gw = np.linspace(-0.2, 0, 2000)
+h_strain, f_gw = gravitational_wave_strain(t_gw, M_chirp_gw, distance_gw, f_initial_gw)
+
+ax6.plot(t_gw * 1000, h_strain * 1e21, 'b-', linewidth=1)
+ax6.set_xlabel('Time to Merger (ms)', fontsize=11)
+ax6.set_ylabel('Strain $h \\times 10^{21}$', fontsize=11)
+ax6.set_title('Gravitational Wave Chirp Signal', fontsize=11)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Gravitational wave frequency evolution
+ax7 = fig.add_subplot(3, 3, 7)
+
+ax7.plot(t_gw * 1000, f_gw, 'r-', linewidth=2)
+ax7.set_xlabel('Time to Merger (ms)', fontsize=11)
+ax7.set_ylabel('Frequency (Hz)', fontsize=11)
+ax7.set_title('GW Frequency Evolution (Chirp)', fontsize=11)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: FLRW scale factor evolution
+ax8 = fig.add_subplot(3, 3, 8)
+
+# Different cosmological models
+t_cosmo = np.linspace(0.1, 14, 500)  # Gyr
+Omega_m_vals = [1.0, 0.3, 0.0]
+Omega_lambda_vals = [0.0, 0.7, 1.0]
+labels = ['Matter-only', 'ΛCDM (current)', 'Dark energy only']
+colors = ['blue', 'red', 'green']
+
+for Om, Ol, label, color in zip(Omega_m_vals, Omega_lambda_vals, labels, colors):
+    a_init = 0.1
+    t_sec = t_cosmo * 1e9 * year
+
+    a_solution = odeint(friedmann_equations, a_init, t_sec, args=(Om, Ol))
+    ax8.plot(t_cosmo, a_solution.flatten(), linewidth=2, label=label, color=color)
+
+ax8.set_xlabel('Time (Gyr)', fontsize=11)
+ax8.set_ylabel('Scale Factor $a(t)$', fontsize=11)
+ax8.set_title('Cosmic Expansion: FLRW Models', fontsize=11)
+ax8.legend(fontsize=8)
+ax8.grid(True, alpha=0.3)
+
+# Plot 9: Event horizon radii
+ax9 = fig.add_subplot(3, 3, 9)
+
+mass_labels = ['$1 M_\\odot$', '$10 M_\\odot$', '$10^6 M_\\odot$', 'Sgr A*']
+r_s_km = r_schwarzschild / 1000
+
+ax9.barh(mass_labels, r_s_km, color='darkviolet', edgecolor='black', linewidth=1.5)
+ax9.set_xlabel('Schwarzschild Radius (km)', fontsize=11)
+ax9.set_title('Black Hole Event Horizons', fontsize=11)
+ax9.set_xscale('log')
+ax9.grid(True, alpha=0.3, which='both', axis='x')
+
 plt.tight_layout()
-plt.savefig('general_relativity_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('general_relativity_analysis.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{general_relativity_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\includegraphics[width=\textwidth]{general_relativity_analysis.pdf}
+\caption{Comprehensive general relativity analysis: (a) Schwarzschild metric coefficients
+showing singularity at event horizon $r=r_s$; (b) Effective potential comparing Newtonian
+and general relativistic predictions, with GR correction producing stable circular orbits
+at different radii; (c) Orbital precession demonstrating non-closed elliptical trajectories;
+(d) Perihelion precession rates for inner planets, with Mercury's 43 arcsec/century
+matching 1915 observations; (e) Gravitational light deflection as function of impact
+parameter; (f-g) Gravitational wave strain and frequency evolution for binary black hole
+merger; (h) Cosmic scale factor evolution for different FLRW models; (i) Event horizon
+radii for black holes spanning stellar to supermassive scales.}
+\label{fig:general_relativity}
 \end{figure}
 
-\section{Time Series}
+\section{Results}
+
+\subsection{Black Hole Properties}
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Schwarzschild Radii for Representative Black Holes}")
+print(r"\begin{tabular}{lccc}")
+print(r"\toprule")
+print(r"Object & Mass ($M_\odot$) & $r_s$ (km) & $r_s$ (AU) \\")
+print(r"\midrule")
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('general_relativity_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
+for i, label in enumerate(['Solar mass BH', 'Stellar BH', 'IMBH', 'Sgr A*']):
+    mass_solar = masses_bh[i] / M_sun
+    rs_km = r_schwarzschild[i] / 1000
+    rs_au = r_schwarzschild[i] / au
+
+    if mass_solar < 1000:
+        print(f"{label} & {mass_solar:.1f} & {rs_km:.2f} & {rs_au:.2e} \\\\")
+    else:
+        print(f"{label} & {mass_solar:.2e} & {rs_km:.2e} & {rs_au:.3f} \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:black_holes}")
+print(r"\end{table}")
 \end{pycode}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{general_relativity_plot6.pdf}
-\caption{Time series visualization.}
-\end{figure}
+The Schwarzschild radius scales linearly with mass: $r_s = 2GM/c^2 \approx 2.95$ km per
+solar mass. For Sagittarius A*, the supermassive black hole at the Milky Way's center with
+$M = 4.3 \times 10^6 M_\odot$, the event horizon radius is approximately 0.08 AU, smaller
+than Mercury's orbit yet containing millions of solar masses.
 
-\section{Results Summary}
+\subsection{Orbital Precession Analysis}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Perihelion Precession Rates for Inner Planets}")
+print(r"\begin{tabular}{lcccc}")
+print(r"\toprule")
+print(r"Planet & $a$ (AU) & $e$ & $\delta\phi$/orbit (\") & $\delta\phi$/century (\") \\")
+print(r"\midrule")
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+for i, planet in enumerate(planets):
+    a_au = semi_major[i] / au
+    e = eccentricity[i]
+    prec_orbit = precession_rates[i]
+    prec_cent = precession_per_century[i]
+    print(f"{planet} & {a_au:.1f} & {e:.4f} & {prec_orbit:.4f} & {prec_cent:.2f} \\\\")
+
+print(r"\midrule")
+print(r"Mercury (observed) & --- & --- & --- & 43.0 \\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:precession}")
+print(r"\end{table}")
 \end{pycode}
+
+Mercury's perihelion precession provided the first precision test of general relativity. The
+observed value of 43 arcseconds per century, after accounting for Newtonian perturbations
+from other planets, exactly matches Einstein's GR prediction. This $1/r^3$ correction term
+in the effective potential arises from the curvature of spacetime near the Sun.
+
+\subsection{Gravitational Wave Properties}
+
+\begin{pycode}
+# Calculate properties for GW150914-like event
+M1_gw150914 = 36  # Solar masses
+M2_gw150914 = 29
+M_chirp_150914 = (M1_gw150914 * M2_gw150914)**(3/5) / (M1_gw150914 + M2_gw150914)**(1/5)
+distance_150914 = 410  # Mpc
+peak_strain = 1.0e-21
+
+# Frequency at merger
+f_merge = c**3 / (6**(3/2) * np.pi * G * (M1_gw150914 + M2_gw150914) * M_sun)
+
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Gravitational Wave Event Parameters (GW150914-type)}")
+print(r"\begin{tabular}{lc}")
+print(r"\toprule")
+print(r"Parameter & Value \\")
+print(r"\midrule")
+print(f"Chirp mass $\\mathcal{{M}}$ & {M_chirp_150914:.1f} $M_\\odot$ \\\\")
+print(f"Luminosity distance & {distance_150914} Mpc \\\\")
+print(f"Peak strain amplitude & {peak_strain:.1e} \\\\")
+print(f"Merger frequency & {f_merge:.0f} Hz \\\\")
+print(f"Total radiated energy & $\\sim 3 M_\\odot c^2$ \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:gw_event}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Testing General Relativity]
+GR has passed precision tests across vast scales:
+\begin{itemize}
+\item \textbf{Solar System}: Mercury precession (43\"/century), light deflection by Sun (1.75\")
+\item \textbf{Binary Pulsars}: Orbital decay matching gravitational wave emission (Hulse-Taylor)
+\item \textbf{Cosmology}: Accelerating expansion requiring dark energy ($\Omega_\Lambda \approx 0.7$)
+\item \textbf{Strong Gravity}: LIGO/Virgo detections confirming black hole mergers
+\end{itemize}
+\end{example}
+
+\begin{remark}[Gravitational Time Dilation]
+The Schwarzschild metric predicts time runs slower in gravitational fields. For GPS satellites
+at altitude $h \approx 20{,}000$ km, clocks run approximately 38 microseconds per day faster
+than Earth-surface clocks due to weaker gravity (offset by 7 $\mu$s/day special relativistic
+correction). Without GR corrections, GPS would accumulate 10 km positioning errors daily.
+\end{remark}
+
+\subsection{Event Horizon Physics}
+
+\begin{pycode}
+# Calculate tidal forces at horizon
+M_bh_tidal = 10 * M_sun  # Stellar mass black hole
+r_s_tidal = schwarzschild_radius(M_bh_tidal)
+
+# Tidal acceleration for 2m tall human
+height = 2.0  # meters
+tidal_accel = 2 * G * M_bh_tidal * height / r_s_tidal**3
+
+print(f"For a {M_bh_tidal/M_sun:.0f} $M_\\odot$ black hole with $r_s = {r_s_tidal/1000:.1f}$ km, ")
+print(f"tidal acceleration across a {height} m object at the event horizon is ")
+print(f"${tidal_accel:.2e}$ m/s$^2$ ($\\sim {tidal_accel/9.8:.1e}$ $g$), ")
+print(f"demonstrating extreme spaghettification effects.")
+\end{pycode}
+
+\subsection{Cosmological Implications}
+
+The FLRW metric with $\Omega_m = 0.3$ and $\Omega_\Lambda = 0.7$ (current cosmological
+observations) predicts eternal accelerating expansion. The scale factor grows exponentially
+at late times: $a(t) \propto e^{H_0\sqrt{\Omega_\Lambda}\,t}$, with galaxies beyond the
+cosmic event horizon ($\sim 16$ Gpc) forever receding faster than light, rendering them
+causally disconnected from future observers.
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to general relativity.
+This computational analysis demonstrates general relativity's fundamental predictions:
+
+\begin{enumerate}
+\item Schwarzschild black holes exhibit event horizons at $r_s = 2GM/c^2$, ranging from 3 km for
+solar-mass objects to $10^{10}$ km for supermassive black holes
+\item Orbital precession arises from the $-GML^2/(c^2r^3)$ potential correction, yielding
+Mercury's observed 43 arcseconds per century perihelion advance
+\item Gravitational waves propagate as ripples in spacetime, with LIGO-detected strains
+$h \sim 10^{-21}$ confirming binary black hole mergers
+\item FLRW cosmology with $\Lambda > 0$ describes our accelerating universe, with current
+observations favoring $\Omega_\Lambda \approx 0.7$
+\item Light deflection, time dilation, and geodesic motion provide precision tests confirming
+GR from Solar System scales to cosmological horizons
+\end{enumerate}
+
+Einstein's geometric theory of gravity remains our most accurate description of spacetime,
+validated across 60 orders of magnitude in length scale.
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Misner, C.W., Thorne, K.S., \& Wheeler, J.A. \textit{Gravitation}. Freeman, 1973.
+\item Weinberg, S. \textit{Gravitation and Cosmology}. Wiley, 1972.
+\item Carroll, S.M. \textit{Spacetime and Geometry: An Introduction to General Relativity}. Cambridge, 2019.
+\item Wald, R.M. \textit{General Relativity}. University of Chicago Press, 1984.
+\item Hartle, J.B. \textit{Gravity: An Introduction to Einstein's General Relativity}. Addison-Wesley, 2003.
+\item Schutz, B.F. \textit{A First Course in General Relativity}, 3rd ed. Cambridge, 2022.
+\item Abbott, B.P., et al. (LIGO/Virgo). ``Observation of Gravitational Waves from a Binary Black Hole Merger.'' \textit{Phys. Rev. Lett.} \textbf{116}, 061102 (2016).
+\item Will, C.M. ``The Confrontation between General Relativity and Experiment.'' \textit{Living Rev. Relativity} \textbf{17}, 4 (2014).
+\item Perlmutter, S., et al. ``Measurements of $\Omega$ and $\Lambda$ from 42 High-Redshift Supernovae.'' \textit{Astrophys. J.} \textbf{517}, 565 (1999).
+\item Event Horizon Telescope Collaboration. ``First M87 Event Horizon Telescope Results. I. The Shadow of the Supermassive Black Hole.'' \textit{Astrophys. J. Lett.} \textbf{875}, L1 (2019).
+\item Riess, A.G., et al. ``Observational Evidence from Supernovae for an Accelerating Universe.'' \textit{Astron. J.} \textbf{116}, 1009 (1998).
+\item Stairs, I.H. ``Testing General Relativity with Pulsar Timing.'' \textit{Living Rev. Relativity} \textbf{6}, 5 (2003).
+\item Hulse, R.A., \& Taylor, J.H. ``Discovery of a Pulsar in a Binary System.'' \textit{Astrophys. J. Lett.} \textbf{195}, L51 (1975).
+\item Ashby, N. ``Relativity in the Global Positioning System.'' \textit{Living Rev. Relativity} \textbf{6}, 1 (2003).
+\item Shapiro, I.I. ``Fourth Test of General Relativity.'' \textit{Phys. Rev. Lett.} \textbf{13}, 789 (1964).
+\end{itemize}
 
 \end{document}

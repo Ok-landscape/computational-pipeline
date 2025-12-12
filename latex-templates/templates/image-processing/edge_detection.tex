@@ -1,223 +1,819 @@
-\documentclass[11pt,a4paper]{article}
+% Edge Detection in Digital Image Processing
+% Topics: Gradient operators, Canny edge detection, Laplacian methods, performance metrics
+% Style: Technical report with computational implementations
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{geometry}
-\geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
-\title{Edge Detection\\Sobel and Canny}
-\author{Image Processing Research Group}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Edge Detection: From Gradient Operators to Multi-Scale Analysis}
+\author{Computer Vision Laboratory}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Gradient-based edge detection methods.
+This report presents a comprehensive analysis of edge detection algorithms in digital image
+processing. We examine gradient-based methods (Sobel, Prewitt, Roberts), the Canny edge
+detector with its multi-stage pipeline, and Laplacian-based approaches including zero-crossing
+detection. Computational implementations demonstrate edge detection on synthetic test patterns
+and natural images, with quantitative performance evaluation using precision, recall, and
+F-measure metrics. We analyze the trade-offs between noise sensitivity, localization accuracy,
+and computational efficiency across different detector families.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of edge detection.
+Edge detection is a fundamental operation in computer vision, providing critical information
+about object boundaries, surface discontinuities, and scene structure. An edge represents a
+significant local change in image intensity, typically occurring at the boundary between
+regions of different brightness or texture.
+
+\begin{definition}[Edge]
+An edge in a digital image is a set of connected pixels that form a boundary between two
+regions with relatively distinct intensity properties. Mathematically, edges correspond to
+local maxima in the intensity gradient magnitude:
+\begin{equation}
+|\nabla I| = \sqrt{\left(\frac{\partial I}{\partial x}\right)^2 + \left(\frac{\partial I}{\partial y}\right)^2}
+\end{equation}
+where $I(x,y)$ is the image intensity function.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Gradient-Based Edge Detection}
+
+The image gradient captures the rate and direction of intensity change at each pixel.
+
+\begin{definition}[Image Gradient]
+For a continuous image $I(x,y)$, the gradient is a vector:
+\begin{equation}
+\nabla I = \left[\frac{\partial I}{\partial x}, \frac{\partial I}{\partial y}\right]^T
+\end{equation}
+with magnitude $|\nabla I| = \sqrt{I_x^2 + I_y^2}$ and direction $\theta = \arctan(I_y/I_x)$.
+\end{definition}
+
+\begin{theorem}[Sobel Operator]
+The Sobel operator approximates the gradient using 3$\times$3 convolution kernels:
+\begin{equation}
+G_x = \begin{bmatrix} -1 & 0 & 1 \\ -2 & 0 & 2 \\ -1 & 0 & 1 \end{bmatrix}, \quad
+G_y = \begin{bmatrix} -1 & -2 & -1 \\ 0 & 0 & 0 \\ 1 & 2 & 1 \end{bmatrix}
+\end{equation}
+These kernels combine smoothing (perpendicular to gradient direction) with differentiation
+(parallel to gradient direction), providing noise robustness.
+\end{theorem}
+
+\begin{remark}[Alternative Gradient Operators]
+Other first-order operators include:
+\begin{itemize}
+\item \textbf{Prewitt}: Equal-weight smoothing, kernels $\begin{bmatrix} -1 & 0 & 1 \\ -1 & 0 & 1 \\ -1 & 0 & 1 \end{bmatrix}$
+\item \textbf{Roberts}: 2$\times$2 diagonal kernels $\begin{bmatrix} 1 & 0 \\ 0 & -1 \end{bmatrix}$, $\begin{bmatrix} 0 & 1 \\ -1 & 0 \end{bmatrix}$
+\item \textbf{Scharr}: Optimized 3$\times$3 kernels with coefficients $\pm 3, \pm 10$
+\end{itemize}
+\end{remark}
+
+\subsection{Canny Edge Detector}
+
+The Canny algorithm (1986) remains the gold standard for edge detection due to its optimal
+performance according to three criteria: good detection, good localization, and single response.
+
+\begin{theorem}[Canny Edge Detection Pipeline]
+The Canny algorithm consists of four stages:
+\begin{enumerate}
+\item \textbf{Gaussian smoothing}: Convolve image with $G_\sigma(x,y) = \frac{1}{2\pi\sigma^2}e^{-(x^2+y^2)/2\sigma^2}$
+\item \textbf{Gradient computation}: Calculate magnitude and orientation using Sobel or similar
+\item \textbf{Non-maximum suppression}: Thin edges to single-pixel width by suppressing non-maxima perpendicular to edge direction
+\item \textbf{Hysteresis thresholding}: Use dual thresholds $T_{low}$ and $T_{high}$ to link edge chains
+\end{enumerate}
+\end{theorem}
+
+\subsection{Laplacian-Based Methods}
+
+Second-order derivatives detect edges as zero-crossings rather than gradient maxima.
+
+\begin{definition}[Laplacian of Gaussian (LoG)]
+The LoG operator combines Gaussian smoothing with the Laplacian:
+\begin{equation}
+\nabla^2 G_\sigma = -\frac{1}{\pi\sigma^4}\left[1 - \frac{x^2+y^2}{2\sigma^2}\right]e^{-(x^2+y^2)/2\sigma^2}
+\end{equation}
+Edges occur where $\nabla^2(G_\sigma * I) = 0$ with sign change.
+\end{definition}
+
+\begin{remark}[Difference of Gaussians]
+The LoG can be approximated by the Difference of Gaussians (DoG):
+\begin{equation}
+\text{DoG}(x,y) = G_{\sigma_1}(x,y) - G_{\sigma_2}(x,y), \quad \sigma_2 \approx 1.6\sigma_1
+\end{equation}
+This approximation is computationally efficient and forms the basis of SIFT features.
+\end{remark}
+
+\subsection{Performance Evaluation}
+
+\begin{definition}[Edge Detection Metrics]
+Given ground truth edges $E_{GT}$ and detected edges $E_{D}$:
+\begin{itemize}
+\item \textbf{Precision}: $P = \frac{TP}{TP + FP}$ (fraction of detected edges that are correct)
+\item \textbf{Recall}: $R = \frac{TP}{TP + FN}$ (fraction of true edges detected)
+\item \textbf{F-measure}: $F_1 = \frac{2PR}{P+R}$ (harmonic mean of precision and recall)
+\item \textbf{Pratt's FOM}: $\text{FOM} = \frac{1}{\max(N_I, N_D)}\sum_{i=1}^{N_D}\frac{1}{1+\alpha d_i^2}$ where $d_i$ is distance to nearest true edge
+\end{itemize}
+\end{definition}
+
+\section{Computational Analysis}
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy import ndimage, signal
+from scipy.ndimage import gaussian_filter, convolve
 
-\end{pycode}
-
-\section{Mathematical Framework}
-
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('edge_detection_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{edge_detection_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
-
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
-ax2.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('edge_detection_plot2.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{edge_detection_plot2.pdf}
-\caption{Secondary analysis comparison.}
-\end{figure}
-
-\section{Parameter Study}
-
-\begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('edge_detection_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{edge_detection_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('edge_detection_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{edge_detection_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
 np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+# Define gradient operators
+sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+sobel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+prewitt_x = np.array([[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]])
+prewitt_y = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+
+roberts_x = np.array([[1, 0], [0, -1]])
+roberts_y = np.array([[0, 1], [-1, 0]])
+
+# Create synthetic test image: step edges at known locations
+img_size = 200
+test_image = np.zeros((img_size, img_size))
+# Vertical edge
+test_image[:, img_size//2:] = 1.0
+# Horizontal edge in right half
+test_image[img_size//2:, img_size//2:] = 0.5
+# Add diagonal edge
+for i in range(img_size//2):
+    test_image[i, i:i+2] = 0.7
+
+# Add Gaussian noise
+noise_level = 0.05
+noisy_image = test_image + noise_level * np.random.randn(img_size, img_size)
+noisy_image = np.clip(noisy_image, 0, 1)
+
+# Function implementations
+def apply_sobel(image):
+    gradient_x = convolve(image, sobel_x)
+    gradient_y = convolve(image, sobel_y)
+    gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
+    gradient_direction = np.arctan2(gradient_y, gradient_x)
+    return gradient_magnitude, gradient_direction, gradient_x, gradient_y
+
+def apply_prewitt(image):
+    gradient_x = convolve(image, prewitt_x)
+    gradient_y = convolve(image, prewitt_y)
+    gradient_magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
+    return gradient_magnitude
+
+def non_maximum_suppression(gradient_mag, gradient_dir):
+    suppressed = np.zeros_like(gradient_mag)
+    angle = gradient_dir * 180.0 / np.pi
+    angle[angle < 0] += 180
+
+    M, N = gradient_mag.shape
+    for i in range(1, M-1):
+        for j in range(1, N-1):
+            q = 255
+            r = 255
+
+            # Angle 0 (horizontal)
+            if (0 <= angle[i,j] < 22.5) or (157.5 <= angle[i,j] <= 180):
+                q = gradient_mag[i, j+1]
+                r = gradient_mag[i, j-1]
+            # Angle 45
+            elif (22.5 <= angle[i,j] < 67.5):
+                q = gradient_mag[i+1, j-1]
+                r = gradient_mag[i-1, j+1]
+            # Angle 90 (vertical)
+            elif (67.5 <= angle[i,j] < 112.5):
+                q = gradient_mag[i+1, j]
+                r = gradient_mag[i-1, j]
+            # Angle 135
+            elif (112.5 <= angle[i,j] < 157.5):
+                q = gradient_mag[i-1, j-1]
+                r = gradient_mag[i+1, j+1]
+
+            if (gradient_mag[i,j] >= q) and (gradient_mag[i,j] >= r):
+                suppressed[i,j] = gradient_mag[i,j]
+
+    return suppressed
+
+def hysteresis_thresholding(image, threshold_low, threshold_high):
+    strong_edges = image > threshold_high
+    weak_edges = (image >= threshold_low) & (image <= threshold_high)
+
+    edges = strong_edges.copy()
+    M, N = image.shape
+
+    # Link weak edges to strong edges
+    for i in range(1, M-1):
+        for j in range(1, N-1):
+            if weak_edges[i, j]:
+                # Check 8-connected neighbors
+                if np.any(strong_edges[i-1:i+2, j-1:j+2]):
+                    edges[i, j] = True
+
+    return edges.astype(float)
+
+def canny_edge_detector(image, sigma=1.0, threshold_low=0.05, threshold_high=0.15):
+    # Step 1: Gaussian smoothing
+    smoothed = gaussian_filter(image, sigma)
+
+    # Step 2: Gradient computation
+    gradient_mag, gradient_dir, _, _ = apply_sobel(smoothed)
+
+    # Step 3: Non-maximum suppression
+    suppressed = non_maximum_suppression(gradient_mag, gradient_dir)
+
+    # Step 4: Hysteresis thresholding
+    edges = hysteresis_thresholding(suppressed, threshold_low, threshold_high)
+
+    return edges, gradient_mag, suppressed
+
+def laplacian_of_gaussian(image, sigma=2.0):
+    # Smooth with Gaussian
+    smoothed = gaussian_filter(image, sigma)
+    # Apply Laplacian
+    laplacian = ndimage.laplace(smoothed)
+    return laplacian
+
+def zero_crossing_detector(laplacian, threshold=0.01):
+    zero_crossings = np.zeros_like(laplacian)
+    M, N = laplacian.shape
+
+    for i in range(1, M-1):
+        for j in range(1, N-1):
+            # Check for sign changes in 4-connected neighborhood
+            region = laplacian[i-1:i+2, j-1:j+2]
+            if (np.min(region) < -threshold) and (np.max(region) > threshold):
+                zero_crossings[i, j] = 1
+
+    return zero_crossings
+
+# Apply different edge detectors
+sobel_mag, sobel_dir, sobel_gx, sobel_gy = apply_sobel(noisy_image)
+prewitt_mag = apply_prewitt(noisy_image)
+canny_edges, canny_grad, canny_nms = canny_edge_detector(noisy_image, sigma=1.4,
+                                                           threshold_low=0.05, threshold_high=0.15)
+log_result = laplacian_of_gaussian(noisy_image, sigma=2.0)
+log_edges = zero_crossing_detector(log_result, threshold=0.005)
+
+# Threshold gradient magnitudes for comparison
+sobel_edges = sobel_mag > 0.2
+prewitt_edges = prewitt_mag > 0.2
+
+# Count detected edges
+num_sobel_edges = np.sum(sobel_edges)
+num_prewitt_edges = np.sum(prewitt_edges)
+num_canny_edges = np.sum(canny_edges)
+num_log_edges = np.sum(log_edges)
+
+# Calculate ground truth edges from clean image
+true_edges_v = np.zeros_like(test_image)
+true_edges_v[:, img_size//2-1:img_size//2+1] = 1
+true_edges_h = np.zeros_like(test_image)
+true_edges_h[img_size//2-1:img_size//2+1, img_size//2:] = 1
+ground_truth = (true_edges_v + true_edges_h) > 0
+
+# Compute performance metrics for Canny
+def compute_metrics(detected, ground_truth, tolerance=2):
+    # Dilate ground truth for tolerance
+    from scipy.ndimage import binary_dilation
+    struct = np.ones((2*tolerance+1, 2*tolerance+1))
+    gt_dilated = binary_dilation(ground_truth, structure=struct)
+
+    true_positive = np.sum(detected & gt_dilated)
+    false_positive = np.sum(detected & ~gt_dilated)
+    false_negative = np.sum(~detected & ground_truth)
+
+    precision = true_positive / (true_positive + false_positive) if (true_positive + false_positive) > 0 else 0
+    recall = true_positive / (true_positive + false_negative) if (true_positive + false_negative) > 0 else 0
+    f_measure = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+
+    return precision, recall, f_measure
+
+canny_precision, canny_recall, canny_f1 = compute_metrics(canny_edges, ground_truth)
+sobel_precision, sobel_recall, sobel_f1 = compute_metrics(sobel_edges, ground_truth)
+
+# Create comprehensive visualization
+fig = plt.figure(figsize=(16, 14))
+
+# Plot 1: Original test image
+ax1 = fig.add_subplot(4, 4, 1)
+ax1.imshow(test_image, cmap='gray', interpolation='nearest')
+ax1.set_title('Clean Test Image', fontsize=10)
+ax1.axis('off')
+
+# Plot 2: Noisy image
+ax2 = fig.add_subplot(4, 4, 2)
+ax2.imshow(noisy_image, cmap='gray', interpolation='nearest')
+ax2.set_title(f'Noisy Image (SNR$\\approx${1/noise_level:.1f})', fontsize=10)
+ax2.axis('off')
+
+# Plot 3: Sobel gradient magnitude
+ax3 = fig.add_subplot(4, 4, 3)
+im3 = ax3.imshow(sobel_mag, cmap='hot', interpolation='nearest')
+ax3.set_title('Sobel Gradient Magnitude', fontsize=10)
+ax3.axis('off')
+plt.colorbar(im3, ax=ax3, fraction=0.046)
+
+# Plot 4: Gradient direction
+ax4 = fig.add_subplot(4, 4, 4)
+im4 = ax4.imshow(sobel_dir, cmap='hsv', interpolation='nearest')
+ax4.set_title('Gradient Direction', fontsize=10)
+ax4.axis('off')
+plt.colorbar(im4, ax=ax4, fraction=0.046)
+
+# Plot 5: Sobel X gradient
+ax5 = fig.add_subplot(4, 4, 5)
+im5 = ax5.imshow(sobel_gx, cmap='RdBu_r', interpolation='nearest')
+ax5.set_title('Sobel $G_x$ (Vertical Edges)', fontsize=10)
+ax5.axis('off')
+plt.colorbar(im5, ax=ax5, fraction=0.046)
+
+# Plot 6: Sobel Y gradient
+ax6 = fig.add_subplot(4, 4, 6)
+im6 = ax6.imshow(sobel_gy, cmap='RdBu_r', interpolation='nearest')
+ax6.set_title('Sobel $G_y$ (Horizontal Edges)', fontsize=10)
+ax6.axis('off')
+plt.colorbar(im6, ax=ax6, fraction=0.046)
+
+# Plot 7: Sobel thresholded
+ax7 = fig.add_subplot(4, 4, 7)
+ax7.imshow(sobel_edges, cmap='gray', interpolation='nearest')
+ax7.set_title(f'Sobel Edges ({num_sobel_edges} pixels)', fontsize=10)
+ax7.axis('off')
+
+# Plot 8: Prewitt comparison
+ax8 = fig.add_subplot(4, 4, 8)
+ax8.imshow(prewitt_edges, cmap='gray', interpolation='nearest')
+ax8.set_title(f'Prewitt Edges ({num_prewitt_edges} pixels)', fontsize=10)
+ax8.axis('off')
+
+# Plot 9: Canny - gradient after smoothing
+ax9 = fig.add_subplot(4, 4, 9)
+im9 = ax9.imshow(canny_grad, cmap='hot', interpolation='nearest')
+ax9.set_title('Canny: Gradient (Smoothed)', fontsize=10)
+ax9.axis('off')
+plt.colorbar(im9, ax=ax9, fraction=0.046)
+
+# Plot 10: Canny - after NMS
+ax10 = fig.add_subplot(4, 4, 10)
+im10 = ax10.imshow(canny_nms, cmap='hot', interpolation='nearest')
+ax10.set_title('Canny: Non-Max Suppression', fontsize=10)
+ax10.axis('off')
+plt.colorbar(im10, ax=ax10, fraction=0.046)
+
+# Plot 11: Canny final edges
+ax11 = fig.add_subplot(4, 4, 11)
+ax11.imshow(canny_edges, cmap='gray', interpolation='nearest')
+ax11.set_title(f'Canny Edges ({num_canny_edges} pixels)', fontsize=10)
+ax11.axis('off')
+
+# Plot 12: Canny overlay
+ax12 = fig.add_subplot(4, 4, 12)
+overlay = np.stack([noisy_image, noisy_image, noisy_image], axis=-1)
+overlay[canny_edges.astype(bool), :] = [1, 0, 0]
+ax12.imshow(overlay, interpolation='nearest')
+ax12.set_title('Canny Overlay on Image', fontsize=10)
+ax12.axis('off')
+
+# Plot 13: Laplacian of Gaussian
+ax13 = fig.add_subplot(4, 4, 13)
+im13 = ax13.imshow(log_result, cmap='RdBu_r', interpolation='nearest')
+ax13.set_title('Laplacian of Gaussian', fontsize=10)
+ax13.axis('off')
+plt.colorbar(im13, ax=ax13, fraction=0.046)
+
+# Plot 14: LoG zero crossings
+ax14 = fig.add_subplot(4, 4, 14)
+ax14.imshow(log_edges, cmap='gray', interpolation='nearest')
+ax14.set_title(f'LoG Zero-Crossings ({num_log_edges} pixels)', fontsize=10)
+ax14.axis('off')
+
+# Plot 15: Performance comparison
+ax15 = fig.add_subplot(4, 4, 15)
+methods = ['Sobel', 'Canny']
+precision_vals = [sobel_precision, canny_precision]
+recall_vals = [sobel_recall, canny_recall]
+f1_vals = [sobel_f1, canny_f1]
+
+x_pos = np.arange(len(methods))
+width = 0.25
+
+ax15.bar(x_pos - width, precision_vals, width, label='Precision', color='steelblue', edgecolor='black')
+ax15.bar(x_pos, recall_vals, width, label='Recall', color='coral', edgecolor='black')
+ax15.bar(x_pos + width, f1_vals, width, label='F-measure', color='lightgreen', edgecolor='black')
+
+ax15.set_ylabel('Score', fontsize=10)
+ax15.set_title('Detection Performance', fontsize=10)
+ax15.set_xticks(x_pos)
+ax15.set_xticklabels(methods, fontsize=9)
+ax15.legend(fontsize=8)
+ax15.set_ylim([0, 1])
+ax15.grid(axis='y', alpha=0.3)
+
+# Plot 16: Edge count comparison
+ax16 = fig.add_subplot(4, 4, 16)
+edge_counts = [num_sobel_edges, num_prewitt_edges, num_canny_edges, num_log_edges]
+count_labels = ['Sobel', 'Prewitt', 'Canny', 'LoG']
+colors_bars = ['steelblue', 'coral', 'lightgreen', 'plum']
+
+ax16.bar(count_labels, edge_counts, color=colors_bars, edgecolor='black')
+ax16.set_ylabel('Number of Edge Pixels', fontsize=10)
+ax16.set_title('Edge Detector Comparison', fontsize=10)
+ax16.tick_params(axis='x', labelsize=9)
+ax16.grid(axis='y', alpha=0.3)
+
 plt.tight_layout()
-plt.savefig('edge_detection_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('edge_detection_comprehensive.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{edge_detection_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\includegraphics[width=\textwidth]{edge_detection_comprehensive.pdf}
+\caption{Comprehensive edge detection analysis: (a) Clean synthetic test image with step edges;
+(b) Image corrupted with Gaussian noise; (c-d) Sobel gradient magnitude and direction revealing
+edge strength and orientation; (e-f) Directional gradients $G_x$ and $G_y$ highlighting vertical
+and horizontal features; (g-h) Thresholded Sobel and Prewitt edges showing similar detection
+patterns; (i-l) Canny detector pipeline stages from gradient computation through non-maximum
+suppression to final hysteresis thresholding with overlay; (m-n) Laplacian of Gaussian response
+and zero-crossing detection; (o-p) Quantitative performance comparison showing Canny's superior
+precision-recall balance and total edge pixel counts across methods.}
+\label{fig:edge_detection}
 \end{figure}
 
-\section{Time Series}
+\section{Algorithm Implementations}
+
+\subsection{Canny Edge Detector}
+
+\begin{algorithm}
+\caption{Canny Edge Detection}
+\begin{algorithmic}[1]
+\Require Image $I$, Gaussian $\sigma$, thresholds $T_{low}$, $T_{high}$
+\Ensure Binary edge map $E$
+\State $I_{smooth} \gets G_\sigma * I$ \Comment{Gaussian smoothing}
+\State $G_x \gets$ Sobel$_x * I_{smooth}$
+\State $G_y \gets$ Sobel$_y * I_{smooth}$
+\State $M \gets \sqrt{G_x^2 + G_y^2}$ \Comment{Gradient magnitude}
+\State $\theta \gets \arctan(G_y / G_x)$ \Comment{Gradient direction}
+\State $M_{nms} \gets$ NonMaxSuppress$(M, \theta)$ \Comment{Thin edges}
+\State $E \gets$ HysteresisThreshold$(M_{nms}, T_{low}, T_{high})$ \Comment{Link edges}
+\State \Return $E$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Non-Maximum Suppression}
+
+The key to single-pixel-wide edges is suppressing gradient magnitudes that are not local maxima
+in the direction perpendicular to the edge.
+
+\begin{algorithm}
+\caption{Non-Maximum Suppression}
+\begin{algorithmic}[1]
+\Require Gradient magnitude $M$, direction $\theta$
+\Ensure Suppressed magnitude $M_{nms}$
+\For{each pixel $(i,j)$}
+    \State Quantize $\theta_{i,j}$ to nearest 45$^\circ$ (0, 45, 90, 135)
+    \State Get neighboring pixels $p, q$ along gradient direction
+    \If{$M_{i,j} \geq M_p$ \textbf{and} $M_{i,j} \geq M_q$}
+        \State $M_{nms}[i,j] \gets M_{i,j}$ \Comment{Local maximum}
+    \Else
+        \State $M_{nms}[i,j] \gets 0$ \Comment{Suppressed}
+    \EndIf
+\EndFor
+\State \Return $M_{nms}$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Natural Image Analysis}
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+# Create a more complex natural-like scene
+np.random.seed(123)
+scene_size = 300
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
+# Create synthetic natural scene with multiple objects
+scene = np.ones((scene_size, scene_size)) * 0.3
+
+# Add geometric shapes with different intensities
+# Circle
+center_y, center_x = 100, 100
+radius = 40
+y, x = np.ogrid[:scene_size, :scene_size]
+circle_mask = (x - center_x)**2 + (y - center_y)**2 <= radius**2
+scene[circle_mask] = 0.8
+
+# Rectangle
+scene[150:220, 50:150] = 0.6
+
+# Triangle (approximate)
+for i in range(70):
+    scene[200-i, 180:180+2*i] = 0.45
+
+# Add texture using random noise patterns
+texture = np.random.randn(scene_size, scene_size) * 0.03
+scene += texture
+scene = np.clip(scene, 0, 1)
+
+# Add realistic noise
+scene_noisy = scene + 0.02 * np.random.randn(scene_size, scene_size)
+scene_noisy = np.clip(scene_noisy, 0, 1)
+
+# Apply multiple edge detectors with different parameters
+canny_sigma1, _, _ = canny_edge_detector(scene_noisy, sigma=0.8, threshold_low=0.04, threshold_high=0.12)
+canny_sigma2, _, _ = canny_edge_detector(scene_noisy, sigma=1.5, threshold_low=0.04, threshold_high=0.12)
+canny_sigma3, _, _ = canny_edge_detector(scene_noisy, sigma=2.5, threshold_low=0.04, threshold_high=0.12)
+
+sobel_scene, _, _, _ = apply_sobel(scene_noisy)
+log_scene = laplacian_of_gaussian(scene_noisy, sigma=1.5)
+log_scene_edges = zero_crossing_detector(log_scene, threshold=0.003)
+
+# Multi-scale analysis
+scales = [0.5, 1.0, 2.0, 3.0]
+multiscale_edges = np.zeros_like(scene)
+
+for sigma in scales:
+    edges, _, _ = canny_edge_detector(scene_noisy, sigma=sigma, threshold_low=0.04, threshold_high=0.12)
+    multiscale_edges += edges
+
+multiscale_edges = multiscale_edges > 0
+
+# Create visualization
+fig2 = plt.figure(figsize=(16, 10))
+
+# Original scene
+ax1 = fig2.add_subplot(3, 4, 1)
+ax1.imshow(scene, cmap='gray', interpolation='nearest')
+ax1.set_title('Synthetic Scene (Clean)', fontsize=10)
+ax1.axis('off')
+
+# Noisy scene
+ax2 = fig2.add_subplot(3, 4, 2)
+ax2.imshow(scene_noisy, cmap='gray', interpolation='nearest')
+ax2.set_title('Noisy Scene', fontsize=10)
+ax2.axis('off')
+
+# Sobel magnitude
+ax3 = fig2.add_subplot(3, 4, 3)
+im3 = ax3.imshow(sobel_scene, cmap='hot', interpolation='nearest')
+ax3.set_title('Sobel Gradient Magnitude', fontsize=10)
+ax3.axis('off')
+plt.colorbar(im3, ax=ax3, fraction=0.046)
+
+# Canny sigma=0.8
+ax4 = fig2.add_subplot(3, 4, 4)
+ax4.imshow(canny_sigma1, cmap='gray', interpolation='nearest')
+ax4.set_title(f'Canny ($\\sigma$=0.8, {np.sum(canny_sigma1)} edges)', fontsize=10)
+ax4.axis('off')
+
+# Canny sigma=1.5
+ax5 = fig2.add_subplot(3, 4, 5)
+ax5.imshow(canny_sigma2, cmap='gray', interpolation='nearest')
+ax5.set_title(f'Canny ($\\sigma$=1.5, {np.sum(canny_sigma2)} edges)', fontsize=10)
+ax5.axis('off')
+
+# Canny sigma=2.5
+ax6 = fig2.add_subplot(3, 4, 6)
+ax6.imshow(canny_sigma3, cmap='gray', interpolation='nearest')
+ax6.set_title(f'Canny ($\\sigma$=2.5, {np.sum(canny_sigma3)} edges)', fontsize=10)
+ax6.axis('off')
+
+# LoG response
+ax7 = fig2.add_subplot(3, 4, 7)
+im7 = ax7.imshow(log_scene, cmap='RdBu_r', interpolation='nearest')
+ax7.set_title('LoG Response ($\\sigma$=1.5)', fontsize=10)
+ax7.axis('off')
+plt.colorbar(im7, ax=ax7, fraction=0.046)
+
+# LoG edges
+ax8 = fig2.add_subplot(3, 4, 8)
+ax8.imshow(log_scene_edges, cmap='gray', interpolation='nearest')
+ax8.set_title(f'LoG Edges ({np.sum(log_scene_edges)} pixels)', fontsize=10)
+ax8.axis('off')
+
+# Multi-scale edges
+ax9 = fig2.add_subplot(3, 4, 9)
+ax9.imshow(multiscale_edges, cmap='gray', interpolation='nearest')
+ax9.set_title('Multi-Scale Edges (Combined)', fontsize=10)
+ax9.axis('off')
+
+# Edge count vs sigma
+ax10 = fig2.add_subplot(3, 4, 10)
+sigma_range = np.linspace(0.5, 4.0, 15)
+edge_counts_sigma = []
+for sig in sigma_range:
+    edges_temp, _, _ = canny_edge_detector(scene_noisy, sigma=sig, threshold_low=0.04, threshold_high=0.12)
+    edge_counts_sigma.append(np.sum(edges_temp))
+
+ax10.plot(sigma_range, edge_counts_sigma, 'o-', linewidth=2, markersize=6, color='steelblue')
+ax10.set_xlabel('Gaussian $\\sigma$', fontsize=10)
+ax10.set_ylabel('Edge Pixels Detected', fontsize=10)
+ax10.set_title('Scale Parameter Effect', fontsize=10)
+ax10.grid(True, alpha=0.3)
+
+# Threshold sensitivity
+ax11 = fig2.add_subplot(3, 4, 11)
+threshold_range = np.linspace(0.02, 0.20, 15)
+edge_counts_thresh = []
+for thresh in threshold_range:
+    edges_temp, _, _ = canny_edge_detector(scene_noisy, sigma=1.5,
+                                            threshold_low=thresh, threshold_high=thresh*3)
+    edge_counts_thresh.append(np.sum(edges_temp))
+
+ax11.plot(threshold_range, edge_counts_thresh, 's-', linewidth=2, markersize=6, color='coral')
+ax11.set_xlabel('Threshold $T_{low}$', fontsize=10)
+ax11.set_ylabel('Edge Pixels Detected', fontsize=10)
+ax11.set_title('Threshold Sensitivity', fontsize=10)
+ax11.grid(True, alpha=0.3)
+
+# Histogram of gradient magnitudes
+ax12 = fig2.add_subplot(3, 4, 12)
+gradient_flat = sobel_scene.flatten()
+ax12.hist(gradient_flat, bins=50, density=True, alpha=0.7, color='steelblue', edgecolor='black')
+ax12.axvline(x=0.12, color='red', linestyle='--', linewidth=2, label='Typical Threshold')
+ax12.set_xlabel('Gradient Magnitude', fontsize=10)
+ax12.set_ylabel('Probability Density', fontsize=10)
+ax12.set_title('Gradient Distribution', fontsize=10)
+ax12.legend(fontsize=9)
+ax12.set_xlim([0, 0.5])
+
 plt.tight_layout()
-plt.savefig('edge_detection_plot6.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('edge_detection_natural_scene.pdf', dpi=150, bbox_inches='tight')
 plt.close()
+
+# Store key statistics
+num_canny_sigma1 = int(np.sum(canny_sigma1))
+num_canny_sigma2 = int(np.sum(canny_sigma2))
+num_canny_sigma3 = int(np.sum(canny_sigma3))
+num_log_scene = int(np.sum(log_scene_edges))
+num_multiscale = int(np.sum(multiscale_edges))
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{edge_detection_plot6.pdf}
-\caption{Time series visualization.}
+\includegraphics[width=\textwidth]{edge_detection_natural_scene.pdf}
+\caption{Edge detection on synthetic natural scene: (a-b) Clean and noisy synthetic scenes
+containing geometric shapes with varying intensities; (c) Sobel gradient magnitude showing
+continuous edge strength; (d-f) Canny edge detection at three scales ($\sigma$ = 0.8, 1.5, 2.5)
+demonstrating the noise-detail trade-off, detecting \py{num_canny_sigma1}, \py{num_canny_sigma2},
+and \py{num_canny_sigma3} edge pixels respectively; (g-h) Laplacian of Gaussian response and
+zero-crossing detection finding \py{num_log_scene} edge pixels; (i) Multi-scale edge combination
+yielding \py{num_multiscale} consolidated edge pixels; (j-k) Parameter sensitivity analysis showing
+edge count dependence on Gaussian smoothing scale and threshold values; (l) Gradient magnitude
+histogram revealing the distribution of edge strengths and typical threshold selection criterion.}
+\label{fig:natural_scene}
 \end{figure}
 
-\section{Results Summary}
+\section{Results and Performance Analysis}
+
+\subsection{Computational Complexity}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
-
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Edge Detection Algorithm Complexity}")
+print(r"\begin{tabular}{lccc}")
+print(r"\toprule")
+print(r"Algorithm & Convolutions & Non-linear Ops & Complexity \\")
+print(r"\midrule")
+print(r"Sobel & 2 ($3\times3$) & Sqrt, Atan & $O(n^2)$ \\")
+print(r"Prewitt & 2 ($3\times3$) & Sqrt, Atan & $O(n^2)$ \\")
+print(r"Roberts & 2 ($2\times2$) & Sqrt, Atan & $O(n^2)$ \\")
+print(r"Canny & 3 (Gaussian + 2 Sobel) & NMS + Hysteresis & $O(n^2)$ \\")
+print(r"LoG & 1 (LoG kernel) & Zero-crossing & $O(n^2)$ \\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:complexity}")
+print(r"\end{table}")
 \end{pycode}
+
+\subsection{Detection Performance Summary}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Edge Detector Performance on Test Image}")
+print(r"\begin{tabular}{lcccc}")
+print(r"\toprule")
+print(r"Method & Edges Detected & Precision & Recall & F-measure \\")
+print(r"\midrule")
+print(f"Sobel (threshold=0.2) & {num_sobel_edges} & {sobel_precision:.3f} & {sobel_recall:.3f} & {sobel_f1:.3f} \\\\")
+print(f"Prewitt (threshold=0.2) & {num_prewitt_edges} & --- & --- & --- \\\\")
+print(f"Canny ($\\sigma$=1.4) & {num_canny_edges} & {canny_precision:.3f} & {canny_recall:.3f} & {canny_f1:.3f} \\\\")
+print(f"LoG ($\\sigma$=2.0) & {num_log_edges} & --- & --- & --- \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:performance}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Scale Parameter Analysis}
+
+The choice of Gaussian smoothing scale $\sigma$ represents a fundamental trade-off in edge detection:
+
+\begin{itemize}
+\item \textbf{Small $\sigma$ (0.5-1.0)}: Preserves fine details but sensitive to noise, detects $\sim$\py{num_canny_sigma1} edges
+\item \textbf{Medium $\sigma$ (1.5-2.5)}: Balanced noise suppression and detail retention, detects $\sim$\py{num_canny_sigma2} edges
+\item \textbf{Large $\sigma$ (3.0-4.0)}: Strong noise rejection but loses fine structure, detects $\sim$\py{num_canny_sigma3} edges
+\end{itemize}
+
+\section{Discussion}
+
+\begin{example}[Gradient Operator Selection]
+For real-time applications on noisy images, the Sobel operator provides an excellent balance:
+\begin{itemize}
+\item \textbf{Efficiency}: Only two $3\times3$ convolutions required
+\item \textbf{Robustness}: Built-in smoothing suppresses high-frequency noise
+\item \textbf{Accuracy}: Weighted gradient approximation superior to simple differences
+\end{itemize}
+For highest quality, Canny's multi-stage pipeline achieves F-measure of \py{f"{canny_f1:.3f}"}
+compared to Sobel's \py{f"{sobel_f1:.3f}"} on our test image.
+\end{example}
+
+\begin{remark}[Second vs First Derivatives]
+Laplacian-based methods offer theoretical advantages:
+\begin{itemize}
+\item Isotropic response (rotation invariant)
+\item Precise localization at zero-crossings
+\item No explicit thresholding of gradient magnitude
+\end{itemize}
+However, second derivatives amplify noise more severely, requiring larger smoothing kernels
+and potentially missing low-contrast edges.
+\end{remark}
+
+\begin{example}[Hysteresis Thresholding]
+Canny's dual-threshold approach solves the edge linking problem:
+\begin{itemize}
+\item High threshold ($T_h$): Seeds strong edge segments (high confidence)
+\item Low threshold ($T_l$): Extends edges along weak gradients (connected to strong edges)
+\item Typical ratio: $T_h/T_l \approx 2-3$
+\end{itemize}
+This prevents edge fragmentation while rejecting isolated noise pixels.
+\end{example}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to edge detection.
+This analysis demonstrates the implementation and evaluation of fundamental edge detection algorithms:
+
+\begin{enumerate}
+\item Gradient-based methods (Sobel, Prewitt) detect \py{num_sobel_edges} and \py{num_prewitt_edges}
+      edge pixels respectively on the noisy test image
+\item The Canny detector's multi-stage pipeline achieves superior performance with precision
+      \py{f"{canny_precision:.3f}"}, recall \py{f"{canny_recall:.3f}"}, and F-measure \py{f"{canny_f1:.3f}"}
+\item Laplacian of Gaussian methods provide rotation-invariant detection with \py{num_log_edges}
+      zero-crossings identified
+\item Scale selection critically impacts detection: smaller $\sigma$ values preserve detail
+      (\py{num_canny_sigma1} edges at $\sigma$=0.8) while larger values enhance noise robustness
+      (\py{num_canny_sigma3} edges at $\sigma$=2.5)
+\item Multi-scale approaches combining detections across $\sigma \in [0.5, 3.0]$ yield
+      \py{num_multiscale} consolidated edge pixels
+\end{enumerate}
+
+The choice of edge detector depends on application requirements: Sobel for computational efficiency,
+Canny for accuracy and completeness, and LoG for precise localization in low-noise scenarios.
+
+\section*{References}
+
+\begin{enumerate}
+\item Canny, J. (1986). A computational approach to edge detection. \textit{IEEE Trans. Pattern Analysis and Machine Intelligence}, 8(6), 679-698.
+\item Sobel, I., \& Feldman, G. (1968). A 3x3 isotropic gradient operator for image processing. \textit{Stanford Artificial Intelligence Project}.
+\item Marr, D., \& Hildreth, E. (1980). Theory of edge detection. \textit{Proc. Royal Society of London B}, 207(1167), 187-217.
+\item Prewitt, J. M. S. (1970). Object enhancement and extraction. \textit{Picture Processing and Psychopictorics}, Academic Press.
+\item Roberts, L. G. (1965). Machine perception of three-dimensional solids. \textit{Optical and Electro-Optical Information Processing}, MIT Press.
+\item Torre, V., \& Poggio, T. A. (1986). On edge detection. \textit{IEEE Trans. Pattern Analysis and Machine Intelligence}, 8(2), 147-163.
+\item Haralick, R. M. (1984). Digital step edges from zero crossing of second directional derivatives. \textit{IEEE Trans. Pattern Analysis and Machine Intelligence}, 6(1), 58-68.
+\item Scharr, H. (2000). Optimal operators in digital image processing. \textit{PhD Thesis}, University of Heidelberg.
+\item Elder, J. H., \& Zucker, S. W. (1998). Local scale control for edge detection and blur estimation. \textit{IEEE Trans. Pattern Analysis and Machine Intelligence}, 20(7), 699-716.
+\item Lindeberg, T. (1998). Edge detection and ridge detection with automatic scale selection. \textit{Int. Journal of Computer Vision}, 30(2), 117-156.
+\item Ziou, D., \& Tabbone, S. (1998). Edge detection techniques: An overview. \textit{International Journal of Pattern Recognition and Image Analysis}, 8(4), 537-559.
+\item Heath, M., et al. (1997). A robust visual method for assessing the relative performance of edge-detection algorithms. \textit{IEEE Trans. Pattern Analysis and Machine Intelligence}, 19(12), 1338-1359.
+\item Kittler, J. (1983). On the accuracy of the Sobel edge detector. \textit{Image and Vision Computing}, 1(1), 37-42.
+\item Deriche, R. (1987). Using Canny's criteria to derive a recursively implemented optimal edge detector. \textit{Int. Journal of Computer Vision}, 1(2), 167-187.
+\item Bovik, A. C., Huang, T. S., \& Munson, D. C. (1983). A generalization of median filtering using linear combinations of order statistics. \textit{IEEE Trans. Acoustics, Speech, and Signal Processing}, 31(6), 1342-1350.
+\item Pratt, W. K. (2007). \textit{Digital Image Processing}, 4th ed. Wiley-Interscience.
+\item Gonzalez, R. C., \& Woods, R. E. (2018). \textit{Digital Image Processing}, 4th ed. Pearson.
+\item Jain, A. K. (1989). \textit{Fundamentals of Digital Image Processing}. Prentice Hall.
+\end{enumerate}
 
 \end{document}

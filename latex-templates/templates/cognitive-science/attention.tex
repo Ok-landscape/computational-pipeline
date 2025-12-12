@@ -1,223 +1,676 @@
-\documentclass[11pt,a4paper]{article}
+% Computational Models of Visual Attention
+% Topics: Spotlight and zoom-lens models, feature integration theory, biased competition, saliency maps, visual search
+% Style: Cognitive neuroscience research report with computational models
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{geometry}
-\geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 
-\title{Attention\\Signal Detection Theory}
-\author{Cognitive Science Research Group}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Computational Models of Visual Attention: From Saliency Maps to Biased Competition}
+\author{Cognitive Neuroscience Laboratory}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Models of visual attention and signal detection in cognitive tasks.
+This report presents a computational investigation of visual attention mechanisms using models inspired by cognitive neuroscience research. We implement the feature integration theory (FIT) framework to simulate visual search tasks, construct bottom-up saliency maps based on multi-feature integration, model the attentional spotlight using Gaussian spatial weighting functions, and analyze the attentional blink phenomenon in rapid serial visual presentation (RSVP) paradigms. The computational models demonstrate how attention operates through both spatial selection (spotlight and zoom-lens mechanisms) and feature-based enhancement (biased competition), producing reaction time patterns and accuracy metrics consistent with behavioral data from human observers.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of attention.
+Visual attention is the cognitive mechanism that selectively enhances processing of task-relevant information while suppressing irrelevant distractors. Understanding attention is fundamental to cognitive science because it reveals how the brain overcomes processing bottlenecks and allocates limited computational resources. Multiple theoretical frameworks have emerged to explain attention, ranging from early selection models that filter information based on spatial location to late selection models that operate on fully processed semantic representations.
+
+\begin{definition}[Selective Attention]
+Selective attention is the cognitive process that prioritizes relevant stimuli for enhanced processing through mechanisms including spatial selection (location-based filtering), feature-based selection (enhancement of specific features across the visual field), and object-based selection (selection of coherent perceptual objects).
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Feature Integration Theory}
+
+Anne Treisman's feature integration theory (FIT) proposes that visual attention operates in two stages: a parallel preattentive stage that detects simple features across the entire visual field, followed by a serial attentive stage that binds features together to form coherent object representations.
+
+\begin{theorem}[Feature vs Conjunction Search]
+Under FIT, search for a target defined by a single feature (feature search) proceeds in parallel with constant reaction time independent of set size. Search for a target defined by a conjunction of features (conjunction search) requires serial attention with reaction time linearly proportional to set size: $RT = RT_0 + k \cdot n$, where $n$ is set size and $k$ is the search slope.
+\end{theorem}
+
+\begin{definition}[Illusory Conjunctions]
+When attention is divided or overloaded, features from different objects may be incorrectly bound together, creating illusory conjunctions. This phenomenon supports the idea that feature binding requires focal attention.
+\end{definition}
+
+\subsection{Biased Competition Model}
+
+The biased competition model, developed by Desimone and Duncan, proposes that visual processing involves competitive interactions among stimulus representations, with attention biasing the competition in favor of behaviorally relevant stimuli.
+
+\begin{definition}[Biased Competition]
+Multiple stimuli within a neuron's receptive field compete for neural representation. Attention biases this competition through top-down signals that enhance responses to attended stimuli and suppress responses to unattended stimuli, implementing a form of competitive selection at the neural level.
+\end{definition}
+
+\subsection{Saliency Map Theory}
+
+Bottom-up attention can be modeled through saliency maps that integrate multiple feature dimensions (color, orientation, intensity) to compute a spatial map of visual conspicuity. The saliency at location $(x,y)$ is computed as:
+
+\begin{equation}
+S(x,y) = \sum_{i=1}^{N} w_i \cdot F_i(x,y)
+\end{equation}
+
+where $F_i(x,y)$ represents the feature contrast for feature channel $i$ and $w_i$ are channel weights. Regions with high saliency automatically capture attention.
+
+\subsection{Spatial Models: Spotlight and Zoom-Lens}
+
+\begin{definition}[Spotlight Model]
+The spotlight model treats attention as a beam that illuminates a contiguous region of space, with enhanced processing within the spotlight and degraded processing outside it. The spotlight can be modeled as a Gaussian weighting function:
+\begin{equation}
+w_{spatial}(r) = \exp\left(-\frac{r^2}{2\sigma^2}\right)
+\end{equation}
+where $r$ is distance from the attended location and $\sigma$ controls spotlight size.
+\end{definition}
+
+\begin{remark}[Zoom-Lens Variant]
+The zoom-lens model extends the spotlight model by allowing the attentional beam to vary in size (spatial extent). Smaller spotlights provide higher resolution processing over smaller regions, while larger spotlights provide coarser processing over broader areas.
+\end{remark}
+
+\section{Computational Analysis}
+
+We now implement computational models of the attention mechanisms described above, simulating behavioral experiments and analyzing the resulting performance patterns.
+
+\subsection{Visual Search Simulation: Feature Integration Theory}
+
+Visual search tasks provide critical evidence for theories of attention. We simulate feature search (target differs in one feature) and conjunction search (target differs in multiple features) to demonstrate the qualitative differences predicted by feature integration theory.
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy.optimize import curve_fit
+from scipy.stats import linregress
+from scipy.ndimage import gaussian_filter
 
-\end{pycode}
-
-\section{Mathematical Framework}
-
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('attention_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{attention_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
-
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
-ax2.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('attention_plot2.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{attention_plot2.pdf}
-\caption{Secondary analysis comparison.}
-\end{figure}
-
-\section{Parameter Study}
-
-\begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('attention_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{attention_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('attention_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{attention_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
 np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+# Visual search simulation: Feature Integration Theory
+def simulate_visual_search(set_sizes, search_type='feature', num_trials=100):
+    """
+    Simulate visual search experiments.
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+    search_type: 'feature' or 'conjunction'
+    Returns: reaction times and accuracy for each set size
+    """
+    rt_data = []
+    accuracy_data = []
+
+    for n in set_sizes:
+        if search_type == 'feature':
+            # Feature search: parallel processing
+            # RT is roughly constant regardless of set size
+            base_rt = 450  # ms
+            slope = 2      # very shallow slope
+            noise_sd = 50
+        else:  # conjunction search
+            # Conjunction search: serial processing
+            # RT increases linearly with set size
+            base_rt = 500  # ms
+            slope = 35     # steep slope
+            noise_sd = 80
+
+        # Generate RTs for this set size
+        mean_rt = base_rt + slope * n
+        rts = np.random.normal(mean_rt, noise_sd, num_trials)
+        rts = np.maximum(rts, 200)  # minimum RT
+
+        # Accuracy decreases slightly with set size for conjunction
+        if search_type == 'feature':
+            accuracy = 0.98 - 0.001 * n + np.random.normal(0, 0.02)
+        else:
+            accuracy = 0.95 - 0.005 * n + np.random.normal(0, 0.03)
+
+        accuracy = np.clip(accuracy, 0.5, 1.0)
+
+        rt_data.append(rts)
+        accuracy_data.append(accuracy)
+
+    return rt_data, accuracy_data
+
+# Set sizes to test
+set_sizes = np.array([4, 8, 12, 16, 20, 24])
+
+# Simulate both search types
+rt_feature, acc_feature = simulate_visual_search(set_sizes, 'feature', num_trials=100)
+rt_conjunction, acc_conjunction = simulate_visual_search(set_sizes, 'conjunction', num_trials=100)
+
+# Compute mean RTs
+mean_rt_feature = np.array([np.mean(rts) for rts in rt_feature])
+mean_rt_conjunction = np.array([np.mean(rts) for rts in rt_conjunction])
+
+# Fit linear models: RT = intercept + slope * set_size
+slope_feature, intercept_feature, r_feature, p_feature, se_feature = linregress(
+    set_sizes, mean_rt_feature)
+slope_conjunction, intercept_conjunction, r_conjunction, p_conjunction, se_conjunction = linregress(
+    set_sizes, mean_rt_conjunction)
+
+# Store slopes for later reference in conclusions
+search_slope_feature = slope_feature
+search_slope_conjunction = slope_conjunction
+\end{pycode}
+
+The simulation above models the classic dissociation between feature and conjunction search. In feature search, where the target is defined by a single distinctive feature (e.g., a red item among green items), detection can proceed in parallel across the visual field. This predicts flat search functions with minimal increases in reaction time as set size grows. By contrast, conjunction search requires serial examination of items to bind features together, producing steep linear search slopes.
+
+The fitted regression models quantify these patterns, revealing search slopes of approximately \py{search_slope_feature:.1f} ms/item for feature search versus \py{search_slope_conjunction:.1f} ms/item for conjunction search. This 15-20 fold difference in slope is consistent with the distinction between parallel and serial processing mechanisms.
+
+\subsection{Saliency Map Construction}
+
+Bottom-up attention is driven by stimulus salience, computed by integrating local feature contrasts across multiple feature dimensions. We construct a saliency map by combining color, orientation, and intensity contrast maps.
+
+\begin{pycode}
+# Saliency map computation
+def compute_feature_contrast(image, feature_type='intensity'):
+    """
+    Compute local contrast for a given feature dimension.
+    Uses center-surround differences at multiple scales.
+    """
+    h, w = image.shape
+    contrast_map = np.zeros((h, w))
+
+    # Center-surround at multiple scales
+    scales = [(3, 9), (5, 15), (7, 21)]
+
+    for center_size, surround_size in scales:
+        center = gaussian_filter(image, center_size)
+        surround = gaussian_filter(image, surround_size)
+        contrast = np.abs(center - surround)
+        contrast_map += contrast
+
+    # Normalize
+    if contrast_map.max() > 0:
+        contrast_map = contrast_map / contrast_map.max()
+
+    return contrast_map
+
+# Create a synthetic visual scene (64x64 grid)
+scene_size = 64
+visual_scene = np.random.rand(scene_size, scene_size) * 0.3
+
+# Add salient regions
+# Region 1: bright spot (intensity salient)
+visual_scene[15:20, 15:20] = 0.9
+
+# Region 2: oriented edge (orientation salient)
+visual_scene[45:55, 10:12] = 0.8
+
+# Region 3: moderate contrast region
+visual_scene[30:38, 45:53] = 0.6
+
+# Compute feature contrast maps
+intensity_contrast = compute_feature_contrast(visual_scene, 'intensity')
+orientation_contrast = compute_feature_contrast(np.gradient(visual_scene)[0], 'orientation')
+color_contrast = compute_feature_contrast(visual_scene + 0.1 * np.random.randn(scene_size, scene_size), 'color')
+
+# Combine into saliency map
+weight_intensity = 0.4
+weight_orientation = 0.3
+weight_color = 0.3
+
+saliency_map = (weight_intensity * intensity_contrast +
+                weight_orientation * orientation_contrast +
+                weight_color * color_contrast)
+
+# Find peak saliency location
+max_saliency = np.max(saliency_map)
+peak_location = np.unravel_index(np.argmax(saliency_map), saliency_map.shape)
+\end{pycode}
+
+The saliency map integrates information from multiple feature channels using weighted linear combination. Each feature channel computes center-surround differences at multiple spatial scales to identify regions with high local contrast. The resulting saliency map predicts that attention will be automatically drawn to the location at (\py{peak_location[0]}, \py{peak_location[1]}) with maximum saliency of \py{max_saliency:.3f}, demonstrating how bottom-up attention operates independently of task goals.
+
+This saliency-based attention mechanism explains phenomena such as pop-out effects in visual search and the capture of attention by task-irrelevant but highly salient distractors. The model aligns with the influential computational framework proposed by Itti and Koch for predicting eye movements and attentional deployment.
+
+\subsection{Attentional Spotlight: Gaussian Spatial Weighting}
+
+The spatial spotlight model implements location-based selection by applying Gaussian weights to the visual field, with processing efficiency declining as a function of distance from the attended location.
+
+\begin{pycode}
+# Attentional spotlight model
+def gaussian_spotlight(grid_size, center, sigma):
+    """
+    Create a Gaussian attentional spotlight.
+
+    grid_size: size of spatial grid
+    center: (x, y) center of attention
+    sigma: spatial extent of spotlight
+    """
+    x = np.arange(grid_size)
+    y = np.arange(grid_size)
+    X, Y = np.meshgrid(x, y)
+
+    cx, cy = center
+    distance = np.sqrt((X - cx)**2 + (Y - cy)**2)
+    spotlight = np.exp(-distance**2 / (2 * sigma**2))
+
+    return spotlight
+
+# Create spotlights with different sizes (zoom-lens)
+grid_size = 64
+center = (32, 32)
+
+spotlight_small = gaussian_spotlight(grid_size, center, sigma=5)
+spotlight_medium = gaussian_spotlight(grid_size, center, sigma=10)
+spotlight_large = gaussian_spotlight(grid_size, center, sigma=15)
+
+# Simulate processing efficiency as function of distance
+distances = np.arange(0, 30)
+sigma_attention = 8
+efficiency = np.exp(-distances**2 / (2 * sigma_attention**2))
+
+# Reaction time increases with decreased efficiency
+baseline_rt = 400  # ms
+max_rt_cost = 300  # ms
+reaction_times = baseline_rt + max_rt_cost * (1 - efficiency)
+
+# Fit to estimate spatial gradient
+def inverse_exp(d, rt0, cost, sigma_fit):
+    return rt0 + cost * (1 - np.exp(-d**2 / (2 * sigma_fit**2)))
+
+popt_spotlight, _ = curve_fit(inverse_exp, distances, reaction_times,
+                               p0=[400, 300, 8])
+rt_baseline_fit, rt_cost_fit, sigma_fit = popt_spotlight
+\end{pycode}
+
+The Gaussian spotlight model captures the graded nature of spatial attention, where processing efficiency decreases smoothly with distance from the focus of attention rather than exhibiting a sharp boundary. The fitted parameters reveal a baseline reaction time of \py{rt_baseline_fit:.1f} ms at the attended location, increasing to approximately \py{rt_baseline_fit + rt_cost_fit:.1f} ms at unattended peripheral locations. The spatial extent parameter sigma = \py{sigma_fit:.1f} indicates the effective radius of the attentional spotlight.
+
+This model accounts for cuing effects in spatial attention paradigms, where valid spatial cues that direct attention to the target location produce faster and more accurate responses compared to invalid cues. The zoom-lens extension allows the spotlight to expand or contract depending on task demands, trading spatial resolution for spatial coverage.
+
+\subsection{Attentional Blink: Temporal Attention Dynamics}
+
+When observers monitor a rapid serial visual presentation (RSVP) stream for two targets, detection of the first target (T1) impairs detection of the second target (T2) when it appears 200-500 ms later. This attentional blink reveals temporal limitations of attention.
+
+\begin{pycode}
+# Attentional blink simulation
+def simulate_attentional_blink(lags, num_trials=200):
+    """
+    Simulate attentional blink in RSVP.
+
+    lags: temporal separations between T1 and T2 (in units of items)
+    Returns: T2 accuracy given T1 detected
+    """
+    # Convert lag to milliseconds (assume 100 ms per item)
+    ms_per_item = 100
+
+    accuracy_t2 = []
+
+    for lag in lags:
+        time_gap = lag * ms_per_item  # ms
+
+        # Attentional blink function
+        # Lag 1: sparing (T2 still in attentional window)
+        # Lag 2-4: blink (attentional resources depleted)
+        # Lag 5+: recovery (attention recovered)
+
+        if lag == 1:
+            # Lag-1 sparing
+            mean_acc = 0.85
+        elif lag >= 2 and lag <= 4:
+            # Blink period
+            blink_depth = 0.40  # maximum deficit
+            recovery_rate = 0.15
+            mean_acc = 0.85 - blink_depth + recovery_rate * (lag - 2)
+        else:
+            # Full recovery
+            mean_acc = 0.85
+
+        # Add noise
+        acc = np.random.normal(mean_acc, 0.08, num_trials)
+        acc = np.clip(acc, 0, 1)
+        accuracy_t2.append(np.mean(acc))
+
+    return np.array(accuracy_t2)
+
+# Simulate blink
+lags = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+t2_accuracy = simulate_attentional_blink(lags, num_trials=200)
+
+# Find minimum accuracy (blink depth)
+blink_minimum = np.min(t2_accuracy)
+blink_lag = lags[np.argmin(t2_accuracy)]
+lag1_accuracy = t2_accuracy[0]
+recovered_accuracy = t2_accuracy[-1]
+\end{pycode}
+
+The attentional blink simulation reveals the characteristic temporal dynamics of attention allocation. At lag 1 (100 ms separation), T2 benefits from lag-1 sparing with accuracy of \py{lag1_accuracy:.2f}, reflecting the continued availability of attentional resources deployed for T1 processing. However, at lag \py{blink_lag} (approximately \py{blink_lag * 100} ms), accuracy drops to a minimum of \py{blink_minimum:.2f} as attentional resources are consumed by T1 consolidation into working memory. By lag 8 (\py{8 * 100} ms), attention has recovered and T2 accuracy returns to \py{recovered_accuracy:.2f}.
+
+This pattern demonstrates that attention operates under temporal constraints, with a refractory period during which attentional engagement with one target temporarily impairs processing of subsequent targets. The attentional blink has been influential in revealing the stages of perceptual processing and the bottleneck at the level of working memory consolidation.
+
+\subsection{Integrated Visualization}
+
+\begin{pycode}
+# Create comprehensive figure
+fig = plt.figure(figsize=(16, 12))
+
+# Plot 1: Visual search results
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.scatter(set_sizes, mean_rt_feature, s=80, c='blue', edgecolor='black',
+            label='Feature Search', marker='o')
+ax1.scatter(set_sizes, mean_rt_conjunction, s=80, c='red', edgecolor='black',
+            label='Conjunction Search', marker='s')
+set_sizes_fine = np.linspace(4, 24, 100)
+ax1.plot(set_sizes_fine, intercept_feature + slope_feature * set_sizes_fine,
+         'b--', linewidth=2, alpha=0.7)
+ax1.plot(set_sizes_fine, intercept_conjunction + slope_conjunction * set_sizes_fine,
+         'r--', linewidth=2, alpha=0.7)
+ax1.set_xlabel('Set Size (number of items)', fontsize=11)
+ax1.set_ylabel('Reaction Time (ms)', fontsize=11)
+ax1.set_title('Visual Search: FIT Prediction', fontsize=12, fontweight='bold')
+ax1.legend(fontsize=9)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(2, 26)
+ax1.set_ylim(400, 1200)
+
+# Plot 2: Search slopes comparison
+ax2 = fig.add_subplot(3, 3, 2)
+search_types = ['Feature', 'Conjunction']
+slopes = [slope_feature, slope_conjunction]
+colors_bar = ['blue', 'red']
+bars = ax2.bar(search_types, slopes, color=colors_bar, edgecolor='black', linewidth=2, alpha=0.7)
+ax2.set_ylabel('Search Slope (ms/item)', fontsize=11)
+ax2.set_title('Parallel vs Serial Processing', fontsize=12, fontweight='bold')
+ax2.set_ylim(0, max(slopes) * 1.2)
+for i, (bar, slope) in enumerate(zip(bars, slopes)):
+    height = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2., height,
+             f'{slope:.1f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+ax2.grid(True, alpha=0.3, axis='y')
+
+# Plot 3: Visual scene and saliency map
+ax3 = fig.add_subplot(3, 3, 3)
+im3 = ax3.imshow(visual_scene, cmap='gray', origin='lower')
+ax3.scatter(peak_location[1], peak_location[0], s=200, c='red', marker='x', linewidths=3)
+ax3.set_xlabel('X position', fontsize=11)
+ax3.set_ylabel('Y position', fontsize=11)
+ax3.set_title('Visual Scene', fontsize=12, fontweight='bold')
+plt.colorbar(im3, ax=ax3, fraction=0.046)
+
+# Plot 4: Saliency map
+ax4 = fig.add_subplot(3, 3, 4)
+im4 = ax4.imshow(saliency_map, cmap='hot', origin='lower')
+ax4.scatter(peak_location[1], peak_location[0], s=200, c='cyan', marker='x', linewidths=3)
+ax4.set_xlabel('X position', fontsize=11)
+ax4.set_ylabel('Y position', fontsize=11)
+ax4.set_title('Bottom-Up Saliency Map', fontsize=12, fontweight='bold')
+plt.colorbar(im4, ax=ax4, fraction=0.046)
+
+# Plot 5: Feature contrast maps
+ax5a = fig.add_subplot(3, 3, 5)
+im5a = ax5a.imshow(intensity_contrast, cmap='viridis', origin='lower')
+ax5a.set_title('Intensity Contrast', fontsize=11, fontweight='bold')
+ax5a.set_xlabel('X position', fontsize=10)
+ax5a.set_ylabel('Y position', fontsize=10)
+plt.colorbar(im5a, ax=ax5a, fraction=0.046)
+
+# Plot 6: Spotlight shapes (zoom-lens)
+ax6 = fig.add_subplot(3, 3, 6)
+center_profile = spotlight_small[32, :]
+ax6.plot(np.arange(grid_size), spotlight_small[32, :], 'b-', linewidth=2.5,
+         label='$\\sigma=5$ (narrow)', alpha=0.8)
+ax6.plot(np.arange(grid_size), spotlight_medium[32, :], 'g-', linewidth=2.5,
+         label='$\\sigma=10$ (medium)', alpha=0.8)
+ax6.plot(np.arange(grid_size), spotlight_large[32, :], 'r-', linewidth=2.5,
+         label='$\\sigma=15$ (wide)', alpha=0.8)
+ax6.axvline(x=32, color='black', linestyle='--', alpha=0.5)
+ax6.set_xlabel('Spatial Position', fontsize=11)
+ax6.set_ylabel('Attentional Weight', fontsize=11)
+ax6.set_title('Zoom-Lens Model', fontsize=12, fontweight='bold')
+ax6.legend(fontsize=9)
+ax6.grid(True, alpha=0.3)
+ax6.set_xlim(0, grid_size)
+ax6.set_ylim(0, 1.1)
+
+# Plot 7: Spotlight spatial map
+ax7 = fig.add_subplot(3, 3, 7)
+im7 = ax7.imshow(spotlight_medium, cmap='plasma', origin='lower')
+ax7.set_xlabel('X position', fontsize=11)
+ax7.set_ylabel('Y position', fontsize=11)
+ax7.set_title('Spatial Spotlight ($\\sigma=10$)', fontsize=12, fontweight='bold')
+plt.colorbar(im7, ax=ax7, fraction=0.046)
+
+# Plot 8: RT vs distance from spotlight center
+ax8 = fig.add_subplot(3, 3, 8)
+ax8.scatter(distances, reaction_times, s=70, c='steelblue', edgecolor='black', alpha=0.7)
+distances_fine = np.linspace(0, 30, 200)
+rt_fit = inverse_exp(distances_fine, rt_baseline_fit, rt_cost_fit, sigma_fit)
+ax8.plot(distances_fine, rt_fit, 'r-', linewidth=2.5, label='Gaussian Fit')
+ax8.axhline(y=rt_baseline_fit, color='green', linestyle='--', alpha=0.6,
+            label=f'Baseline RT')
+ax8.set_xlabel('Distance from Attended Location', fontsize=11)
+ax8.set_ylabel('Reaction Time (ms)', fontsize=11)
+ax8.set_title('Spatial Gradient of Attention', fontsize=12, fontweight='bold')
+ax8.legend(fontsize=9)
+ax8.grid(True, alpha=0.3)
+ax8.set_xlim(-1, 31)
+
+# Plot 9: Attentional blink
+ax9 = fig.add_subplot(3, 3, 9)
+ax9.plot(lags, t2_accuracy, 'o-', markersize=10, linewidth=2.5, color='darkviolet',
+         markeredgecolor='black', markeredgewidth=1.5)
+ax9.axhline(y=0.85, color='gray', linestyle='--', alpha=0.6, label='Baseline')
+ax9.axvspan(2, 4, alpha=0.2, color='red', label='Blink Period')
+ax9.set_xlabel('Lag (T1-T2 Separation)', fontsize=11)
+ax9.set_ylabel('T2|T1 Accuracy', fontsize=11)
+ax9.set_title('Attentional Blink in RSVP', fontsize=12, fontweight='bold')
+ax9.set_xticks(lags)
+ax9.set_ylim(0.35, 0.95)
+ax9.legend(fontsize=9)
+ax9.grid(True, alpha=0.3)
+
 plt.tight_layout()
-plt.savefig('attention_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('attention_comprehensive_analysis.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{attention_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\includegraphics[width=\textwidth]{attention_comprehensive_analysis.pdf}
+\caption{Comprehensive computational analysis of visual attention mechanisms: (a) Visual search reaction times showing the dissociation between parallel feature search (flat slope) and serial conjunction search (steep slope) predicted by feature integration theory; (b) Quantitative comparison of search slopes revealing the 15-fold difference between processing modes; (c) Synthetic visual scene containing regions of varying contrast and salience; (d) Bottom-up saliency map computed by integrating intensity, orientation, and color contrast channels, with peak saliency marked; (e) Intensity contrast feature map showing center-surround differences; (f) Zoom-lens model demonstrating variable spotlight sizes with different spatial extents controlled by sigma parameter; (g) Two-dimensional representation of the Gaussian attentional spotlight with medium spatial extent; (h) Spatial gradient of attention showing reaction time costs as a function of distance from the attended location, fitted with Gaussian decay function; (i) Attentional blink in rapid serial visual presentation showing lag-1 sparing, blink period (lags 2-4), and recovery, revealing temporal constraints on attention allocation.}
+\label{fig:attention_analysis}
 \end{figure}
 
-\section{Time Series}
+\section{Quantitative Results}
+
+\subsection{Visual Search Performance}
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
-
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('attention_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Visual Search Performance by Condition}")
+print(r"\begin{tabular}{lcccc}")
+print(r"\toprule")
+print(r"Search Type & Slope (ms/item) & Intercept (ms) & $R^2$ & Interpretation \\")
+print(r"\midrule")
+print(f"Feature Search & {slope_feature:.2f} & {intercept_feature:.1f} & {r_feature**2:.3f} & Parallel \\\\")
+print(f"Conjunction Search & {slope_conjunction:.2f} & {intercept_conjunction:.1f} & {r_conjunction**2:.3f} & Serial \\\\")
+print(r"\midrule")
+print(f"Slope Ratio & {slope_conjunction/slope_feature:.1f} & --- & --- & FIT Prediction \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:visual_search}")
+print(r"\end{table}")
 \end{pycode}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{attention_plot6.pdf}
-\caption{Time series visualization.}
-\end{figure}
-
-\section{Results Summary}
+\subsection{Saliency and Attention Allocation}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
-
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Saliency Map Parameters and Predictions}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Value & Interpretation \\")
+print(r"\midrule")
+print(f"Intensity Weight ($w_{{intensity}}$) & {weight_intensity:.2f} & Channel contribution \\\\")
+print(f"Orientation Weight ($w_{{orient}}$) & {weight_orientation:.2f} & Channel contribution \\\\")
+print(f"Color Weight ($w_{{color}}$) & {weight_color:.2f} & Channel contribution \\\\")
+print(r"\midrule")
+print(f"Peak Saliency & {max_saliency:.3f} & Maximum attention capture \\\\")
+print(f"Peak Location & ({peak_location[0]}, {peak_location[1]}) & Predicted fixation \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:saliency}")
+print(r"\end{table}")
 \end{pycode}
+
+\subsection{Spatial Attention Parameters}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Attentional Spotlight Model Parameters}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Estimate & Interpretation \\")
+print(r"\midrule")
+print(f"Baseline RT ($RT_0$) & {rt_baseline_fit:.1f} ms & Attended location \\\\")
+print(f"Maximum RT Cost & {rt_cost_fit:.1f} ms & Unattended periphery \\\\")
+print(f"Spatial Extent ($\\sigma$) & {sigma_fit:.1f} units & Spotlight radius \\\\")
+print(r"\midrule")
+print(f"RT at Attended Location & {rt_baseline_fit:.1f} ms & Peak efficiency \\\\")
+print(f"RT at Distance 20 & {inverse_exp(20, rt_baseline_fit, rt_cost_fit, sigma_fit):.1f} ms & Peripheral cost \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:spotlight}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Attentional Blink Dynamics}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Attentional Blink Time Course}")
+print(r"\begin{tabular}{lcl}")
+print(r"\toprule")
+print(r"Temporal Window & T2|T1 Accuracy & Mechanism \\")
+print(r"\midrule")
+print(f"Lag 1 (100 ms) & {lag1_accuracy:.2f} & Lag-1 sparing \\\\")
+print(f"Lag {blink_lag} ({blink_lag*100} ms) & {blink_minimum:.2f} & Blink minimum \\\\")
+print(f"Lag 8 (800 ms) & {recovered_accuracy:.2f} & Full recovery \\\\")
+print(r"\midrule")
+print(f"Blink Depth & {lag1_accuracy - blink_minimum:.2f} & Accuracy deficit \\\\")
+print(f"Blink Duration & {300} ms & Impairment window \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:attentional_blink}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Real-World Applications]
+These computational models of attention have practical applications in multiple domains:
+\begin{itemize}
+\item \textbf{Interface Design}: Saliency maps predict where users will look first on web pages and software interfaces, informing layout decisions to place critical information in high-saliency regions.
+\item \textbf{Aviation Safety}: Understanding attentional blink helps design cockpit warning systems that avoid presenting critical information during periods when pilot attention is engaged with a prior alert.
+\item \textbf{Medical Imaging}: Feature integration theory explains why radiologists may miss tumors in conjunction search scenarios, leading to training protocols that improve diagnostic accuracy.
+\item \textbf{Autonomous Vehicles}: Biased competition models inform computer vision systems about how to allocate computational resources to task-relevant objects while suppressing irrelevant scene elements.
+\end{itemize}
+\end{example}
+
+\begin{remark}[Neural Implementation]
+The computational models presented here have neural correlates in specific brain regions. The frontal eye fields (FEF) and lateral intraparietal area (LIP) show activity patterns consistent with saliency maps, the superior colliculus implements priority maps for saccadic eye movements, and visual cortex exhibits enhancement of responses to attended stimuli through top-down modulation from fronto-parietal attention networks.
+\end{remark}
+
+\begin{remark}[Model Limitations and Extensions]
+While these models capture important phenomena, they simplify complex cognitive processes. Extensions include: (1) incorporating object-based attention where attention selects entire perceptual objects rather than spatial regions; (2) modeling feature-based attention that enhances processing of a particular feature (e.g., red) across the entire visual field; (3) integrating task-driven top-down control signals that bias attention based on behavioral goals; (4) accounting for individual differences in attentional capacity and control.
+\end{remark}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to attention.
+This computational investigation demonstrates multiple mechanisms of visual attention operating at different levels of processing:
+
+\begin{enumerate}
+\item \textbf{Feature Integration Theory}: Visual search simulations reveal a clear dissociation between parallel feature search (slope = \py{f"{slope_feature:.1f}"} ms/item) and serial conjunction search (slope = \py{f"{slope_conjunction:.1f}"} ms/item), consistent with the two-stage processing architecture proposed by Treisman. The approximately \py{f"{slope_conjunction/slope_feature:.0f}"}-fold difference in slopes confirms that feature binding requires focal attention.
+
+\item \textbf{Saliency-Based Selection}: Bottom-up saliency maps successfully predict attention capture by computing multi-feature conspicuity. The peak saliency of \py{f"{max_saliency:.3f}"} at location (\py{peak_location[0]}, \py{peak_location[1]}) demonstrates how stimulus-driven factors automatically draw attention to salient regions, even when task-irrelevant.
+
+\item \textbf{Spatial Attention Gradient}: The Gaussian spotlight model quantifies the spatial extent of attention, showing baseline reaction times of \py{f"{rt_baseline_fit:.0f}"} ms at attended locations increasing to approximately \py{f"{rt_baseline_fit + rt_cost_fit:.0f}"} ms in the periphery. The fitted spatial extent ($\sigma$ = \py{f"{sigma_fit:.1f}"}) indicates the effective radius of the attentional window.
+
+\item \textbf{Temporal Attention Dynamics}: The attentional blink reveals temporal constraints on attention, with T2 accuracy dropping from \py{f"{lag1_accuracy:.2f}"} (lag-1 sparing) to \py{f"{blink_minimum:.2f}"} during the blink period (\py{blink_lag*100}-\py{(blink_lag+2)*100} ms), before recovering to \py{f"{recovered_accuracy:.2f}"}. This demonstrates the bottleneck in consolidating information into working memory.
+\end{enumerate}
+
+These computational models provide quantitative frameworks for understanding how attention overcomes processing limitations through selective enhancement of relevant information and suppression of irrelevant distractors, operating through both spatial and feature-based selection mechanisms constrained by temporal dynamics.
+
+\section*{References}
+
+\begin{thebibliography}{99}
+
+\bibitem{treisman1980}
+Treisman, A. M., \& Gelade, G. (1980). A feature-integration theory of attention. \textit{Cognitive Psychology}, 12(1), 97-136.
+
+\bibitem{desimone1995}
+Desimone, R., \& Duncan, J. (1995). Neural mechanisms of selective visual attention. \textit{Annual Review of Neuroscience}, 18(1), 193-222.
+
+\bibitem{itti1998}
+Itti, L., Koch, C., \& Niebur, E. (1998). A model of saliency-based visual attention for rapid scene analysis. \textit{IEEE Transactions on Pattern Analysis and Machine Intelligence}, 20(11), 1254-1259.
+
+\bibitem{posner1980}
+Posner, M. I. (1980). Orienting of attention. \textit{Quarterly Journal of Experimental Psychology}, 32(1), 3-25.
+
+\bibitem{chun2011}
+Chun, M. M., Golomb, J. D., \& Turk-Browne, N. B. (2011). A taxonomy of external and internal attention. \textit{Annual Review of Psychology}, 62, 73-101.
+
+\bibitem{raymond1992}
+Raymond, J. E., Shapiro, K. L., \& Arnell, K. M. (1992). Temporary suppression of visual processing in an RSVP task: An attentional blink? \textit{Journal of Experimental Psychology: Human Perception and Performance}, 18(3), 849-860.
+
+\bibitem{eriksen1986}
+Eriksen, C. W., \& St. James, J. D. (1986). Visual attention within and around the field of focal attention: A zoom lens model. \textit{Perception \& Psychophysics}, 40(4), 225-240.
+
+\bibitem{wolfe1994}
+Wolfe, J. M. (1994). Guided search 2.0: A revised model of visual search. \textit{Psychonomic Bulletin \& Review}, 1(2), 202-238.
+
+\bibitem{bundesen1990}
+Bundesen, C. (1990). A theory of visual attention. \textit{Psychological Review}, 97(4), 523-547.
+
+\bibitem{corbetta2002}
+Corbetta, M., \& Shulman, G. L. (2002). Control of goal-directed and stimulus-driven attention in the brain. \textit{Nature Reviews Neuroscience}, 3(3), 201-215.
+
+\bibitem{duncan1984}
+Duncan, J., \& Humphreys, G. W. (1989). Visual search and stimulus similarity. \textit{Psychological Review}, 96(3), 433-458.
+
+\bibitem{lavie1995}
+Lavie, N. (1995). Perceptual load as a necessary condition for selective attention. \textit{Journal of Experimental Psychology: Human Perception and Performance}, 21(3), 451-468.
+
+\bibitem{koch1985}
+Koch, C., \& Ullman, S. (1985). Shifts in selective visual attention: Towards the underlying neural circuitry. \textit{Human Neurobiology}, 4(4), 219-227.
+
+\bibitem{carrasco2011}
+Carrasco, M. (2011). Visual attention: The past 25 years. \textit{Vision Research}, 51(13), 1484-1525.
+
+\bibitem{kastner1998}
+Kastner, S., \& Ungerleider, L. G. (2000). Mechanisms of visual attention in the human cortex. \textit{Annual Review of Neuroscience}, 23(1), 315-341.
+
+\bibitem{reynolds1999}
+Reynolds, J. H., Chelazzi, L., \& Desimone, R. (1999). Competitive mechanisms subserve attention in macaque areas V2 and V4. \textit{Journal of Neuroscience}, 19(5), 1736-1753.
+
+\bibitem{theeuwes2010}
+Theeuwes, J. (2010). Top-down and bottom-up control of visual selection. \textit{Acta Psychologica}, 135(2), 77-99.
+
+\bibitem{palmer1994}
+Palmer, J. (1994). Set-size effects in visual search: The effect of attention is independent of the stimulus for simple tasks. \textit{Vision Research}, 34(13), 1703-1721.
+
+\bibitem{moore1996}
+Moore, C. M., \& Egeth, H. (1998). How does feature-based attention affect visual processing? \textit{Journal of Experimental Psychology: Human Perception and Performance}, 24(4), 1296-1310.
+
+\bibitem{nakayama1989}
+Nakayama, K., \& Mackeben, M. (1989). Sustained and transient components of focal visual attention. \textit{Vision Research}, 29(11), 1631-1647.
+
+\end{thebibliography}
 
 \end{document}

@@ -1,223 +1,695 @@
-\documentclass[11pt,a4paper]{article}
+% Inventory Models Analysis Template
+% Topics: EOQ, (s,Q) policies, newsvendor model, safety stock, stochastic demand
+% Style: Operations research report with computational analysis
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{geometry}
-\geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 
-\title{Inventory Models\\EOQ}
-\author{Operations Research Research Group}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Inventory Management: Economic Order Quantity and Stochastic Models}
+\author{Operations Research Laboratory}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Optimal inventory control policies.
+This report presents a comprehensive computational analysis of inventory management models
+under both deterministic and stochastic demand. We derive and analyze the Economic Order
+Quantity (EOQ) model, examine continuous review $(s,Q)$ and periodic review $(s,S)$ policies,
+solve the newsvendor problem under various demand distributions, and compute optimal safety
+stock levels for specified service targets. Sensitivity analysis demonstrates the robustness
+of EOQ to parameter estimation errors and quantifies the cost of suboptimal ordering policies.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of inventory models.
+Inventory management balances two competing costs: holding costs incurred by maintaining
+stock and ordering costs associated with replenishment. The Economic Order Quantity model
+provides the fundamental framework for deterministic demand, while stochastic models
+incorporate demand uncertainty through safety stock mechanisms.
+
+\begin{definition}[Inventory Costs]
+Total inventory cost comprises:
+\begin{itemize}
+\item \textbf{Holding cost}: $h$ per unit per year (storage, capital, obsolescence)
+\item \textbf{Ordering cost}: $K$ per order (fixed setup, processing, shipping)
+\item \textbf{Shortage cost}: $p$ per unit short (lost sales, backorder penalties)
+\end{itemize}
+\end{definition}
+
+\section{Economic Order Quantity Model}
+
+\subsection{Derivation of EOQ Formula}
+
+Consider continuous demand at rate $D$ units per year. For order quantity $Q$, the
+average inventory is $Q/2$, giving annual holding cost $h(Q/2)$. The number of orders
+per year is $D/Q$, giving annual ordering cost $K(D/Q)$.
+
+\begin{theorem}[EOQ Optimality]
+The total cost function is:
+\begin{equation}
+TC(Q) = \frac{KD}{Q} + \frac{hQ}{2}
+\end{equation}
+Minimizing with respect to $Q$ yields the optimal order quantity:
+\begin{equation}
+Q^* = \sqrt{\frac{2KD}{h}}
+\end{equation}
+The minimum total cost is $TC(Q^*) = \sqrt{2KDh}$.
+\end{theorem}
+
+\begin{proof}
+Taking the derivative:
+\begin{equation}
+\frac{dTC}{dQ} = -\frac{KD}{Q^2} + \frac{h}{2}
+\end{equation}
+Setting equal to zero and solving for $Q$ gives the EOQ formula. The second derivative
+$d^2TC/dQ^2 = 2KD/Q^3 > 0$ confirms this is a minimum.
+\end{proof}
+
+\subsection{EOQ Properties}
+
+\begin{remark}[Square Root Law]
+The EOQ is proportional to $\sqrt{D}$, not $D$. Doubling demand increases optimal
+order quantity by only $\sqrt{2} \approx 1.414$. This sublinear scaling reflects
+economies of scale in ordering.
+\end{remark}
+
+\begin{theorem}[Robustness of EOQ]
+If the actual order quantity is $\alpha Q^*$ where $\alpha \neq 1$, the cost penalty is:
+\begin{equation}
+\frac{TC(\alpha Q^*)}{TC(Q^*)} = \frac{1}{2}\left(\alpha + \frac{1}{\alpha}\right)
+\end{equation}
+Even at $\alpha = 2$ (ordering twice the optimal quantity), the cost increase is only 25\%.
+\end{theorem}
+
+\section{Stochastic Demand Models}
+
+\subsection{Continuous Review (s,Q) Policy}
+
+\begin{definition}[(s,Q) Policy]
+Order quantity $Q$ when inventory position reaches reorder point $s$. The reorder point
+accounts for lead time demand:
+\begin{equation}
+s = \mu_L + z\sigma_L = \mu_L + SS
+\end{equation}
+where $\mu_L$ is expected demand during lead time $L$, $\sigma_L$ is standard deviation,
+$z$ is the safety factor, and $SS = z\sigma_L$ is safety stock.
+\end{equation}
+
+\subsection{Service Level Definitions}
+
+\begin{definition}[Service Levels]
+\textbf{Type 1 (Cycle Service Level)}: Probability of no stockout during lead time
+\begin{equation}
+CSL = P(\text{lead time demand} \leq s) = \Phi(z)
+\end{equation}
+\textbf{Type 2 (Fill Rate)}: Fraction of demand satisfied from stock
+\begin{equation}
+FR = 1 - \frac{E[\text{shortage per cycle}]}{Q}
+\end{equation}
+\end{definition}
+
+\subsection{Newsvendor Model}
+
+\begin{definition}[Newsvendor Problem]
+Single-period decision: order quantity $Q$ before observing demand $D \sim F(x)$.
+\begin{itemize}
+\item \textbf{Underage cost}: $c_u$ per unit of unsatisfied demand
+\item \textbf{Overage cost}: $c_o$ per unit of excess inventory
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Critical Ratio]
+The optimal order quantity satisfies:
+\begin{equation}
+F(Q^*) = \frac{c_u}{c_u + c_o}
+\end{equation}
+This is the critical ratio. For uniform demand $U[a,b]$:
+\begin{equation}
+Q^* = a + (b-a)\frac{c_u}{c_u + c_o}
+\end{equation}
+For normal demand $N(\mu, \sigma^2)$:
+\begin{equation}
+Q^* = \mu + z^*\sigma \quad \text{where} \quad \Phi(z^*) = \frac{c_u}{c_u + c_o}
+\end{equation}
+\end{theorem}
+
+\section{Computational Analysis}
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy.stats import norm, uniform, poisson
+from scipy.optimize import minimize_scalar, fminbound
+from scipy.special import erfc
 
-\end{pycode}
-
-\section{Mathematical Framework}
-
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('inventory_models_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{inventory_models_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
-
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
-ax2.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('inventory_models_plot2.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{inventory_models_plot2.pdf}
-\caption{Secondary analysis comparison.}
-\end{figure}
-
-\section{Parameter Study}
-
-\begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('inventory_models_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{inventory_models_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('inventory_models_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{inventory_models_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
 np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+# EOQ Model Parameters
+annual_demand = 10000  # units/year
+ordering_cost = 100    # $/order
+holding_cost = 5       # $/unit/year
+unit_cost = 20         # $/unit
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Calculate EOQ
+eoq = np.sqrt(2 * ordering_cost * annual_demand / holding_cost)
+optimal_orders_per_year = annual_demand / eoq
+cycle_time = 365 / optimal_orders_per_year
+min_total_cost = np.sqrt(2 * ordering_cost * annual_demand * holding_cost)
+holding_component = holding_cost * eoq / 2
+ordering_component = ordering_cost * annual_demand / eoq
+
+# Cost function
+def total_cost(Q, D, K, h):
+    return K * D / Q + h * Q / 2
+
+# EOQ sensitivity analysis
+Q_range = np.linspace(100, 1000, 500)
+tc_values = [total_cost(Q, annual_demand, ordering_cost, holding_cost) for Q in Q_range]
+
+# Cost penalty for suboptimal ordering
+alpha_range = np.linspace(0.5, 3, 100)
+cost_ratio = 0.5 * (alpha_range + 1/alpha_range)
+
+# Stochastic demand parameters
+daily_demand_mean = annual_demand / 365
+daily_demand_std = 15
+lead_time_days = 14
+lead_time_demand_mean = daily_demand_mean * lead_time_days
+lead_time_demand_std = daily_demand_std * np.sqrt(lead_time_days)
+
+# Service level analysis (Type 1)
+service_levels = [0.90, 0.95, 0.98, 0.99, 0.995]
+z_values = [norm.ppf(sl) for sl in service_levels]
+safety_stocks = [z * lead_time_demand_std for z in z_values]
+reorder_points = [lead_time_demand_mean + ss for ss in safety_stocks]
+
+# Expected shortage calculation
+def expected_shortage(z, sigma):
+    """Expected shortage per cycle using unit normal loss function"""
+    return sigma * (norm.pdf(z) - z * (1 - norm.cdf(z)))
+
+# Fill rate calculation
+fill_rates = []
+for z in z_values:
+    shortage = expected_shortage(z, lead_time_demand_std)
+    fill_rate = 1 - shortage / eoq
+    fill_rates.append(fill_rate)
+
+# Newsvendor model
+selling_price = 50
+purchase_cost = 20
+salvage_value = 10
+shortage_penalty = 5  # goodwill loss
+
+overage_cost = purchase_cost - salvage_value
+underage_cost = selling_price - purchase_cost + shortage_penalty
+critical_ratio = underage_cost / (underage_cost + overage_cost)
+
+# Newsvendor with normal demand
+newsvendor_demand_mean = 500
+newsvendor_demand_std = 100
+z_newsvendor = norm.ppf(critical_ratio)
+optimal_order_qty = newsvendor_demand_mean + z_newsvendor * newsvendor_demand_std
+
+# Expected profit calculation
+def newsvendor_profit(Q, mu, sigma, p, c, s):
+    """Expected profit for newsvendor with normal demand"""
+    z = (Q - mu) / sigma
+    expected_sales = mu - sigma * (norm.pdf(z) - z * norm.cdf(z))
+    expected_leftover = Q - expected_sales
+    return p * expected_sales - c * Q + s * expected_leftover
+
+Q_news_range = np.linspace(300, 700, 200)
+profit_values = [newsvendor_profit(Q, newsvendor_demand_mean, newsvendor_demand_std,
+                                   selling_price, purchase_cost, salvage_value)
+                 for Q in Q_news_range]
+
+# (s,Q) policy simulation
+np.random.seed(123)
+simulation_days = 365
+daily_demands = np.random.normal(daily_demand_mean, daily_demand_std, simulation_days)
+daily_demands = np.maximum(daily_demands, 0)
+
+# Simulate inventory with (s,Q) policy
+target_service_level = 0.95
+z_target = norm.ppf(target_service_level)
+safety_stock_target = z_target * lead_time_demand_std
+reorder_point_target = lead_time_demand_mean + safety_stock_target
+
+inventory_levels = []
+orders_placed = []
+stockouts = []
+
+current_inventory = eoq
+inventory_position = current_inventory
+outstanding_orders = []
+
+for day in range(simulation_days):
+    # Record inventory
+    inventory_levels.append(current_inventory)
+
+    # Check outstanding orders
+    delivered_today = [qty for (delivery_day, qty) in outstanding_orders if delivery_day == day]
+    current_inventory += sum(delivered_today)
+    outstanding_orders = [(d, q) for (d, q) in outstanding_orders if d != day]
+
+    # Satisfy demand
+    demand_today = daily_demands[day]
+    if current_inventory >= demand_today:
+        current_inventory -= demand_today
+        stockouts.append(0)
+    else:
+        stockouts.append(demand_today - current_inventory)
+        current_inventory = 0
+
+    # Update inventory position
+    inventory_position = current_inventory + sum(q for (d, q) in outstanding_orders)
+
+    # Check if reorder needed
+    if inventory_position <= reorder_point_target:
+        outstanding_orders.append((day + lead_time_days, eoq))
+        inventory_position += eoq
+        orders_placed.append(day)
+
+# Calculate realized service level
+total_demand = sum(daily_demands)
+total_shortage = sum(stockouts)
+realized_fill_rate = 1 - total_shortage / total_demand
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(16, 12))
+
+# Plot 1: EOQ Total Cost Curve
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(Q_range, tc_values, 'b-', linewidth=2.5, label='Total Cost')
+holding_costs = [holding_cost * Q / 2 for Q in Q_range]
+ordering_costs = [ordering_cost * annual_demand / Q for Q in Q_range]
+ax1.plot(Q_range, holding_costs, 'g--', linewidth=1.5, alpha=0.7, label='Holding Cost')
+ax1.plot(Q_range, ordering_costs, 'r--', linewidth=1.5, alpha=0.7, label='Ordering Cost')
+ax1.axvline(x=eoq, color='black', linestyle=':', linewidth=2, label=f'$Q^* = {eoq:.0f}$')
+ax1.scatter([eoq], [min_total_cost], color='red', s=100, zorder=5)
+ax1.set_xlabel('Order Quantity $Q$ (units)', fontsize=10)
+ax1.set_ylabel('Annual Cost (\$)', fontsize=10)
+ax1.set_title('Economic Order Quantity Model', fontsize=11, fontweight='bold')
+ax1.legend(fontsize=8)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(100, 1000)
+
+# Plot 2: EOQ Robustness
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.plot(alpha_range, cost_ratio, 'b-', linewidth=2.5)
+ax2.axhline(y=1, color='black', linestyle=':', linewidth=1.5, label='Optimal')
+ax2.axvline(x=1, color='black', linestyle=':', linewidth=1.5)
+ax2.fill_between(alpha_range, 1, cost_ratio, alpha=0.2, color='red')
+ax2.scatter([2], [0.5 * (2 + 0.5)], color='red', s=100, zorder=5,
+            label='2$\\times$ EOQ: +25\% cost')
+ax2.set_xlabel('Order Quantity (as multiple of $Q^*$)', fontsize=10)
+ax2.set_ylabel('Cost Ratio $TC(\\alpha Q^*)/TC(Q^*)$', fontsize=10)
+ax2.set_title('EOQ Robustness to Ordering Errors', fontsize=11, fontweight='bold')
+ax2.legend(fontsize=8)
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0.5, 3)
+ax2.set_ylim(0.9, 2)
+
+# Plot 3: Safety Stock vs Service Level
+ax3 = fig.add_subplot(3, 3, 3)
+sl_fine = np.linspace(0.85, 0.999, 200)
+z_fine = [norm.ppf(s) for s in sl_fine]
+ss_fine = [z * lead_time_demand_std for z in z_fine]
+ax3.plot(sl_fine, ss_fine, 'b-', linewidth=2.5)
+ax3.scatter(service_levels, safety_stocks, color='red', s=80, zorder=5, edgecolor='black')
+for i, sl in enumerate(service_levels):
+    ax3.annotate(f'{sl:.1%}', (sl, safety_stocks[i]),
+                 xytext=(5, 5), textcoords='offset points', fontsize=8)
+ax3.set_xlabel('Cycle Service Level (CSL)', fontsize=10)
+ax3.set_ylabel('Safety Stock (units)', fontsize=10)
+ax3.set_title('Safety Stock Requirements', fontsize=11, fontweight='bold')
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Service Level Trade-offs
+ax4 = fig.add_subplot(3, 3, 4)
+ax4_twin = ax4.twinx()
+ax4.plot(service_levels, safety_stocks, 'bo-', linewidth=2, markersize=8, label='Safety Stock')
+ax4_twin.plot(service_levels, fill_rates, 'rs-', linewidth=2, markersize=8, label='Fill Rate')
+ax4.set_xlabel('Target CSL', fontsize=10)
+ax4.set_ylabel('Safety Stock (units)', color='b', fontsize=10)
+ax4_twin.set_ylabel('Fill Rate', color='r', fontsize=10)
+ax4.set_title('CSL vs Fill Rate Trade-off', fontsize=11, fontweight='bold')
+ax4.tick_params(axis='y', labelcolor='b')
+ax4_twin.tick_params(axis='y', labelcolor='r')
+ax4.grid(True, alpha=0.3)
+
+# Plot 5: Newsvendor Profit Function
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.plot(Q_news_range, profit_values, 'b-', linewidth=2.5)
+ax5.axvline(x=optimal_order_qty, color='red', linestyle='--', linewidth=2,
+            label=f'$Q^* = {optimal_order_qty:.0f}$')
+max_profit = newsvendor_profit(optimal_order_qty, newsvendor_demand_mean,
+                                newsvendor_demand_std, selling_price,
+                                purchase_cost, salvage_value)
+ax5.scatter([optimal_order_qty], [max_profit], color='red', s=100, zorder=5)
+ax5.axhline(y=max_profit, color='gray', linestyle=':', alpha=0.5)
+ax5.set_xlabel('Order Quantity (units)', fontsize=10)
+ax5.set_ylabel('Expected Profit (\$)', fontsize=10)
+ax5.set_title(f'Newsvendor Model (CR = {critical_ratio:.3f})', fontsize=11, fontweight='bold')
+ax5.legend(fontsize=8)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Newsvendor Critical Ratio Sensitivity
+ax6 = fig.add_subplot(3, 3, 6)
+cu_range = np.linspace(10, 50, 100)
+cr_sensitivity = cu_range / (cu_range + overage_cost)
+q_sensitivity = [newsvendor_demand_mean + norm.ppf(cr) * newsvendor_demand_std
+                 for cr in cr_sensitivity]
+ax6.plot(cu_range, q_sensitivity, 'b-', linewidth=2.5)
+ax6.axhline(y=newsvendor_demand_mean, color='gray', linestyle='--', linewidth=1.5,
+            label=f'Mean demand = {newsvendor_demand_mean}')
+ax6.axvline(x=underage_cost, color='red', linestyle=':', linewidth=2)
+ax6.scatter([underage_cost], [optimal_order_qty], color='red', s=100, zorder=5)
+ax6.set_xlabel('Underage Cost $c_u$ (\$/unit)', fontsize=10)
+ax6.set_ylabel('Optimal Order Quantity', fontsize=10)
+ax6.set_title('Newsvendor Sensitivity to Shortage Cost', fontsize=11, fontweight='bold')
+ax6.legend(fontsize=8)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Inventory Simulation
+ax7 = fig.add_subplot(3, 3, 7)
+days_to_plot = 90
+ax7.plot(range(days_to_plot), inventory_levels[:days_to_plot], 'b-', linewidth=1.5,
+         label='On-hand Inventory')
+ax7.axhline(y=reorder_point_target, color='red', linestyle='--', linewidth=1.5,
+            label=f'Reorder Point = {reorder_point_target:.0f}')
+ax7.axhline(y=lead_time_demand_mean, color='orange', linestyle=':', linewidth=1.5,
+            label=f'Expected Lead Time Demand')
+ax7.axhline(y=safety_stock_target, color='green', linestyle='-.', linewidth=1.5,
+            label=f'Safety Stock = {safety_stock_target:.0f}')
+order_days = [d for d in orders_placed if d < days_to_plot]
+ax7.scatter(order_days, [reorder_point_target] * len(order_days),
+            color='red', s=100, marker='^', zorder=5, label='Order Placed')
+ax7.set_xlabel('Day', fontsize=10)
+ax7.set_ylabel('Inventory Level (units)', fontsize=10)
+ax7.set_title('$(s,Q)$ Policy Simulation (90 days)', fontsize=11, fontweight='bold')
+ax7.legend(fontsize=7, loc='upper right')
+ax7.grid(True, alpha=0.3)
+ax7.set_xlim(0, days_to_plot)
+
+# Plot 8: Demand Distribution
+ax8 = fig.add_subplot(3, 3, 8)
+x_demand = np.linspace(lead_time_demand_mean - 4*lead_time_demand_std,
+                       lead_time_demand_mean + 4*lead_time_demand_std, 300)
+demand_pdf = norm.pdf(x_demand, lead_time_demand_mean, lead_time_demand_std)
+ax8.plot(x_demand, demand_pdf, 'b-', linewidth=2.5, label='Lead Time Demand')
+ax8.axvline(x=lead_time_demand_mean, color='black', linestyle='--', linewidth=1.5,
+            label=f'Mean = {lead_time_demand_mean:.0f}')
+ax8.axvline(x=reorder_point_target, color='red', linestyle='--', linewidth=2,
+            label=f'Reorder Point (CSL={target_service_level:.0%})')
+ax8.fill_between(x_demand, 0, demand_pdf, where=(x_demand <= reorder_point_target),
+                  alpha=0.3, color='green', label=f'No Stockout: {target_service_level:.0%}')
+ax8.fill_between(x_demand, 0, demand_pdf, where=(x_demand > reorder_point_target),
+                  alpha=0.3, color='red', label=f'Stockout: {1-target_service_level:.1%}')
+ax8.set_xlabel('Lead Time Demand (units)', fontsize=10)
+ax8.set_ylabel('Probability Density', fontsize=10)
+ax8.set_title('Lead Time Demand Distribution', fontsize=11, fontweight='bold')
+ax8.legend(fontsize=7)
+ax8.grid(True, alpha=0.3, axis='y')
+
+# Plot 9: Cumulative Shortage Analysis
+ax9 = fig.add_subplot(3, 3, 9)
+cumulative_shortage = np.cumsum(stockouts)
+cumulative_demand = np.cumsum(daily_demands)
+cumulative_fill_rate = 1 - cumulative_shortage / cumulative_demand
+ax9.plot(range(simulation_days), cumulative_fill_rate, 'b-', linewidth=2)
+ax9.axhline(y=target_service_level, color='red', linestyle='--', linewidth=1.5,
+            label=f'Target CSL = {target_service_level:.0%}')
+ax9.axhline(y=realized_fill_rate, color='green', linestyle=':', linewidth=1.5,
+            label=f'Realized FR = {realized_fill_rate:.2%}')
+ax9.set_xlabel('Day', fontsize=10)
+ax9.set_ylabel('Cumulative Fill Rate', fontsize=10)
+ax9.set_title('Realized Service Level Performance', fontsize=11, fontweight='bold')
+ax9.legend(fontsize=8)
+ax9.grid(True, alpha=0.3)
+ax9.set_ylim(0.90, 1.01)
+
 plt.tight_layout()
-plt.savefig('inventory_models_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('inventory_models_analysis.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{inventory_models_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\includegraphics[width=\textwidth]{inventory_models_analysis.pdf}
+\caption{Comprehensive inventory management analysis: (a) EOQ total cost minimization showing
+the trade-off between holding and ordering costs; (b) Robustness analysis demonstrating that
+EOQ tolerates substantial ordering errors with modest cost penalties; (c) Safety stock as a
+nonlinear function of target service level; (d) Trade-off between cycle service level and fill
+rate performance; (e) Newsvendor expected profit maximization under demand uncertainty;
+(f) Sensitivity of optimal newsvendor order quantity to underage cost parameter; (g) Simulation
+of $(s,Q)$ continuous review policy showing inventory dynamics and reorder triggers; (h) Lead
+time demand distribution with reorder point calibrated to 95\% cycle service level; (i) Realized
+fill rate convergence over 365-day simulation horizon.}
+\label{fig:inventory}
 \end{figure}
 
-\section{Time Series}
+\section{Results}
+
+\subsection{EOQ Model}
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
-
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('inventory_models_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Economic Order Quantity Results}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Value & Units \\")
+print(r"\midrule")
+print(f"Annual demand ($D$) & {annual_demand:,.0f} & units/year \\\\")
+print(f"Ordering cost ($K$) & \${ordering_cost:.2f} & per order \\\\")
+print(f"Holding cost ($h$) & \${holding_cost:.2f} & per unit/year \\\\")
+print(r"\midrule")
+print(f"Optimal order quantity ($Q^*$) & {eoq:.0f} & units \\\\")
+print(f"Orders per year & {optimal_orders_per_year:.1f} & orders/year \\\\")
+print(f"Cycle time & {cycle_time:.1f} & days \\\\")
+print(f"Annual holding cost & \${holding_component:.2f} & \\\\")
+print(f"Annual ordering cost & \${ordering_component:.2f} & \\\\")
+print(f"Minimum total cost & \${min_total_cost:.2f} & per year \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:eoq}")
+print(r"\end{table}")
 \end{pycode}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{inventory_models_plot6.pdf}
-\caption{Time series visualization.}
-\end{figure}
-
-\section{Results Summary}
+\subsection{Safety Stock Requirements}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Safety Stock and Service Level Analysis}")
+print(r"\begin{tabular}{cccccc}")
+print(r"\toprule")
+print(r"CSL & $z$ & Safety Stock & Reorder Point & Fill Rate & Annual Cost \\")
+print(r" & & (units) & (units) & & (\$) \\")
+print(r"\midrule")
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+for i, sl in enumerate(service_levels):
+    annual_holding_ss = holding_cost * safety_stocks[i]
+    print(f"{sl:.1%} & {z_values[i]:.3f} & {safety_stocks[i]:.0f} & "
+          f"{reorder_points[i]:.0f} & {fill_rates[i]:.4f} & "
+          f"\${annual_holding_ss:.2f} \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:safety}")
+print(r"\end{table}")
 \end{pycode}
+
+\begin{remark}[Service Level Economics]
+Achieving 99.5\% cycle service level requires safety stock of \py{f"{safety_stocks[-1]:.0f}"}
+units, adding \$\py{f"{holding_cost * safety_stocks[-1]:.2f}"} in annual holding costs.
+The marginal cost of increasing CSL from 99\% to 99.5\% is
+\$\py{f"{holding_cost * (safety_stocks[-1] - safety_stocks[-2]):.2f}"} per year.
+\end{remark}
+
+\subsection{Newsvendor Analysis}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Newsvendor Model Parameters and Results}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Parameter & Value & Units \\")
+print(r"\midrule")
+print(f"Demand mean ($\\mu$) & {newsvendor_demand_mean:.0f} & units \\\\")
+print(f"Demand std dev ($\\sigma$) & {newsvendor_demand_std:.0f} & units \\\\")
+print(f"Selling price & \${selling_price:.2f} & per unit \\\\")
+print(f"Purchase cost & \${purchase_cost:.2f} & per unit \\\\")
+print(f"Salvage value & \${salvage_value:.2f} & per unit \\\\")
+print(f"Shortage penalty & \${shortage_penalty:.2f} & per unit \\\\")
+print(r"\midrule")
+print(f"Overage cost ($c_o$) & \${overage_cost:.2f} & per unit \\\\")
+print(f"Underage cost ($c_u$) & \${underage_cost:.2f} & per unit \\\\")
+print(f"Critical ratio & {critical_ratio:.4f} & \\\\")
+print(f"Optimal $z^*$ & {z_newsvendor:.3f} & \\\\")
+print(f"Optimal order quantity & {optimal_order_qty:.0f} & units \\\\")
+print(f"Expected profit & \${max_profit:.2f} & \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:newsvendor}")
+print(r"\end{table}")
+\end{pycode}
+
+\begin{example}[Newsvendor Interpretation]
+With critical ratio \py{f"{critical_ratio:.3f}"}, the newsvendor stocks to the
+\py{f"{critical_ratio:.1%}"} quantile of the demand distribution. This balances
+the \$\py{f"{underage_cost:.2f}"} cost of being short against the
+\$\py{f"{overage_cost:.2f}"} cost of overstocking. The optimal order quantity
+of \py{f"{optimal_order_qty:.0f}"} units is \py{f"{optimal_order_qty - newsvendor_demand_mean:.0f}"}
+units above mean demand.
+\end{example}
+
+\subsection{Simulation Results}
+
+\begin{pycode}
+total_orders = len(orders_placed)
+avg_inventory = np.mean(inventory_levels)
+max_inventory = np.max(inventory_levels)
+stockout_days = sum(1 for s in stockouts if s > 0)
+stockout_probability = stockout_days / simulation_days
+
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{$(s,Q)$ Policy Simulation Results (365 days)}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"Metric & Value & Units \\")
+print(r"\midrule")
+print(f"Target CSL & {target_service_level:.0%} & \\\\")
+print(f"Reorder point ($s$) & {reorder_point_target:.0f} & units \\\\")
+print(f"Order quantity ($Q$) & {eoq:.0f} & units \\\\")
+print(f"Safety stock & {safety_stock_target:.0f} & units \\\\")
+print(r"\midrule")
+print(f"Total demand & {total_demand:.0f} & units \\\\")
+print(f"Total orders placed & {total_orders} & orders \\\\")
+print(f"Average inventory & {avg_inventory:.0f} & units \\\\")
+print(f"Maximum inventory & {max_inventory:.0f} & units \\\\")
+print(f"Stockout days & {stockout_days} & days \\\\")
+print(f"Realized fill rate & {realized_fill_rate:.2%} & \\\\")
+print(f"Stockout probability & {stockout_probability:.2%} & \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:simulation}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\subsection{EOQ Model Insights}
+
+The square root relationship in EOQ has important implications. The optimal order
+quantity scales as $Q^* \propto \sqrt{D}$, meaning that inventory does not need to
+increase proportionally with demand. A company experiencing 4× demand growth only
+needs to double its order quantity.
+
+\begin{example}[EOQ Robustness]
+The EOQ formula is remarkably robust to parameter estimation errors. From the cost
+ratio formula $TC(\alpha Q^*)/TC(Q^*) = \frac{1}{2}(\alpha + 1/\alpha)$:
+\begin{itemize}
+\item Ordering 50\% more than optimal ($\alpha = 1.5$): cost increase = 8.3\%
+\item Ordering twice the optimal ($\alpha = 2$): cost increase = 25\%
+\item Ordering half the optimal ($\alpha = 0.5$): cost increase = 25\%
+\end{itemize}
+This symmetry means underage and overage errors have equal cost penalties.
+\end{example}
+
+\subsection{Service Level vs Fill Rate}
+
+Cycle service level and fill rate measure different aspects of service quality:
+
+\begin{theorem}[CSL-Fill Rate Relationship]
+For continuous review $(s,Q)$ policy with normal demand:
+\begin{equation}
+FR \approx CSL + \frac{\sigma_L}{Q}L(z)
+\end{equation}
+where $L(z) = \phi(z) - z(1-\Phi(z))$ is the unit normal loss function.
+\end{theorem}
+
+Our analysis shows that 95\% CSL yields \py{f"{fill_rates[1]:.2%}"} fill rate, while
+99\% CSL achieves \py{f"{fill_rates[3]:.2%}"} fill rate. The gap between CSL and fill
+rate narrows as order quantity increases.
+
+\subsection{Newsvendor Critical Ratio}
+
+The newsvendor model reveals an asymmetric response to costs:
+
+\begin{remark}[Ratio Sensitivity]
+When $c_u \gg c_o$ (shortage much costlier than excess), the critical ratio approaches 1
+and optimal ordering approaches the upper tail of demand. When $c_u = c_o$, we order at
+the median. The critical ratio framework generalizes to perishable goods, seasonal
+products, and fashion items.
+\end{remark}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to inventory models.
+This computational analysis demonstrates fundamental inventory management principles:
+
+\begin{enumerate}
+\item The EOQ formula $Q^* = \sqrt{2KD/h}$ yields \py{f"{eoq:.0f}"} units for our
+parameters, with minimum annual cost \$\py{f"{min_total_cost:.2f}"}
+
+\item Safety stock for 95\% cycle service level is \py{f"{safety_stocks[1]:.0f}"} units,
+resulting in reorder point \py{f"{reorder_points[1]:.0f}"} units and
+\py{f"{fill_rates[1]:.2%}"} fill rate
+
+\item The newsvendor critical ratio \py{f"{critical_ratio:.3f}"} produces optimal order
+quantity \py{f"{optimal_order_qty:.0f}"} units with expected profit
+\$\py{f"{max_profit:.2f}"}
+
+\item Simulation of $(s,Q)$ policy over 365 days achieved \py{f"{realized_fill_rate:.2%}"}
+fill rate with \py{f"{stockout_days}"} stockout days
+
+\item EOQ robustness analysis confirms that ordering errors within $\pm$50\% increase
+costs by less than 10\%, validating the model's practical utility
+\end{enumerate}
+
+The square root laws governing EOQ and safety stock create economies of scale and
+diminishing returns to service level improvements. These mathematical relationships
+provide rigorous foundations for inventory optimization across industries.
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item Zipkin, P.H. \textit{Foundations of Inventory Management}. McGraw-Hill, 2000.
+\item Nahmias, S. and Cheng, Y. \textit{Production and Operations Analysis}, 7th ed. Waveland Press, 2009.
+\item Silver, E.A., Pyke, D.F., and Peterson, R. \textit{Inventory Management and Production Planning and Scheduling}, 3rd ed. Wiley, 1998.
+\item Porteus, E.L. \textit{Foundations of Stochastic Inventory Theory}. Stanford University Press, 2002.
+\item Hadley, G. and Whitin, T.M. \textit{Analysis of Inventory Systems}. Prentice-Hall, 1963.
+\item Arrow, K.J., Karlin, S., and Scarf, H. \textit{Studies in the Mathematical Theory of Inventory and Production}. Stanford University Press, 1958.
+\item Wagner, H.M. and Whitin, T.M. "Dynamic Version of the Economic Lot Size Model." \textit{Management Science}, 5(1), 1958.
+\item Scarf, H. "A Min-Max Solution of an Inventory Problem." \textit{Studies in the Mathematical Theory of Inventory and Production}, 1958.
+\item Clark, A.J. and Scarf, H. "Optimal Policies for a Multi-Echelon Inventory Problem." \textit{Management Science}, 6(4), 1960.
+\item Zheng, Y.S. and Federgruen, A. "Finding Optimal $(s,S)$ Policies is About as Simple as Evaluating a Single Policy." \textit{Operations Research}, 39(4), 1991.
+\item Chen, F. and Zheng, Y.S. "Lower Bounds for Multi-Echelon Stochastic Inventory Systems." \textit{Management Science}, 40(11), 1994.
+\item Graves, S.C., Rinnooy Kan, A.H.G., and Zipkin, P.H. \textit{Handbooks in Operations Research and Management Science: Logistics of Production and Inventory}. North-Holland, 1993.
+\item Axsäter, S. \textit{Inventory Control}, 3rd ed. Springer, 2015.
+\item Cachon, G.P. and Terwiesch, C. \textit{Matching Supply with Demand: An Introduction to Operations Management}, 4th ed. McGraw-Hill, 2019.
+\item Simchi-Levi, D., Chen, X., and Bramel, J. \textit{The Logic of Logistics: Theory, Algorithms, and Applications for Logistics Management}, 3rd ed. Springer, 2014.
+\item Hopp, W.J. and Spearman, M.L. \textit{Factory Physics}, 3rd ed. Waveland Press, 2011.
+\item Chopra, S. and Meindl, P. \textit{Supply Chain Management: Strategy, Planning, and Operation}, 7th ed. Pearson, 2019.
+\item Muckstadt, J.A. and Sapra, A. \textit{Principles of Inventory Management: When You Are Down to Four, Order More}. Springer, 2010.
+\end{itemize}
 
 \end{document}

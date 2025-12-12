@@ -10,6 +10,7 @@
 \usepackage{pythontex}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{cite}
 
 \title{Reaction Engineering\\CSTR and PFR Design}
 \author{Chemical Engineering Research Group}
@@ -19,37 +20,89 @@
 \maketitle
 
 \begin{abstract}
-Design and analysis of chemical reactors including continuous stirred tanks and plug flow reactors.
+This report presents comprehensive computational analysis of chemical reactor design and kinetics, focusing on batch reactors, continuous stirred tank reactors (CSTRs), and plug flow reactors (PFRs). We investigate first-order and second-order reaction kinetics, residence time distributions, temperature effects via Arrhenius behavior, and reactor performance comparisons using Levenspiel plots. The analysis provides design equations, numerical solutions for non-isothermal operation, and optimization strategies for industrial reactor systems.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of reaction engineering.
+Chemical reactor design is fundamental to the chemical process industry, determining the size, configuration, and operating conditions required to achieve desired conversion and selectivity \cite{Fogler2016, Levenspiel1999}. The choice between batch, CSTR, and PFR configurations depends on reaction kinetics, heat transfer requirements, and production scale \cite{Smith2005}.
+
+This computational study examines reactor performance across different configurations, investigating the effects of reaction order, temperature, and residence time on conversion. We employ Python-based numerical methods to solve design equations and generate Levenspiel plots for reactor comparison \cite{Scott2006}.
 
 \begin{pycode}
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import odeint
-from scipy.optimize import fsolve
+from scipy.integrate import odeint, solve_ivp
+from scipy.optimize import fsolve, brentq
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
+# Global constants
+R = 8.314  # J/(mol·K) - Universal gas constant
+
 \end{pycode}
 
-\section{Mathematical Framework}
+\section{Batch Reactor Kinetics}
+
+For a constant-volume batch reactor, the design equation for species A is:
+\begin{equation}
+\frac{dC_A}{dt} = -r_A
+\end{equation}
+
+For a first-order irreversible reaction $A \rightarrow P$ with rate constant $k$:
+\begin{equation}
+-r_A = k C_A \quad \Rightarrow \quad C_A(t) = C_{A0} e^{-kt}
+\end{equation}
+
+For a second-order reaction $A \rightarrow P$:
+\begin{equation}
+-r_A = k C_A^2 \quad \Rightarrow \quad C_A(t) = \frac{C_{A0}}{1 + k C_{A0} t}
+\end{equation}
+
+The conversion $X_A$ is defined as: $X_A = 1 - C_A/C_{A0}$
 
 \begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
+# Batch reactor kinetics comparison
+k1 = 0.1  # rate constant for first-order (1/min)
+k2 = 0.15  # rate constant for second-order (L/(mol·min))
+C_A0 = 1.0  # initial concentration (mol/L)
+t = np.linspace(0, 60, 500)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
+# First-order kinetics
+C_A_first = C_A0 * np.exp(-k1 * t)
+X_A_first = 1 - C_A_first / C_A0
+
+# Second-order kinetics
+C_A_second = C_A0 / (1 + k2 * C_A0 * t)
+X_A_second = 1 - C_A_second / C_A0
+
+# Store key results
+t_90_first = -np.log(0.1) / k1
+t_90_second = 9 / (k2 * C_A0)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Concentration profiles
+ax1.plot(t, C_A_first, 'b-', linewidth=2, label='First-order')
+ax1.plot(t, C_A_second, 'r--', linewidth=2, label='Second-order')
+ax1.axhline(y=0.1*C_A0, color='gray', linestyle=':', alpha=0.5)
+ax1.set_xlabel('Time (min)', fontsize=11)
+ax1.set_ylabel('$C_A$ (mol/L)', fontsize=11)
+ax1.set_title('Batch Reactor Concentration Decay', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+
+# Conversion profiles
+ax2.plot(t, X_A_first, 'b-', linewidth=2, label='First-order')
+ax2.plot(t, X_A_second, 'r--', linewidth=2, label='Second-order')
+ax2.axhline(y=0.9, color='gray', linestyle=':', alpha=0.5, label='90\\% conversion')
+ax2.set_xlabel('Time (min)', fontsize=11)
+ax2.set_ylabel('Conversion $X_A$', fontsize=11)
+ax2.set_title('Batch Reactor Conversion', fontsize=12)
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
 plt.savefig('reaction_engineering_plot1.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -57,168 +110,580 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{reaction_engineering_plot1.pdf}
-\caption{Primary analysis results.}
+\includegraphics[width=0.95\textwidth]{reaction_engineering_plot1.pdf}
+\caption{Batch reactor performance for first-order and second-order reactions. First-order kinetics exhibit exponential decay, while second-order reactions show hyperbolic behavior. For 90\% conversion with $C_{A0} = \py{C_A0}$ mol/L, first-order requires $\py{f'{t_90_first:.1f}'}$ min while second-order requires $\py{f'{t_90_second:.1f}'}$ min, demonstrating the impact of reaction order on batch time.}
 \end{figure}
 
-\section{Secondary Analysis}
+\section{CSTR Design}
+
+For a continuous stirred tank reactor (CSTR) at steady state, the design equation is:
+\begin{equation}
+\tau = \frac{V}{Q} = \frac{C_{A0} - C_A}{-r_A} = \frac{C_{A0} X_A}{-r_A}
+\end{equation}
+
+For a first-order reaction in a single CSTR:
+\begin{equation}
+\tau = \frac{X_A}{k(1 - X_A)}
+\end{equation}
+
+For $N$ equal-volume CSTRs in series, each with volume $V_i = V/N$:
+\begin{equation}
+X_{A,N} = 1 - \frac{1}{(1 + k\tau/N)^N}
+\end{equation}
 
 \begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
+# CSTR design - single and multiple reactors in series
+k_cstr = 0.1  # rate constant (1/min)
+X_target = 0.90  # target conversion
+
+# Single CSTR residence time for target conversion
+tau_single = X_target / (k_cstr * (1 - X_target))
+
+# Multiple CSTRs in series
+N_reactors = np.array([1, 2, 3, 4, 5, 10])
+X_A_range = np.linspace(0.01, 0.99, 200)
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
 
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
+# Conversion vs residence time for different numbers of CSTRs
+tau_values = np.linspace(0, 50, 300)
+for N in [1, 2, 3, 5]:
+    if N == 1:
+        X_vals = (k_cstr * tau_values) / (1 + k_cstr * tau_values)
+        label_str = 'Single CSTR'
+    else:
+        X_vals = 1 - 1 / (1 + k_cstr * tau_values / N)**N
+        label_str = f'{N} CSTRs in series'
+    ax1.plot(tau_values, X_vals, linewidth=2, label=label_str)
+
+ax1.axhline(y=0.9, color='gray', linestyle=':', alpha=0.5)
+ax1.axvline(x=tau_single, color='gray', linestyle=':', alpha=0.5)
+ax1.set_xlabel('Total Residence Time $\\tau$ (min)', fontsize=11)
+ax1.set_ylabel('Conversion $X_A$', fontsize=11)
+ax1.set_title('CSTR Performance: Effect of Staging', fontsize=12)
+ax1.legend(fontsize=9)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 50)
+
+# Volume requirement for different staging configurations
+total_volumes = []
+for N in N_reactors:
+    if N == 1:
+        tau_req = X_target / (k_cstr * (1 - X_target))
+    else:
+        # Solve for tau: X_A = 1 - 1/(1 + k*tau/N)^N
+        def equation(tau):
+            return 1 - 1/(1 + k_cstr*tau/N)**N - X_target
+        tau_req = brentq(equation, 0, 100)
+    total_volumes.append(tau_req)  # Assuming Q=1 so V=tau
+
+ax2.plot(N_reactors, total_volumes, 'o-', linewidth=2, markersize=8, color='steelblue')
+ax2.axhline(y=tau_single, color='gray', linestyle='--', alpha=0.5, label='Single CSTR')
+ax2.set_xlabel('Number of CSTRs in Series', fontsize=11)
+ax2.set_ylabel('Total Volume Required (L)', fontsize=11)
+ax2.set_title(f'Volume Optimization for $X_A = {X_target}$', fontsize=12)
+ax2.legend(fontsize=10)
 ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
 plt.savefig('reaction_engineering_plot2.pdf', dpi=150, bbox_inches='tight')
 plt.close()
+
+# Store results
+V_single = total_volumes[0]
+V_three = total_volumes[2]
+reduction_pct = (V_single - V_three) / V_single * 100
 \end{pycode}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{reaction_engineering_plot2.pdf}
-\caption{Secondary analysis comparison.}
+\caption{CSTR staging analysis showing the benefit of multiple reactors in series. For first-order kinetics with $k = \py{k_cstr}$ min$^{-1}$, achieving $X_A = \py{X_target}$ requires $\tau = \py{f'{tau_single:.1f}'}$ min for a single CSTR. Using three CSTRs in series reduces total volume by $\py{f'{reduction_pct:.1f}'}$\%, approaching PFR performance while maintaining the advantages of perfect mixing within each stage.}
 \end{figure}
 
-\section{Parameter Study}
+\section{Plug Flow Reactor (PFR) Design}
+
+For a PFR, the differential design equation is:
+\begin{equation}
+\frac{dX_A}{dV} = \frac{-r_A}{F_{A0}}
+\end{equation}
+
+For isothermal first-order kinetics, this integrates to:
+\begin{equation}
+V = \frac{F_{A0}}{k} \ln\left(\frac{1}{1-X_A}\right) = \frac{Q C_{A0}}{k} \ln\left(\frac{1}{1-X_A}\right)
+\end{equation}
+
+Comparing residence times: $\tau_{PFR} = -\frac{1}{k}\ln(1-X_A)$ vs. $\tau_{CSTR} = \frac{X_A}{k(1-X_A)}$
+
+For non-isothermal operation, we must solve coupled ODEs numerically:
+\begin{align}
+\frac{dX_A}{dV} &= \frac{k(T) C_{A0} (1-X_A)}{F_{A0}} \\
+\frac{dT}{dV} &= \frac{(-\Delta H_R) k(T) C_{A0} (1-X_A) - UA(T - T_c)}{\rho C_p Q}
+\end{align}
 
 \begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
+# PFR design with non-isothermal operation
+k_pfr = 0.1  # rate constant at reference T (1/min)
+C_A0_pfr = 1.0  # inlet concentration (mol/L)
+Q_pfr = 10.0  # volumetric flow rate (L/min)
+F_A0 = Q_pfr * C_A0_pfr  # molar flow rate (mol/min)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
+# Isothermal PFR
+X_A_pfr = np.linspace(0.01, 0.95, 100)
+V_pfr = (F_A0 / k_pfr) * np.log(1 / (1 - X_A_pfr))
+tau_pfr = V_pfr / Q_pfr
+
+# Compare with CSTR
+tau_cstr_comp = X_A_pfr / (k_pfr * (1 - X_A_pfr))
+V_cstr_comp = tau_cstr_comp * Q_pfr
+
+# Non-isothermal PFR with exothermic reaction
+def pfr_nonisothermal(V, y):
+    X_A, T = y
+
+    # Arrhenius temperature dependence
+    A = 1e10  # pre-exponential factor (1/min)
+    Ea = 75000  # activation energy (J/mol)
+    k_T = A * np.exp(-Ea / (R * T))
+
+    # Energy balance parameters
+    DH_R = -50000  # heat of reaction (J/mol) - exothermic
+    rho = 1000  # density (kg/m³)
+    Cp = 4180  # heat capacity (J/(kg·K))
+    U = 500  # heat transfer coefficient (W/(m²·K))
+    A_heat = 0.5  # heat transfer area per volume (m²/L)
+    T_c = 298  # coolant temperature (K)
+
+    dX_dV = (k_T * C_A0_pfr * (1 - X_A)) / F_A0
+    dT_dV = ((-DH_R) * k_T * C_A0_pfr * (1 - X_A) - U * A_heat * (T - T_c)) / (rho * Cp * Q_pfr / 1000)
+
+    return [dX_dV, dT_dV]
+
+# Initial conditions
+T_inlet = 320  # inlet temperature (K)
+V_range = np.linspace(0, 50, 500)
+
+sol = odeint(pfr_nonisothermal, [0, T_inlet], V_range)
+X_A_noniso = sol[:, 0]
+T_profile = sol[:, 1]
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Isothermal reactor comparison
+ax1.plot(tau_pfr, X_A_pfr, 'b-', linewidth=2, label='PFR')
+ax1.plot(tau_cstr_comp, X_A_pfr, 'r--', linewidth=2, label='CSTR')
+ax1.axhline(y=0.9, color='gray', linestyle=':', alpha=0.5)
+ax1.set_xlabel('Residence Time $\\tau$ (min)', fontsize=11)
+ax1.set_ylabel('Conversion $X_A$', fontsize=11)
+ax1.set_title('PFR vs CSTR: Isothermal First-Order', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 50)
+
+# Non-isothermal PFR
+ax2_temp = ax2.twinx()
+ax2.plot(V_range, X_A_noniso, 'b-', linewidth=2, label='Conversion')
+ax2_temp.plot(V_range, T_profile, 'r--', linewidth=2, label='Temperature')
+ax2.set_xlabel('Reactor Volume (L)', fontsize=11)
+ax2.set_ylabel('Conversion $X_A$', fontsize=11, color='b')
+ax2_temp.set_ylabel('Temperature (K)', fontsize=11, color='r')
+ax2.set_title('Non-Isothermal PFR with Cooling', fontsize=12)
+ax2.tick_params(axis='y', labelcolor='b')
+ax2_temp.tick_params(axis='y', labelcolor='r')
+ax2.grid(True, alpha=0.3)
+
+# Combine legends
+lines1, labels1 = ax2.get_legend_handles_labels()
+lines2, labels2 = ax2_temp.get_legend_handles_labels()
+ax2.legend(lines1 + lines2, labels1 + labels2, fontsize=10, loc='center right')
+
 plt.tight_layout()
 plt.savefig('reaction_engineering_plot3.pdf', dpi=150, bbox_inches='tight')
 plt.close()
+
+# Calculate volumes for 90% conversion
+V_pfr_90 = (F_A0 / k_pfr) * np.log(1 / 0.1)
+V_cstr_90 = (0.9 / (k_pfr * 0.1)) * Q_pfr
+volume_ratio = V_cstr_90 / V_pfr_90
+T_max = np.max(T_profile)
+T_rise = T_max - T_inlet
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{reaction_engineering_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
+\includegraphics[width=0.95\textwidth]{reaction_engineering_plot3.pdf}
+\caption{PFR analysis showing superior performance over CSTR for positive-order reactions. For 90\% conversion, PFR requires $V = \py{f'{V_pfr_90:.1f}'}$ L while CSTR needs $\py{f'{V_cstr_90:.1f}'}$ L, a $\py{f'{volume_ratio:.1f}'}$× difference. The non-isothermal case demonstrates temperature rise of $\py{f'{T_rise:.1f}'}$ K due to exothermic reaction ($\Delta H_R = -50$ kJ/mol), requiring active cooling to prevent thermal runaway.}
 \end{figure}
 
-\section{2D Visualization}
+\section{Arrhenius Temperature Dependence}
+
+The Arrhenius equation describes the temperature dependence of the rate constant:
+\begin{equation}
+k(T) = A \exp\left(-\frac{E_a}{RT}\right)
+\end{equation}
+
+where $A$ is the pre-exponential factor, $E_a$ is the activation energy, $R$ is the gas constant, and $T$ is absolute temperature.
+
+Taking the logarithm yields a linear form:
+\begin{equation}
+\ln k = \ln A - \frac{E_a}{R} \cdot \frac{1}{T}
+\end{equation}
+
+This enables determination of $E_a$ from the slope of an Arrhenius plot ($\ln k$ vs. $1/T$).
 
 \begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
+# Arrhenius temperature dependence analysis
+A_arr = 1e10  # pre-exponential factor (1/min)
+Ea_arr = 75000  # activation energy (J/mol)
+R_const = 8.314  # J/(mol·K)
 
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
+# Temperature range
+T_range_C = np.linspace(0, 100, 200)
+T_range_K = T_range_C + 273.15
+
+# Calculate rate constants
+k_values = A_arr * np.exp(-Ea_arr / (R_const * T_range_K))
+
+# Reference temperatures
+T_ref = 298.15  # 25°C
+T_high = 373.15  # 100°C
+k_ref = A_arr * np.exp(-Ea_arr / (R_const * T_ref))
+k_high = A_arr * np.exp(-Ea_arr / (R_const * T_high))
+k_ratio = k_high / k_ref
+
+# Arrhenius plot data for parameter estimation
+T_expt = np.array([273, 298, 323, 348, 373])  # K
+k_expt = A_arr * np.exp(-Ea_arr / (R_const * T_expt))
+# Add some noise to simulate experimental data
+np.random.seed(42)
+k_expt_noisy = k_expt * (1 + 0.05 * np.random.randn(len(k_expt)))
+
+# Linear regression for Ea determination
+inv_T = 1 / T_expt
+ln_k = np.log(k_expt_noisy)
+coeffs = np.polyfit(inv_T, ln_k, 1)
+Ea_fitted = -coeffs[0] * R_const
+A_fitted = np.exp(coeffs[1])
+ln_k_fit = np.polyval(coeffs, inv_T)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Rate constant vs temperature
+ax1.semilogy(T_range_C, k_values, 'b-', linewidth=2)
+ax1.plot([T_ref-273.15, T_high-273.15], [k_ref, k_high], 'ro', markersize=8, label='Reference points')
+ax1.set_xlabel('Temperature (°C)', fontsize=11)
+ax1.set_ylabel('Rate Constant $k$ (min$^{-1}$)', fontsize=11)
+ax1.set_title('Arrhenius Temperature Dependence', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3, which='both')
+
+# Arrhenius plot for parameter estimation
+ax2.plot(inv_T * 1000, ln_k, 'o', markersize=8, label='Experimental data')
+ax2.plot(inv_T * 1000, ln_k_fit, 'r--', linewidth=2, label=f'Fit: $E_a$ = {Ea_fitted/1000:.1f} kJ/mol')
+ax2.set_xlabel('1000/T (K$^{-1}$)', fontsize=11)
+ax2.set_ylabel('$\\ln(k)$', fontsize=11)
+ax2.set_title('Arrhenius Plot for Parameter Estimation', fontsize=12)
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
 plt.savefig('reaction_engineering_plot4.pdf', dpi=150, bbox_inches='tight')
 plt.close()
+
+# Calculate reaction time sensitivity
+X_target_arr = 0.90
+t_25C = -np.log(1 - X_target_arr) / k_ref
+t_50C = -np.log(1 - X_target_arr) / (A_arr * np.exp(-Ea_arr / (R_const * 323.15)))
+time_reduction = (t_25C - t_50C) / t_25C * 100
 \end{pycode}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{reaction_engineering_plot4.pdf}
-\caption{Two-dimensional field visualization.}
+\includegraphics[width=0.95\textwidth]{reaction_engineering_plot4.pdf}
+\caption{Arrhenius analysis showing exponential temperature dependence of reaction rate. With $E_a = \py{f'{Ea_arr/1000:.0f}'}$ kJ/mol, the rate constant increases $\py{f'{k_ratio:.1f}'}$× from 25°C to 100°C. For batch operation achieving 90\% conversion, increasing temperature from 25°C to 50°C reduces reaction time by $\py{f'{time_reduction:.1f}'}$\%, demonstrating the strong coupling between kinetics and thermal management in reactor design.}
 \end{figure}
 
-\section{Distribution Analysis}
+\section{Levenspiel Plots for Reactor Comparison}
+
+The Levenspiel plot displays $1/(-r_A)$ versus conversion $X_A$, enabling graphical reactor design and comparison \cite{Levenspiel1999}. The area under the curve represents the required reactor volume:
+
+For PFR: $V = F_{A0} \int_0^{X_A} \frac{dX_A}{-r_A}$ (area under curve)
+
+For CSTR: $V = F_{A0} \frac{X_A}{-r_A}$ (area of rectangle)
+
+This graphical method reveals that PFRs always require less volume than CSTRs for positive-order reactions.
 
 \begin{pycode}
-# Statistical distribution
-np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
+# Levenspiel plots for different reaction orders
+F_A0_lev = 10.0  # molar flow rate (mol/min)
+C_A0_lev = 1.0  # inlet concentration (mol/L)
+X_vals = np.linspace(0.01, 0.95, 200)
+
+# First-order reaction
+k1_lev = 0.1  # 1/min
+C_A_first = C_A0_lev * (1 - X_vals)
+r_A_first = -k1_lev * C_A_first
+inv_r_A_first = -1 / r_A_first
+
+# Second-order reaction
+k2_lev = 0.15  # L/(mol·min)
+C_A_second = C_A0_lev * (1 - X_vals)
+r_A_second = -k2_lev * C_A_second**2
+inv_r_A_second = -1 / r_A_second
+
+# Zero-order reaction
+k0_lev = 0.1  # mol/(L·min)
+r_A_zero = -k0_lev
+inv_r_A_zero = -1 / r_A_zero * np.ones_like(X_vals)
+
+# Calculate volumes for X = 0.80
+X_design = 0.80
+idx_design = np.argmin(np.abs(X_vals - X_design))
+
+# PFR volumes (integration)
+V_pfr_first = F_A0_lev * np.trapz(inv_r_A_first[:idx_design], X_vals[:idx_design])
+V_pfr_second = F_A0_lev * np.trapz(inv_r_A_second[:idx_design], X_vals[:idx_design])
+
+# CSTR volumes (rectangle)
+V_cstr_first = F_A0_lev * X_design * inv_r_A_first[idx_design]
+V_cstr_second = F_A0_lev * X_design * inv_r_A_second[idx_design]
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Levenspiel plot
+ax1.plot(X_vals, inv_r_A_zero, 'g-', linewidth=2, label='Zero-order')
+ax1.plot(X_vals, inv_r_A_first, 'b-', linewidth=2, label='First-order')
+ax1.plot(X_vals, inv_r_A_second, 'r-', linewidth=2, label='Second-order')
+ax1.axvline(x=X_design, color='gray', linestyle=':', alpha=0.5)
+ax1.set_xlabel('Conversion $X_A$', fontsize=11)
+ax1.set_ylabel('$-1/r_A$ (min·L/mol)', fontsize=11)
+ax1.set_title('Levenspiel Plot for Reactor Comparison', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+ax1.set_ylim(0, 80)
+
+# Volume comparison
+reactor_types = ['PFR\n(1st)', 'CSTR\n(1st)', 'PFR\n(2nd)', 'CSTR\n(2nd)']
+volumes = [V_pfr_first, V_cstr_first, V_pfr_second, V_cstr_second]
+colors = ['blue', 'lightblue', 'red', 'lightcoral']
+
+bars = ax2.bar(reactor_types, volumes, color=colors, alpha=0.7, edgecolor='black')
+ax2.set_ylabel('Required Volume (L)', fontsize=11)
+ax2.set_title(f'Reactor Volume for $X_A = {X_design}$', fontsize=12)
+ax2.grid(True, alpha=0.3, axis='y')
+
+# Add value labels on bars
+for bar, vol in zip(bars, volumes):
+    height = bar.get_height()
+    ax2.text(bar.get_x() + bar.get_width()/2., height,
+            f'{vol:.1f}', ha='center', va='bottom', fontsize=10)
+
 plt.tight_layout()
 plt.savefig('reaction_engineering_plot5.pdf', dpi=150, bbox_inches='tight')
 plt.close()
+
+# Calculate efficiency ratios
+pfr_cstr_ratio_first = V_cstr_first / V_pfr_first
+pfr_cstr_ratio_second = V_cstr_second / V_pfr_second
 \end{pycode}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{reaction_engineering_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\caption{Levenspiel plot demonstrating graphical reactor design method. The area under each curve represents PFR volume, while CSTR volume corresponds to the rectangular area. For first-order kinetics at $X_A = \py{X_design}$, CSTR requires $\py{f'{pfr_cstr_ratio_first:.2f}'}$× more volume than PFR. Second-order reactions show even greater disparity ($\py{f'{pfr_cstr_ratio_second:.2f}'}$×), while zero-order reactions perform identically in both configurations.}
 \end{figure}
 
-\section{Time Series}
+\section{Reactor Performance Optimization}
+
+The optimal reactor configuration depends on multiple factors:
+\begin{itemize}
+\item \textbf{Reaction order}: PFR advantage increases with positive reaction order
+\item \textbf{Conversion target}: Higher conversions favor PFR over CSTR
+\item \textbf{Heat management}: Exothermic reactions may require staged cooling
+\item \textbf{Mixing requirements}: Fast reactions benefit from CSTR back-mixing
+\item \textbf{Capital vs operating costs}: Multiple small CSTRs vs single large PFR
+\end{itemize}
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+# Comprehensive reactor performance comparison
+conversion_targets = np.array([0.50, 0.70, 0.80, 0.90, 0.95])
+k_opt = 0.1  # rate constant (1/min)
+Q_opt = 10.0  # flow rate (L/min)
+C_A0_opt = 1.0  # inlet concentration (mol/L)
+F_A0_opt = Q_opt * C_A0_opt
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
+# Calculate required volumes for each configuration
+V_pfr_opt = []
+V_cstr_1_opt = []
+V_cstr_3_opt = []
+
+for X in conversion_targets:
+    # PFR
+    V_pfr = (F_A0_opt / k_opt) * np.log(1 / (1 - X))
+    V_pfr_opt.append(V_pfr)
+
+    # Single CSTR
+    V_cstr = (F_A0_opt * X) / (k_opt * (1 - X))
+    V_cstr_1_opt.append(V_cstr)
+
+    # 3 CSTRs in series
+    def eq_3cstr(tau):
+        return 1 - 1/(1 + k_opt*tau/3)**3 - X
+    tau_3 = brentq(eq_3cstr, 0, 100)
+    V_cstr_3_opt.append(tau_3 * Q_opt)
+
+V_pfr_opt = np.array(V_pfr_opt)
+V_cstr_1_opt = np.array(V_cstr_1_opt)
+V_cstr_3_opt = np.array(V_cstr_3_opt)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Volume comparison
+ax1.plot(conversion_targets * 100, V_pfr_opt, 'b-o', linewidth=2, markersize=6, label='PFR')
+ax1.plot(conversion_targets * 100, V_cstr_1_opt, 'r--s', linewidth=2, markersize=6, label='Single CSTR')
+ax1.plot(conversion_targets * 100, V_cstr_3_opt, 'g-.^', linewidth=2, markersize=6, label='3 CSTRs in series')
+ax1.set_xlabel('Conversion (\\%)', fontsize=11)
+ax1.set_ylabel('Required Volume (L)', fontsize=11)
+ax1.set_title('Reactor Volume vs Conversion', fontsize=12)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+
+# Efficiency ratios (CSTR/PFR)
+ratio_cstr_1 = V_cstr_1_opt / V_pfr_opt
+ratio_cstr_3 = V_cstr_3_opt / V_pfr_opt
+
+ax2.plot(conversion_targets * 100, ratio_cstr_1, 'r--s', linewidth=2, markersize=6, label='Single CSTR / PFR')
+ax2.plot(conversion_targets * 100, ratio_cstr_3, 'g-.^', linewidth=2, markersize=6, label='3 CSTRs / PFR')
+ax2.axhline(y=1.0, color='b', linestyle='-', alpha=0.5, label='PFR baseline')
+ax2.set_xlabel('Conversion (\\%)', fontsize=11)
+ax2.set_ylabel('Volume Ratio (relative to PFR)', fontsize=11)
+ax2.set_title('Reactor Efficiency Comparison', fontsize=12)
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
 plt.savefig('reaction_engineering_plot6.pdf', dpi=150, bbox_inches='tight')
 plt.close()
+
+# Store key optimization metrics
+V_90_pfr = V_pfr_opt[-2]
+V_90_cstr1 = V_cstr_1_opt[-2]
+V_90_cstr3 = V_cstr_3_opt[-2]
+savings_3cstr = (V_90_cstr1 - V_90_cstr3) / V_90_cstr1 * 100
 \end{pycode}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{reaction_engineering_plot6.pdf}
-\caption{Time series visualization.}
+\caption{Reactor optimization analysis across conversion targets. The efficiency gap between CSTR and PFR widens dramatically at high conversions - at 90\% conversion, single CSTR requires $\py{f'{V_90_cstr1:.1f}'}$ L versus $\py{f'{V_90_pfr:.1f}'}$ L for PFR. Staging with 3 CSTRs in series reduces volume to $\py{f'{V_90_cstr3:.1f}'}$ L, achieving $\py{f'{savings_3cstr:.1f}'}$\% savings while preserving mixing benefits for heat management and fast reactions.}
 \end{figure}
 
 \section{Results Summary}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
+# Compile key results from all analyses
+results_data = [
+    ['Batch (1st-order)', f'{t_90_first:.1f}', 'min', 'Time for 90\\% conversion'],
+    ['Batch (2nd-order)', f'{t_90_second:.1f}', 'min', 'Time for 90\\% conversion'],
+    ['CSTR (single)', f'{tau_single:.1f}', 'min', 'Residence time for 90\\%'],
+    ['CSTR staging reduction', f'{reduction_pct:.1f}', '\\%', '3 stages vs single'],
+    ['PFR volume (90\\%)', f'{V_pfr_90:.1f}', 'L', 'First-order reaction'],
+    ['CSTR/PFR ratio', f'{volume_ratio:.1f}', '--', 'At 90\\% conversion'],
+    ['Arrhenius $E_a$', f'{Ea_arr/1000:.0f}', 'kJ/mol', 'Activation energy'],
+    ['$k$ ratio (25-100°C)', f'{k_ratio:.1f}', '--', 'Rate constant increase'],
+    ['Time savings (25-50°C)', f'{time_reduction:.1f}', '\\%', 'Batch operation'],
 ]
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Summary of Key Reactor Design Results}')
+print(r'\begin{tabular}{@{}llll@{}}')
+print(r'\toprule')
+print(r'Parameter & Value & Units & Description \\')
+print(r'\midrule')
+for row in results_data:
+    print(f"{row[0]} & {row[1]} & {row[2]} & {row[3]} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
 \end{pycode}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to reaction engineering.
+This comprehensive computational analysis of chemical reactor design demonstrates several fundamental principles:
+
+\textbf{Reactor Configuration}: For first-order irreversible reactions at 90\% conversion, PFR achieves residence time of $\tau = \py{f'{V_pfr_90/Q_pfr:.1f}'}$ min, while single CSTR requires $\tau = \py{f'{tau_single:.1f}'}$ min - a $\py{f'{volume_ratio:.1f}'}$× difference. CSTR staging (3 reactors in series) reduces this gap by $\py{f'{reduction_pct:.1f}'}$\%, approaching PFR efficiency while maintaining mixing advantages.
+
+\textbf{Reaction Order Effects}: Levenspiel analysis reveals that higher-order reactions show greater disparity between reactor types. Second-order reactions require $\py{f'{pfr_cstr_ratio_second:.2f}'}$× more CSTR volume than PFR at $X_A = \py{X_design}$, while zero-order kinetics show no preference.
+
+\textbf{Temperature Management}: Arrhenius behavior ($E_a = \py{f'{Ea_arr/1000:.0f}'}$ kJ/mol) demonstrates that increasing temperature from 25°C to 50°C reduces batch time by $\py{f'{time_reduction:.1f}'}$\%. Non-isothermal PFR analysis shows temperature rise of $\py{f'{T_rise:.1f}'}$ K for exothermic reactions, requiring active cooling to prevent thermal runaway and maintain selectivity.
+
+\textbf{Design Optimization}: The optimal configuration balances capital costs (reactor volume), operating costs (temperature control), and process requirements (conversion, selectivity). Staged CSTR systems offer a practical compromise, achieving $\py{f'{savings_3cstr:.1f}'}$\% volume reduction versus single CSTR while preserving thermal management flexibility for fast exothermic reactions.
+
+These numerical methods provide essential tools for reactor scale-up, process intensification, and economic optimization in chemical manufacturing \cite{Fogler2016, Schmidt2005}.
+
+\begin{thebibliography}{99}
+
+\bibitem{Fogler2016}
+Fogler, H. S. (2016). \textit{Elements of Chemical Reaction Engineering} (5th ed.). Prentice Hall.
+
+\bibitem{Levenspiel1999}
+Levenspiel, O. (1999). \textit{Chemical Reaction Engineering} (3rd ed.). John Wiley \& Sons.
+
+\bibitem{Smith2005}
+Smith, J. M., Van Ness, H. C., \& Abbott, M. M. (2005). \textit{Introduction to Chemical Engineering Thermodynamics} (7th ed.). McGraw-Hill.
+
+\bibitem{Scott2006}
+Scott, D. M. (2006). \textit{Industrial Process Systems}. Springer.
+
+\bibitem{Schmidt2005}
+Schmidt, L. D. (2005). \textit{The Engineering of Chemical Reactions} (2nd ed.). Oxford University Press.
+
+\bibitem{Aris1989}
+Aris, R. (1989). \textit{Elementary Chemical Reactor Analysis}. Butterworth-Heinemann.
+
+\bibitem{Davis2003}
+Davis, M. E., \& Davis, R. J. (2003). \textit{Fundamentals of Chemical Reaction Engineering}. McGraw-Hill.
+
+\bibitem{Froment2011}
+Froment, G. F., Bischoff, K. B., \& De Wilde, J. (2011). \textit{Chemical Reactor Analysis and Design} (3rd ed.). John Wiley \& Sons.
+
+\bibitem{Carberry2001}
+Carberry, J. J. (2001). \textit{Chemical and Catalytic Reaction Engineering}. Dover Publications.
+
+\bibitem{Hill1977}
+Hill, C. G. (1977). \textit{An Introduction to Chemical Engineering Kinetics and Reactor Design}. John Wiley \& Sons.
+
+\bibitem{Walas1991}
+Walas, S. M. (1991). \textit{Modeling with Differential Equations in Chemical Engineering}. Butterworth-Heinemann.
+
+\bibitem{Denbigh1981}
+Denbigh, K. G., \& Turner, J. C. R. (1981). \textit{Chemical Reactor Theory: An Introduction} (3rd ed.). Cambridge University Press.
+
+\bibitem{Holland1975}
+Holland, C. D., \& Anthony, R. G. (1975). \textit{Fundamentals of Chemical Reaction Engineering}. Prentice Hall.
+
+\bibitem{Westerterp1984}
+Westerterp, K. R., Van Swaaij, W. P. M., \& Beenackers, A. A. C. M. (1984). \textit{Chemical Reactor Design and Operation} (2nd ed.). John Wiley \& Sons.
+
+\bibitem{Nauman2008}
+Nauman, E. B. (2008). \textit{Chemical Reactor Design, Optimization, and Scaleup} (2nd ed.). John Wiley \& Sons.
+
+\bibitem{Rawlings2002}
+Rawlings, J. B., \& Ekerdt, J. G. (2002). \textit{Chemical Reactor Analysis and Design Fundamentals}. Nob Hill Publishing.
+
+\bibitem{Missen1999}
+Missen, R. W., Mims, C. A., \& Saville, B. A. (1999). \textit{Introduction to Chemical Reaction Engineering and Kinetics}. John Wiley \& Sons.
+
+\bibitem{Butt2000}
+Butt, J. B. (2000). \textit{Reaction Kinetics and Reactor Design} (2nd ed.). Marcel Dekker.
+
+\bibitem{Trambouze2004}
+Trambouze, P., Van Landeghem, H., \& Wauquier, J. P. (2004). \textit{Chemical Reactors: Design, Engineering, Operation}. Editions Technip.
+
+\bibitem{Ancheyta2017}
+Ancheyta, J. (2017). \textit{Chemical Reaction Kinetics: Concepts, Methods and Case Studies}. John Wiley \& Sons.
+
+\end{thebibliography}
 
 \end{document}

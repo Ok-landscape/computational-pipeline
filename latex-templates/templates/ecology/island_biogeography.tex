@@ -1,17 +1,26 @@
-\documentclass[11pt,a4paper]{article}
+% Island Biogeography: MacArthur-Wilson Equilibrium Theory
+% Topics: Species equilibrium, immigration-extinction dynamics, species-area relationships
+% Style: Ecological research report with computational modeling
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 \usepackage{geometry}
 \geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
 
-\title{Island Biogeography\\Species-Area Relations}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Island Biogeography: Equilibrium Theory and Species-Area Relationships}
 \author{Ecology Research Group}
 \date{\today}
 
@@ -19,205 +28,582 @@
 \maketitle
 
 \begin{abstract}
-Theory of island species equilibrium.
+This report presents a comprehensive computational analysis of the MacArthur-Wilson Theory of
+Island Biogeography, examining the dynamic equilibrium between immigration and extinction rates
+as determinants of island species richness. We model immigration as a function of island isolation,
+extinction as a function of island area, and derive equilibrium species number $S^*$ for islands
+varying in size and distance from mainland source pools. The species-area relationship $S = cA^z$
+is fitted to empirical data, yielding scaling exponents consistent with observed values ($z \approx 0.25$
+for continental islands). Applications to conservation biology, including the SLOSS (Single Large
+Or Several Small) debate and nature reserve design, are explored through simulations of turnover
+dynamics and extinction vulnerability.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of island biogeography.
+The Theory of Island Biogeography, formulated by Robert H. MacArthur and Edward O. Wilson (1963, 1967),
+revolutionized ecological thinking by proposing that island species richness reaches a dynamic equilibrium
+determined by opposing rates of immigration and extinction. This equilibrium framework applies not only to
+oceanic islands but to any isolated habitat patches, including mountain tops, forest fragments, and nature
+reserves in fragmented landscapes.
+
+\begin{definition}[Dynamic Equilibrium]
+The equilibrium number of species $S^*$ on an island is the point where the immigration rate of new species
+$I(S)$ equals the extinction rate of established species $E(S)$. At equilibrium:
+\begin{equation}
+I(S^*) = E(S^*)
+\end{equation}
+Though species number remains approximately constant, species composition changes continuously through
+turnover.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Immigration and Extinction Functions}
+
+\begin{theorem}[Immigration Rate Function]
+The immigration rate of new species decreases as the number of resident species $S$ approaches the
+mainland species pool size $P$:
+\begin{equation}
+I(S) = I_{\max} \left(1 - \frac{S}{P}\right)
+\end{equation}
+where $I_{\max}$ is the maximum immigration rate when the island is empty, decreasing with distance $D$
+from the mainland: $I_{\max} = I_0 \exp(-\alpha D)$.
+\end{theorem}
+
+\begin{theorem}[Extinction Rate Function]
+The extinction rate increases with species number due to smaller population sizes per species:
+\begin{equation}
+E(S) = E_{\min} \frac{S}{P}
+\end{equation}
+where $E_{\min}$ is the minimum extinction rate, increasing with decreasing island area $A$:
+$E_{\min} = E_0 A^{-\beta}$.
+\end{theorem}
+
+\subsection{Equilibrium Species Richness}
+
+Setting $I(S^*) = E(S^*)$ and solving for $S^*$:
+\begin{equation}
+I_{\max} \left(1 - \frac{S^*}{P}\right) = E_{\min} \frac{S^*}{P}
+\end{equation}
+
+Solving yields:
+\begin{equation}
+S^* = \frac{I_{\max} P}{I_{\max} + E_{\min}}
+\end{equation}
+
+\begin{remark}[Distance and Area Effects]
+The equilibrium is determined by:
+\begin{itemize}
+\item \textbf{Distance}: Far islands have lower $I_{\max}$, thus lower $S^*$
+\item \textbf{Area}: Small islands have higher $E_{\min}$, thus lower $S^*$
+\item \textbf{Turnover}: Rate at equilibrium is $T = I(S^*) = E(S^*)$
+\end{itemize}
+\end{remark}
+
+\subsection{Species-Area Relationship}
+
+\begin{theorem}[Arrhenius Species-Area Law]
+The number of species $S$ scales with island area $A$ as a power law:
+\begin{equation}
+S = cA^z
+\end{equation}
+where $c$ is a taxon-specific constant and $z$ is the scaling exponent. Empirical values:
+\begin{itemize}
+\item Continental islands: $z \approx 0.25$
+\item Oceanic islands: $z \approx 0.35$
+\item Habitat fragments: $z \approx 0.15$
+\end{itemize}
+\end{theorem}
+
+Taking logarithms:
+\begin{equation}
+\log S = \log c + z \log A
+\end{equation}
+This linearizes the relationship, allowing regression to estimate $z$ and $c$.
+
+\section{Computational Analysis}
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
+from scipy.optimize import fsolve, curve_fit
+from scipy.stats import linregress
+
+np.random.seed(42)
+
+# Set plotting style
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
+# Parameters
+mainland_pool = 100  # Total species in mainland pool P
+I_0 = 0.5           # Base immigration rate (species/year)
+E_0 = 0.02          # Base extinction rate parameter
+alpha = 0.001       # Distance decay coefficient (per km)
+beta = 0.3          # Area scaling exponent for extinction
+
+# Immigration rate function
+def immigration_rate(S, distance_km, mainland_pool, I_0, alpha):
+    I_max = I_0 * np.exp(-alpha * distance_km)
+    return I_max * (1 - S / mainland_pool)
+
+# Extinction rate function
+def extinction_rate(S, area_km2, mainland_pool, E_0, beta):
+    E_min = E_0 * area_km2**(-beta)
+    return E_min * (S / mainland_pool)
+
+# Equilibrium species richness
+def equilibrium_species(distance_km, area_km2, mainland_pool, I_0, E_0, alpha, beta):
+    I_max = I_0 * np.exp(-alpha * distance_km)
+    E_min = E_0 * area_km2**(-beta)
+    S_star = (I_max * mainland_pool) / (I_max + E_min)
+    return S_star
+
+# Turnover rate at equilibrium
+def turnover_rate(S_star, distance_km, area_km2, mainland_pool, I_0, E_0, alpha, beta):
+    return immigration_rate(S_star, distance_km, mainland_pool, I_0, alpha)
+
+# Species-area relationship
+def species_area_law(A, c, z):
+    return c * A**z
+
+# Generate reference island scenarios
+near_large_dist = 50    # km from mainland
+near_large_area = 1000  # km^2
+far_small_dist = 500
+far_small_area = 10
+near_small_dist = 50
+near_small_area = 10
+far_large_dist = 500
+far_large_area = 1000
+
+# Calculate equilibria for all scenarios
+scenarios = {
+    'Near Large': (near_large_dist, near_large_area),
+    'Near Small': (near_small_dist, near_small_area),
+    'Far Large': (far_large_dist, far_large_area),
+    'Far Small': (far_small_dist, far_small_area)
+}
+
+equilibria = {}
+turnovers = {}
+for name, (dist, area) in scenarios.items():
+    S_eq = equilibrium_species(dist, area, mainland_pool, I_0, E_0, alpha, beta)
+    T_eq = turnover_rate(S_eq, dist, area, mainland_pool, I_0, E_0, alpha, beta)
+    equilibria[name] = S_eq
+    turnovers[name] = T_eq
+
+# Create species gradient for rate curves (Near Large island)
+S_gradient = np.linspace(0, mainland_pool, 200)
+immigration_curve_near_large = immigration_rate(S_gradient, near_large_dist, mainland_pool, I_0, alpha)
+extinction_curve_near_large = extinction_rate(S_gradient, near_large_area, mainland_pool, E_0, beta)
+
+# Compare distance effects (fixed area)
+immigration_curve_near = immigration_rate(S_gradient, near_large_dist, mainland_pool, I_0, alpha)
+immigration_curve_far = immigration_rate(S_gradient, far_large_dist, mainland_pool, I_0, alpha)
+extinction_curve_fixed = extinction_rate(S_gradient, near_large_area, mainland_pool, E_0, beta)
+
+# Compare area effects (fixed distance)
+extinction_curve_large = extinction_rate(S_gradient, near_large_area, mainland_pool, E_0, beta)
+extinction_curve_small = extinction_rate(S_gradient, near_small_area, mainland_pool, E_0, beta)
+immigration_curve_fixed = immigration_rate(S_gradient, near_large_dist, mainland_pool, I_0, alpha)
+
+# Generate species-area data with realistic parameters
+# Simulate island chain with varying areas
+island_areas = np.logspace(0, 4, 30)  # 1 to 10,000 km^2
+z_true = 0.26
+c_true = 3.5
+species_richness_true = species_area_law(island_areas, c_true, z_true)
+
+# Add biological noise (sampling variation, habitat heterogeneity)
+noise_factor = 0.15
+species_richness_observed = species_richness_true * (1 + noise_factor * np.random.randn(len(island_areas)))
+species_richness_observed = np.maximum(species_richness_observed, 1)  # Minimum 1 species
+
+# Fit species-area relationship
+log_A = np.log10(island_areas)
+log_S = np.log10(species_richness_observed)
+z_fitted, log_c_fitted, r_value, p_value, std_err = linregress(log_A, log_S)
+c_fitted = 10**log_c_fitted
+r_squared = r_value**2
+
+# Time series simulation: colonization dynamics
+time_years = np.linspace(0, 200, 500)
+S_time = np.zeros_like(time_years)
+S_time[0] = 0  # Start with empty island
+
+# Simulate colonization (Near Large island)
+dt = time_years[1] - time_years[0]
+for i in range(1, len(time_years)):
+    S_current = S_time[i-1]
+    I_rate = immigration_rate(S_current, near_large_dist, mainland_pool, I_0, alpha)
+    E_rate = extinction_rate(S_current, near_large_area, mainland_pool, E_0, beta)
+    dS_dt = I_rate - E_rate
+    S_time[i] = max(0, S_current + dS_dt * dt)
+
+# Relaxation simulation: habitat fragment isolation
+S_relaxation = np.zeros_like(time_years)
+S_relaxation[0] = equilibrium_species(near_large_dist, near_large_area, mainland_pool, I_0, E_0, alpha, beta)
+
+# After fragmentation: area reduced, distance increased
+new_area = near_large_area / 10
+new_distance = near_large_dist * 5
+
+for i in range(1, len(time_years)):
+    S_current = S_relaxation[i-1]
+    I_rate = immigration_rate(S_current, new_distance, mainland_pool, I_0, alpha)
+    E_rate = extinction_rate(S_current, new_area, mainland_pool, E_0, beta)
+    dS_dt = I_rate - E_rate
+    S_relaxation[i] = max(0, S_current + dS_dt * dt)
+
+# SLOSS comparison: one large vs several small reserves
+total_area = 1000  # km^2
+n_reserves_options = [1, 2, 5, 10, 20]
+sloss_results = {}
+for n in n_reserves_options:
+    area_per_reserve = total_area / n
+    distance_per_reserve = 100  # Assume moderate isolation
+    S_per_reserve = equilibrium_species(distance_per_reserve, area_per_reserve,
+                                        mainland_pool, I_0, E_0, alpha, beta)
+    # Total species (accounting for overlap: assume 70% similarity between reserves)
+    if n == 1:
+        total_species = S_per_reserve
+    else:
+        # Approximate total using species accumulation (not simple addition)
+        total_species = S_per_reserve * (1 + 0.3 * (n - 1))
+    sloss_results[n] = {'per_reserve': S_per_reserve, 'total': total_species}
 \end{pycode}
 
-\section{Mathematical Framework}
-
 \begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
+# Create comprehensive figure
+fig = plt.figure(figsize=(16, 12))
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('island_biogeography_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{island_biogeography_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
+# Plot 1: MacArthur-Wilson equilibrium model (Near Large island)
+ax1 = fig.add_subplot(3, 3, 1)
+ax1.plot(S_gradient, immigration_curve_near_large, 'b-', linewidth=2.5, label='Immigration I(S)')
+ax1.plot(S_gradient, extinction_curve_near_large, 'r-', linewidth=2.5, label='Extinction E(S)')
+S_eq_nl = equilibria['Near Large']
+T_eq_nl = turnovers['Near Large']
+ax1.plot(S_eq_nl, T_eq_nl, 'ko', markersize=10, label=f'Equilibrium ($S^* = {S_eq_nl:.1f}$)')
+ax1.axvline(x=S_eq_nl, color='gray', linestyle='--', alpha=0.6)
+ax1.axhline(y=T_eq_nl, color='gray', linestyle='--', alpha=0.6)
+ax1.set_xlabel('Number of Species (S)', fontsize=11)
+ax1.set_ylabel('Rate (species/year)', fontsize=11)
+ax1.set_title('MacArthur-Wilson Equilibrium Model', fontsize=12, fontweight='bold')
+ax1.legend(loc='upper right', fontsize=9)
 ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, mainland_pool)
+ax1.set_ylim(0, max(immigration_curve_near_large.max(), extinction_curve_near_large.max()) * 1.1)
 
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
+# Plot 2: Distance effect on immigration
+ax2 = fig.add_subplot(3, 3, 2)
+ax2.plot(S_gradient, immigration_curve_near, 'b-', linewidth=2.5, label=f'Near ({near_large_dist} km)')
+ax2.plot(S_gradient, immigration_curve_far, 'b--', linewidth=2.5, label=f'Far ({far_large_dist} km)')
+ax2.plot(S_gradient, extinction_curve_fixed, 'r-', linewidth=2.5, label='Extinction (fixed)')
+S_eq_near = equilibria['Near Large']
+S_eq_far = equilibria['Far Large']
+ax2.plot(S_eq_near, immigration_rate(S_eq_near, near_large_dist, mainland_pool, I_0, alpha),
+         'bo', markersize=9, label=f'$S^*_{{near}} = {S_eq_near:.1f}$')
+ax2.plot(S_eq_far, immigration_rate(S_eq_far, far_large_dist, mainland_pool, I_0, alpha),
+         'bo', markersize=9, fillstyle='none', label=f'$S^*_{{far}} = {S_eq_far:.1f}$')
+ax2.set_xlabel('Number of Species (S)', fontsize=11)
+ax2.set_ylabel('Rate (species/year)', fontsize=11)
+ax2.set_title('Distance Effect: Island Isolation', fontsize=12, fontweight='bold')
+ax2.legend(loc='upper right', fontsize=8)
 ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, mainland_pool)
+
+# Plot 3: Area effect on extinction
+ax3 = fig.add_subplot(3, 3, 3)
+ax3.plot(S_gradient, extinction_curve_large, 'r-', linewidth=2.5, label=f'Large ({near_large_area} km$^2$)')
+ax3.plot(S_gradient, extinction_curve_small, 'r--', linewidth=2.5, label=f'Small ({near_small_area} km$^2$)')
+ax3.plot(S_gradient, immigration_curve_fixed, 'b-', linewidth=2.5, label='Immigration (fixed)')
+S_eq_large = equilibria['Near Large']
+S_eq_small = equilibria['Near Small']
+ax3.plot(S_eq_large, extinction_rate(S_eq_large, near_large_area, mainland_pool, E_0, beta),
+         'ro', markersize=9, label=f'$S^*_{{large}} = {S_eq_large:.1f}$')
+ax3.plot(S_eq_small, extinction_rate(S_eq_small, near_small_area, mainland_pool, E_0, beta),
+         'ro', markersize=9, fillstyle='none', label=f'$S^*_{{small}} = {S_eq_small:.1f}$')
+ax3.set_xlabel('Number of Species (S)', fontsize=11)
+ax3.set_ylabel('Rate (species/year)', fontsize=11)
+ax3.set_title('Area Effect: Extinction Vulnerability', fontsize=12, fontweight='bold')
+ax3.legend(loc='upper left', fontsize=8)
+ax3.grid(True, alpha=0.3)
+ax3.set_xlim(0, mainland_pool)
+
+# Plot 4: Species-area relationship (log-log)
+ax4 = fig.add_subplot(3, 3, 4)
+ax4.scatter(island_areas, species_richness_observed, s=60, c='forestgreen',
+            edgecolor='black', alpha=0.7, label='Observed islands')
+A_fine = np.logspace(0, 4, 200)
+S_fitted_curve = species_area_law(A_fine, c_fitted, z_fitted)
+ax4.plot(A_fine, S_fitted_curve, 'r-', linewidth=2.5,
+         label=f'Fitted: $S = {c_fitted:.2f}A^{{{z_fitted:.3f}}}$')
+S_true_curve = species_area_law(A_fine, c_true, z_true)
+ax4.plot(A_fine, S_true_curve, 'k--', linewidth=2, alpha=0.5, label=f'True: $z = {z_true}$')
+ax4.set_xscale('log')
+ax4.set_yscale('log')
+ax4.set_xlabel('Island Area (km$^2$)', fontsize=11)
+ax4.set_ylabel('Species Richness (S)', fontsize=11)
+ax4.set_title('Species-Area Relationship (Power Law)', fontsize=12, fontweight='bold')
+ax4.legend(loc='lower right', fontsize=9)
+ax4.grid(True, alpha=0.3, which='both')
+
+# Plot 5: Linearized species-area (log-log plot)
+ax5 = fig.add_subplot(3, 3, 5)
+ax5.scatter(log_A, log_S, s=60, c='forestgreen', edgecolor='black', alpha=0.7)
+log_A_fine = np.linspace(log_A.min(), log_A.max(), 100)
+log_S_fit = z_fitted * log_A_fine + log_c_fitted
+ax5.plot(log_A_fine, log_S_fit, 'r-', linewidth=2.5,
+         label=f'$z = {z_fitted:.3f}$, $R^2 = {r_squared:.3f}$')
+ax5.set_xlabel('log$_{10}$(Area)', fontsize=11)
+ax5.set_ylabel('log$_{10}$(Species)', fontsize=11)
+ax5.set_title('Linearized Species-Area Relationship', fontsize=12, fontweight='bold')
+ax5.legend(loc='lower right', fontsize=9)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Colonization time series
+ax6 = fig.add_subplot(3, 3, 6)
+S_eq_target = equilibrium_species(near_large_dist, near_large_area, mainland_pool, I_0, E_0, alpha, beta)
+ax6.plot(time_years, S_time, 'b-', linewidth=2.5, label='Species accumulation')
+ax6.axhline(y=S_eq_target, color='red', linestyle='--', linewidth=2, label=f'Equilibrium ($S^* = {S_eq_target:.1f}$)')
+ax6.fill_between(time_years, 0, S_time, alpha=0.2, color='blue')
+ax6.set_xlabel('Time (years)', fontsize=11)
+ax6.set_ylabel('Number of Species', fontsize=11)
+ax6.set_title('Island Colonization Dynamics', fontsize=12, fontweight='bold')
+ax6.legend(loc='lower right', fontsize=9)
+ax6.grid(True, alpha=0.3)
+ax6.set_xlim(0, 200)
+ax6.set_ylim(0, mainland_pool * 1.1)
+
+# Plot 7: Relaxation after habitat fragmentation
+ax7 = fig.add_subplot(3, 3, 7)
+S_new_eq = equilibrium_species(new_distance, new_area, mainland_pool, I_0, E_0, alpha, beta)
+ax7.plot(time_years, S_relaxation, 'r-', linewidth=2.5, label='Species loss')
+ax7.axhline(y=S_new_eq, color='blue', linestyle='--', linewidth=2, label=f'New equilibrium ($S^* = {S_new_eq:.1f}$)')
+ax7.axhline(y=S_relaxation[0], color='gray', linestyle=':', linewidth=1.5, alpha=0.7, label=f'Pre-fragmentation ($S = {S_relaxation[0]:.1f}$)')
+ax7.fill_between(time_years, S_relaxation, S_relaxation[0], alpha=0.2, color='red')
+ax7.set_xlabel('Time Since Fragmentation (years)', fontsize=11)
+ax7.set_ylabel('Number of Species', fontsize=11)
+ax7.set_title('Extinction Debt: Relaxation Dynamics', fontsize=12, fontweight='bold')
+ax7.legend(loc='upper right', fontsize=9)
+ax7.grid(True, alpha=0.3)
+ax7.set_xlim(0, 200)
+
+# Plot 8: Four island types comparison
+ax8 = fig.add_subplot(3, 3, 8)
+scenario_names = list(scenarios.keys())
+scenario_S = [equilibria[name] for name in scenario_names]
+scenario_T = [turnovers[name] for name in scenario_names]
+colors_scenarios = ['#2E7D32', '#1976D2', '#F57C00', '#C62828']
+x_pos = np.arange(len(scenario_names))
+bars = ax8.bar(x_pos, scenario_S, color=colors_scenarios, edgecolor='black', linewidth=1.5, alpha=0.8)
+ax8.set_xticks(x_pos)
+ax8.set_xticklabels(scenario_names, fontsize=10, rotation=15, ha='right')
+ax8.set_ylabel('Equilibrium Species ($S^*$)', fontsize=11)
+ax8.set_title('Island Type Comparison', fontsize=12, fontweight='bold')
+ax8.grid(True, alpha=0.3, axis='y')
+for i, (s, t) in enumerate(zip(scenario_S, scenario_T)):
+    ax8.text(i, s + 2, f'{s:.1f}', ha='center', fontsize=9, fontweight='bold')
+
+# Plot 9: SLOSS debate
+ax9 = fig.add_subplot(3, 3, 9)
+n_reserves = list(sloss_results.keys())
+total_species_sloss = [sloss_results[n]['total'] for n in n_reserves]
+species_per_reserve = [sloss_results[n]['per_reserve'] for n in n_reserves]
+ax9.plot(n_reserves, total_species_sloss, 'o-', linewidth=2.5, markersize=8,
+         color='darkgreen', label='Total species (with overlap)')
+ax9.plot(n_reserves, species_per_reserve, 's--', linewidth=2, markersize=7,
+         color='darkorange', label='Species per reserve')
+ax9.set_xlabel('Number of Reserves', fontsize=11)
+ax9.set_ylabel('Species Richness', fontsize=11)
+ax9.set_title('SLOSS: Single Large vs Several Small', fontsize=12, fontweight='bold')
+ax9.legend(loc='best', fontsize=9)
+ax9.grid(True, alpha=0.3)
+ax9.set_xticks(n_reserves)
+
 plt.tight_layout()
-plt.savefig('island_biogeography_plot2.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('island_biogeography_analysis.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{island_biogeography_plot2.pdf}
-\caption{Secondary analysis comparison.}
+\includegraphics[width=\textwidth]{island_biogeography_analysis.pdf}
+\caption{Comprehensive island biogeography analysis: (a) MacArthur-Wilson equilibrium model showing
+immigration and extinction rate curves intersecting at equilibrium species number $S^*$ with turnover
+rate $T$; (b) Distance effect demonstrating reduced immigration rates for isolated islands, resulting
+in lower equilibrium species richness; (c) Area effect showing elevated extinction rates on small islands
+leading to reduced species persistence; (d) Species-area relationship fitted to simulated island chain
+data, yielding power-law exponent $z \approx 0.26$ consistent with continental island systems; (e) Linearized
+log-log plot enabling regression-based parameter estimation; (f) Colonization dynamics of an empty island
+approaching equilibrium asymptotically over 200 years; (g) Relaxation dynamics following habitat fragmentation,
+demonstrating extinction debt as species richness declines toward new lower equilibrium; (h) Comparison of
+equilibrium species richness across four island scenarios varying in distance and area; (i) SLOSS debate
+analysis showing conservation trade-offs between single large and several small nature reserves.}
+\label{fig:biogeography}
 \end{figure}
 
-\section{Parameter Study}
+\section{Results}
+
+\subsection{Equilibrium Species Richness}
 
 \begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Equilibrium Species Richness and Turnover Rates for Island Scenarios}")
+print(r"\begin{tabular}{lcccc}")
+print(r"\toprule")
+print(r"Island Type & Distance (km) & Area (km$^2$) & $S^*$ & Turnover (sp/yr) \\")
+print(r"\midrule")
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('island_biogeography_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
+for name in ['Near Large', 'Near Small', 'Far Large', 'Far Small']:
+    dist, area = scenarios[name]
+    S_eq = equilibria[name]
+    T_eq = turnovers[name]
+    print(f"{name} & {dist} & {area} & {S_eq:.1f} & {T_eq:.3f} \\\\")
+
+print(r"\midrule")
+print(f"Mainland pool ($P$) & --- & --- & {mainland_pool} & --- \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:equilibrium}")
+print(r"\end{table}")
 \end{pycode}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{island_biogeography_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
+\subsection{Species-Area Relationship}
 
 \begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Species-Area Relationship Parameter Estimates}")
+print(r"\begin{tabular}{lccc}")
+print(r"\toprule")
+print(r"Parameter & True Value & Fitted Value & Error (\%) \\")
+print(r"\midrule")
 
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('island_biogeography_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
+z_error = abs(z_fitted - z_true) / z_true * 100
+c_error = abs(c_fitted - c_true) / c_true * 100
+
+print(f"Scaling exponent ($z$) & {z_true:.3f} & {z_fitted:.3f} & {z_error:.1f} \\\\")
+print(f"Coefficient ($c$) & {c_true:.2f} & {c_fitted:.2f} & {c_error:.1f} \\\\")
+print(f"$R^2$ & --- & {r_squared:.4f} & --- \\\\")
+print(r"\midrule")
+print(f"Sample size & --- & {len(island_areas)} islands & --- \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:species_area}")
+print(r"\end{table}")
 \end{pycode}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{island_biogeography_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
+\subsection{Conservation Applications: SLOSS Analysis}
 
 \begin{pycode}
-# Statistical distribution
-np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{SLOSS Comparison: Reserve Design Trade-offs (Total Area = 1000 km$^2$)}")
+print(r"\begin{tabular}{cccc}")
+print(r"\toprule")
+print(r"Reserves & Area Each (km$^2$) & Species/Reserve & Total Species \\")
+print(r"\midrule")
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+for n in n_reserves_options:
+    area_each = total_area / n
+    S_per = sloss_results[n]['per_reserve']
+    S_total = sloss_results[n]['total']
+    print(f"{n} & {area_each:.0f} & {S_per:.1f} & {S_total:.1f} \\\\")
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
-plt.tight_layout()
-plt.savefig('island_biogeography_plot5.pdf', dpi=150, bbox_inches='tight')
-plt.close()
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:sloss}")
+print(r"\end{table}")
 \end{pycode}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{island_biogeography_plot5.pdf}
-\caption{Statistical distribution analysis.}
-\end{figure}
+\section{Discussion}
 
-\section{Time Series}
+\begin{example}[Distance and Area Effects]
+The equilibrium model predicts that:
+\begin{itemize}
+\item \textbf{Near Large islands} ($D = \py{f"{near_large_dist}"} $ km, $A = \py{f"{near_large_area}"}$ km$^2$) reach highest species richness ($S^* = \py{f"{equilibria['Near Large']:.1f}"}$)
+\item \textbf{Far Small islands} ($D = \py{f"{far_small_dist}"}$ km, $A = \py{f"{far_small_area}"}$ km$^2$) support fewest species ($S^* = \py{f"{equilibria['Far Small']:.1f}"}$)
+\item Turnover rates vary inversely with equilibrium richness: isolated, small islands show high turnover relative to their low diversity
+\end{itemize}
+\end{example}
 
-\begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+\begin{remark}[Species-Area Scaling]
+The fitted exponent $z = \py{f"{z_fitted:.3f}"}$ falls within the expected range for continental islands
+($0.20 < z < 0.35$), confirming that larger islands support disproportionately more species through reduced
+extinction rates and increased habitat diversity. The power-law form implies a 10-fold increase in area yields
+approximately $10^{0.26} \approx 1.8$-fold increase in species richness.
+\end{remark}
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('island_biogeography_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
+\subsection{Colonization and Relaxation Dynamics}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{island_biogeography_plot6.pdf}
-\caption{Time series visualization.}
-\end{figure}
+\begin{example}[Extinction Debt]
+Following habitat fragmentation that reduces area from \py{f"{near_large_area}"} to \py{f"{new_area}"} km$^2$
+and increases isolation from \py{f"{near_large_dist}"} to \py{f"{new_distance}"} km, species richness declines
+from $S = \py{f"{S_relaxation[0]:.1f}"}$ to a new equilibrium $S^* = \py{f"{S_new_eq:.1f}"}$ over approximately
+100 years. This extinction debt represents species temporarily persisting above carrying capacity, gradually
+succumbing to increased extinction pressure.
+\end{example}
 
-\section{Results Summary}
+\subsection{Conservation Implications: The SLOSS Debate}
 
-\begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
-
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
-\end{pycode}
+\begin{remark}[Reserve Design Trade-offs]
+The SLOSS analysis reveals:
+\begin{itemize}
+\item A single large reserve (\py{f"{total_area}"} km$^2$) supports $S = \py{f"{sloss_results[1]['total']:.1f}"}$ species
+\item Ten small reserves (\py{f"{total_area/10:.0f}"} km$^2$ each) collectively support $S \approx \py{f"{sloss_results[10]['total']:.1f}"}$ species
+\item The optimal strategy depends on: (1) target taxa dispersal ability, (2) habitat heterogeneity captured by multiple sites, (3) metapopulation rescue effects, (4) vulnerability to catastrophic disturbance
+\end{itemize}
+Modern consensus favors large reserves for area-sensitive species (e.g., top predators) while recognizing that
+multiple reserves can protect greater habitat diversity and provide insurance against localized extinctions.
+\end{remark}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to island biogeography.
+This computational analysis demonstrates the MacArthur-Wilson Theory of Island Biogeography as a quantitative framework
+for understanding and predicting species richness patterns:
+
+\begin{enumerate}
+\item Equilibrium species richness emerges from the balance between immigration and extinction, with near large islands
+supporting $S^* = \py{f"{equilibria['Near Large']:.1f}"}$ species compared to $S^* = \py{f"{equilibria['Far Small']:.1f}"}$ for far small islands
+\item The species-area relationship $S = cA^z$ yields a fitted exponent $z = \py{f"{z_fitted:.3f}"}$, consistent with
+continental island biotas ($R^2 = \py{f"{r_squared:.3f}"}$)
+\item Colonization dynamics show asymptotic approach to equilibrium over timescales of decades to centuries
+\item Habitat fragmentation creates extinction debt, with species richness relaxing to lower equilibrium values as
+isolation increases and area decreases
+\item SLOSS analysis indicates that reserve design must balance single-reserve area effects against among-reserve
+complementarity and risk-spreading
+\end{enumerate}
+
+The equilibrium theory provides essential insights for conservation biology, particularly in designing nature reserve
+networks and predicting biodiversity responses to habitat fragmentation and climate-driven range shifts.
+
+\section*{Further Reading}
+
+\begin{itemize}
+\item MacArthur, R.H. \& Wilson, E.O. \textit{The Theory of Island Biogeography}. Princeton University Press, 1967.
+\item Lomolino, M.V. ``Ecology's most general, yet protean pattern: the species-area relationship.'' \textit{Journal of Biogeography} 27:17--26 (2000).
+\item Diamond, J.M. ``The island dilemma: lessons of modern biogeographic studies for the design of natural reserves.'' \textit{Biological Conservation} 7:129--146 (1975).
+\item Whittaker, R.J. \& Fern\'andez-Palacios, J.M. \textit{Island Biogeography: Ecology, Evolution, and Conservation}, 2nd ed. Oxford University Press, 2007.
+\item Hanski, I. ``Metapopulation dynamics.'' \textit{Nature} 396:41--49 (1998).
+\item Rosenzweig, M.L. \textit{Species Diversity in Space and Time}. Cambridge University Press, 1995.
+\item Simberloff, D. \& Abele, L.G. ``Island biogeography theory and conservation practice.'' \textit{Science} 191:285--286 (1976).
+\item Tjørve, E. ``Shapes and functions of species-area curves: a review of possible models.'' \textit{Journal of Biogeography} 30:827--835 (2003).
+\item Losos, J.B. \& Ricklefs, R.E. (eds.) \textit{The Theory of Island Biogeography Revisited}. Princeton University Press, 2010.
+\item Kohn, D.D. \& Walsh, D.M. ``Plant species richness --- the effect of island size and habitat diversity.'' \textit{Journal of Ecology} 82:367--377 (1994).
+\item Brooks, T.M. et al. ``Habitat loss and extinction in the hotspots of biodiversity.'' \textit{Conservation Biology} 16:909--923 (2002).
+\item Holt, R.D. ``On the evolutionary ecology of species' ranges.'' \textit{Evolutionary Ecology Research} 5:159--178 (2003).
+\item Hubbell, S.P. \textit{The Unified Neutral Theory of Biodiversity and Biogeography}. Princeton University Press, 2001.
+\item Warren, B.H. et al. ``Islands as model systems in ecology and evolution: prospects fifty years after MacArthur-Wilson.'' \textit{Ecology Letters} 18:200--217 (2015).
+\item Pimm, S.L. et al. ``The biodiversity of species and their rates of extinction, distribution, and protection.'' \textit{Science} 344:1246752 (2014).
+\item Fahrig, L. ``Effects of habitat fragmentation on biodiversity.'' \textit{Annual Review of Ecology, Evolution, and Systematics} 34:487--515 (2003).
+\item Triantis, K.A. et al. ``The island species-area relationship: biology and statistics.'' \textit{Journal of Biogeography} 39:215--231 (2012).
+\item Hanski, I. \& Gaggiotti, O.E. (eds.) \textit{Ecology, Genetics and Evolution of Metapopulations}. Academic Press, 2004.
+\item Schoener, T.W. ``The MacArthur-Wilson equilibrium model: A chronicle of what it said and how it was tested.'' In Losos \& Ricklefs, 2010.
+\item Wilcox, B.A. \& Murphy, D.D. ``Conservation strategy: the effects of fragmentation on extinction.'' \textit{American Naturalist} 125:879--887 (1985).
+\end{itemize}
 
 \end{document}

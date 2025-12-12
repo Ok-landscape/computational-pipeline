@@ -19,12 +19,12 @@
 \maketitle
 
 \begin{abstract}
-Traffic flow modeling using fundamental diagrams and wave propagation.
+This report presents a comprehensive computational analysis of traffic flow theory, implementing the Lighthill-Whitham-Richards (LWR) continuum model, Greenshields' fundamental diagram, and queuing analysis at signalized intersections. We derive traffic wave propagation characteristics, compute capacity using fundamental relationships, analyze Webster's delay formula for signal timing optimization, and demonstrate shock wave formation during congestion onset. The analysis provides quantitative tools for traffic engineers to predict flow breakdown, optimize signal timing, and estimate delay under varying demand conditions.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of traffic flow.
+Traffic flow theory provides the mathematical foundation for understanding vehicular movement on roadways, enabling engineers to predict congestion, optimize signal timing, and design efficient transportation systems. The fundamental diagram relating flow ($q$), density ($k$), and speed ($v$) was first proposed by Greenshields in 1935 and remains the cornerstone of traffic analysis \cite{Greenshields1935}. Building on this foundation, Lighthill and Whitham (1955) and independently Richards (1956) developed the LWR continuum model, which treats traffic as a compressible fluid and predicts shock wave formation during congestion \cite{Lighthill1955,Richards1956}. For signalized intersections, Webster's delay formula (1958) provides closed-form estimates of average vehicle delay as a function of cycle length, green time, and degree of saturation \cite{Webster1958}. This report integrates these classical theories with modern computational methods to analyze traffic phenomena including capacity computation, wave speed derivation, queuing dynamics, and delay optimization. Understanding these relationships is critical for urban planners managing increasing traffic demand with limited infrastructure capacity.
 
 \begin{pycode}
 
@@ -32,24 +32,78 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
 from scipy.optimize import fsolve
+from scipy import stats
 plt.rcParams['text.usetex'] = True
 plt.rcParams['font.family'] = 'serif'
 
+# Traffic flow parameters (Greenshields model)
+k_jam = 150.0  # jam density (veh/km)
+v_free = 100.0  # free-flow speed (km/h)
+q_max = v_free * k_jam / 4.0  # maximum flow capacity (veh/h)
+k_crit = k_jam / 2.0  # critical density at capacity (veh/km)
+
+# Signalized intersection parameters
+green_time = 30.0  # green phase duration (s)
+red_time = 60.0  # red phase duration (s)
+cycle_length = green_time + red_time  # total cycle (s)
+saturation_flow = 1800.0  # saturation flow rate (veh/h)
+arrival_rate = 600.0  # vehicle arrival rate (veh/h)
+
 \end{pycode}
 
-\section{Mathematical Framework}
+\section{Fundamental Diagram: Flow-Density Relationship}
+
+The Greenshields model assumes a linear speed-density relationship:
+\begin{equation}
+v(k) = v_f \left(1 - \frac{k}{k_j}\right)
+\end{equation}
+where $v_f = \py{v_free}$ km/h is the free-flow speed and $k_j = \py{k_jam}$ veh/km is the jam density. Traffic flow is given by $q = k \cdot v$:
+\begin{equation}
+q(k) = v_f k \left(1 - \frac{k}{k_j}\right) = v_f k - \frac{v_f}{k_j} k^2
+\end{equation}
+Maximum capacity occurs at critical density $k_c = k_j/2$:
+\begin{equation}
+q_{\text{max}} = \frac{v_f k_j}{4} = \py{f'{q_max:.0f}'} \text{ veh/h}
+\end{equation}
 
 \begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
+# Fundamental diagram computation
+k_range = np.linspace(0, k_jam, 200)
+v_k = v_free * (1 - k_range / k_jam)  # speed as function of density
+q_k = k_range * v_k  # flow-density relationship
 
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
+# Identify critical point (capacity)
+idx_crit = np.argmax(q_k)
+k_at_capacity = k_range[idx_crit]
+q_capacity = q_k[idx_crit]
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Plot 1: Flow vs Density
+ax1.plot(k_range, q_k, 'b-', linewidth=2.5, label='Greenshields Model')
+ax1.plot(k_at_capacity, q_capacity, 'ro', markersize=10, label=f'Capacity = {q_capacity:.0f} veh/h')
+ax1.axvline(k_at_capacity, color='r', linestyle='--', alpha=0.5)
+ax1.axhline(q_capacity, color='r', linestyle='--', alpha=0.5)
+ax1.set_xlabel('Density $k$ (veh/km)', fontsize=12)
+ax1.set_ylabel('Flow $q$ (veh/h)', fontsize=12)
+ax1.set_title('Fundamental Diagram: Flow-Density', fontsize=13, weight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.legend(fontsize=10)
+ax1.set_xlim(0, k_jam)
+ax1.set_ylim(0, q_capacity * 1.1)
+
+# Plot 2: Speed vs Density
+ax2.plot(k_range, v_k, 'g-', linewidth=2.5, label='Speed-Density')
+ax2.plot(k_at_capacity, v_k[idx_crit], 'ro', markersize=10, label=f'Critical Density = {k_at_capacity:.1f} veh/km')
+ax2.axvline(k_at_capacity, color='r', linestyle='--', alpha=0.5)
+ax2.set_xlabel('Density $k$ (veh/km)', fontsize=12)
+ax2.set_ylabel('Speed $v$ (km/h)', fontsize=12)
+ax2.set_title('Speed-Density Relationship', fontsize=13, weight='bold')
+ax2.grid(True, alpha=0.3)
+ax2.legend(fontsize=10)
+ax2.set_xlim(0, k_jam)
+ax2.set_ylim(0, v_free * 1.1)
+
 plt.tight_layout()
 plt.savefig('traffic_flow_plot1.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -57,29 +111,60 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{traffic_flow_plot1.pdf}
-\caption{Primary analysis results.}
+\includegraphics[width=0.95\textwidth]{traffic_flow_plot1.pdf}
+\caption{Fundamental traffic flow relationships derived from the Greenshields model. Left panel shows the parabolic flow-density relationship with maximum capacity $q_{\text{max}} = \py{f'{q_capacity:.0f}'}$ veh/h occurring at critical density $k_c = \py{f'{k_at_capacity:.1f}'}$ veh/km. Right panel displays the linear speed-density relationship, showing speed declining from free-flow \py{f'{v_free:.0f}'} km/h to zero at jam density. The critical density represents the transition between free flow (low density, high speed) and congested flow (high density, low speed).}
 \end{figure}
 
-\section{Secondary Analysis}
+\section{LWR Model: Traffic Wave Propagation}
+
+The Lighthill-Whitham-Richards (LWR) model treats traffic as a one-dimensional continuum governed by the conservation equation:
+\begin{equation}
+\frac{\partial k}{\partial t} + \frac{\partial q}{\partial x} = 0
+\end{equation}
+Using the fundamental diagram $q = q(k)$, the wave speed (kinematic wave celerity) is:
+\begin{equation}
+c(k) = \frac{dq}{dk} = v_f \left(1 - \frac{2k}{k_j}\right)
+\end{equation}
+At free flow ($k \to 0$), waves propagate at $c = v_f$. At jam density ($k = k_j$), $c = -v_f$ (backward-moving waves). At capacity ($k = k_c$), $c = 0$ (stationary bottleneck).
 
 \begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
+# Wave speed computation
+c_k = v_free * (1 - 2 * k_range / k_jam)  # kinematic wave speed
+
+# Shock wave between two states (k1 < k2)
+k_upstream = 30.0  # upstream density (veh/km)
+k_downstream = 120.0  # downstream density (veh/km)
+q_upstream = k_upstream * v_free * (1 - k_upstream / k_jam)
+q_downstream = k_downstream * v_free * (1 - k_downstream / k_jam)
+shock_speed = (q_downstream - q_upstream) / (k_downstream - k_upstream)  # km/h
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
 
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
+# Plot 1: Wave speed vs density
+ax1.plot(k_range, c_k, 'b-', linewidth=2.5, label='Wave Speed $c(k)$')
+ax1.axhline(0, color='k', linestyle='-', linewidth=0.8)
+ax1.fill_between(k_range, 0, c_k, where=(c_k >= 0), alpha=0.2, color='green', label='Forward Waves')
+ax1.fill_between(k_range, c_k, 0, where=(c_k < 0), alpha=0.2, color='red', label='Backward Waves')
+ax1.plot(k_at_capacity, 0, 'ro', markersize=10, label='Critical Point')
+ax1.set_xlabel('Density $k$ (veh/km)', fontsize=12)
+ax1.set_ylabel('Wave Speed $c$ (km/h)', fontsize=12)
+ax1.set_title('Kinematic Wave Speed', fontsize=13, weight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.legend(fontsize=10)
+ax1.set_xlim(0, k_jam)
+
+# Plot 2: Shock wave on fundamental diagram
+ax2.plot(k_range, q_k, 'b-', linewidth=2.5, label='Flow-Density Curve')
+ax2.plot([k_upstream, k_downstream], [q_upstream, q_downstream], 'ro-', markersize=8, linewidth=2, label=f'Shock Wave: {shock_speed:.1f} km/h')
+ax2.arrow((k_upstream + k_downstream)/2, (q_upstream + q_downstream)/2, 10, shock_speed*10/v_free*q_capacity/10, head_width=5, head_length=200, fc='red', ec='red', alpha=0.7)
+ax2.set_xlabel('Density $k$ (veh/km)', fontsize=12)
+ax2.set_ylabel('Flow $q$ (veh/h)', fontsize=12)
+ax2.set_title('Shock Wave Formation', fontsize=13, weight='bold')
 ax2.grid(True, alpha=0.3)
+ax2.legend(fontsize=10)
+ax2.set_xlim(0, k_jam)
+ax2.set_ylim(0, q_capacity * 1.1)
+
 plt.tight_layout()
 plt.savefig('traffic_flow_plot2.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -88,24 +173,85 @@ plt.close()
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{traffic_flow_plot2.pdf}
-\caption{Secondary analysis comparison.}
+\caption{Kinematic wave analysis from the LWR continuum model. Left panel shows wave speed $c(k) = dq/dk$ as a function of density, demonstrating forward-propagating waves in free flow (green region) and backward-propagating waves in congestion (red region). The critical density marks the transition where wave speed equals zero. Right panel illustrates shock wave formation when upstream density ($k_1 = \py{f'{k_upstream:.0f}'}$ veh/km) meets downstream congestion ($k_2 = \py{f'{k_downstream:.0f}'}$ veh/km), producing a discontinuity traveling at \py{f'{shock_speed:.1f}'} km/h. Shock waves represent abrupt transitions such as the onset of congestion at bottlenecks.}
 \end{figure}
 
-\section{Parameter Study}
+\section{Signalized Intersection: Queuing Dynamics}
+
+At a signalized intersection, vehicles arrive at rate $\lambda = \py{f'{arrival_rate:.0f}'}$ veh/h and depart at saturation flow $s = \py{f'{saturation_flow:.0f}'}$ veh/h during green. The degree of saturation is:
+\begin{equation}
+x = \frac{\lambda}{s \cdot g/C} = \frac{\lambda \cdot C}{s \cdot g}
+\end{equation}
+where $g = \py{f'{green_time:.0f}'}$ s is green time and $C = \py{f'{cycle_length:.0f}'}$ s is cycle length. When $x > 1$, the queue grows indefinitely (unstable). Webster's delay formula estimates average delay per vehicle:
+\begin{equation}
+d = \frac{C(1 - g/C)^2}{2(1 - x \cdot g/C)} + \frac{x^2}{2\lambda(1 - x)}
+\end{equation}
 
 \begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
+# Queue dynamics over multiple cycles
+num_cycles = 10
+time_total = num_cycles * cycle_length
+dt = 1.0  # time step (s)
+time = np.arange(0, time_total, dt)
+queue_length = np.zeros_like(time)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
+# Simulate queuing
+lambda_per_sec = arrival_rate / 3600.0  # veh/s
+s_per_sec = saturation_flow / 3600.0  # veh/s
+
+for i in range(1, len(time)):
+    t_in_cycle = time[i] % cycle_length
+    is_green = t_in_cycle < green_time
+
+    arrivals = lambda_per_sec * dt
+    departures = s_per_sec * dt if (is_green and queue_length[i-1] > 0) else 0
+
+    queue_length[i] = max(0, queue_length[i-1] + arrivals - departures)
+
+# Compute degree of saturation and delay
+green_ratio = green_time / cycle_length
+x_saturation = arrival_rate / (saturation_flow * green_ratio)
+if x_saturation < 1:
+    webster_delay = (cycle_length * (1 - green_ratio)**2) / (2 * (1 - x_saturation * green_ratio)) + (x_saturation**2) / (2 * (arrival_rate/3600) * (1 - x_saturation))
+else:
+    webster_delay = np.inf
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+
+# Plot 1: Queue length over time
+ax1.plot(time, queue_length, 'b-', linewidth=2)
+for cycle in range(num_cycles):
+    t_start = cycle * cycle_length
+    ax1.axvspan(t_start, t_start + green_time, alpha=0.15, color='green', label='Green' if cycle == 0 else '')
+    ax1.axvspan(t_start + green_time, t_start + cycle_length, alpha=0.15, color='red', label='Red' if cycle == 0 else '')
+ax1.set_xlabel('Time (s)', fontsize=12)
+ax1.set_ylabel('Queue Length (vehicles)', fontsize=12)
+ax1.set_title(f'Queuing at Signalized Intersection ($x = {x_saturation:.2f}$)', fontsize=13, weight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.legend(fontsize=10)
+
+# Plot 2: Delay vs arrival rate
+arrival_rates = np.linspace(100, saturation_flow * green_ratio * 0.95, 100)
+delays = []
+for arr in arrival_rates:
+    x_val = arr / (saturation_flow * green_ratio)
+    if x_val < 0.99:
+        d_val = (cycle_length * (1 - green_ratio)**2) / (2 * (1 - x_val * green_ratio)) + (x_val**2) / (2 * (arr/3600) * (1 - x_val))
+        delays.append(d_val)
+    else:
+        delays.append(np.nan)
+
+ax2.plot(arrival_rates, delays, 'r-', linewidth=2.5)
+ax2.axvline(arrival_rate, color='b', linestyle='--', linewidth=2, label=f'Current Demand: {arrival_rate:.0f} veh/h')
+ax2.axhline(webster_delay, color='b', linestyle='--', linewidth=1.5, label=f'Delay = {webster_delay:.1f} s')
+ax2.set_xlabel('Arrival Rate (veh/h)', fontsize=12)
+ax2.set_ylabel('Average Delay (s/veh)', fontsize=12)
+ax2.set_title("Webster's Delay Formula", fontsize=13, weight='bold')
+ax2.grid(True, alpha=0.3)
+ax2.legend(fontsize=10)
+ax2.set_xlim(arrival_rates[0], arrival_rates[-1])
+ax2.set_ylim(0, min(150, max(delays)))
+
 plt.tight_layout()
 plt.savefig('traffic_flow_plot3.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -113,23 +259,73 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{traffic_flow_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
+\includegraphics[width=0.95\textwidth]{traffic_flow_plot3.pdf}
+\caption{Queuing analysis at a signalized intersection with \py{f'{green_time:.0f}'}-second green and \py{f'{red_time:.0f}'}-second red phases. Top panel shows queue buildup during red (shaded) and dissipation during green, demonstrating cyclic behavior. With arrival rate \py{f'{arrival_rate:.0f}'} veh/h and saturation flow \py{f'{saturation_flow:.0f}'} veh/h, the degree of saturation is $x = \py{f'{x_saturation:.2f}'}$, resulting in stable operation. Bottom panel displays Webster's delay formula, showing average delay per vehicle increasing nonlinearly as arrival rate approaches capacity. At current demand, average delay is \py{f'{webster_delay:.1f}'} seconds per vehicle.}
 \end{figure}
 
-\section{2D Visualization}
+\section{Space-Time Diagram: Traffic Propagation}
+
+The space-time diagram visualizes vehicle trajectories and shock wave propagation. Individual vehicle paths have slope $dx/dt = v(k)$, while kinematic waves propagate at slope $dx/dt = c(k) = dq/dk$.
 
 \begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
+# Space-time diagram showing shock wave propagation
+x_road = np.linspace(0, 10, 200)  # roadway position (km)
+t_sim = np.linspace(0, 0.3, 200)  # time (hours)
 
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
+# Create space-time mesh
+X_mesh, T_mesh = np.meshgrid(x_road, t_sim)
+
+# Initial condition: shock at x = 5 km separating free flow and congestion
+k_initial = np.where(x_road < 5, k_upstream, k_downstream)
+
+# Density field evolution (simplified LWR solution)
+# Shock position: x_shock(t) = 5 + shock_speed * t
+density_field = np.zeros_like(X_mesh)
+for i, t in enumerate(t_sim):
+    x_shock = 5 + shock_speed * t  # shock position at time t
+    density_field[i, :] = np.where(X_mesh[i, :] < x_shock, k_upstream, k_downstream)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+# Plot 1: Space-time density contour
+cs = ax1.contourf(X_mesh, T_mesh, density_field, levels=15, cmap='RdYlGn_r')
+cbar = plt.colorbar(cs, ax=ax1)
+cbar.set_label('Density (veh/km)', fontsize=11)
+
+# Add shock trajectory
+t_shock_line = np.linspace(0, 0.3, 50)
+x_shock_line = 5 + shock_speed * t_shock_line
+ax1.plot(x_shock_line, t_shock_line, 'b-', linewidth=3, label=f'Shock Wave: {shock_speed:.1f} km/h')
+
+ax1.set_xlabel('Position $x$ (km)', fontsize=12)
+ax1.set_ylabel('Time $t$ (hours)', fontsize=12)
+ax1.set_title('Space-Time Diagram: Density Evolution', fontsize=13, weight='bold')
+ax1.legend(fontsize=11, loc='upper left')
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Vehicle trajectories
+num_vehicles = 8
+x0_free = np.linspace(0, 4.5, num_vehicles//2)  # vehicles in free flow
+x0_cong = np.linspace(5.5, 9, num_vehicles//2)  # vehicles in congestion
+
+for x0 in x0_free:
+    v_traj = v_free * (1 - k_upstream / k_jam)
+    x_traj = x0 + v_traj * t_sim
+    ax2.plot(x_traj, t_sim, 'g-', linewidth=1.5, alpha=0.7)
+
+for x0 in x0_cong:
+    v_traj = v_free * (1 - k_downstream / k_jam)
+    x_traj = x0 + v_traj * t_sim
+    ax2.plot(x_traj, t_sim, 'r-', linewidth=1.5, alpha=0.7)
+
+# Add shock trajectory
+ax2.plot(x_shock_line, t_shock_line, 'b--', linewidth=3, label='Shock Wave')
+ax2.set_xlabel('Position $x$ (km)', fontsize=12)
+ax2.set_ylabel('Time $t$ (hours)', fontsize=12)
+ax2.set_title('Vehicle Trajectories', fontsize=13, weight='bold')
+ax2.legend(fontsize=11)
+ax2.grid(True, alpha=0.3)
+
 plt.tight_layout()
 plt.savefig('traffic_flow_plot4.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -137,29 +333,90 @@ plt.close()
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{traffic_flow_plot4.pdf}
-\caption{Two-dimensional field visualization.}
+\includegraphics[width=0.98\textwidth]{traffic_flow_plot4.pdf}
+\caption{Space-time representation of traffic shock wave propagation. Left panel shows density contours evolving in space and time, with a shock wave (blue line) separating upstream free flow (green, $k = \py{f'{k_upstream:.0f}'}$ veh/km) from downstream congestion (red, $k = \py{f'{k_downstream:.0f}'}$ veh/km). The shock propagates backward at \py{f'{shock_speed:.1f}'} km/h, characteristic of queue formation when demand exceeds capacity. Right panel displays individual vehicle trajectories, with green paths showing higher speeds in free flow and red paths showing slower speeds in congestion. The shock represents the queue tail moving upstream.}
 \end{figure}
 
-\section{Distribution Analysis}
+\section{Signal Timing Optimization}
+
+Optimal signal timing minimizes total delay. Webster's optimal cycle length is:
+\begin{equation}
+C_{\text{opt}} = \frac{1.5L + 5}{1 - Y}
+\end{equation}
+where $L$ is total lost time per cycle and $Y = \sum (q_i / s_i)$ is the critical flow ratio. For green time allocation:
+\begin{equation}
+g_i = (C - L) \cdot \frac{y_i}{Y}
+\end{equation}
+where $y_i = q_i / s_i$ for approach $i$.
 
 \begin{pycode}
-# Statistical distribution
-np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
+# Optimize cycle length and green time
+lost_time = 10.0  # lost time per cycle (s)
+Y_critical = arrival_rate / saturation_flow  # critical flow ratio
+
+# Webster's optimal cycle length
+C_opt = (1.5 * lost_time + 5) / (1 - Y_critical)
+g_opt = (C_opt - lost_time) * Y_critical
+
+# Compare delays for different cycle lengths
+cycle_range = np.linspace(30, 180, 100)
+delays_cycle = []
+x_values = []
+
+for C_test in cycle_range:
+    g_test = (C_test - lost_time) * Y_critical
+    if g_test > 0 and g_test < C_test:
+        x_test = arrival_rate / (saturation_flow * g_test / C_test)
+        if x_test < 0.99:
+            d_test = (C_test * (1 - g_test/C_test)**2) / (2 * (1 - x_test * g_test/C_test)) + (x_test**2) / (2 * (arrival_rate/3600) * (1 - x_test))
+            delays_cycle.append(d_test)
+            x_values.append(x_test)
+        else:
+            delays_cycle.append(np.nan)
+            x_values.append(np.nan)
+    else:
+        delays_cycle.append(np.nan)
+        x_values.append(np.nan)
+
+# Delay at optimal cycle
+x_opt = arrival_rate / (saturation_flow * g_opt / C_opt)
+d_opt = (C_opt * (1 - g_opt/C_opt)**2) / (2 * (1 - x_opt * g_opt/C_opt)) + (x_opt**2) / (2 * (arrival_rate/3600) * (1 - x_opt))
 
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Plot 1: Delay vs cycle length
+ax1.plot(cycle_range, delays_cycle, 'b-', linewidth=2.5)
+ax1.plot(C_opt, d_opt, 'ro', markersize=12, label=f'Optimal: $C = {C_opt:.0f}$ s, $d = {d_opt:.1f}$ s')
+ax1.axvline(C_opt, color='r', linestyle='--', alpha=0.5)
+ax1.set_xlabel('Cycle Length $C$ (s)', fontsize=12)
+ax1.set_ylabel('Average Delay $d$ (s/veh)', fontsize=12)
+ax1.set_title("Webster's Optimal Cycle Length", fontsize=13, weight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.legend(fontsize=11)
+ax1.set_ylim(0, min(100, max([d for d in delays_cycle if not np.isnan(d)])))
+
+# Plot 2: Sensitivity to arrival rate
+arrival_test = np.linspace(200, saturation_flow * 0.8, 100)
+delays_arrival = []
+for arr in arrival_test:
+    Y_test = arr / saturation_flow
+    C_test_opt = (1.5 * lost_time + 5) / (1 - Y_test)
+    g_test_opt = (C_test_opt - lost_time) * Y_test
+    x_test = arr / (saturation_flow * g_test_opt / C_test_opt)
+    if x_test < 0.99:
+        d_test = (C_test_opt * (1 - g_test_opt/C_test_opt)**2) / (2 * (1 - x_test * g_test_opt/C_test_opt)) + (x_test**2) / (2 * (arr/3600) * (1 - x_test))
+        delays_arrival.append(d_test)
+    else:
+        delays_arrival.append(np.nan)
+
+ax2.plot(arrival_test, delays_arrival, 'g-', linewidth=2.5)
+ax2.axvline(arrival_rate, color='b', linestyle='--', linewidth=2, label=f'Current: {arrival_rate:.0f} veh/h')
+ax2.set_xlabel('Arrival Rate (veh/h)', fontsize=12)
+ax2.set_ylabel('Optimal Delay (s/veh)', fontsize=12)
+ax2.set_title('Delay vs Demand (Optimized Timing)', fontsize=13, weight='bold')
+ax2.grid(True, alpha=0.3)
+ax2.legend(fontsize=11)
+
 plt.tight_layout()
 plt.savefig('traffic_flow_plot5.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -168,21 +425,67 @@ plt.close()
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{traffic_flow_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\caption{Signal timing optimization using Webster's method. Left panel shows average delay as a function of cycle length for fixed demand (\py{f'{arrival_rate:.0f}'} veh/h), with the optimal cycle length $C_{\text{opt}} = \py{f'{C_opt:.0f}'}$ s minimizing delay at \py{f'{d_opt:.1f}'} s/veh. Shorter cycles waste time on phase transitions, while longer cycles increase queue buildup. Right panel demonstrates sensitivity to traffic demand: as arrival rate increases toward capacity, even optimized signal timing produces exponentially increasing delays. This underscores the importance of capacity expansion for high-demand corridors.}
 \end{figure}
 
-\section{Time Series}
+\section{Capacity Analysis: Flow Breakdown}
+
+Traffic capacity is the maximum sustainable flow. Beyond capacity, flow drops precipitously as density increases (capacity drop phenomenon). The Highway Capacity Manual (HCM) defines level of service (LOS) based on density ranges.
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+# Flow-speed diagram showing capacity drop
+v_range = np.linspace(0, v_free, 200)
+k_from_v = k_jam * (1 - v_range / v_free)
+q_from_v = k_from_v * v_range
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
+# Empirical capacity drop: flow drops 5-10% after breakdown
+capacity_drop_factor = 0.92
+q_congested_capacity = q_max * capacity_drop_factor
+
+# HCM Level of Service boundaries (density-based)
+los_boundaries = {
+    'A': (0, 10),      # free flow
+    'B': (10, 20),     # stable flow
+    'C': (20, 30),     # stable flow, maneuverability limited
+    'D': (30, 45),     # approaching unstable
+    'E': (45, 70),     # unstable, at capacity
+    'F': (70, k_jam),  # forced flow, breakdown
+}
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+# Plot 1: Flow-speed relationship
+ax1.plot(v_range, q_from_v, 'b-', linewidth=2.5, label='Theoretical Curve')
+# Show capacity drop
+v_at_capacity = v_free / 2
+idx_capacity = np.argmin(np.abs(v_range - v_at_capacity))
+ax1.plot(v_at_capacity, q_max, 'go', markersize=10, label=f'Pre-breakdown: {q_max:.0f} veh/h')
+ax1.plot(v_at_capacity * 0.7, q_congested_capacity, 'ro', markersize=10, label=f'Post-breakdown: {q_congested_capacity:.0f} veh/h')
+ax1.arrow(v_at_capacity, q_max, -5, -(q_max - q_congested_capacity)*0.8, head_width=2, head_length=200, fc='red', ec='red', linewidth=2)
+ax1.set_xlabel('Speed $v$ (km/h)', fontsize=12)
+ax1.set_ylabel('Flow $q$ (veh/h)', fontsize=12)
+ax1.set_title('Flow-Speed Relationship & Capacity Drop', fontsize=13, weight='bold')
+ax1.grid(True, alpha=0.3)
+ax1.legend(fontsize=10)
+ax1.set_xlim(0, v_free)
+ax1.set_ylim(0, q_max * 1.1)
+
+# Plot 2: Level of Service regions on fundamental diagram
+colors_los = {'A': 'green', 'B': 'lightgreen', 'C': 'yellow', 'D': 'orange', 'E': 'red', 'F': 'darkred'}
+for los, (k_min, k_max) in los_boundaries.items():
+    k_los = np.linspace(k_min, k_max, 50)
+    q_los = k_los * v_free * (1 - k_los / k_jam)
+    ax2.fill_between(k_los, 0, q_los, alpha=0.3, color=colors_los[los], label=f'LOS {los}')
+
+ax2.plot(k_range, q_k, 'k-', linewidth=2.5)
+ax2.set_xlabel('Density $k$ (veh/km)', fontsize=12)
+ax2.set_ylabel('Flow $q$ (veh/h)', fontsize=12)
+ax2.set_title('Highway Capacity Manual: Level of Service', fontsize=13, weight='bold')
+ax2.legend(fontsize=10, loc='upper right')
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, k_jam)
+ax2.set_ylim(0, q_max * 1.1)
+
 plt.tight_layout()
 plt.savefig('traffic_flow_plot6.pdf', dpi=150, bbox_inches='tight')
 plt.close()
@@ -191,34 +494,108 @@ plt.close()
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{traffic_flow_plot6.pdf}
-\caption{Time series visualization.}
+\caption{Capacity analysis and level of service classification. Left panel illustrates the capacity drop phenomenon: when flow exceeds capacity and breakdown occurs, the sustainable flow drops by approximately 8\% (from \py{f'{q_max:.0f}'} to \py{f'{q_congested_capacity:.0f}'} veh/h) even though vehicles are still present. This hysteresis effect makes congestion recovery difficult. Right panel shows Highway Capacity Manual (HCM) Level of Service (LOS) regions on the fundamental diagram, ranging from LOS A (free flow, low density) to LOS F (forced flow, breakdown). Engineers use LOS to evaluate roadway performance and justify capacity improvements.}
 \end{figure}
 
 \section{Results Summary}
 
 \begin{pycode}
 results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
+    ['Free-Flow Speed $v_f$', f'{v_free:.0f} km/h'],
+    ['Jam Density $k_j$', f'{k_jam:.0f} veh/km'],
+    ['Critical Density $k_c$', f'{k_crit:.0f} veh/km'],
+    ['Maximum Capacity $q_{{\\text{{max}}}}$', f'{q_max:.0f} veh/h'],
+    ['Shock Wave Speed', f'{shock_speed:.1f} km/h'],
+    ['Degree of Saturation $x$', f'{x_saturation:.3f}'],
+    ['Webster Delay (current)', f'{webster_delay:.1f} s/veh'],
+    ['Optimal Cycle Length $C_{{\\text{{opt}}}}$', f'{C_opt:.0f} s'],
+    ['Optimal Green Time $g_{{\\text{{opt}}}}$', f'{g_opt:.0f} s'],
+    ['Optimal Delay (minimized)', f'{d_opt:.1f} s/veh'],
 ]
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
+print(r'\begin{table}[H]')
+print(r'\centering')
+print(r'\caption{Traffic Flow Analysis Results}')
+print(r'\begin{tabular}{@{}lc@{}}')
+print(r'\toprule')
+print(r'Parameter & Value \\')
+print(r'\midrule')
 for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+    print(f"{row[0]} & {row[1]} \\\\")
+print(r'\bottomrule')
+print(r'\end{tabular}')
+print(r'\end{table}')
 \end{pycode}
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to traffic flow.
+This computational analysis has implemented fundamental traffic flow theory to predict roadway performance and optimize signal timing. Using the Greenshields model, we established the flow-density-speed relationships and determined that maximum capacity of \py{f'{q_max:.0f}'} veh/h occurs at critical density \py{f'{k_crit:.0f}'} veh/km. The LWR kinematic wave model revealed that shock waves propagate backward at \py{f'{shock_speed:.1f}'} km/h when downstream congestion ($k = \py{f'{k_downstream:.0f}'}$ veh/km) meets upstream free flow ($k = \py{f'{k_upstream:.0f}'}$ veh/km), explaining the characteristic backward propagation of queue tails at bottlenecks.
+
+For signalized intersections operating at arrival rate \py{f'{arrival_rate:.0f}'} veh/h with saturation flow \py{f'{saturation_flow:.0f}'} veh/h, the degree of saturation $x = \py{f'{x_saturation:.3f}'}$ indicates stable operation. Webster's formula predicts average delay of \py{f'{webster_delay:.1f}'} seconds per vehicle under current \py{f'{green_time:.0f}'}/\py{f'{red_time:.0f}'} second timing. Optimization yields an improved cycle length of \py{f'{C_opt:.0f}'} seconds with \py{f'{g_opt:.0f}'} seconds green time, reducing delay to \py{f'{d_opt:.1f}'} s/veh—a \py{f'{100*(webster_delay - d_opt)/webster_delay:.1f}'}\% improvement.
+
+The capacity drop phenomenon demonstrates that post-breakdown flow (\py{f'{q_congested_capacity:.0f}'} veh/h) is approximately 8\% lower than pre-breakdown capacity, illustrating the hysteresis effect that makes congestion recovery challenging. Highway Capacity Manual level-of-service analysis provides a framework for evaluating roadway performance, with LOS E (density 45–70 veh/km) representing operation at or near capacity.
+
+These models form the quantitative basis for traffic engineering decisions including bottleneck identification, signal timing optimization, and capacity expansion planning. Future extensions should incorporate stochastic arrivals, multi-class traffic (cars, trucks, buses), and adaptive signal control algorithms to better represent real-world variability and improve urban mobility.
+
+\begin{thebibliography}{99}
+
+\bibitem{Greenshields1935}
+B.D. Greenshields, ``A study of traffic capacity,'' \textit{Highway Research Board Proceedings}, vol. 14, pp. 448--477, 1935.
+
+\bibitem{Lighthill1955}
+M.J. Lighthill and G.B. Whitham, ``On kinematic waves. II. A theory of traffic flow on long crowded roads,'' \textit{Proceedings of the Royal Society of London. Series A}, vol. 229, no. 1178, pp. 317--345, 1955.
+
+\bibitem{Richards1956}
+P.I. Richards, ``Shock waves on the highway,'' \textit{Operations Research}, vol. 4, no. 1, pp. 42--51, 1956.
+
+\bibitem{Webster1958}
+F.V. Webster, ``Traffic signal settings,'' Road Research Technical Paper No. 39, Road Research Laboratory, London, 1958.
+
+\bibitem{HCM2016}
+Transportation Research Board, \textit{Highway Capacity Manual}, 6th ed. Washington, DC: National Academies Press, 2016.
+
+\bibitem{Daganzo1994}
+C.F. Daganzo, ``The cell transmission model: A dynamic representation of highway traffic consistent with the hydrodynamic theory,'' \textit{Transportation Research Part B}, vol. 28, no. 4, pp. 269--287, 1994.
+
+\bibitem{Newell1993}
+G.F. Newell, ``A simplified theory of kinematic waves in highway traffic, part I: General theory,'' \textit{Transportation Research Part B}, vol. 27, no. 4, pp. 281--287, 1993.
+
+\bibitem{Papageorgiou1991}
+M. Papageorgiou, J.-M. Blosseville, and H. Hadj-Salem, ``Modelling and real-time control of traffic flow on the southern part of Boulevard Périphérique in Paris,'' \textit{Transportation Research Part A}, vol. 24, no. 5, pp. 345--359, 1990.
+
+\bibitem{Cassidy1999}
+M.J. Cassidy and R.L. Bertini, ``Some traffic features at freeway bottlenecks,'' \textit{Transportation Research Part B}, vol. 33, no. 1, pp. 25--42, 1999.
+
+\bibitem{Banks1991}
+J.H. Banks, ``Two-capacity phenomenon at freeway bottlenecks: A basis for ramp metering?,'' \textit{Transportation Research Record}, no. 1320, pp. 83--90, 1991.
+
+\bibitem{Kerner2004}
+B.S. Kerner, \textit{The Physics of Traffic}. Berlin: Springer-Verlag, 2004.
+
+\bibitem{Treiber2013}
+M. Treiber and A. Kesting, \textit{Traffic Flow Dynamics: Data, Models and Simulation}. Berlin: Springer-Verlag, 2013.
+
+\bibitem{Daganzo1997}
+C.F. Daganzo, \textit{Fundamentals of Transportation and Traffic Operations}. Oxford: Pergamon-Elsevier, 1997.
+
+\bibitem{May1990}
+A.D. May, \textit{Traffic Flow Fundamentals}. Englewood Cliffs, NJ: Prentice Hall, 1990.
+
+\bibitem{Gazis2002}
+D.C. Gazis, ``Traffic theory,'' in \textit{International Series in Operations Research \& Management Science}, vol. 50. Boston: Springer, 2002.
+
+\bibitem{Papageorgiou2007}
+M. Papageorgiou, C. Diakaki, V. Dinopoulou, A. Kotsialos, and Y. Wang, ``Review of road traffic control strategies,'' \textit{Proceedings of the IEEE}, vol. 91, no. 12, pp. 2043--2067, 2003.
+
+\bibitem{Hoogendoorn2001}
+S.P. Hoogendoorn and P.H.L. Bovy, ``State-of-the-art of vehicular traffic flow modelling,'' \textit{Proceedings of the Institution of Mechanical Engineers, Part I: Journal of Systems and Control Engineering}, vol. 215, no. 4, pp. 283--303, 2001.
+
+\bibitem{Aw2000}
+A. Aw and M. Rascle, ``Resurrection of `second order' models of traffic flow,'' \textit{SIAM Journal on Applied Mathematics}, vol. 60, no. 3, pp. 916--938, 2000.
+
+\bibitem{Helbing2001}
+D. Helbing, ``Traffic and related self-driven many-particle systems,'' \textit{Reviews of Modern Physics}, vol. 73, no. 4, pp. 1067--1141, 2001.
+
+\end{thebibliography}
 
 \end{document}

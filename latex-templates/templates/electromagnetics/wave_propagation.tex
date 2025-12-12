@@ -1,223 +1,701 @@
-\documentclass[11pt,a4paper]{article}
+% Electromagnetic Wave Propagation Template
+% Topics: Maxwell's equations, Fresnel coefficients, waveguides, skin depth
+% Style: Technical report with computational electromagnetics analysis
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
-\usepackage{geometry}
-\geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 
-\title{EM Wave Propagation\\Waveguides}
-\author{Electromagnetics Research Group}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Electromagnetic Wave Propagation: From Maxwell's Equations to Waveguides}
+\author{Electromagnetics Research Laboratory}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Electromagnetic wave propagation in guided structures.
+This technical report presents a comprehensive computational analysis of electromagnetic
+wave propagation phenomena derived from Maxwell's equations. We examine plane wave
+solutions in free space and lossy media, analyze reflection and transmission at dielectric
+interfaces using Fresnel coefficients, investigate rectangular waveguide modes with cutoff
+frequencies and dispersion relations, and characterize skin depth and attenuation in
+conductors. The analysis includes numerical computation of Brewster angles, total internal
+reflection conditions, TE/TM mode field distributions, and frequency-dependent penetration
+depths relevant to RF engineering and microwave systems.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of wave propagation.
+Electromagnetic wave propagation forms the foundation of modern wireless communication,
+radar systems, optical fibers, and microwave engineering. Maxwell's equations, formulated
+in 1865, unify electricity and magnetism and predict the existence of electromagnetic waves
+traveling at the speed of light.
+
+\begin{definition}[Maxwell's Equations in Source-Free Media]
+In regions without charges or currents, Maxwell's equations are:
+\begin{align}
+\nabla \times \mathbf{E} &= -\frac{\partial \mathbf{B}}{\partial t} \quad \text{(Faraday's law)}\\
+\nabla \times \mathbf{H} &= \frac{\partial \mathbf{D}}{\partial t} \quad \text{(Ampère-Maxwell law)}\\
+\nabla \cdot \mathbf{D} &= 0 \quad \text{(Gauss's law)}\\
+\nabla \cdot \mathbf{B} &= 0 \quad \text{(No magnetic monopoles)}
+\end{align}
+where $\mathbf{D} = \varepsilon \mathbf{E}$ and $\mathbf{B} = \mu \mathbf{H}$.
+\end{definition}
+
+\section{Theoretical Framework}
+
+\subsection{Wave Equation and Plane Waves}
+
+\begin{theorem}[Wave Equation]
+Combining Faraday's and Ampère's laws yields the wave equation:
+\begin{equation}
+\nabla^2 \mathbf{E} = \mu \varepsilon \frac{\partial^2 \mathbf{E}}{\partial t^2}
+\end{equation}
+with phase velocity $v_p = 1/\sqrt{\mu \varepsilon}$ and in vacuum $c = 1/\sqrt{\mu_0 \varepsilon_0}$.
+\end{theorem}
+
+\begin{definition}[Plane Wave Solution]
+A uniform plane wave propagating in the $+z$ direction has the form:
+\begin{equation}
+\mathbf{E}(z,t) = E_0 \cos(\omega t - \beta z + \phi) \hat{\mathbf{x}}
+\end{equation}
+where $\beta = \omega\sqrt{\mu\varepsilon}$ is the phase constant and the magnetic field is:
+\begin{equation}
+\mathbf{H}(z,t) = \frac{E_0}{\eta} \cos(\omega t - \beta z + \phi) \hat{\mathbf{y}}
+\end{equation}
+with intrinsic impedance $\eta = \sqrt{\mu/\varepsilon}$ (377 $\Omega$ in free space).
+\end{definition}
+
+\subsection{Reflection and Transmission at Interfaces}
+
+\begin{theorem}[Fresnel Equations]
+For a plane wave incident at angle $\theta_i$ on a dielectric interface, the reflection
+and transmission coefficients for perpendicular (TE) polarization are:
+\begin{align}
+\Gamma_\perp &= \frac{\eta_2 \cos\theta_i - \eta_1 \cos\theta_t}{\eta_2 \cos\theta_i + \eta_1 \cos\theta_t}\\
+\tau_\perp &= \frac{2\eta_2 \cos\theta_i}{\eta_2 \cos\theta_i + \eta_1 \cos\theta_t}
+\end{align}
+For parallel (TM) polarization:
+\begin{align}
+\Gamma_\parallel &= \frac{\eta_2 \cos\theta_t - \eta_1 \cos\theta_i}{\eta_2 \cos\theta_t + \eta_1 \cos\theta_i}\\
+\tau_\parallel &= \frac{2\eta_2 \cos\theta_i}{\eta_2 \cos\theta_t + \eta_1 \cos\theta_i}
+\end{align}
+where $\theta_t$ is determined by Snell's law: $n_1 \sin\theta_i = n_2 \sin\theta_t$.
+\end{theorem}
+
+\begin{definition}[Brewster Angle]
+The Brewster angle $\theta_B$ is the incidence angle at which parallel polarization
+has zero reflection:
+\begin{equation}
+\theta_B = \arctan\left(\frac{n_2}{n_1}\right)
+\end{equation}
+At this angle, reflected and transmitted rays are perpendicular.
+\end{definition}
+
+\subsection{Propagation in Lossy Media}
+
+\begin{theorem}[Complex Propagation Constant]
+In a lossy medium with conductivity $\sigma$, the propagation constant is complex:
+\begin{equation}
+\gamma = \alpha + j\beta = j\omega\sqrt{\mu\varepsilon_c} = j\omega\sqrt{\mu\varepsilon\left(1 - j\frac{\sigma}{\omega\varepsilon}\right)}
+\end{equation}
+where $\alpha$ is the attenuation constant (Np/m) and $\beta$ is the phase constant (rad/m).
+\end{theorem}
+
+\begin{definition}[Skin Depth]
+The skin depth $\delta$ is the distance over which field amplitude decays to $1/e$:
+\begin{equation}
+\delta = \frac{1}{\alpha} = \sqrt{\frac{2}{\omega\mu\sigma}}
+\end{equation}
+For good conductors ($\sigma \gg \omega\varepsilon$), this simplifies to the classical formula.
+\end{definition}
+
+\subsection{Rectangular Waveguide Theory}
+
+\begin{theorem}[Cutoff Frequency]
+For a rectangular waveguide with dimensions $a \times b$ (where $a > b$), the cutoff
+frequency for the $\text{TE}_{mn}$ or $\text{TM}_{mn}$ mode is:
+\begin{equation}
+f_{c,mn} = \frac{c}{2\sqrt{\mu_r\varepsilon_r}} \sqrt{\left(\frac{m}{a}\right)^2 + \left(\frac{n}{b}\right)^2}
+\end{equation}
+The dominant mode is $\text{TE}_{10}$ with $f_{c,10} = c/(2a\sqrt{\mu_r\varepsilon_r})$.
+\end{theorem}
+
+\begin{definition}[Phase and Group Velocity]
+Above cutoff, the phase velocity is:
+\begin{equation}
+v_p = \frac{c}{\sqrt{1 - (f_c/f)^2}}
+\end{equation}
+and the group velocity (energy propagation speed) is:
+\begin{equation}
+v_g = c\sqrt{1 - (f_c/f)^2}
+\end{equation}
+Note that $v_p v_g = c^2$.
+\end{definition}
+
+\section{Computational Analysis}
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy.constants import c, mu_0, epsilon_0
+from scipy.optimize import fsolve
 
-\end{pycode}
-
-\section{Mathematical Framework}
-
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('wave_propagation_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{wave_propagation_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
-
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
-ax2.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('wave_propagation_plot2.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{wave_propagation_plot2.pdf}
-\caption{Secondary analysis comparison.}
-\end{figure}
-
-\section{Parameter Study}
-
-\begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('wave_propagation_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{wave_propagation_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('wave_propagation_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{wave_propagation_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
 np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+# Physical constants
+eta_0 = np.sqrt(mu_0 / epsilon_0)  # Free space impedance (377 ohms)
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Define material properties
+def refractive_index(epsilon_r, mu_r=1.0):
+    return np.sqrt(epsilon_r * mu_r)
+
+def intrinsic_impedance(epsilon_r, mu_r=1.0):
+    return eta_0 * np.sqrt(mu_r / epsilon_r)
+
+# Fresnel coefficients
+def fresnel_perpendicular(theta_i, n1, n2):
+    """TE polarization (s-polarized)"""
+    sin_theta_t = (n1 / n2) * np.sin(theta_i)
+    if np.any(sin_theta_t > 1):
+        # Total internal reflection
+        cos_theta_t = 1j * np.sqrt(sin_theta_t**2 - 1)
+    else:
+        cos_theta_t = np.sqrt(1 - sin_theta_t**2)
+
+    cos_theta_i = np.cos(theta_i)
+    Gamma = (n1 * cos_theta_i - n2 * cos_theta_t) / (n1 * cos_theta_i + n2 * cos_theta_t)
+    tau = (2 * n1 * cos_theta_i) / (n1 * cos_theta_i + n2 * cos_theta_t)
+    return Gamma, tau
+
+def fresnel_parallel(theta_i, n1, n2):
+    """TM polarization (p-polarized)"""
+    sin_theta_t = (n1 / n2) * np.sin(theta_i)
+    if np.any(sin_theta_t > 1):
+        cos_theta_t = 1j * np.sqrt(sin_theta_t**2 - 1)
+    else:
+        cos_theta_t = np.sqrt(1 - sin_theta_t**2)
+
+    cos_theta_i = np.cos(theta_i)
+    Gamma = (n2 * cos_theta_i - n1 * cos_theta_t) / (n2 * cos_theta_i + n1 * cos_theta_t)
+    tau = (2 * n1 * cos_theta_i) / (n2 * cos_theta_i + n1 * cos_theta_t)
+    return Gamma, tau
+
+def brewster_angle(n1, n2):
+    return np.arctan(n2 / n1)
+
+def critical_angle(n1, n2):
+    if n1 <= n2:
+        return None
+    return np.arcsin(n2 / n1)
+
+# Skin depth calculation
+def skin_depth(frequency, sigma, mu_r=1.0):
+    """Skin depth in meters"""
+    omega = 2 * np.pi * frequency
+    return np.sqrt(2 / (omega * mu_0 * mu_r * sigma))
+
+def attenuation_constant(frequency, sigma, epsilon_r=1.0, mu_r=1.0):
+    """Attenuation constant in Np/m"""
+    omega = 2 * np.pi * frequency
+    eps = epsilon_0 * epsilon_r
+    mu = mu_0 * mu_r
+    # General formula for lossy dielectric
+    loss_tangent = sigma / (omega * eps)
+    beta_lossless = omega * np.sqrt(mu * eps)
+    alpha = beta_lossless * loss_tangent / 2
+    return alpha
+
+# Waveguide properties
+def cutoff_frequency(m, n, a, b, epsilon_r=1.0, mu_r=1.0):
+    """Cutoff frequency for TE_mn or TM_mn mode"""
+    return (c / (2 * np.sqrt(epsilon_r * mu_r))) * np.sqrt((m/a)**2 + (n/b)**2)
+
+def phase_velocity(frequency, cutoff_freq):
+    """Phase velocity in waveguide"""
+    if frequency <= cutoff_freq:
+        return np.inf
+    return c / np.sqrt(1 - (cutoff_freq / frequency)**2)
+
+def group_velocity(frequency, cutoff_freq):
+    """Group velocity in waveguide"""
+    if frequency <= cutoff_freq:
+        return 0
+    return c * np.sqrt(1 - (cutoff_freq / frequency)**2)
+
+def guide_wavelength(frequency, cutoff_freq):
+    """Wavelength in waveguide"""
+    lambda_0 = c / frequency
+    if frequency <= cutoff_freq:
+        return np.inf
+    return lambda_0 / np.sqrt(1 - (cutoff_freq / frequency)**2)
+
+# Materials
+n_air = 1.0
+n_glass = 1.5
+n_water = 1.33
+epsilon_glass = n_glass**2
+epsilon_water = n_water**2
+
+# Compute Brewster angle
+theta_b_air_glass = brewster_angle(n_air, n_glass)
+theta_b_air_water = brewster_angle(n_air, n_water)
+
+# Compute critical angles
+theta_c_glass_air = critical_angle(n_glass, n_air)
+theta_c_water_air = critical_angle(n_water, n_air)
+
+# Create comprehensive figure
+fig = plt.figure(figsize=(16, 14))
+
+# Plot 1: Fresnel coefficients vs angle (air to glass)
+ax1 = fig.add_subplot(3, 3, 1)
+angles_deg = np.linspace(0, 89, 500)
+angles_rad = np.radians(angles_deg)
+
+Gamma_perp_ag, tau_perp_ag = fresnel_perpendicular(angles_rad, n_air, n_glass)
+Gamma_para_ag, tau_para_ag = fresnel_parallel(angles_rad, n_air, n_glass)
+
+ax1.plot(angles_deg, np.abs(Gamma_perp_ag)**2, 'b-', linewidth=2, label='$R_\\perp$ (TE)')
+ax1.plot(angles_deg, np.abs(Gamma_para_ag)**2, 'r-', linewidth=2, label='$R_\\parallel$ (TM)')
+ax1.axvline(x=np.degrees(theta_b_air_glass), color='gray', linestyle='--',
+            alpha=0.7, label=f'Brewster: {np.degrees(theta_b_air_glass):.1f}°')
+ax1.set_xlabel('Incidence Angle (degrees)')
+ax1.set_ylabel('Reflectance')
+ax1.set_title('Fresnel Reflectance: Air $\\to$ Glass')
+ax1.legend(fontsize=9)
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 90)
+ax1.set_ylim(0, 1)
+
+# Plot 2: Transmittance vs angle
+ax2 = fig.add_subplot(3, 3, 2)
+T_perp = 1 - np.abs(Gamma_perp_ag)**2
+T_para = 1 - np.abs(Gamma_para_ag)**2
+
+ax2.plot(angles_deg, T_perp, 'b-', linewidth=2, label='$T_\\perp$ (TE)')
+ax2.plot(angles_deg, T_para, 'r-', linewidth=2, label='$T_\\parallel$ (TM)')
+ax2.axvline(x=np.degrees(theta_b_air_glass), color='gray', linestyle='--', alpha=0.7)
+ax2.set_xlabel('Incidence Angle (degrees)')
+ax2.set_ylabel('Transmittance')
+ax2.set_title('Fresnel Transmittance: Air $\\to$ Glass')
+ax2.legend(fontsize=9)
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, 90)
+ax2.set_ylim(0, 1)
+
+# Plot 3: Total internal reflection (glass to air)
+ax3 = fig.add_subplot(3, 3, 3)
+angles_deg_ga = np.linspace(0, 89, 500)
+angles_rad_ga = np.radians(angles_deg_ga)
+
+Gamma_perp_ga, _ = fresnel_perpendicular(angles_rad_ga, n_glass, n_air)
+Gamma_para_ga, _ = fresnel_parallel(angles_rad_ga, n_glass, n_air)
+
+ax3.plot(angles_deg_ga, np.abs(Gamma_perp_ga)**2, 'b-', linewidth=2, label='$R_\\perp$')
+ax3.plot(angles_deg_ga, np.abs(Gamma_para_ga)**2, 'r-', linewidth=2, label='$R_\\parallel$')
+ax3.axvline(x=np.degrees(theta_c_glass_air), color='green', linestyle='--',
+            linewidth=2, label=f'Critical: {np.degrees(theta_c_glass_air):.1f}°')
+ax3.set_xlabel('Incidence Angle (degrees)')
+ax3.set_ylabel('Reflectance')
+ax3.set_title('Total Internal Reflection: Glass $\\to$ Air')
+ax3.legend(fontsize=9)
+ax3.grid(True, alpha=0.3)
+ax3.set_xlim(0, 90)
+ax3.set_ylim(0, 1.05)
+
+# Plot 4: Skin depth vs frequency in copper
+ax4 = fig.add_subplot(3, 3, 4)
+sigma_copper = 5.96e7  # S/m
+frequencies_khz = np.logspace(1, 4, 100)  # 10 kHz to 10 MHz
+frequencies_hz = frequencies_khz * 1e3
+
+skin_depths_copper = skin_depth(frequencies_hz, sigma_copper)
+
+ax4.loglog(frequencies_khz, skin_depths_copper * 1e6, 'b-', linewidth=2)
+ax4.set_xlabel('Frequency (kHz)')
+ax4.set_ylabel('Skin Depth ($\\mu$m)')
+ax4.set_title('Skin Depth in Copper ($\\sigma$ = 5.96$\\times$10$^7$ S/m)')
+ax4.grid(True, alpha=0.3, which='both')
+ax4.axhline(y=10, color='gray', linestyle='--', alpha=0.5, label='10 $\\mu$m')
+ax4.axhline(y=100, color='gray', linestyle=':', alpha=0.5, label='100 $\\mu$m')
+ax4.legend(fontsize=8)
+
+# Plot 5: Skin depth comparison for different metals
+ax5 = fig.add_subplot(3, 3, 5)
+sigma_aluminum = 3.5e7  # S/m
+sigma_gold = 4.1e7  # S/m
+sigma_silver = 6.3e7  # S/m
+
+freq_mhz = np.logspace(-1, 2, 100)  # 0.1 MHz to 100 MHz
+freq_hz_metal = freq_mhz * 1e6
+
+skin_copper = skin_depth(freq_hz_metal, sigma_copper) * 1e6
+skin_aluminum = skin_depth(freq_hz_metal, sigma_aluminum) * 1e6
+skin_gold = skin_depth(freq_hz_metal, sigma_gold) * 1e6
+skin_silver = skin_depth(freq_hz_metal, sigma_silver) * 1e6
+
+ax5.loglog(freq_mhz, skin_copper, 'b-', linewidth=2, label='Copper')
+ax5.loglog(freq_mhz, skin_aluminum, 'r-', linewidth=2, label='Aluminum')
+ax5.loglog(freq_mhz, skin_gold, 'g-', linewidth=2, label='Gold')
+ax5.loglog(freq_mhz, skin_silver, 'm-', linewidth=2, label='Silver')
+ax5.set_xlabel('Frequency (MHz)')
+ax5.set_ylabel('Skin Depth ($\\mu$m)')
+ax5.set_title('Skin Depth: Metal Comparison')
+ax5.legend(fontsize=9)
+ax5.grid(True, alpha=0.3, which='both')
+
+# Plot 6: Waveguide dispersion (TE10 mode)
+ax6 = fig.add_subplot(3, 3, 6)
+a_guide = 0.02286  # Standard WR-90 waveguide (m)
+b_guide = 0.01016  # (m)
+
+fc_10 = cutoff_frequency(1, 0, a_guide, b_guide)
+fc_20 = cutoff_frequency(2, 0, a_guide, b_guide)
+fc_01 = cutoff_frequency(0, 1, a_guide, b_guide)
+fc_11 = cutoff_frequency(1, 1, a_guide, b_guide)
+
+freq_ghz = np.linspace(fc_10 / 1e9, 2 * fc_20 / 1e9, 500)
+freq_hz_guide = freq_ghz * 1e9
+
+vp_10 = np.array([phase_velocity(f, fc_10) for f in freq_hz_guide])
+vg_10 = np.array([group_velocity(f, fc_10) for f in freq_hz_guide])
+
+# Normalize to speed of light
+vp_norm = vp_10 / c
+vg_norm = vg_10 / c
+
+ax6.plot(freq_ghz, vp_norm, 'b-', linewidth=2, label='$v_p/c$ (phase)')
+ax6.plot(freq_ghz, vg_norm, 'r-', linewidth=2, label='$v_g/c$ (group)')
+ax6.axvline(x=fc_10/1e9, color='gray', linestyle='--', alpha=0.7,
+            label=f'$f_{{c,10}}$ = {fc_10/1e9:.2f} GHz')
+ax6.axhline(y=1, color='black', linestyle=':', alpha=0.5)
+ax6.set_xlabel('Frequency (GHz)')
+ax6.set_ylabel('Normalized Velocity')
+ax6.set_title('Waveguide Dispersion: TE$_{10}$ Mode (WR-90)')
+ax6.legend(fontsize=9)
+ax6.grid(True, alpha=0.3)
+ax6.set_xlim(fc_10/1e9, 2*fc_20/1e9)
+ax6.set_ylim(0, 3)
+
+# Plot 7: Multiple mode cutoff frequencies
+ax7 = fig.add_subplot(3, 3, 7)
+modes = ['TE$_{10}$', 'TE$_{20}$', 'TE$_{01}$', 'TE$_{11}$', 'TM$_{11}$']
+cutoffs_ghz = [fc_10/1e9, fc_20/1e9, fc_01/1e9, fc_11/1e9, fc_11/1e9]
+
+y_pos = np.arange(len(modes))
+bars = ax7.barh(y_pos, cutoffs_ghz, color='steelblue', edgecolor='black')
+bars[0].set_color('coral')  # Highlight dominant mode
+ax7.set_yticks(y_pos)
+ax7.set_yticklabels(modes, fontsize=10)
+ax7.set_xlabel('Cutoff Frequency (GHz)')
+ax7.set_title('Mode Cutoff Frequencies (WR-90)')
+ax7.grid(True, alpha=0.3, axis='x')
+
+# Add frequency labels
+for i, (bar, fc) in enumerate(zip(bars, cutoffs_ghz)):
+    ax7.text(fc + 0.5, i, f'{fc:.2f} GHz', va='center', fontsize=9)
+
+# Plot 8: TE10 electric field distribution
+ax8 = fig.add_subplot(3, 3, 8)
+x_norm = np.linspace(0, 1, 100)
+y_norm = np.linspace(0, 1, 100)
+X_norm, Y_norm = np.meshgrid(x_norm, y_norm)
+
+# TE10 mode: Ey component (dominant)
+E_field_te10 = np.sin(np.pi * X_norm)
+
+im = ax8.contourf(X_norm, Y_norm, E_field_te10, levels=20, cmap='RdBu_r')
+plt.colorbar(im, ax=ax8, label='$E_y$ (normalized)')
+ax8.set_xlabel('x/a')
+ax8.set_ylabel('y/b')
+ax8.set_title('TE$_{10}$ Mode: Electric Field ($E_y$)')
+ax8.set_aspect('equal')
+
+# Plot 9: Guide wavelength vs frequency
+ax9 = fig.add_subplot(3, 3, 9)
+lambda_guide = np.array([guide_wavelength(f, fc_10) for f in freq_hz_guide])
+lambda_free = c / freq_hz_guide
+
+ax9.plot(freq_ghz, lambda_free * 1000, 'b--', linewidth=2, label='Free space ($\\lambda_0$)')
+ax9.plot(freq_ghz, lambda_guide * 1000, 'r-', linewidth=2, label='Waveguide ($\\lambda_g$)')
+ax9.axvline(x=fc_10/1e9, color='gray', linestyle='--', alpha=0.7)
+ax9.set_xlabel('Frequency (GHz)')
+ax9.set_ylabel('Wavelength (mm)')
+ax9.set_title('Wavelength Comparison')
+ax9.legend(fontsize=9)
+ax9.grid(True, alpha=0.3)
+ax9.set_xlim(fc_10/1e9, 2*fc_20/1e9)
+ax9.set_ylim(0, 100)
+
 plt.tight_layout()
-plt.savefig('wave_propagation_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('wave_propagation_analysis.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{wave_propagation_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\includegraphics[width=\textwidth]{wave_propagation_analysis.pdf}
+\caption{Comprehensive electromagnetic wave propagation analysis: (a) Fresnel reflectance
+coefficients for air-to-glass interface showing Brewster angle at 56.3° where parallel
+polarization has zero reflection; (b) Corresponding transmittance revealing complementary
+behavior; (c) Total internal reflection at glass-to-air interface with critical angle
+at 41.8° beyond which complete reflection occurs; (d) Skin depth in copper decreasing
+from 660 $\mu$m at 10 kHz to 21 $\mu$m at 1 MHz; (e) Comparative skin depths for
+Cu, Al, Au, and Ag showing frequency-dependent penetration; (f) Phase and group velocity
+dispersion in WR-90 waveguide for TE$_{10}$ mode with cutoff at 6.56 GHz; (g) Cutoff
+frequencies for multiple waveguide modes; (h) TE$_{10}$ mode electric field distribution
+exhibiting half-wave sinusoidal variation; (i) Guide wavelength exceeding free-space
+wavelength near cutoff frequency.}
+\label{fig:propagation}
 \end{figure}
 
-\section{Time Series}
+\section{Results}
+
+\subsection{Interface Phenomena}
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Critical Angles for Common Material Interfaces}")
+print(r"\begin{tabular}{lccc}")
+print(r"\toprule")
+print(r"Interface & $n_1$ & $n_2$ & Brewster Angle & Critical Angle \\")
+print(r"\midrule")
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('wave_propagation_plot6.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{wave_propagation_plot6.pdf}
-\caption{Time series visualization.}
-\end{figure}
-
-\section{Results Summary}
-
-\begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
+interfaces = [
+    ("Air $\\to$ Glass", n_air, n_glass, theta_b_air_glass, None),
+    ("Air $\\to$ Water", n_air, n_water, theta_b_air_water, None),
+    ("Glass $\\to$ Air", n_glass, n_air, brewster_angle(n_glass, n_air), theta_c_glass_air),
+    ("Water $\\to$ Air", n_water, n_air, brewster_angle(n_water, n_air), theta_c_water_air),
 ]
 
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+for name, n1, n2, theta_b, theta_c in interfaces:
+    theta_b_deg = np.degrees(theta_b)
+    if theta_c is not None:
+        theta_c_deg = np.degrees(theta_c)
+        print(f"{name} & {n1:.2f} & {n2:.2f} & {theta_b_deg:.1f}$^\\circ$ & {theta_c_deg:.1f}$^\\circ$ \\\\")
+    else:
+        print(f"{name} & {n1:.2f} & {n2:.2f} & {theta_b_deg:.1f}$^\\circ$ & --- \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:angles}")
+print(r"\end{table}")
 \end{pycode}
+
+\subsection{Skin Depth Analysis}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Skin Depth in Copper at Representative Frequencies}")
+print(r"\begin{tabular}{cccc}")
+print(r"\toprule")
+print(r"Frequency & Wavelength & Skin Depth & Attenuation \\")
+print(r"& (m) & ($\mu$m) & (dB/cm) \\")
+print(r"\midrule")
+
+test_frequencies = [60, 1e3, 1e6, 1e9, 10e9]  # Hz
+
+for f in test_frequencies:
+    wavelength = c / f
+    delta = skin_depth(f, sigma_copper) * 1e6  # Convert to micrometers
+    alpha_np = 1 / (delta * 1e-6)  # Np/m
+    alpha_db = alpha_np * 8.686  # dB/m
+
+    if f < 1e3:
+        f_str = f"{f:.0f} Hz"
+    elif f < 1e6:
+        f_str = f"{f/1e3:.0f} kHz"
+    elif f < 1e9:
+        f_str = f"{f/1e6:.0f} MHz"
+    else:
+        f_str = f"{f/1e9:.0f} GHz"
+
+    if wavelength >= 1:
+        wl_str = f"{wavelength:.1f}"
+    elif wavelength >= 0.001:
+        wl_str = f"{wavelength*1000:.1f}$\\times$10$^{{-3}}$"
+    else:
+        wl_str = f"{wavelength:.2e}"
+
+    print(f"{f_str} & {wl_str} & {delta:.1f} & {alpha_db/100:.2f} \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:skin}")
+print(r"\end{table}")
+\end{pycode}
+
+\subsection{Waveguide Characteristics}
+
+\begin{pycode}
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Standard Rectangular Waveguide Parameters}")
+print(r"\begin{tabular}{lccccc}")
+print(r"\toprule")
+print(r"Designation & $a$ (mm) & $b$ (mm) & $f_{c,10}$ (GHz) & Band & Frequency Range \\")
+print(r"\midrule")
+
+waveguides = [
+    ("WR-284", 72.14, 34.04, "WG-6", "2.6--3.95 GHz"),
+    ("WR-187", 47.55, 22.15, "WG-9", "3.95--5.85 GHz"),
+    ("WR-90", 22.86, 10.16, "X-band", "8.2--12.4 GHz"),
+    ("WR-62", 15.80, 7.90, "Ku-band", "12.4--18.0 GHz"),
+    ("WR-42", 10.67, 4.32, "Ka-band", "18.0--26.5 GHz"),
+]
+
+for name, a_mm, b_mm, band, freq_range in waveguides:
+    a_m = a_mm / 1000
+    b_m = b_mm / 1000
+    fc = cutoff_frequency(1, 0, a_m, b_m) / 1e9
+    print(f"{name} & {a_mm:.2f} & {b_mm:.2f} & {fc:.2f} & {band} & {freq_range} \\\\")
+
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:waveguide}")
+print(r"\end{table}")
+\end{pycode}
+
+\section{Discussion}
+
+\begin{example}[Polarization-Dependent Reflection]
+At the air-glass Brewster angle ($56.3°$), parallel-polarized light experiences zero
+reflection while perpendicular-polarized light has approximately 7\% reflectance. This
+phenomenon enables polarizing beam splitters and laser cavity windows oriented at
+Brewster's angle to minimize losses for one polarization.
+\end{example}
+
+\begin{example}[Total Internal Reflection Applications]
+The critical angle for glass-to-air ($41.8°$) enables optical fiber communication.
+Light launched into a fiber core at angles exceeding the critical angle undergoes
+total internal reflection, confining the signal over kilometer-scale distances with
+minimal loss. This principle also governs prism reflectors and retroreflectors.
+\end{example}
+
+\begin{remark}[RF Shielding and Skin Effect]
+At 1 MHz, the skin depth in copper is only 66 $\mu$m, implying that current flows
+predominantly near conductor surfaces at radio frequencies. This necessitates different
+design strategies for RF circuits compared to DC circuits: hollow waveguides can
+replace solid conductors, and surface plating (gold or silver) can reduce losses
+without requiring solid precious metal construction.
+\end{remark}
+
+\begin{example}[Waveguide Mode Selection]
+The WR-90 waveguide has a TE$_{10}$ cutoff at 6.56 GHz and TE$_{20}$ cutoff at
+13.1 GHz. Operating in the X-band range (8.2--12.4 GHz) ensures single-mode propagation,
+preventing modal dispersion and signal distortion. The operating frequency must satisfy
+$1.25 f_{c,10} < f < 0.95 f_{c,20}$ to avoid cutoff and higher-order modes.
+\end{example}
+
+\subsection{Poynting Vector and Power Flow}
+
+\begin{pycode}
+# Calculate time-averaged Poynting vector magnitude
+E_field_magnitude = 1.0  # V/m (normalized)
+H_field_magnitude = E_field_magnitude / eta_0
+power_density = 0.5 * E_field_magnitude * H_field_magnitude  # W/m^2
+
+print(f"For a plane wave with $E_0 = 1$ V/m in free space, the time-averaged power density is $\\langle S \\rangle = E_0^2/(2\\eta_0) = {power_density*1e3:.3f}$ mW/m$^2$.")
+\end{pycode}
+
+The Poynting vector $\mathbf{S} = \mathbf{E} \times \mathbf{H}$ describes electromagnetic
+energy flux. For plane waves, the time-averaged power density scales as $E_0^2$ and
+inversely with medium impedance.
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to wave propagation.
+This comprehensive analysis of electromagnetic wave propagation demonstrates:
+
+\begin{enumerate}
+\item Fresnel coefficients predict reflectance and transmittance at dielectric interfaces,
+with the air-glass Brewster angle at \py{f"{np.degrees(theta_b_air_glass):.1f}"}$^\circ$
+and glass-air critical angle at \py{f"{np.degrees(theta_c_glass_air):.1f}"}$^\circ$
+enabling total internal reflection.
+
+\item Skin depth in copper decreases from 660 $\mu$m at 10 kHz to 2.1 $\mu$m at 10 GHz,
+confining high-frequency currents to conductor surfaces and dictating RF circuit design.
+
+\item Rectangular waveguides exhibit dispersive propagation above cutoff frequency, with
+phase velocity exceeding $c$ while group velocity remains subluminal, satisfying
+$v_p v_g = c^2$.
+
+\item The dominant TE$_{10}$ mode in WR-90 waveguide has cutoff at
+\py{f"{fc_10/1e9:.2f}"} GHz, enabling X-band operation (8.2--12.4 GHz) in single-mode regime.
+\end{enumerate}
+
+\section*{Further Reading}
+
+\begin{thebibliography}{99}
+
+\bibitem{balanis2012}
+Balanis, C.A. \textit{Advanced Engineering Electromagnetics}, 2nd ed. Wiley, 2012.
+
+\bibitem{jackson1999}
+Jackson, J.D. \textit{Classical Electrodynamics}, 3rd ed. Wiley, 1999.
+
+\bibitem{pozar2011}
+Pozar, D.M. \textit{Microwave Engineering}, 4th ed. Wiley, 2011.
+
+\bibitem{griffiths2017}
+Griffiths, D.J. \textit{Introduction to Electrodynamics}, 4th ed. Cambridge University Press, 2017.
+
+\bibitem{collin2001}
+Collin, R.E. \textit{Foundations for Microwave Engineering}, 2nd ed. Wiley-IEEE Press, 2001.
+
+\bibitem{harrington2001}
+Harrington, R.F. \textit{Time-Harmonic Electromagnetic Fields}, 2nd ed. Wiley-IEEE Press, 2001.
+
+\bibitem{born1999}
+Born, M. and Wolf, E. \textit{Principles of Optics}, 7th ed. Cambridge University Press, 1999.
+
+\bibitem{stratton2007}
+Stratton, J.A. \textit{Electromagnetic Theory}. Wiley-IEEE Press, 2007.
+
+\bibitem{elliott1993}
+Elliott, R.S. \textit{Electromagnetics: History, Theory, and Applications}. IEEE Press, 1993.
+
+\bibitem{kong2008}
+Kong, J.A. \textit{Electromagnetic Wave Theory}. EMW Publishing, 2008.
+
+\bibitem{cheng1989}
+Cheng, D.K. \textit{Field and Wave Electromagnetics}, 2nd ed. Addison-Wesley, 1989.
+
+\bibitem{ramo1994}
+Ramo, S., Whinnery, J.R., and Van Duzer, T. \textit{Fields and Waves in Communication Electronics}, 3rd ed. Wiley, 1994.
+
+\bibitem{marcuvitz1951}
+Marcuvitz, N. \textit{Waveguide Handbook}. McGraw-Hill, 1951.
+
+\bibitem{chen1983}
+Chen, H.C. \textit{Theory of Electromagnetic Waves}. McGraw-Hill, 1983.
+
+\bibitem{stutzman2012}
+Stutzman, W.L. and Thiele, G.A. \textit{Antenna Theory and Design}, 3rd ed. Wiley, 2012.
+
+\bibitem{orfanidis2016}
+Orfanidis, S.J. \textit{Electromagnetic Waves and Antennas}. Rutgers University, 2016.
+
+\bibitem{ulaby2015}
+Ulaby, F.T. and Ravaioli, U. \textit{Fundamentals of Applied Electromagnetics}, 7th ed. Pearson, 2015.
+
+\bibitem{johnk1988}
+Johnk, C.T.A. \textit{Engineering Electromagnetic Fields and Waves}, 2nd ed. Wiley, 1988.
+
+\end{thebibliography}
 
 \end{document}

@@ -1,17 +1,26 @@
-\documentclass[11pt,a4paper]{article}
+% Rainfall-Runoff Modeling Template
+% Topics: Unit hydrograph theory, SCS Curve Number method, Nash cascade, watershed response
+% Style: Engineering hydrology report with computational modeling
+
+\documentclass[a4paper, 11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath, amssymb}
 \usepackage{graphicx}
-\usepackage{booktabs}
 \usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage[makestderr]{pythontex}
 \usepackage{geometry}
 \geometry{margin=1in}
-\usepackage{pythontex}
-\usepackage{hyperref}
-\usepackage{float}
 
-\title{Rainfall-Runoff\\Unit Hydrograph}
+% Theorem environments
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{remark}{Remark}[section]
+
+\title{Rainfall-Runoff Modeling: Unit Hydrograph Theory and SCS Curve Number Method}
 \author{Hydrology Research Group}
 \date{\today}
 
@@ -19,205 +28,859 @@
 \maketitle
 
 \begin{abstract}
-Watershed response to precipitation.
+This engineering report presents a comprehensive analysis of rainfall-runoff transformation
+using the unit hydrograph approach and the Soil Conservation Service (SCS) Curve Number method.
+We develop synthetic unit hydrographs using the Nash cascade model, compute excess rainfall
+from design storms using the SCS-CN method, and apply discrete convolution to generate direct
+runoff hydrographs. The analysis demonstrates watershed response characteristics including
+time of concentration, peak discharge estimation, and the effects of antecedent moisture
+conditions and land use on runoff generation.
 \end{abstract}
 
 \section{Introduction}
 
-This report presents computational analysis of rainfall runoff.
+Rainfall-runoff modeling is fundamental to hydrologic engineering, providing the basis
+for flood forecasting, drainage design, and water resources planning. The transformation
+of precipitation into streamflow involves complex processes including interception,
+infiltration, surface detention, and channel routing. The unit hydrograph approach,
+introduced by Sherman (1932), provides an elegant framework for this transformation
+by treating the watershed as a linear time-invariant system.
+
+\begin{definition}[Unit Hydrograph]
+A unit hydrograph (UH) is the direct runoff hydrograph resulting from 1 unit (typically
+1 inch or 1 cm) of excess rainfall generated uniformly over the drainage area at a constant
+rate for an effective duration $D$. The direct runoff excludes baseflow and represents
+only the surface and rapid subsurface response.
+\end{definition}
+
+The SCS Curve Number method, developed by the USDA Natural Resources Conservation Service,
+provides a practical approach to estimating rainfall excess from total precipitation based
+on watershed characteristics including soil type, land use, and antecedent moisture conditions.
+
+\section{Theoretical Framework}
+
+\subsection{Unit Hydrograph Theory}
+
+The unit hydrograph method relies on three fundamental principles:
+
+\begin{enumerate}
+\item \textbf{Time invariance}: The UH for a given watershed is time-invariant
+\item \textbf{Proportionality}: Direct runoff ordinates are proportional to excess rainfall depth
+\item \textbf{Superposition}: Runoff hydrographs from successive storms can be superposed
+\end{enumerate}
+
+\begin{theorem}[Convolution Equation]
+For a watershed with unit hydrograph $u(t)$ and excess rainfall intensity $i_e(t)$,
+the direct runoff $Q(t)$ is given by the convolution integral:
+\begin{equation}
+Q(t) = \int_0^t i_e(\tau) \cdot u(t - \tau) \, d\tau
+\end{equation}
+In discrete form with time intervals $\Delta t$:
+\begin{equation}
+Q_n = \sum_{m=1}^{n} P_m \cdot U_{n-m+1}
+\end{equation}
+where $P_m$ is excess rainfall in period $m$ and $U_n$ is the unit hydrograph ordinate.
+\end{theorem}
+
+\subsection{SCS Curve Number Method}
+
+The SCS-CN method estimates direct runoff depth from rainfall depth based on the curve number $CN$,
+which ranges from 0 (no runoff potential) to 100 (complete runoff).
+
+\begin{definition}[SCS Runoff Equation]
+The direct runoff depth $Q$ (inches) from rainfall depth $P$ (inches) is:
+\begin{equation}
+Q = \frac{(P - I_a)^2}{P - I_a + S}
+\end{equation}
+where $I_a$ is initial abstraction (interception + infiltration before runoff begins)
+and $S$ is potential maximum retention after runoff begins. The relationships are:
+\begin{equation}
+S = \frac{1000}{CN} - 10 \quad \text{(inches)}
+\end{equation}
+\begin{equation}
+I_a = 0.2S \quad \text{(standard assumption)}
+\end{equation}
+\end{definition}
+
+\begin{remark}[Curve Number Selection]
+Curve numbers depend on:
+\begin{itemize}
+\item \textbf{Hydrologic Soil Group}: A (low runoff), B, C, D (high runoff)
+\item \textbf{Land Use/Cover}: Urban areas have higher CN than forests
+\item \textbf{Antecedent Moisture Condition}: AMC I (dry), II (normal), III (wet)
+\end{itemize}
+\end{remark}
+
+\subsection{Nash Cascade Model}
+
+The Nash cascade represents the watershed as a series of $N$ identical linear reservoirs,
+each with storage coefficient $K$.
+
+\begin{theorem}[Nash Instantaneous Unit Hydrograph]
+The instantaneous unit hydrograph (IUH) for a Nash cascade is:
+\begin{equation}
+u(t) = \frac{1}{K \Gamma(N)} \left(\frac{t}{K}\right)^{N-1} e^{-t/K}
+\end{equation}
+where $\Gamma(N)$ is the gamma function. The parameters relate to watershed properties:
+\begin{equation}
+K = \frac{t_p}{N} \quad \text{and} \quad N = \left(\frac{t_p}{\sigma}\right)^2
+\end{equation}
+where $t_p$ is time to peak and $\sigma$ is standard deviation of the IUH.
+\end{theorem}
+
+\section{Computational Analysis}
+
+\subsection{Watershed Characteristics and Design Storm}
+
+We analyze a small urban watershed to demonstrate rainfall-runoff transformation.
+The watershed has mixed land use with moderate infiltration characteristics, typical
+of suburban development with 40\% impervious cover. We apply a 6-hour design storm
+with total precipitation depth of 4.5 inches, distributed using the SCS Type II
+temporal distribution commonly used in the eastern United States.
 
 \begin{pycode}
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats, optimize, integrate
-plt.rcParams['text.usetex'] = True
-plt.rcParams['font.family'] = 'serif'
+from scipy.special import gamma
+from scipy.interpolate import interp1d
 
-\end{pycode}
-
-\section{Mathematical Framework}
-
-\begin{pycode}
-# Generate sample data
-x = np.linspace(0, 10, 100)
-y = np.sin(x) * np.exp(-0.1*x)
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(x, y, 'b-', linewidth=2)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Primary Analysis')
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('rainfall_runoff_plot1.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{rainfall_runoff_plot1.pdf}
-\caption{Primary analysis results.}
-\end{figure}
-
-\section{Secondary Analysis}
-
-\begin{pycode}
-# Secondary visualization
-y2 = np.cos(x) * np.exp(-0.2*x)
-y3 = x * np.exp(-0.3*x)
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.plot(x, y2, 'r-', linewidth=2)
-ax1.set_xlabel('x')
-ax1.set_ylabel('y')
-ax1.set_title('Analysis A')
-ax1.grid(True, alpha=0.3)
-
-ax2.plot(x, y3, 'g-', linewidth=2)
-ax2.set_xlabel('x')
-ax2.set_ylabel('y')
-ax2.set_title('Analysis B')
-ax2.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('rainfall_runoff_plot2.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{rainfall_runoff_plot2.pdf}
-\caption{Secondary analysis comparison.}
-\end{figure}
-
-\section{Parameter Study}
-
-\begin{pycode}
-# Parameter variation
-params = [0.1, 0.3, 0.5, 0.7]
-
-fig, ax = plt.subplots(figsize=(10, 6))
-for p in params:
-    y_p = np.exp(-p * x) * np.sin(x)
-    ax.plot(x, y_p, linewidth=1.5, label=f'$\\alpha$ = {p}')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('Parameter Sensitivity')
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('rainfall_runoff_plot3.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{rainfall_runoff_plot3.pdf}
-\caption{Parameter sensitivity analysis.}
-\end{figure}
-
-\section{2D Visualization}
-
-\begin{pycode}
-# 2D contour plot
-X, Y = np.meshgrid(np.linspace(-5, 5, 100), np.linspace(-5, 5, 100))
-Z = np.sin(np.sqrt(X**2 + Y**2))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-cs = ax.contourf(X, Y, Z, levels=20, cmap='viridis')
-plt.colorbar(cs)
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_title('2D Field')
-plt.tight_layout()
-plt.savefig('rainfall_runoff_plot4.pdf', dpi=150, bbox_inches='tight')
-plt.close()
-\end{pycode}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{rainfall_runoff_plot4.pdf}
-\caption{Two-dimensional field visualization.}
-\end{figure}
-
-\section{Distribution Analysis}
-
-\begin{pycode}
-# Statistical distribution
 np.random.seed(42)
-data = np.random.normal(5, 1.5, 1000)
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-ax1.hist(data, bins=30, density=True, alpha=0.7, color='steelblue')
-x_dist = np.linspace(0, 10, 100)
-ax1.plot(x_dist, stats.norm.pdf(x_dist, 5, 1.5), 'r-', linewidth=2)
-ax1.set_xlabel('Value')
-ax1.set_ylabel('Density')
-ax1.set_title('Distribution')
+# Watershed characteristics
+drainage_area = 2.5  # square miles
+time_of_concentration = 1.2  # hours
+CN = 75  # Curve number for suburban residential (1/4 acre lots, 38% impervious)
 
-ax2.boxplot([data, np.random.normal(4, 2, 1000)])
-ax2.set_xticklabels(['Dataset 1', 'Dataset 2'])
-ax2.set_ylabel('Value')
-ax2.set_title('Box Plot')
+# Calculate storage parameters
+S_inches = 1000/CN - 10  # Maximum retention (inches)
+Ia_inches = 0.2 * S_inches  # Initial abstraction (inches)
+
+# Design storm parameters
+total_rainfall = 4.5  # inches
+storm_duration = 6.0  # hours
+dt = 0.25  # time step (hours)
+
+# SCS Type II storm distribution (cumulative fractions)
+# Time fractions of storm duration
+time_fractions = np.array([0, 0.1, 0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6,
+                           0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0])
+# Cumulative rainfall fractions (Type II distribution)
+cum_rainfall_fractions = np.array([0, 0.035, 0.076, 0.125, 0.156, 0.194, 0.219,
+                                   0.663, 0.735, 0.772, 0.799, 0.820, 0.844,
+                                   0.871, 0.898, 0.926, 0.963, 1.0])
+
+# Create time series
+time_storm = time_fractions * storm_duration
+cum_rainfall = cum_rainfall_fractions * total_rainfall
+
+# Interpolate to finer time step
+time_series = np.arange(0, storm_duration + dt, dt)
+interp_func = interp1d(time_storm, cum_rainfall, kind='linear', fill_value='extrapolate')
+cum_rainfall_series = interp_func(time_series)
+cum_rainfall_series = np.maximum(cum_rainfall_series, 0)
+cum_rainfall_series = np.minimum(cum_rainfall_series, total_rainfall)
+
+# Incremental rainfall depth
+rainfall_incremental = np.diff(cum_rainfall_series, prepend=0)
+
+# Calculate excess rainfall using SCS-CN method
+excess_rainfall = np.zeros_like(cum_rainfall_series)
+for i in range(len(cum_rainfall_series)):
+    P = cum_rainfall_series[i]
+    if P > Ia_inches:
+        Q = ((P - Ia_inches)**2) / (P - Ia_inches + S_inches)
+        excess_rainfall[i] = Q
+
+# Incremental excess rainfall
+excess_incremental = np.diff(excess_rainfall, prepend=0)
+
+# Calculate runoff coefficient
+total_excess = excess_rainfall[-1]
+runoff_coefficient = total_excess / total_rainfall if total_rainfall > 0 else 0
+
+# Plot rainfall and excess rainfall
+fig1, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+
+# Rainfall hyetograph
+ax1.bar(time_series, rainfall_incremental / dt, width=dt*0.9,
+        color='steelblue', edgecolor='black', alpha=0.7, label='Total rainfall')
+ax1.bar(time_series, excess_incremental / dt, width=dt*0.9,
+        color='darkred', edgecolor='black', alpha=0.7, label='Excess rainfall')
+ax1.set_xlabel('Time (hours)', fontsize=11)
+ax1.set_ylabel('Rainfall intensity (in/hr)', fontsize=11)
+ax1.set_title(f'SCS Type II Design Storm (Total P = {total_rainfall} in, CN = {CN})', fontsize=12)
+ax1.legend(fontsize=10, loc='upper left')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, storm_duration)
+
+# Cumulative rainfall and runoff
+ax2.plot(time_series, cum_rainfall_series, 'b-', linewidth=2.5, label='Cumulative rainfall')
+ax2.plot(time_series, excess_rainfall, 'r-', linewidth=2.5, label='Cumulative excess rainfall')
+ax2.axhline(y=Ia_inches, color='gray', linestyle='--', linewidth=1.5,
+            label=f'Initial abstraction = {Ia_inches:.2f} in')
+ax2.fill_between(time_series, 0, excess_rainfall, color='darkred', alpha=0.2)
+ax2.set_xlabel('Time (hours)', fontsize=11)
+ax2.set_ylabel('Cumulative depth (inches)', fontsize=11)
+ax2.set_title(f'Cumulative Rainfall and Runoff (Runoff coefficient = {runoff_coefficient:.3f})', fontsize=12)
+ax2.legend(fontsize=10, loc='upper left')
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, storm_duration)
+ax2.set_ylim(0, total_rainfall * 1.1)
+
 plt.tight_layout()
-plt.savefig('rainfall_runoff_plot5.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('rainfall_runoff_scs_cn.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{rainfall_runoff_plot5.pdf}
-\caption{Statistical distribution analysis.}
+\includegraphics[width=0.95\textwidth]{rainfall_runoff_scs_cn.pdf}
+\caption{SCS Curve Number method applied to Type II design storm showing (top) rainfall
+hyetograph with incremental rainfall intensity and excess rainfall intensity, and (bottom)
+cumulative rainfall and runoff depths. The curve number CN = \py{CN} represents suburban
+residential land use with moderate runoff potential. Initial abstraction $I_a$ = \py{f"{Ia_inches:.2f}"}
+inches must be satisfied before runoff begins, resulting in a runoff coefficient of
+\py{f"{runoff_coefficient:.3f}"}, indicating that \py{f"{runoff_coefficient*100:.1f}"}\%
+of total precipitation becomes direct runoff. The nonlinear relationship between rainfall
+and runoff is evident in the cumulative plot, with runoff generation accelerating once
+initial abstraction is exceeded.}
+\label{fig:scs_cn}
 \end{figure}
 
-\section{Time Series}
+\subsection{Synthetic Unit Hydrograph Development}
+
+Using the time of concentration and drainage area, we develop a synthetic unit hydrograph
+based on the Nash cascade model. The Nash model parameters are calibrated to match typical
+watershed response characteristics for small urban basins. We use $N = 3$ reservoirs to
+represent the storage-routing behavior of the watershed, which provides a realistic shape
+with moderate skewness. The storage coefficient $K$ is derived from the time of concentration
+using empirical relationships for urban watersheds.
 
 \begin{pycode}
-t = np.linspace(0, 100, 1000)
-signal = np.sin(0.5*t) + 0.5*np.sin(2*t) + 0.3*np.random.randn(len(t))
+# Nash cascade parameters
+N_reservoirs = 3  # Number of linear reservoirs
+lag_time = 0.6 * time_of_concentration  # Lag time approximation
 
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(t, signal, 'b-', linewidth=0.5, alpha=0.7)
-ax.set_xlabel('Time')
-ax.set_ylabel('Signal')
-ax.set_title('Time Series Data')
+# Storage coefficient K from time to peak relationship
+# For Nash model: tp ≈ K(N-1) for N > 1
+K_hours = lag_time / (N_reservoirs - 1) if N_reservoirs > 1 else lag_time
+
+# Time array for unit hydrograph (extended beyond storm)
+time_uh = np.arange(0, 12, dt)
+
+# Nash IUH function
+def nash_iuh(t, K, N):
+    """Nash instantaneous unit hydrograph"""
+    if t <= 0:
+        return 0
+    return (1 / (K * gamma(N))) * ((t / K)**(N - 1)) * np.exp(-t / K)
+
+# Generate instantaneous unit hydrograph
+iuh = np.array([nash_iuh(t, K_hours, N_reservoirs) for t in time_uh])
+
+# Convert IUH to unit hydrograph for duration D = dt
+# UH(t) ≈ IUH(t) * dt for small dt
+unit_hydrograph = iuh * dt
+
+# Normalize to ensure sum equals 1 inch over drainage area
+uh_sum = np.sum(unit_hydrograph)
+if uh_sum > 0:
+    unit_hydrograph = unit_hydrograph / uh_sum
+
+# Convert to flow units (cfs per inch of excess rainfall)
+# Q (cfs) = Depth (in) * Area (sq mi) * 640 acres/sq mi * 43560 sq ft/acre / (duration * 3600 s/hr)
+conversion_factor = drainage_area * 640 * 43560 / (dt * 3600)
+unit_hydrograph_cfs = unit_hydrograph * conversion_factor
+
+# Calculate unit hydrograph properties
+peak_uh = np.max(unit_hydrograph_cfs)
+time_to_peak_uh = time_uh[np.argmax(unit_hydrograph_cfs)]
+base_time_idx = np.where(unit_hydrograph_cfs > 0.01 * peak_uh)[0]
+base_time_uh = time_uh[base_time_idx[-1]] if len(base_time_idx) > 0 else time_uh[-1]
+
+# Plot unit hydrograph
+fig2, ax = plt.subplots(figsize=(12, 7))
+ax.fill_between(time_uh, 0, unit_hydrograph_cfs, color='steelblue', alpha=0.3, label='UH area')
+ax.plot(time_uh, unit_hydrograph_cfs, 'b-', linewidth=2.5, label=f'Unit hydrograph (D = {dt} hr)')
+ax.axvline(x=time_to_peak_uh, color='red', linestyle='--', linewidth=1.5,
+           label=f'Time to peak = {time_to_peak_uh:.2f} hr')
+ax.axhline(y=peak_uh, color='red', linestyle=':', linewidth=1.5, alpha=0.7)
+ax.scatter([time_to_peak_uh], [peak_uh], s=100, c='red', zorder=5, edgecolor='black')
+
+# Add annotations
+ax.annotate(f'Peak = {peak_uh:.0f} cfs',
+            xy=(time_to_peak_uh, peak_uh), xytext=(time_to_peak_uh + 1.5, peak_uh + 50),
+            arrowprops=dict(arrowstyle='->', color='red', lw=1.5),
+            fontsize=11, color='red', weight='bold')
+
+ax.set_xlabel('Time (hours)', fontsize=12)
+ax.set_ylabel('Discharge (cfs per inch of excess rainfall)', fontsize=12)
+ax.set_title(f'Synthetic Unit Hydrograph - Nash Cascade Model (N = {N_reservoirs}, K = {K_hours:.2f} hr)',
+             fontsize=13)
+ax.legend(fontsize=11, loc='upper right')
 ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 10)
+ax.set_ylim(0, peak_uh * 1.2)
+
 plt.tight_layout()
-plt.savefig('rainfall_runoff_plot6.pdf', dpi=150, bbox_inches='tight')
+plt.savefig('rainfall_runoff_unit_hydrograph.pdf', dpi=150, bbox_inches='tight')
 plt.close()
 \end{pycode}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{rainfall_runoff_plot6.pdf}
-\caption{Time series visualization.}
+\includegraphics[width=0.95\textwidth]{rainfall_runoff_unit_hydrograph.pdf}
+\caption{Synthetic unit hydrograph derived from Nash cascade model with N = \py{N_reservoirs}
+linear reservoirs and storage coefficient K = \py{f"{K_hours:.2f}"} hours. The unit hydrograph
+represents the direct runoff response to 1 inch of excess rainfall uniformly distributed over
+the \py{f"{drainage_area:.1f}"} square mile watershed during a \py{dt}-hour duration. Peak
+discharge occurs at \py{f"{time_to_peak_uh:.2f}"} hours with magnitude \py{f"{peak_uh:.0f}"}
+cfs per inch of excess rainfall. The base time is approximately \py{f"{base_time_uh:.1f}"}
+hours, indicating the duration of direct runoff. The shape exhibits characteristic rising limb,
+sharp peak, and gradual recession typical of small urban watersheds with rapid concentration
+and moderate storage effects.}
+\label{fig:unit_hydrograph}
+\end{figure}
+
+\subsection{Direct Runoff Hydrograph by Convolution}
+
+We now apply discrete convolution of the excess rainfall hyetograph with the unit hydrograph
+to generate the complete direct runoff hydrograph. This demonstrates the superposition principle,
+where each increment of excess rainfall generates its own hydrograph following the unit hydrograph
+shape, and all individual responses are summed to produce the total watershed response. The
+convolution process accounts for the temporal distribution of rainfall intensity and the storage-
+routing characteristics of the watershed.
+
+\begin{pycode}
+# Extend time series to accommodate full hydrograph
+time_total = np.arange(0, storm_duration + base_time_uh + dt, dt)
+
+# Extend excess rainfall array with zeros
+excess_extended = np.zeros(len(time_total))
+excess_extended[:len(excess_incremental)] = excess_incremental
+
+# Extend unit hydrograph to match length
+uh_extended = np.zeros(len(time_total))
+uh_length = min(len(unit_hydrograph_cfs), len(uh_extended))
+uh_extended[:uh_length] = unit_hydrograph_cfs[:uh_length]
+
+# Perform discrete convolution
+# Q(n) = sum(P(m) * U(n-m+1)) for m = 1 to n
+direct_runoff = np.zeros(len(time_total))
+for n in range(len(time_total)):
+    for m in range(n + 1):
+        if m < len(excess_extended) and (n - m) < len(uh_extended):
+            direct_runoff[n] += excess_extended[m] * uh_extended[n - m]
+
+# Calculate peak discharge and time to peak
+peak_discharge = np.max(direct_runoff)
+time_to_peak = time_total[np.argmax(direct_runoff)]
+
+# Calculate runoff volume
+runoff_volume_cf = np.sum(direct_runoff) * dt * 3600  # cubic feet
+runoff_volume_inches = runoff_volume_cf / (drainage_area * 640 * 43560)
+
+# Add baseflow (simplified constant baseflow)
+baseflow = 15.0  # cfs
+total_streamflow = direct_runoff + baseflow
+
+# Calculate centroid of excess rainfall and runoff
+excess_centroid = np.sum(time_series[:len(excess_incremental)] * excess_incremental) / np.sum(excess_incremental) if np.sum(excess_incremental) > 0 else 0
+runoff_centroid = np.sum(time_total * direct_runoff * dt) / np.sum(direct_runoff * dt) if np.sum(direct_runoff * dt) > 0 else 0
+lag_time_computed = runoff_centroid - excess_centroid
+
+# Plot direct runoff hydrograph
+fig3, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+
+# Rainfall and runoff
+ax1_twin = ax1.twinx()
+ax1_twin.bar(time_series, rainfall_incremental / dt, width=dt*0.9,
+             color='steelblue', alpha=0.4, edgecolor='black', linewidth=0.5)
+ax1_twin.bar(time_series, excess_incremental / dt, width=dt*0.9,
+             color='darkred', alpha=0.5, edgecolor='black', linewidth=0.7)
+ax1_twin.set_ylabel('Rainfall intensity (in/hr)', fontsize=11, color='steelblue')
+ax1_twin.tick_params(axis='y', labelcolor='steelblue')
+ax1_twin.set_ylim(0, np.max(rainfall_incremental / dt) * 2.5)
+ax1_twin.invert_yaxis()
+
+ax1.fill_between(time_total, 0, direct_runoff, color='navy', alpha=0.3, label='Direct runoff')
+ax1.plot(time_total, direct_runoff, 'b-', linewidth=2.5, label='Direct runoff hydrograph')
+ax1.axvline(x=time_to_peak, color='red', linestyle='--', linewidth=1.5,
+            label=f'Time to peak = {time_to_peak:.2f} hr')
+ax1.axhline(y=peak_discharge, color='red', linestyle=':', linewidth=1.5, alpha=0.7)
+ax1.scatter([time_to_peak], [peak_discharge], s=120, c='red', zorder=5,
+            edgecolor='black', linewidth=1.5)
+ax1.annotate(f'$Q_p$ = {peak_discharge:.0f} cfs',
+             xy=(time_to_peak, peak_discharge), xytext=(time_to_peak + 1.5, peak_discharge * 0.85),
+             arrowprops=dict(arrowstyle='->', color='red', lw=1.5),
+             fontsize=12, color='red', weight='bold')
+
+ax1.set_xlabel('Time (hours)', fontsize=11)
+ax1.set_ylabel('Discharge (cfs)', fontsize=11)
+ax1.set_title('Direct Runoff Hydrograph from Convolution of Excess Rainfall with Unit Hydrograph',
+              fontsize=13)
+ax1.legend(fontsize=10, loc='upper right')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, storm_duration + base_time_uh)
+ax1.set_ylim(0, peak_discharge * 1.3)
+
+# Total streamflow with baseflow
+ax2.fill_between(time_total, baseflow, total_streamflow, color='navy', alpha=0.3, label='Direct runoff')
+ax2.fill_between(time_total, 0, baseflow, color='lightblue', alpha=0.5, label='Baseflow')
+ax2.plot(time_total, total_streamflow, 'b-', linewidth=2.5, label='Total streamflow')
+ax2.plot(time_total, np.ones_like(time_total) * baseflow, 'c--', linewidth=1.5, label=f'Baseflow = {baseflow} cfs')
+ax2.axvline(x=time_to_peak, color='red', linestyle='--', linewidth=1.5, alpha=0.7)
+ax2.scatter([time_to_peak], [peak_discharge + baseflow], s=120, c='red', zorder=5,
+            edgecolor='black', linewidth=1.5)
+
+ax2.set_xlabel('Time (hours)', fontsize=11)
+ax2.set_ylabel('Discharge (cfs)', fontsize=11)
+ax2.set_title(f'Total Streamflow Hydrograph (Direct Runoff + Baseflow)', fontsize=13)
+ax2.legend(fontsize=10, loc='upper right')
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, storm_duration + base_time_uh)
+ax2.set_ylim(0, (peak_discharge + baseflow) * 1.2)
+
+plt.tight_layout()
+plt.savefig('rainfall_runoff_hydrograph.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{rainfall_runoff_hydrograph.pdf}
+\caption{Direct runoff hydrograph generated by discrete convolution of excess rainfall
+with the unit hydrograph (top panel) and complete streamflow hydrograph including baseflow
+(bottom panel). The peak discharge $Q_p$ = \py{f"{peak_discharge:.0f}"} cfs occurs at
+$t_p$ = \py{f"{time_to_peak:.2f}"} hours, demonstrating the lag between peak rainfall
+intensity and peak watershed response. The computed lag time is \py{f"{lag_time_computed:.2f}"}
+hours, measured between the centroids of excess rainfall and direct runoff. Total runoff
+volume is \py{f"{runoff_volume_inches:.2f}"} inches, which matches the excess rainfall
+calculated by the SCS-CN method, validating the convolution procedure. The hydrograph shape
+exhibits rapid rise following intense rainfall, sustained peak during the main storm period,
+and exponential recession characteristic of the Nash cascade routing. Baseflow contribution
+of \py{baseflow} cfs represents the pre-storm groundwater contribution to streamflow.}
+\label{fig:runoff_hydrograph}
+\end{figure}
+
+\section{Sensitivity Analysis}
+
+\subsection{Effect of Curve Number on Runoff}
+
+The curve number exerts strong control on runoff generation, with small changes in CN
+producing significant changes in total runoff volume and peak discharge. We analyze
+watershed response across a range of curve numbers representing different land use
+conditions, from forested areas (low CN) to highly urbanized basins (high CN). This
+sensitivity is particularly important for assessing the hydrologic impacts of land
+development and urban sprawl.
+
+\begin{pycode}
+# Analyze sensitivity to curve number
+CN_values = [60, 65, 70, 75, 80, 85, 90]  # Range from forest to urban
+colors_cn = plt.cm.viridis(np.linspace(0.1, 0.9, len(CN_values)))
+
+fig4, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
+
+# Store results for each CN
+peak_discharges_cn = []
+runoff_coeffs = []
+times_to_peak_cn = []
+
+for i, CN_test in enumerate(CN_values):
+    # Calculate excess rainfall for this CN
+    S_test = 1000/CN_test - 10
+    Ia_test = 0.2 * S_test
+
+    excess_test = np.zeros_like(cum_rainfall_series)
+    for j in range(len(cum_rainfall_series)):
+        P = cum_rainfall_series[j]
+        if P > Ia_test:
+            Q = ((P - Ia_test)**2) / (P - Ia_test + S_test)
+            excess_test[j] = Q
+
+    excess_incr_test = np.diff(excess_test, prepend=0)
+
+    # Convolution
+    excess_ext_test = np.zeros(len(time_total))
+    excess_ext_test[:len(excess_incr_test)] = excess_incr_test
+
+    runoff_test = np.zeros(len(time_total))
+    for n in range(len(time_total)):
+        for m in range(n + 1):
+            if m < len(excess_ext_test) and (n - m) < len(uh_extended):
+                runoff_test[n] += excess_ext_test[m] * uh_extended[n - m]
+
+    peak_q = np.max(runoff_test)
+    peak_discharges_cn.append(peak_q)
+    runoff_coeffs.append(excess_test[-1] / total_rainfall if total_rainfall > 0 else 0)
+    times_to_peak_cn.append(time_total[np.argmax(runoff_test)])
+
+    # Plot hydrograph
+    ax1.plot(time_total, runoff_test, color=colors_cn[i], linewidth=2,
+             label=f'CN = {CN_test}', alpha=0.8)
+
+    # Plot cumulative runoff
+    ax2.plot(time_total, np.cumsum(runoff_test) * dt * 3600 / (drainage_area * 640 * 43560),
+             color=colors_cn[i], linewidth=2, label=f'CN = {CN_test}', alpha=0.8)
+
+# Peak discharge vs CN
+ax3.plot(CN_values, peak_discharges_cn, 'o-', color='darkblue', linewidth=2.5,
+         markersize=8, markerfacecolor='steelblue', markeredgecolor='black', markeredgewidth=1.5)
+ax3.set_xlabel('Curve Number (CN)', fontsize=11)
+ax3.set_ylabel('Peak discharge (cfs)', fontsize=11)
+ax3.set_title('Peak Discharge vs. Curve Number', fontsize=12)
+ax3.grid(True, alpha=0.3)
+
+# Runoff coefficient vs CN
+ax4.plot(CN_values, runoff_coeffs, 's-', color='darkred', linewidth=2.5,
+         markersize=8, markerfacecolor='coral', markeredgecolor='black', markeredgewidth=1.5)
+ax4.set_xlabel('Curve Number (CN)', fontsize=11)
+ax4.set_ylabel('Runoff coefficient', fontsize=11)
+ax4.set_title('Runoff Coefficient vs. Curve Number', fontsize=12)
+ax4.grid(True, alpha=0.3)
+ax4.set_ylim(0, 1)
+
+ax1.set_xlabel('Time (hours)', fontsize=11)
+ax1.set_ylabel('Discharge (cfs)', fontsize=11)
+ax1.set_title('Effect of Curve Number on Hydrograph Shape', fontsize=12)
+ax1.legend(fontsize=9, loc='upper right')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 15)
+
+ax2.set_xlabel('Time (hours)', fontsize=11)
+ax2.set_ylabel('Cumulative runoff depth (inches)', fontsize=11)
+ax2.set_title('Cumulative Direct Runoff Depth', fontsize=12)
+ax2.legend(fontsize=9, loc='lower right')
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, 15)
+
+plt.tight_layout()
+plt.savefig('rainfall_runoff_cn_sensitivity.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Calculate CN sensitivity metrics
+CN_mid_idx = len(CN_values) // 2
+dQ_dCN = (peak_discharges_cn[-1] - peak_discharges_cn[0]) / (CN_values[-1] - CN_values[0])
+relative_change = (peak_discharges_cn[-1] - peak_discharges_cn[0]) / peak_discharges_cn[0] * 100
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.98\textwidth]{rainfall_runoff_cn_sensitivity.pdf}
+\caption{Sensitivity of watershed response to curve number variation from CN = 60 (forested,
+permeable soils) to CN = 90 (heavily urbanized, impervious surfaces). Top left panel shows
+direct runoff hydrographs demonstrating dramatic increases in peak discharge and runoff volume
+with increasing CN. Top right panel displays cumulative runoff depth, illustrating how
+urbanization increases total runoff. Bottom panels quantify peak discharge sensitivity
+(slope = \py{f"{dQ_dCN:.1f}"} cfs per CN unit) and runoff coefficient progression from
+\py{f"{runoff_coeffs[0]:.2f}"} to \py{f"{runoff_coeffs[-1]:.2f}"}. The \py{f"{relative_change:.0f}"}\%
+increase in peak discharge from CN = 60 to CN = 90 demonstrates the profound hydrologic impact
+of urbanization, with corresponding increases in flood risk and reduced groundwater recharge.}
+\label{fig:cn_sensitivity}
+\end{figure}
+
+\subsection{Effect of Time of Concentration}
+
+Time of concentration affects both the unit hydrograph shape and watershed response timing.
+Shorter times of concentration, typical of urbanized or steep watersheds, produce higher,
+sharper peaks with reduced lag time. Longer times of concentration, characteristic of flat
+rural watersheds with longer flow paths, produce attenuated hydrographs with delayed peaks.
+We examine this sensitivity by varying the Nash model storage coefficient while maintaining
+constant excess rainfall.
+
+\begin{pycode}
+# Analyze sensitivity to time of concentration
+tc_values = [0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8]  # hours
+colors_tc = plt.cm.plasma(np.linspace(0.1, 0.9, len(tc_values)))
+
+fig5, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
+
+peak_discharges_tc = []
+times_to_peak_tc = []
+
+for i, tc_test in enumerate(tc_values):
+    # Recalculate unit hydrograph with new tc
+    lag_test = 0.6 * tc_test
+    K_test = lag_test / (N_reservoirs - 1) if N_reservoirs > 1 else lag_test
+
+    iuh_test = np.array([nash_iuh(t, K_test, N_reservoirs) for t in time_uh])
+    uh_test = iuh_test * dt
+    uh_sum_test = np.sum(uh_test)
+    if uh_sum_test > 0:
+        uh_test = uh_test / uh_sum_test
+    uh_test_cfs = uh_test * conversion_factor
+
+    # Extend for convolution
+    uh_ext_test = np.zeros(len(time_total))
+    uh_length_test = min(len(uh_test_cfs), len(uh_ext_test))
+    uh_ext_test[:uh_length_test] = uh_test_cfs[:uh_length_test]
+
+    # Convolution with original excess rainfall
+    runoff_tc_test = np.zeros(len(time_total))
+    for n in range(len(time_total)):
+        for m in range(n + 1):
+            if m < len(excess_extended) and (n - m) < len(uh_ext_test):
+                runoff_tc_test[n] += excess_extended[m] * uh_ext_test[n - m]
+
+    peak_q_tc = np.max(runoff_tc_test)
+    peak_discharges_tc.append(peak_q_tc)
+    times_to_peak_tc.append(time_total[np.argmax(runoff_tc_test)])
+
+    # Plot unit hydrograph
+    ax1.plot(time_uh, uh_test_cfs, color=colors_tc[i], linewidth=2,
+             label=f'$t_c$ = {tc_test} hr', alpha=0.8)
+
+    # Plot runoff hydrograph
+    ax2.plot(time_total, runoff_tc_test, color=colors_tc[i], linewidth=2,
+             label=f'$t_c$ = {tc_test} hr', alpha=0.8)
+
+# Peak discharge vs tc
+ax3.plot(tc_values, peak_discharges_tc, 'o-', color='darkblue', linewidth=2.5,
+         markersize=8, markerfacecolor='steelblue', markeredgecolor='black', markeredgewidth=1.5)
+ax3.set_xlabel('Time of concentration (hours)', fontsize=11)
+ax3.set_ylabel('Peak discharge (cfs)', fontsize=11)
+ax3.set_title('Peak Discharge vs. Time of Concentration', fontsize=12)
+ax3.grid(True, alpha=0.3)
+
+# Time to peak vs tc
+ax4.plot(tc_values, times_to_peak_tc, 's-', color='darkred', linewidth=2.5,
+         markersize=8, markerfacecolor='coral', markeredgecolor='black', markeredgewidth=1.5)
+ax4.plot(tc_values, tc_values, 'k--', linewidth=1.5, alpha=0.5, label='1:1 line')
+ax4.set_xlabel('Time of concentration (hours)', fontsize=11)
+ax4.set_ylabel('Time to peak discharge (hours)', fontsize=11)
+ax4.set_title('Time to Peak vs. Time of Concentration', fontsize=12)
+ax4.legend(fontsize=10)
+ax4.grid(True, alpha=0.3)
+
+ax1.set_xlabel('Time (hours)', fontsize=11)
+ax1.set_ylabel('Discharge (cfs per inch)', fontsize=11)
+ax1.set_title('Unit Hydrographs for Different $t_c$', fontsize=12)
+ax1.legend(fontsize=9, loc='upper right')
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(0, 8)
+
+ax2.set_xlabel('Time (hours)', fontsize=11)
+ax2.set_ylabel('Discharge (cfs)', fontsize=11)
+ax2.set_title('Runoff Hydrographs for Different $t_c$', fontsize=12)
+ax2.legend(fontsize=9, loc='upper right')
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(0, 15)
+
+plt.tight_layout()
+plt.savefig('rainfall_runoff_tc_sensitivity.pdf', dpi=150, bbox_inches='tight')
+plt.close()
+
+# Calculate inverse relationship strength
+from scipy.stats import linregress
+slope_tc, intercept_tc, r_tc, p_tc, se_tc = linregress(tc_values, peak_discharges_tc)
+\end{pycode}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.98\textwidth]{rainfall_runoff_tc_sensitivity.pdf}
+\caption{Sensitivity of watershed response to time of concentration $t_c$ ranging from
+0.6 hours (highly urbanized, steep watershed) to 1.8 hours (rural, mild slopes). Top left
+shows unit hydrographs becoming more attenuated and delayed with increasing $t_c$. Top right
+displays corresponding runoff hydrographs exhibiting the inverse relationship between $t_c$
+and peak discharge. Bottom left quantifies this relationship with regression slope
+\py{f"{slope_tc:.1f}"} cfs/hour (R² = \py{f"{r_tc**2:.3f}"}), demonstrating that shorter
+concentration times produce \py{f"{abs(peak_discharges_tc[0] - peak_discharges_tc[-1]):.0f}"}
+cfs higher peaks. Bottom right shows time to peak increases approximately linearly with $t_c$,
+though storm timing also influences this relationship. These results have critical implications
+for urban drainage design and flood mitigation.}
+\label{fig:tc_sensitivity}
 \end{figure}
 
 \section{Results Summary}
 
 \begin{pycode}
-results = [
-    ['Parameter A', '3.14'],
-    ['Parameter B', '2.71'],
-    ['Parameter C', '1.41'],
-]
-
-print(r'\\begin{table}[H]')
-print(r'\\centering')
-print(r'\\caption{Computed Results}')
-print(r'\\begin{tabular}{@{}lc@{}}')
-print(r'\\toprule')
-print(r'Parameter & Value \\\\')
-print(r'\\midrule')
-for row in results:
-    print(f"{row[0]} & {row[1]} \\\\\\\\")
-print(r'\\bottomrule')
-print(r'\\end{tabular}')
-print(r'\\end{table}')
+print(r"\begin{table}[htbp]")
+print(r"\centering")
+print(r"\caption{Summary of Rainfall-Runoff Analysis Results}")
+print(r"\begin{tabular}{lcc}")
+print(r"\toprule")
+print(r"\textbf{Parameter} & \textbf{Value} & \textbf{Units} \\")
+print(r"\midrule")
+print(r"\multicolumn{3}{l}{\textit{Watershed Characteristics}} \\")
+print(f"Drainage area & {drainage_area:.2f} & sq mi \\\\")
+print(f"Time of concentration & {time_of_concentration:.2f} & hr \\\\")
+print(f"Curve number (CN) & {CN} & --- \\\\")
+print(f"Maximum retention (S) & {S_inches:.2f} & in \\\\")
+print(f"Initial abstraction ($I_a$) & {Ia_inches:.2f} & in \\\\")
+print(r"\midrule")
+print(r"\multicolumn{3}{l}{\textit{Design Storm}} \\")
+print(f"Total rainfall depth & {total_rainfall:.2f} & in \\\\")
+print(f"Storm duration & {storm_duration:.1f} & hr \\\\")
+print(f"Distribution type & SCS Type II & --- \\\\")
+print(r"\midrule")
+print(r"\multicolumn{3}{l}{\textit{Runoff Generation}} \\")
+print(f"Total excess rainfall & {total_excess:.2f} & in \\\\")
+print(f"Runoff coefficient & {runoff_coefficient:.3f} & --- \\\\")
+print(f"Runoff volume & {runoff_volume_cf:.0f} & cu ft \\\\")
+print(r"\midrule")
+print(r"\multicolumn{3}{l}{\textit{Unit Hydrograph}} \\")
+print(f"Nash N parameter & {N_reservoirs} & --- \\\\")
+print(f"Storage coefficient (K) & {K_hours:.2f} & hr \\\\")
+print(f"Peak UH discharge & {peak_uh:.0f} & cfs/in \\\\")
+print(f"Time to peak (UH) & {time_to_peak_uh:.2f} & hr \\\\")
+print(f"Base time & {base_time_uh:.1f} & hr \\\\")
+print(r"\midrule")
+print(r"\multicolumn{3}{l}{\textit{Direct Runoff Hydrograph}} \\")
+print(f"Peak discharge & {peak_discharge:.0f} & cfs \\\\")
+print(f"Time to peak & {time_to_peak:.2f} & hr \\\\")
+print(f"Lag time & {lag_time_computed:.2f} & hr \\\\")
+print(r"\bottomrule")
+print(r"\end{tabular}")
+print(r"\label{tab:results}")
+print(r"\end{table}")
 \end{pycode}
+
+\section{Discussion}
+
+\subsection{Hydrologic Insights}
+
+The analysis demonstrates several key principles of rainfall-runoff transformation:
+
+\begin{enumerate}
+\item \textbf{Nonlinear losses}: The SCS-CN method captures the nonlinear relationship
+between precipitation and runoff, with runoff coefficient increasing from near-zero for
+small storms to asymptotically approaching $(1 - I_a/P)$ for large storms.
+
+\item \textbf{Watershed routing}: The Nash cascade model provides a parsimonious representation
+of watershed storage and routing effects with physically meaningful parameters (N and K)
+related to watershed geomorphology.
+
+\item \textbf{Peak attenuation}: The convolution process demonstrates how watershed storage
+attenuates and delays the runoff response relative to rainfall input, with peak discharge
+occurring \py{f"{lag_time_computed:.2f}"} hours after the rainfall centroid.
+
+\item \textbf{Land use sensitivity}: The CN sensitivity analysis quantifies the dramatic
+impact of urbanization on flood potential, with peak discharge increasing by
+\py{f"{relative_change:.0f}"}\% when CN increases from 60 to 90.
+\end{enumerate}
+
+\subsection{Engineering Applications}
+
+These methods provide the foundation for:
+
+\begin{itemize}
+\item \textbf{Flood frequency analysis}: Design hydrographs for culvert and bridge sizing
+\item \textbf{Stormwater management}: Detention basin sizing and outlet design
+\item \textbf{Urban drainage}: Storm sewer network design and analysis
+\item \textbf{Regulatory compliance}: Post-development runoff not exceeding pre-development conditions
+\item \textbf{Watershed planning}: Assessing hydrologic impacts of land use changes
+\end{itemize}
+
+\subsection{Method Limitations}
+
+Important assumptions and limitations include:
+
+\begin{remark}[Model Assumptions]
+\begin{itemize}
+\item \textbf{Spatial uniformity}: Rainfall and watershed properties assumed spatially uniform
+\item \textbf{Temporal invariance}: Unit hydrograph assumed constant for all storm events
+\item \textbf{Linearity}: Superposition assumes linear watershed response
+\item \textbf{Empiricism}: SCS-CN method is empirical, calibrated to agricultural watersheds
+\item \textbf{Initial conditions}: Antecedent moisture significantly affects CN selection
+\end{itemize}
+\end{remark}
+
+For large or heterogeneous watersheds, distributed hydrologic models may be more appropriate.
 
 \section{Conclusions}
 
-This analysis demonstrates the computational approach to rainfall runoff.
+This comprehensive analysis of rainfall-runoff transformation demonstrates the coupled
+application of the SCS Curve Number method and unit hydrograph theory for watershed response
+prediction. Key findings include:
+
+\begin{enumerate}
+\item For the \py{f"{drainage_area:.1f}"} square mile urban watershed with CN = \py{CN},
+the \py{total_rainfall}-inch design storm produces peak discharge $Q_p$ = \py{f"{peak_discharge:.0f}"}
+cfs occurring at $t_p$ = \py{f"{time_to_peak:.2f}"} hours.
+
+\item The runoff coefficient of \py{f"{runoff_coefficient:.3f}"} indicates that
+\py{f"{runoff_coefficient*100:.1f}"}\% of total precipitation becomes direct runoff, with
+\py{f"{Ia_inches:.2f}"} inches lost to initial abstraction and \py{f"{S_inches:.2f}"}
+inches to continuing infiltration and retention.
+
+\item The Nash cascade unit hydrograph with N = \py{N_reservoirs} reservoirs and K =
+\py{f"{K_hours:.2f}"} hours accurately represents the storage-routing characteristics
+of small urban watersheds, producing realistic hydrograph shape and timing.
+
+\item Sensitivity analysis reveals peak discharge varies from \py{f"{peak_discharges_cn[0]:.0f}"}
+to \py{f"{peak_discharges_cn[-1]:.0f}"} cfs across the CN range 60-90, emphasizing the
+critical importance of land use in flood generation and the need for effective stormwater
+management in developing areas.
+
+\item Time of concentration exerts strong control on hydrograph attenuation, with the
+inverse relationship between $t_c$ and peak discharge (slope = \py{f"{slope_tc:.1f}"}
+cfs/hour) demonstrating why urbanization (which reduces $t_c$) amplifies flood peaks.
+\end{enumerate}
+
+These methods provide essential tools for hydrologic engineering practice, enabling
+quantitative assessment of watershed response to design storms for infrastructure planning,
+flood mitigation, and environmental protection.
+
+\section*{References}
+
+\begin{enumerate}
+\item Sherman, L.K. (1932). Streamflow from rainfall by the unit-graph method.
+\textit{Engineering News-Record}, 108, 501-505.
+
+\item Soil Conservation Service (1985). \textit{National Engineering Handbook, Section 4: Hydrology}.
+U.S. Department of Agriculture, Washington, D.C.
+
+\item Chow, V.T., Maidment, D.R., and Mays, L.W. (1988). \textit{Applied Hydrology}.
+McGraw-Hill, New York.
+
+\item Nash, J.E. (1957). The form of the instantaneous unit hydrograph.
+\textit{International Association of Scientific Hydrology, Publication}, 45(3), 114-121.
+
+\item Hawkins, R.H., Ward, T.J., Woodward, D.E., and Van Mullem, J.A. (2009).
+\textit{Curve Number Hydrology: State of the Practice}. American Society of Civil Engineers.
+
+\item Natural Resources Conservation Service (2010). \textit{National Engineering Handbook,
+Part 630: Hydrology}. U.S. Department of Agriculture.
+
+\item Dooge, J.C.I. (1973). Linear theory of hydrologic systems. \textit{Technical Bulletin
+No. 1468}, Agricultural Research Service, U.S. Department of Agriculture.
+
+\item McCuen, R.H. (2016). \textit{Hydrologic Analysis and Design}, 4th ed. Pearson, Upper Saddle River, NJ.
+
+\item Singh, V.P. (1988). \textit{Hydrologic Systems: Rainfall-Runoff Modeling}, Volume I.
+Prentice Hall, Englewood Cliffs, NJ.
+
+\item Viessman, W. and Lewis, G.L. (2003). \textit{Introduction to Hydrology}, 5th ed.
+Pearson Education, Upper Saddle River, NJ.
+
+\item Ponce, V.M. (1989). \textit{Engineering Hydrology: Principles and Practices}.
+Prentice Hall, Englewood Cliffs, NJ.
+
+\item USDA-NRCS (2004). Estimation of direct runoff from storm rainfall. In \textit{National
+Engineering Handbook Part 630}, Chapter 10. U.S. Department of Agriculture.
+
+\item Mishra, S.K. and Singh, V.P. (2003). \textit{Soil Conservation Service Curve Number (SCS-CN)
+Methodology}. Kluwer Academic Publishers, Dordrecht.
+
+\item Singh, V.P. (1992). \textit{Elementary Hydrology}. Prentice Hall, Englewood Cliffs, NJ.
+
+\item Hjelmfelt, A.T. (1991). Investigation of curve number procedure. \textit{Journal of
+Hydraulic Engineering}, 117(6), 725-737.
+
+\item Mockus, V. (1949). Estimation of total (and peak rates of) surface runoff for individual
+storms. \textit{Exhibit A of Appendix B, Interim Survey Report, Grand (Neosho) River Watershed},
+U.S. Department of Agriculture.
+
+\item Snyder, F.F. (1938). Synthetic unit-graphs. \textit{Transactions of the American Geophysical
+Union}, 19, 447-454.
+
+\item U.S. Army Corps of Engineers (2000). \textit{Hydrologic Modeling System HEC-HMS: Technical
+Reference Manual}. Hydrologic Engineering Center, Davis, CA.
+
+\item Singh, V.P. and Frevert, D.K. (2006). \textit{Watershed Models}. CRC Press, Boca Raton, FL.
+
+\item Beven, K.J. (2012). \textit{Rainfall-Runoff Modelling: The Primer}, 2nd ed. Wiley-Blackwell,
+Chichester, UK.
+\end{enumerate}
 
 \end{document}
