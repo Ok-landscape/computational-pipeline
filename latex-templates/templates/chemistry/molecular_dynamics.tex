@@ -1,0 +1,702 @@
+\documentclass[11pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{pythontex}
+\usepackage[margin=1in]{geometry}
+
+% Custom commands
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\ee}{\mathrm{e}}
+\newcommand{\vect}[1]{\mathbf{#1}}
+
+% Document metadata
+\title{Molecular Dynamics Simulation:\\From Lennard-Jones Potentials to Thermodynamic Properties}
+\author{Computational Chemistry}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Molecular dynamics (MD) simulations provide atomistic insight into the behavior of matter by solving Newton's equations of motion for systems of interacting particles. This document develops a complete MD simulation framework, starting from the Lennard-Jones potential for pairwise interactions, implementing the velocity Verlet integration algorithm, and extracting thermodynamic properties including temperature, pressure, and radial distribution functions. We simulate a simple Lennard-Jones fluid, demonstrating phase behavior and energy conservation.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%------------------------------------------------------------------------------
+\section{Introduction: Simulating Matter at the Atomic Scale}
+%------------------------------------------------------------------------------
+
+Molecular dynamics simulations bridge the gap between quantum mechanical descriptions of molecular interactions and macroscopic thermodynamic properties. By numerically solving Newton's equations of motion for a system of $N$ particles, we can:
+
+\begin{itemize}
+    \item Observe molecular-level dynamics in real time
+    \item Calculate thermodynamic properties from first principles
+    \item Study phase transitions and transport phenomena
+    \item Investigate protein folding, chemical reactions, and material properties
+\end{itemize}
+
+The fundamental algorithm is straightforward:
+\begin{enumerate}
+    \item Define interatomic potentials that describe particle interactions
+    \item Initialize positions and velocities
+    \item Compute forces on each particle: $\vect{F}_i = -\nabla_i U$
+    \item Integrate equations of motion: $\vect{F}_i = m_i \ddot{\vect{r}}_i$
+    \item Repeat, collecting statistics along the trajectory
+\end{enumerate}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Style configuration
+plt.rcParams['figure.figsize'] = (10, 6)
+plt.rcParams['font.size'] = 11
+plt.rcParams['axes.labelsize'] = 12
+plt.rcParams['axes.titlesize'] = 14
+\end{pycode}
+
+%------------------------------------------------------------------------------
+\section{The Lennard-Jones Potential}
+%------------------------------------------------------------------------------
+
+The Lennard-Jones (LJ) potential is the most widely used model for van der Waals interactions between neutral atoms:
+
+\begin{equation}
+U_{\text{LJ}}(r) = 4\varepsilon \left[\left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^{6}\right]
+\label{eq:lennard-jones}
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $\varepsilon$ is the depth of the potential well (energy scale)
+    \item $\sigma$ is the distance at which $U = 0$ (length scale)
+    \item $r$ is the interparticle distance
+\end{itemize}
+
+The $r^{-12}$ term models Pauli repulsion at short range, while the $r^{-6}$ term models the attractive London dispersion force. The potential has a minimum at $r_{\text{min}} = 2^{1/6}\sigma \approx 1.122\sigma$ with depth $-\varepsilon$.
+
+\subsection{Force Derivation}
+
+The force between particles is the negative gradient of the potential:
+
+\begin{equation}
+F_{\text{LJ}}(r) = -\frac{\dd U_{\text{LJ}}}{\dd r} = \frac{24\varepsilon}{r}\left[2\left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^{6}\right]
+\label{eq:lj-force}
+\end{equation}
+
+In vector form, the force on particle $i$ due to particle $j$ is:
+
+\begin{equation}
+\vect{F}_{ij} = F_{\text{LJ}}(r_{ij}) \frac{\vect{r}_{ij}}{r_{ij}}
+\end{equation}
+
+\begin{pycode}
+# Lennard-Jones potential and force
+def lennard_jones_potential(r, epsilon=1.0, sigma=1.0):
+    """Lennard-Jones pair potential."""
+    sr6 = (sigma / r)**6
+    sr12 = sr6**2
+    return 4 * epsilon * (sr12 - sr6)
+
+def lennard_jones_force(r, epsilon=1.0, sigma=1.0):
+    """Magnitude of Lennard-Jones force."""
+    sr6 = (sigma / r)**6
+    sr12 = sr6**2
+    return 24 * epsilon / r * (2 * sr12 - sr6)
+
+# Plot potential and force
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+r = np.linspace(0.9, 3.0, 500)
+U = lennard_jones_potential(r)
+F = lennard_jones_force(r)
+
+# Left: Potential
+ax = axes[0]
+ax.plot(r, U, 'b-', linewidth=2)
+ax.axhline(0, color='gray', linestyle='--', alpha=0.5)
+ax.axvline(2**(1/6), color='red', linestyle=':', alpha=0.7, label=r'$r_{min} = 2^{1/6}\sigma$')
+
+# Mark key points
+r_min = 2**(1/6)
+ax.plot(r_min, -1, 'ro', markersize=8)
+ax.annotate(r'$(-\varepsilon)$', xy=(r_min, -1), xytext=(r_min + 0.2, -0.7),
+            fontsize=11, color='red')
+ax.plot(1.0, 0, 'go', markersize=8)
+ax.annotate(r'$\sigma$', xy=(1.0, 0), xytext=(0.85, 0.5), fontsize=11, color='green')
+
+ax.set_xlabel(r'Distance $r/\sigma$')
+ax.set_ylabel(r'Potential $U/\varepsilon$')
+ax.set_title('Lennard-Jones Potential')
+ax.set_xlim(0.9, 3.0)
+ax.set_ylim(-1.5, 2.0)
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Right: Force
+ax = axes[1]
+ax.plot(r, F, 'r-', linewidth=2)
+ax.axhline(0, color='gray', linestyle='--', alpha=0.5)
+ax.axvline(2**(1/6), color='blue', linestyle=':', alpha=0.7)
+
+ax.fill_between(r[F > 0], 0, F[F > 0], alpha=0.3, color='red', label='Repulsive')
+ax.fill_between(r[F < 0], 0, F[F < 0], alpha=0.3, color='blue', label='Attractive')
+
+ax.set_xlabel(r'Distance $r/\sigma$')
+ax.set_ylabel(r'Force $F\sigma/\varepsilon$')
+ax.set_title('Lennard-Jones Force')
+ax.set_xlim(0.9, 3.0)
+ax.set_ylim(-3, 5)
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('molecular_dynamics_potential.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{molecular_dynamics_potential.pdf}
+\caption{The Lennard-Jones potential and its derivative. Left: The potential energy curve shows strong repulsion at short range ($r < \sigma$), a minimum at $r_{\text{min}} = 2^{1/6}\sigma$ with depth $-\varepsilon$, and asymptotic approach to zero at large distances. Right: The force is repulsive (positive) for $r < r_{\text{min}}$ and attractive (negative) for $r > r_{\text{min}}$. At the equilibrium distance $r_{\text{min}}$, the force is zero.}
+\label{fig:lj-potential}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Reduced Units}
+%------------------------------------------------------------------------------
+
+MD simulations typically use \textit{reduced units} where $\varepsilon$, $\sigma$, and the particle mass $m$ are set to unity. All quantities are then expressed in terms of these fundamental scales:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Quantity & Reduced Unit & For Argon \\
+\midrule
+Length & $\sigma$ & 3.4 \AA \\
+Energy & $\varepsilon$ & $1.65 \times 10^{-21}$ J \\
+Mass & $m$ & $6.63 \times 10^{-26}$ kg \\
+Time & $\sigma\sqrt{m/\varepsilon}$ & 2.15 ps \\
+Temperature & $\varepsilon/k_B$ & 120 K \\
+Pressure & $\varepsilon/\sigma^3$ & 42 MPa \\
+\bottomrule
+\end{tabular}
+\caption{Reduced units and their values for liquid argon.}
+\label{tab:units}
+\end{table}
+
+%------------------------------------------------------------------------------
+\section{The Velocity Verlet Algorithm}
+%------------------------------------------------------------------------------
+
+The velocity Verlet algorithm is the most popular integrator for MD due to its time-reversibility, symplectic nature, and good energy conservation:
+
+\begin{align}
+\vect{r}(t + \Delta t) &= \vect{r}(t) + \vect{v}(t)\Delta t + \frac{1}{2}\vect{a}(t)\Delta t^2 \label{eq:verlet-r}\\
+\vect{v}(t + \Delta t) &= \vect{v}(t) + \frac{1}{2}[\vect{a}(t) + \vect{a}(t + \Delta t)]\Delta t \label{eq:verlet-v}
+\end{align}
+
+where $\vect{a} = \vect{F}/m$. The algorithm proceeds as:
+\begin{enumerate}
+    \item Calculate forces at time $t$
+    \item Update positions using Eq.~\eqref{eq:verlet-r}
+    \item Calculate forces at time $t + \Delta t$
+    \item Update velocities using Eq.~\eqref{eq:verlet-v}
+\end{enumerate}
+
+\begin{pycode}
+class LennardJonesSimulation:
+    """
+    Molecular dynamics simulation of a Lennard-Jones fluid.
+
+    Uses reduced units: epsilon = sigma = mass = 1
+    """
+
+    def __init__(self, n_particles, box_length, temperature, dt=0.002, cutoff=2.5):
+        """
+        Initialize the simulation.
+
+        Parameters:
+        -----------
+        n_particles : int
+            Number of particles
+        box_length : float
+            Side length of cubic simulation box
+        temperature : float
+            Initial temperature (reduced units)
+        dt : float
+            Time step (reduced units)
+        cutoff : float
+            Potential cutoff distance
+        """
+        self.n = n_particles
+        self.L = box_length
+        self.T = temperature
+        self.dt = dt
+        self.rc = cutoff
+        self.rc2 = cutoff**2
+
+        # Potential shift for continuity at cutoff
+        self.U_shift = 4 * ((1/cutoff)**12 - (1/cutoff)**6)
+
+        # Initialize positions on a lattice
+        self.positions = self._init_lattice()
+
+        # Initialize velocities from Maxwell-Boltzmann distribution
+        self.velocities = self._init_velocities()
+
+        # Force array
+        self.forces = np.zeros_like(self.positions)
+
+        # Observables
+        self.potential_energy = 0
+        self.kinetic_energy = 0
+        self.virial = 0
+
+    def _init_lattice(self):
+        """Place particles on a simple cubic lattice."""
+        n_side = int(np.ceil(self.n**(1/3)))
+        spacing = self.L / n_side
+        positions = []
+
+        for i in range(n_side):
+            for j in range(n_side):
+                for k in range(n_side):
+                    if len(positions) < self.n:
+                        positions.append([
+                            (i + 0.5) * spacing,
+                            (j + 0.5) * spacing,
+                            (k + 0.5) * spacing
+                        ])
+
+        return np.array(positions)
+
+    def _init_velocities(self):
+        """Initialize velocities from Maxwell-Boltzmann distribution."""
+        velocities = np.random.randn(self.n, 3) * np.sqrt(self.T)
+
+        # Remove center of mass motion
+        velocities -= np.mean(velocities, axis=0)
+
+        # Scale to exact temperature
+        ke = 0.5 * np.sum(velocities**2)
+        current_T = 2 * ke / (3 * self.n)
+        velocities *= np.sqrt(self.T / current_T)
+
+        return velocities
+
+    def _minimum_image(self, dr):
+        """Apply minimum image convention for periodic boundaries."""
+        return dr - self.L * np.round(dr / self.L)
+
+    def compute_forces(self):
+        """
+        Compute forces, potential energy, and virial.
+
+        Uses the minimum image convention for periodic boundaries.
+        """
+        self.forces.fill(0)
+        self.potential_energy = 0
+        self.virial = 0
+
+        for i in range(self.n - 1):
+            for j in range(i + 1, self.n):
+                dr = self.positions[j] - self.positions[i]
+                dr = self._minimum_image(dr)
+                r2 = np.sum(dr**2)
+
+                if r2 < self.rc2:
+                    r2_inv = 1 / r2
+                    r6_inv = r2_inv**3
+                    r12_inv = r6_inv**2
+
+                    # Potential (shifted)
+                    U = 4 * (r12_inv - r6_inv) - self.U_shift
+                    self.potential_energy += U
+
+                    # Force magnitude / r
+                    f_over_r = 24 * r2_inv * (2 * r12_inv - r6_inv)
+
+                    # Force vector
+                    f = f_over_r * dr
+                    self.forces[i] -= f
+                    self.forces[j] += f
+
+                    # Virial for pressure calculation
+                    self.virial += f_over_r * r2
+
+    def velocity_verlet_step(self):
+        """Perform one velocity Verlet integration step."""
+        # Half-step velocity update
+        self.velocities += 0.5 * self.forces * self.dt
+
+        # Full position update
+        self.positions += self.velocities * self.dt
+
+        # Apply periodic boundary conditions
+        self.positions = self.positions % self.L
+
+        # Compute new forces
+        self.compute_forces()
+
+        # Complete velocity update
+        self.velocities += 0.5 * self.forces * self.dt
+
+        # Calculate kinetic energy
+        self.kinetic_energy = 0.5 * np.sum(self.velocities**2)
+
+    def get_temperature(self):
+        """Calculate instantaneous temperature."""
+        return 2 * self.kinetic_energy / (3 * self.n)
+
+    def get_pressure(self):
+        """Calculate pressure using virial theorem."""
+        density = self.n / self.L**3
+        T = self.get_temperature()
+        return density * T + self.virial / (3 * self.L**3)
+
+    def get_total_energy(self):
+        """Calculate total energy."""
+        return self.kinetic_energy + self.potential_energy
+
+    def apply_thermostat(self, target_T):
+        """Velocity rescaling thermostat."""
+        current_T = self.get_temperature()
+        if current_T > 0:
+            scale = np.sqrt(target_T / current_T)
+            self.velocities *= scale
+
+# Run a short simulation
+np.random.seed(42)
+n_particles = 108  # 4x4x4 FCC-like arrangement
+density = 0.8  # Reduced density (liquid state)
+box_length = (n_particles / density)**(1/3)
+temperature = 1.0  # Reduced temperature
+
+sim = LennardJonesSimulation(n_particles, box_length, temperature)
+sim.compute_forces()
+
+# Equilibration with thermostat
+n_equil = 500
+for _ in range(n_equil):
+    sim.velocity_verlet_step()
+    if _ % 50 == 0:
+        sim.apply_thermostat(temperature)
+
+# Production run (NVE - constant energy)
+n_steps = 2000
+energies = {'kinetic': [], 'potential': [], 'total': []}
+temperatures = []
+pressures = []
+
+for step in range(n_steps):
+    sim.velocity_verlet_step()
+
+    energies['kinetic'].append(sim.kinetic_energy / n_particles)
+    energies['potential'].append(sim.potential_energy / n_particles)
+    energies['total'].append(sim.get_total_energy() / n_particles)
+    temperatures.append(sim.get_temperature())
+    pressures.append(sim.get_pressure())
+
+# Convert to arrays
+for key in energies:
+    energies[key] = np.array(energies[key])
+temperatures = np.array(temperatures)
+pressures = np.array(pressures)
+time_array = np.arange(n_steps) * sim.dt
+\end{pycode}
+
+%------------------------------------------------------------------------------
+\section{Simulation Results}
+%------------------------------------------------------------------------------
+
+\subsection{Energy Conservation}
+
+A hallmark of a good MD integrator is energy conservation in the microcanonical (NVE) ensemble. The velocity Verlet algorithm achieves excellent long-term energy conservation.
+
+\begin{pycode}
+# Energy conservation plot
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Top left: Energy components
+ax = axes[0, 0]
+ax.plot(time_array, energies['kinetic'], 'r-', alpha=0.7, label='Kinetic')
+ax.plot(time_array, energies['potential'], 'b-', alpha=0.7, label='Potential')
+ax.plot(time_array, energies['total'], 'k-', linewidth=2, label='Total')
+
+ax.set_xlabel('Time (reduced units)')
+ax.set_ylabel('Energy per particle')
+ax.set_title('Energy Components')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Top right: Energy conservation detail
+ax = axes[0, 1]
+E_total = energies['total']
+E_mean = np.mean(E_total)
+E_drift = (E_total - E_total[0]) * 100 / np.abs(E_mean)  # Percentage drift
+
+ax.plot(time_array, E_drift, 'k-', linewidth=1)
+ax.axhline(0, color='gray', linestyle='--', alpha=0.5)
+
+ax.set_xlabel('Time (reduced units)')
+ax.set_ylabel('Energy drift (%)')
+ax.set_title(f'Energy Conservation (drift: {np.std(E_drift):.4f}%)')
+ax.grid(True, alpha=0.3)
+
+# Bottom left: Temperature fluctuations
+ax = axes[1, 0]
+ax.plot(time_array, temperatures, 'r-', alpha=0.7)
+ax.axhline(np.mean(temperatures), color='k', linestyle='--',
+           label=f'Mean: {np.mean(temperatures):.3f}')
+ax.fill_between(time_array,
+                np.mean(temperatures) - np.std(temperatures),
+                np.mean(temperatures) + np.std(temperatures),
+                alpha=0.2, color='red')
+
+ax.set_xlabel('Time (reduced units)')
+ax.set_ylabel('Temperature')
+ax.set_title(f'Temperature (std: {np.std(temperatures):.3f})')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+# Bottom right: Pressure fluctuations
+ax = axes[1, 1]
+ax.plot(time_array, pressures, 'b-', alpha=0.7)
+ax.axhline(np.mean(pressures), color='k', linestyle='--',
+           label=f'Mean: {np.mean(pressures):.3f}')
+
+ax.set_xlabel('Time (reduced units)')
+ax.set_ylabel('Pressure')
+ax.set_title(f'Pressure (std: {np.std(pressures):.3f})')
+ax.legend()
+ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('molecular_dynamics_energy.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{molecular_dynamics_energy.pdf}
+\caption{Thermodynamic properties during MD simulation. Top left: Energy components showing the exchange between kinetic and potential energy while total energy remains constant. Top right: Energy drift as a percentage of mean energy, demonstrating excellent conservation by the velocity Verlet integrator. Bottom left: Temperature fluctuations around the mean---these are expected in the NVE ensemble and decrease as $1/\sqrt{N}$. Bottom right: Pressure fluctuations; the mean pressure includes both ideal gas and virial contributions.}
+\label{fig:energy}
+\end{figure}
+
+\subsection{Radial Distribution Function}
+
+The radial distribution function (RDF) $g(r)$ measures the probability of finding a particle at distance $r$ from another particle, relative to an ideal gas. It provides structural information about the fluid:
+
+\begin{equation}
+g(r) = \frac{V}{N^2} \left\langle \sum_i \sum_{j \neq i} \delta(r - r_{ij}) \right\rangle
+\end{equation}
+
+\begin{pycode}
+def compute_rdf(positions, box_length, n_bins=100, r_max=None):
+    """
+    Compute the radial distribution function.
+
+    Parameters:
+    -----------
+    positions : ndarray
+        Particle positions (N x 3)
+    box_length : float
+        Simulation box size
+    n_bins : int
+        Number of histogram bins
+    r_max : float
+        Maximum distance (default: half box length)
+    """
+    if r_max is None:
+        r_max = box_length / 2
+
+    n = len(positions)
+    dr = r_max / n_bins
+    hist = np.zeros(n_bins)
+
+    for i in range(n - 1):
+        for j in range(i + 1, n):
+            dpos = positions[j] - positions[i]
+            dpos = dpos - box_length * np.round(dpos / box_length)
+            r = np.sqrt(np.sum(dpos**2))
+
+            if r < r_max:
+                bin_idx = int(r / dr)
+                hist[bin_idx] += 2  # Count both i-j and j-i
+
+    # Normalize
+    r_edges = np.linspace(0, r_max, n_bins + 1)
+    r_centers = 0.5 * (r_edges[:-1] + r_edges[1:])
+    shell_volumes = 4 * np.pi * r_centers**2 * dr
+
+    density = n / box_length**3
+    g_r = hist / (n * density * shell_volumes)
+
+    return r_centers, g_r
+
+# Collect RDF samples
+rdf_samples = []
+for _ in range(200):
+    sim.velocity_verlet_step()
+    if _ % 10 == 0:
+        r_vals, g_vals = compute_rdf(sim.positions, sim.L)
+        rdf_samples.append(g_vals)
+
+g_mean = np.mean(rdf_samples, axis=0)
+g_std = np.std(rdf_samples, axis=0)
+
+# Plot RDF
+fig, ax = plt.subplots(figsize=(10, 6))
+
+ax.plot(r_vals, g_mean, 'b-', linewidth=2, label='Simulation')
+ax.fill_between(r_vals, g_mean - g_std, g_mean + g_std, alpha=0.3, color='blue')
+ax.axhline(1, color='gray', linestyle='--', alpha=0.7, label='Ideal gas')
+
+# Mark key features
+peaks = [1.0, 1.95]  # Approximate peak positions for LJ liquid
+for i, p in enumerate(peaks):
+    idx = np.argmin(np.abs(r_vals - p))
+    if g_mean[idx] > 1:
+        ax.annotate(f'{i+1}st shell', xy=(r_vals[idx], g_mean[idx]),
+                    xytext=(r_vals[idx] + 0.2, g_mean[idx] + 0.5),
+                    arrowprops=dict(arrowstyle='->', color='red'),
+                    fontsize=10, color='red')
+
+ax.set_xlabel(r'Distance $r/\sigma$')
+ax.set_ylabel(r'$g(r)$')
+ax.set_title(f'Radial Distribution Function ($\\rho^* = {density:.1f}$, $T^* = {temperature:.1f}$)')
+ax.legend()
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, sim.L / 2)
+ax.set_ylim(0, 3.5)
+
+plt.tight_layout()
+plt.savefig('molecular_dynamics_rdf.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{molecular_dynamics_rdf.pdf}
+\caption{Radial distribution function $g(r)$ for the Lennard-Jones fluid at liquid density ($\rho^* = 0.8$) and temperature ($T^* = 1.0$). The first peak near $r = \sigma$ corresponds to the first coordination shell of nearest neighbors. The second peak indicates the second shell. At large distances, $g(r) \to 1$ (ideal gas behavior). The oscillatory structure is characteristic of liquids, contrasting with the delta-function peaks of solids and the uniform $g(r) = 1$ of gases.}
+\label{fig:rdf}
+\end{figure}
+
+\subsection{Phase Diagram Exploration}
+
+The Lennard-Jones system exhibits gas, liquid, and solid phases. The phase depends on reduced density $\rho^* = \rho\sigma^3$ and reduced temperature $T^* = k_BT/\varepsilon$.
+
+\begin{pycode}
+# Scan different state points
+state_points = [
+    (0.1, 2.0, 'Gas'),
+    (0.8, 1.0, 'Liquid'),
+    (1.0, 0.5, 'Solid'),
+]
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+for ax, (density, temp, phase) in zip(axes, state_points):
+    # Quick simulation at this state point
+    np.random.seed(42)
+    n_test = 64
+    L_test = (n_test / density)**(1/3)
+
+    sim_test = LennardJonesSimulation(n_test, L_test, temp)
+    sim_test.compute_forces()
+
+    # Short equilibration
+    for _ in range(300):
+        sim_test.velocity_verlet_step()
+        if _ % 20 == 0:
+            sim_test.apply_thermostat(temp)
+
+    # Plot 3D snapshot
+    pos = sim_test.positions
+    ax.scatter(pos[:, 0], pos[:, 1], c=pos[:, 2], cmap='viridis',
+               s=500, alpha=0.7, edgecolors='white')
+
+    ax.set_xlim(0, L_test)
+    ax.set_ylim(0, L_test)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_title(f'{phase}\n($\\rho^* = {density}$, $T^* = {temp}$)')
+    ax.set_aspect('equal')
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('molecular_dynamics_phases.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{molecular_dynamics_phases.pdf}
+\caption{Snapshots of the Lennard-Jones system in different phases (2D projection, colored by z-coordinate). Left: Gas phase at low density---particles are well-separated with no persistent structure. Center: Liquid phase at intermediate density---particles form a disordered but cohesive structure with short-range order. Right: Solid phase at high density and low temperature---particles arrange in an ordered crystalline lattice. These phases emerge naturally from the interplay between kinetic energy (temperature) and potential energy (density).}
+\label{fig:phases}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Conclusions}
+%------------------------------------------------------------------------------
+
+This document has presented a complete molecular dynamics simulation framework:
+
+\begin{enumerate}
+    \item \textbf{Lennard-Jones potential}: The $12$-$6$ form captures essential physics of neutral atom interactions, with repulsion at short range and attraction at longer distances.
+
+    \item \textbf{Velocity Verlet integration}: This symplectic integrator provides excellent energy conservation, enabling accurate NVE simulations over long timescales.
+
+    \item \textbf{Thermodynamic properties}: Temperature, pressure, and energy are directly calculable from particle positions and velocities. The virial theorem connects microscopic forces to macroscopic pressure.
+
+    \item \textbf{Structural analysis}: The radial distribution function reveals the characteristic short-range order of liquids, distinguishing them from gases and solids.
+
+    \item \textbf{Phase behavior}: By varying density and temperature, the simulation captures gas, liquid, and solid phases---all emerging from the same simple interatomic potential.
+\end{enumerate}
+
+The simulated system of \pyc{print(n_particles)} particles showed:
+\begin{itemize}
+    \item Energy conservation to \pyc{print(f'{np.std(E_drift):.4f}')}{\%}
+    \item Mean temperature: \pyc{print(f'{np.mean(temperatures):.3f}')} (target: \pyc{print(f'{temperature:.1f}')})
+    \item Mean pressure: \pyc{print(f'{np.mean(pressures):.3f}')} (reduced units)
+    \item First RDF peak at $r \approx \sigma$, characteristic of liquid structure
+\end{itemize}
+
+Extensions of this framework include more realistic potentials (EAM for metals, force fields for biomolecules), constant temperature and pressure ensembles, long-range electrostatics (Ewald summation), and reactive MD for chemical transformations.
+
+%------------------------------------------------------------------------------
+\section{References}
+%------------------------------------------------------------------------------
+
+\begin{enumerate}
+    \item Allen, M.P. \& Tildesley, D.J. (2017). \textit{Computer Simulation of Liquids}, 2nd ed. Oxford University Press.
+
+    \item Frenkel, D. \& Smit, B. (2002). \textit{Understanding Molecular Simulation}, 2nd ed. Academic Press.
+
+    \item Rapaport, D.C. (2004). \textit{The Art of Molecular Dynamics Simulation}, 2nd ed. Cambridge University Press.
+
+    \item Lennard-Jones, J.E. (1924). On the Determination of Molecular Fields. \textit{Proc. R. Soc. Lond. A}, 106(738), 463-477.
+
+    \item Verlet, L. (1967). Computer ``Experiments'' on Classical Fluids. \textit{Physical Review}, 159(1), 98-103.
+
+    \item Hansen, J.P. \& Verlet, L. (1969). Phase Transitions of the Lennard-Jones System. \textit{Physical Review}, 184(1), 151-161.
+\end{enumerate}
+
+\end{document}

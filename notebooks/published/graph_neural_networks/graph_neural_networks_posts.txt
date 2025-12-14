@@ -1,0 +1,139 @@
+=== GRAPH NEURAL NETWORKS SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+Learn Graph Neural Networks from scratch! Build a GCN that classifies nodes in Zachary's Karate Club using only 8 labeled examples.
+
+Message passing + Python = powerful graph AI
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+#MachineLearning #GNN #DeepLearning
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+Graph Neural Networks demystified! This notebook implements a 2-layer GCN from scratch, showing how message passing aggregates neighbor information for node classification.
+
+See the math, code, and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+#ML #Graphs #Python
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+Ever wondered how AI processes social networks and molecules?
+
+Graph Neural Networks are the answer! This notebook teaches you:
+- How to represent graphs as matrices
+- The message passing mechanism behind GNNs
+- Building a Graph Convolutional Network from scratch
+- Node classification with only 8 labeled examples
+
+Real math, real code, no frameworks - just NumPy.
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+New notebook: Graph Neural Networks from scratch!
+
+Implements a 2-layer GCN for node classification on Zachary's Karate Club:
+- Adjacency matrix normalization (D^{-1/2} A D^{-1/2})
+- Message passing aggregation
+- Semi-supervised learning with only 8 labels
+- Beautiful visualizations of learned embeddings
+
+All in pure NumPy - no PyTorch Geometric needed.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+#Python #MachineLearning #GraphTheory #DataScience
+
+================================================================================
+REDDIT (< 40,000 chars)
+================================================================================
+**Title:** [Tutorial] Graph Neural Networks from Scratch - Implementing GCN for Node Classification
+
+**Body:**
+I created an educational Jupyter notebook that implements Graph Neural Networks from the ground up using only NumPy. No PyTorch Geometric, no DGL - just pure Python to understand what's really happening.
+
+**What's covered:**
+
+1. **Graph Representation** - How to encode graphs as adjacency matrices and feature matrices
+
+2. **Message Passing** - The fundamental mechanism where nodes aggregate information from neighbors: h_v = UPDATE(h_v, AGGREGATE({h_u : u in N(v)}))
+
+3. **GCN Layer Implementation** - The spectral convolution H' = ReLU(D^{-1/2} A D^{-1/2} H W) with proper symmetric normalization
+
+4. **Semi-Supervised Learning** - Achieving high accuracy with only 8 labeled nodes out of 34 total
+
+5. **Visualizations** - Training curves, learned embeddings, and the classic Karate Club graph with predictions
+
+**Why this matters:**
+GNNs are everywhere now - social network analysis, drug discovery, recommendation systems, traffic prediction. Understanding the fundamentals helps you choose the right architecture and debug issues.
+
+**Key insight:** The symmetric normalization D^{-1/2} A D^{-1/2} is crucial - it prevents high-degree nodes from dominating and ensures numerical stability.
+
+Link: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+Happy to answer questions!
+
+Suggested subreddits: r/MachineLearning, r/learnmachinelearning, r/deeplearning, r/datascience
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+What will YOU learn from this notebook?
+
+How to build Graph Neural Networks from scratch! This step-by-step tutorial shows you:
+
+- How graphs become matrices for machine learning
+- The "message passing" trick that makes GNNs work
+- Semi-supervised learning (high accuracy from few labels)
+- Beautiful visualizations of learned node embeddings
+
+Uses Zachary's famous Karate Club dataset. Pure Python, no fancy frameworks.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+Graph Neural Networks: Understanding the Technology Behind Social Network Analysis and Drug Discovery
+
+Just published a comprehensive educational notebook that implements GNNs from first principles.
+
+Key technical concepts covered:
+- Spectral graph convolutions with symmetric normalization
+- The message passing framework for aggregating neighbor information
+- Semi-supervised node classification achieving high accuracy with minimal labels
+- Mathematical foundations: adjacency matrices, degree normalization, softmax classification
+
+Why this matters for professionals:
+GNNs power recommendation systems at major tech companies, accelerate drug discovery by modeling molecular structures, and enable fraud detection in financial networks. Understanding the fundamentals helps you evaluate when graph-based approaches are appropriate and how to implement them effectively.
+
+The notebook uses Zachary's Karate Club - a classic social network benchmark - to demonstrate these concepts with clear visualizations.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/graph_neural_networks/graph_neural_networks.ipynb
+
+#MachineLearning #GraphNeuralNetworks #DataScience #AI #Python
+
+================================================================================
+INSTAGRAM (< 2200 chars)
+================================================================================
+Graph Neural Networks - explained visually!
+
+Ever wondered how AI understands social networks and molecules? This notebook shows you exactly how, with:
+
+- Step-by-step GCN implementation
+- Message passing animations
+- Beautiful embedding visualizations
+- Only NumPy - no complex frameworks
+
+Link in bio or search "graph_neural_networks" on CoCalc!
+
+#MachineLearning #GraphNeuralNetworks #GNN #DeepLearning #DataScience #Python #AI #ArtificialIntelligence #NeuralNetworks #Coding #Programming #Tech #LearnToCode #DataVisualization #ComputerScience #ML #GraphTheory #SocialNetworkAnalysis #DrugDiscovery #Bioinformatics #TechEducation #CodingLife #PythonProgramming #DataAnalysis #MLEngineering #AIResearch #OpenSource #JupyterNotebook

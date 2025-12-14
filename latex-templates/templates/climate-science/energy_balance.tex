@@ -1,0 +1,669 @@
+\documentclass[11pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{pythontex}
+\usepackage[margin=1in]{geometry}
+
+% Custom commands
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\ee}{\mathrm{e}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+% Document metadata
+\title{Earth's Energy Balance Model:\\Climate Sensitivity and Radiative Forcing}
+\author{Computational Climate Science}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document develops the fundamental physics of Earth's energy balance, from the Stefan-Boltzmann law governing planetary radiation to the greenhouse effect and climate sensitivity. We derive the zero-dimensional energy balance model, calculate equilibrium temperatures with and without an atmosphere, and explore how changes in radiative forcing translate to temperature changes. The analysis includes numerical solutions of the time-dependent energy balance equation, demonstrating the transient response to perturbations such as increased CO$_2$ concentrations.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%------------------------------------------------------------------------------
+\section{Introduction: Earth as a Radiating Body}
+%------------------------------------------------------------------------------
+
+Earth receives energy from the Sun and radiates energy back to space. At equilibrium, these two energy flows must balance. Understanding this balance is fundamental to climate science, as any imbalance leads to warming or cooling of the planet.
+
+The key physical principles governing Earth's energy balance are:
+\begin{enumerate}
+    \item \textbf{Solar irradiance}: The Sun provides approximately $S_0 = 1361$ W/m$^2$ at Earth's orbital distance (the solar constant).
+    \item \textbf{Planetary albedo}: Earth reflects about 30\% of incoming sunlight back to space ($\alpha \approx 0.30$).
+    \item \textbf{Stefan-Boltzmann radiation}: Earth radiates energy according to the Stefan-Boltzmann law $F = \sigma T^4$.
+    \item \textbf{Greenhouse effect}: The atmosphere absorbs and re-emits longwave radiation, warming the surface.
+\end{enumerate}
+
+\begin{pycode}
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, FancyArrowPatch, Rectangle
+from scipy.integrate import odeint
+from scipy.optimize import brentq
+
+# Physical constants
+sigma = 5.67e-8  # Stefan-Boltzmann constant [W/m^2/K^4]
+S0 = 1361        # Solar constant [W/m^2]
+alpha = 0.30     # Earth's average albedo
+
+# Style configuration
+plt.rcParams['figure.figsize'] = (10, 6)
+plt.rcParams['font.size'] = 11
+plt.rcParams['axes.labelsize'] = 12
+plt.rcParams['axes.titlesize'] = 14
+\end{pycode}
+
+%------------------------------------------------------------------------------
+\section{The Stefan-Boltzmann Law and Blackbody Radiation}
+%------------------------------------------------------------------------------
+
+All objects with temperature $T > 0$ emit electromagnetic radiation. For a perfect blackbody, the total power radiated per unit area is given by the Stefan-Boltzmann law:
+
+\begin{equation}
+F = \sigma T^4
+\label{eq:stefan-boltzmann}
+\end{equation}
+
+where $\sigma = 5.67 \times 10^{-8}$ W/m$^2$/K$^4$ is the Stefan-Boltzmann constant. This $T^4$ dependence is crucial---small temperature changes produce significant changes in radiated power.
+
+\begin{pycode}
+# Stefan-Boltzmann demonstration
+T_range = np.linspace(200, 350, 100)  # Temperature range [K]
+F_range = sigma * T_range**4
+
+# Key temperatures
+T_earth_no_atm = 255  # Earth without atmosphere [K]
+T_earth_with_atm = 288  # Earth with atmosphere [K]
+T_sun_surface = 5778  # Sun's surface [K]
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Left plot: Stefan-Boltzmann curve
+ax = axes[0]
+ax.plot(T_range, F_range, 'b-', linewidth=2, label=r'$F = \sigma T^4$')
+ax.axvline(T_earth_no_atm, color='orange', linestyle='--', alpha=0.7,
+           label=f'Earth (no atm): {T_earth_no_atm} K')
+ax.axvline(T_earth_with_atm, color='red', linestyle='--', alpha=0.7,
+           label=f'Earth (with atm): {T_earth_with_atm} K')
+
+ax.fill_between(T_range, 0, F_range, alpha=0.2, color='blue')
+ax.set_xlabel('Temperature [K]')
+ax.set_ylabel('Radiated Power [W/m$^2$]')
+ax.set_title('Stefan-Boltzmann Law')
+ax.legend(loc='upper left')
+ax.grid(True, alpha=0.3)
+ax.set_xlim(200, 350)
+ax.set_ylim(0, 900)
+
+# Right plot: Log-log showing T^4 behavior
+ax = axes[1]
+T_log = np.logspace(1.5, 4, 100)  # 30 K to 10000 K
+F_log = sigma * T_log**4
+
+ax.loglog(T_log, F_log, 'b-', linewidth=2)
+ax.axvline(T_earth_with_atm, color='red', linestyle='--', alpha=0.7)
+ax.axvline(T_sun_surface, color='orange', linestyle='--', alpha=0.7)
+
+ax.annotate('Earth\n288 K', xy=(T_earth_with_atm, sigma*T_earth_with_atm**4),
+            xytext=(100, sigma*T_earth_with_atm**4),
+            arrowprops=dict(arrowstyle='->', color='red'),
+            fontsize=10, color='red')
+ax.annotate('Sun\n5778 K', xy=(T_sun_surface, sigma*T_sun_surface**4),
+            xytext=(8000, sigma*T_sun_surface**4/5),
+            arrowprops=dict(arrowstyle='->', color='orange'),
+            fontsize=10, color='orange')
+
+ax.set_xlabel('Temperature [K]')
+ax.set_ylabel('Radiated Power [W/m$^2$]')
+ax.set_title('Stefan-Boltzmann Law (Log Scale)')
+ax.grid(True, alpha=0.3, which='both')
+
+plt.tight_layout()
+plt.savefig('energy_balance_stefan_boltzmann.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{energy_balance_stefan_boltzmann.pdf}
+\caption{The Stefan-Boltzmann law relates temperature to radiated power through a fourth-power relationship. Left: Linear scale showing the rapid increase in radiated power with temperature. Earth's surface temperature (288 K) radiates significantly more than it would without an atmosphere (255 K). Right: Log-log scale reveals the four orders of magnitude difference between Earth's surface radiation and the Sun's, despite the Sun being only about 20 times hotter.}
+\label{fig:stefan-boltzmann}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Zero-Dimensional Energy Balance Model}
+%------------------------------------------------------------------------------
+
+The simplest climate model treats Earth as a uniform sphere receiving solar radiation and emitting thermal radiation. At equilibrium, incoming and outgoing energy must balance.
+
+\subsection{Incoming Solar Radiation}
+
+The Sun intercepts Earth with a circular cross-section of area $\pi R_E^2$, where $R_E$ is Earth's radius. The total incoming solar power is:
+
+\begin{equation}
+P_{\text{in}} = S_0 \cdot \pi R_E^2 \cdot (1 - \alpha)
+\end{equation}
+
+where $(1-\alpha)$ accounts for the fraction absorbed (not reflected). Dividing by Earth's surface area $4\pi R_E^2$ gives the average absorbed flux:
+
+\begin{equation}
+F_{\text{in}} = \frac{S_0 (1 - \alpha)}{4} \approx 238 \text{ W/m}^2
+\label{eq:incoming}
+\end{equation}
+
+The factor of 4 arises because the sphere's surface area is 4 times its cross-sectional area.
+
+\subsection{Outgoing Thermal Radiation}
+
+Earth radiates from its entire surface according to the Stefan-Boltzmann law. For an effective emission temperature $T_e$:
+
+\begin{equation}
+F_{\text{out}} = \sigma T_e^4
+\label{eq:outgoing}
+\end{equation}
+
+\subsection{Equilibrium Temperature Without Atmosphere}
+
+Setting $F_{\text{in}} = F_{\text{out}}$ and solving for temperature:
+
+\begin{equation}
+T_e = \left(\frac{S_0 (1 - \alpha)}{4\sigma}\right)^{1/4}
+\label{eq:equilibrium}
+\end{equation}
+
+\begin{pycode}
+# Calculate equilibrium temperature without atmosphere
+T_equilibrium = ((S0 * (1 - alpha)) / (4 * sigma))**0.25
+F_absorbed = S0 * (1 - alpha) / 4
+
+print(r'\begin{equation*}')
+print(f'T_e = \\left(\\frac{{{S0:.0f} \\times (1 - {alpha:.2f})}}{{4 \\times {sigma:.2e}}}\\right)^{{1/4}} = {T_equilibrium:.1f} \\text{{ K}} = {T_equilibrium - 273.15:.1f}^\\circ\\text{{C}}')
+print(r'\end{equation*}')
+\end{pycode}
+
+This is 33 K (33$^\circ$C) colder than Earth's actual average surface temperature of approximately 288 K (15$^\circ$C). The difference is due to the greenhouse effect.
+
+%------------------------------------------------------------------------------
+\section{The Greenhouse Effect}
+%------------------------------------------------------------------------------
+
+The atmosphere is largely transparent to incoming shortwave solar radiation but absorbs and re-emits outgoing longwave (infrared) radiation. Greenhouse gases---primarily H$_2$O, CO$_2$, CH$_4$, N$_2$O, and O$_3$---are responsible for this absorption.
+
+\subsection{Single-Layer Atmosphere Model}
+
+Consider a simplified model with a single atmospheric layer at temperature $T_a$ that is:
+\begin{itemize}
+    \item Transparent to solar radiation
+    \item Perfectly absorbing (emissivity $\epsilon = 1$) for infrared radiation
+\end{itemize}
+
+The atmospheric layer radiates both upward (to space) and downward (to the surface). At equilibrium:
+
+\textbf{Atmosphere energy balance:}
+\begin{equation}
+\sigma T_s^4 = 2\sigma T_a^4
+\end{equation}
+
+The atmosphere absorbs surface radiation and emits equally up and down.
+
+\textbf{Surface energy balance:}
+\begin{equation}
+F_{\text{in}} + \sigma T_a^4 = \sigma T_s^4
+\end{equation}
+
+The surface receives both solar radiation and downwelling radiation from the atmosphere.
+
+Solving these equations:
+
+\begin{equation}
+T_a = T_e \quad \text{and} \quad T_s = 2^{1/4} T_e \approx 1.19 T_e
+\end{equation}
+
+\begin{pycode}
+# Single layer atmosphere model
+T_surface_1layer = 2**0.25 * T_equilibrium
+T_atmosphere = T_equilibrium
+
+print(f'With a single-layer atmosphere:')
+print(f'  - Atmospheric temperature: $T_a = {T_atmosphere:.1f}$ K')
+print(f'  - Surface temperature: $T_s = {T_surface_1layer:.1f}$ K = ${T_surface_1layer - 273.15:.1f}^\\circ$C')
+print(f'  - Greenhouse warming: ${T_surface_1layer - T_equilibrium:.1f}$ K')
+\end{pycode}
+
+\subsection{Multi-Layer Atmosphere Model}
+
+With $n$ atmospheric layers, each transparent to solar but opaque to infrared:
+
+\begin{equation}
+T_s = (n+1)^{1/4} T_e
+\end{equation}
+
+\begin{pycode}
+# Multi-layer atmosphere model
+fig, ax = plt.subplots(figsize=(10, 6))
+
+n_layers = np.arange(0, 6)
+T_surface = (n_layers + 1)**0.25 * T_equilibrium
+
+ax.bar(n_layers, T_surface - 273.15, color='coral', edgecolor='darkred', alpha=0.8)
+ax.axhline(288 - 273.15, color='green', linestyle='--', linewidth=2,
+           label=f'Observed Earth: 15$^\\circ$C')
+ax.axhline(T_equilibrium - 273.15, color='blue', linestyle='--', linewidth=2,
+           label=f'No atmosphere: {T_equilibrium - 273.15:.0f}$^\\circ$C')
+
+ax.set_xlabel('Number of Atmospheric Layers')
+ax.set_ylabel('Surface Temperature [$^\\circ$C]')
+ax.set_title('Greenhouse Effect: Multi-Layer Atmosphere Model')
+ax.legend()
+ax.grid(True, alpha=0.3, axis='y')
+ax.set_xticks(n_layers)
+
+# Annotate
+for i, (n, T) in enumerate(zip(n_layers, T_surface)):
+    ax.annotate(f'{T-273.15:.0f}$^\\circ$C',
+                xy=(n, T-273.15),
+                xytext=(0, 5),
+                textcoords='offset points',
+                ha='center', fontsize=10)
+
+plt.tight_layout()
+plt.savefig('energy_balance_greenhouse.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{energy_balance_greenhouse.pdf}
+\caption{Surface temperature as a function of the number of perfectly absorbing atmospheric layers. Each layer adds additional greenhouse warming by trapping outgoing infrared radiation. Earth's actual atmosphere behaves approximately like a 1-2 layer model, producing the observed 33 K of greenhouse warming. The simple model captures the essential physics: adding greenhouse gases (effectively adding partial ``layers'') increases surface temperature.}
+\label{fig:greenhouse}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Radiative Forcing and Climate Sensitivity}
+%------------------------------------------------------------------------------
+
+\subsection{Radiative Forcing}
+
+Radiative forcing ($\Delta F$) measures the change in net radiative flux at the tropopause due to a perturbation (e.g., increased CO$_2$). For a doubling of CO$_2$:
+
+\begin{equation}
+\Delta F_{2\times\text{CO}_2} \approx 5.35 \ln\left(\frac{C}{C_0}\right) \approx 3.7 \text{ W/m}^2
+\label{eq:forcing}
+\end{equation}
+
+where $C$ is the CO$_2$ concentration and $C_0$ is the reference concentration.
+
+\subsection{Climate Sensitivity Parameter}
+
+The climate sensitivity parameter $\lambda$ relates radiative forcing to equilibrium temperature change:
+
+\begin{equation}
+\Delta T = \lambda \Delta F
+\label{eq:sensitivity}
+\end{equation}
+
+For a blackbody (no feedbacks), differentiating the Stefan-Boltzmann law:
+
+\begin{equation}
+\lambda_0 = \frac{\dd T}{\dd F} = \frac{1}{4\sigma T^3} \approx 0.27 \text{ K/(W/m}^2)
+\end{equation}
+
+This gives a temperature change of about 1.0 K for CO$_2$ doubling. However, feedbacks amplify this response.
+
+\begin{pycode}
+# Climate sensitivity analysis
+T_ref = 288  # Reference temperature [K]
+lambda_0 = 1 / (4 * sigma * T_ref**3)  # No-feedback sensitivity
+
+# Radiative forcing for CO2 doubling
+Delta_F_2xCO2 = 5.35 * np.log(2)
+
+# Temperature change without feedbacks
+Delta_T_no_feedback = lambda_0 * Delta_F_2xCO2
+
+# With feedbacks (IPCC range: 2.5-4.0 K for 2xCO2, central estimate ~3 K)
+# This corresponds to lambda ~ 0.8-1.2 K/(W/m^2)
+feedback_factors = np.array([1.0, 2.0, 2.5, 3.0, 3.5])  # Feedback amplification
+lambda_values = lambda_0 * feedback_factors
+Delta_T_values = lambda_values * Delta_F_2xCO2
+
+# Create visualization
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Left: Radiative forcing vs CO2
+ax = axes[0]
+CO2_ratios = np.linspace(0.5, 4, 100)
+Delta_F = 5.35 * np.log(CO2_ratios)
+
+ax.plot(CO2_ratios * 280, Delta_F, 'b-', linewidth=2)
+ax.axvline(560, color='red', linestyle='--', alpha=0.7, label='2x pre-industrial (560 ppm)')
+ax.axvline(420, color='orange', linestyle='--', alpha=0.7, label='Current (~420 ppm)')
+ax.axvline(280, color='green', linestyle='--', alpha=0.7, label='Pre-industrial (280 ppm)')
+
+ax.set_xlabel('CO$_2$ Concentration [ppm]')
+ax.set_ylabel('Radiative Forcing [W/m$^2$]')
+ax.set_title('Radiative Forcing from CO$_2$')
+ax.legend(loc='upper left')
+ax.grid(True, alpha=0.3)
+ax.set_xlim(140, 1120)
+
+# Right: Temperature response
+ax = axes[1]
+bar_colors = ['lightblue', 'skyblue', 'steelblue', 'royalblue', 'navy']
+bars = ax.bar(range(len(feedback_factors)), Delta_T_values,
+              color=bar_colors, edgecolor='black')
+
+ax.set_xticks(range(len(feedback_factors)))
+ax.set_xticklabels([f'{f:.1f}x' for f in feedback_factors])
+ax.set_xlabel('Feedback Amplification Factor')
+ax.set_ylabel('Temperature Change for 2xCO$_2$ [K]')
+ax.set_title('Equilibrium Climate Sensitivity')
+
+# IPCC likely range
+ax.axhspan(2.5, 4.0, alpha=0.2, color='red', label='IPCC likely range')
+ax.axhline(3.0, color='red', linestyle='--', linewidth=2, label='Best estimate: 3 K')
+ax.legend(loc='upper left')
+ax.grid(True, alpha=0.3, axis='y')
+
+for i, dT in enumerate(Delta_T_values):
+    ax.annotate(f'{dT:.1f} K', xy=(i, dT), xytext=(0, 5),
+                textcoords='offset points', ha='center', fontsize=10)
+
+plt.tight_layout()
+plt.savefig('energy_balance_sensitivity.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{energy_balance_sensitivity.pdf}
+\caption{Left: Radiative forcing increases logarithmically with CO$_2$ concentration. The logarithmic relationship means that each doubling adds the same forcing (~3.7 W/m$^2$). Right: Equilibrium temperature change depends strongly on feedback processes. Without feedbacks (1.0x), CO$_2$ doubling causes ~1 K warming. With realistic feedbacks (water vapor, ice-albedo, clouds), the response is amplified to 2.5-4.0 K (IPCC likely range). The central estimate of 3 K corresponds to a feedback amplification of about 2.8x.}
+\label{fig:sensitivity}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Time-Dependent Energy Balance}
+%------------------------------------------------------------------------------
+
+The equilibrium analysis assumes instantaneous adjustment, but in reality, Earth's climate system has thermal inertia due to the ocean's heat capacity. The time-dependent energy balance equation is:
+
+\begin{equation}
+C \frac{\dd T}{\dd t} = F_{\text{in}} - F_{\text{out}} = \frac{S_0(1-\alpha)}{4} - \sigma T^4 + \Delta F
+\label{eq:time-dependent}
+\end{equation}
+
+where $C$ is the effective heat capacity [J/m$^2$/K] and $\Delta F$ is any additional forcing.
+
+\subsection{Linearized Response}
+
+Near equilibrium temperature $T_0$, we can linearize:
+
+\begin{equation}
+C \frac{\dd(\Delta T)}{\dd t} = \Delta F - \frac{\Delta T}{\lambda}
+\end{equation}
+
+This gives an exponential approach to equilibrium with time constant:
+
+\begin{equation}
+\tau = C \lambda
+\end{equation}
+
+For the ocean mixed layer ($C \approx 4 \times 10^8$ J/m$^2$/K) and $\lambda \approx 1$ K/(W/m$^2$):
+
+\begin{equation}
+\tau \approx 4 \times 10^8 \text{ s} \approx 13 \text{ years}
+\end{equation}
+
+\begin{pycode}
+# Time-dependent energy balance model
+def energy_balance_ode(T, t, C, S0, alpha, sigma, Delta_F_func):
+    """
+    Time derivative of temperature for the energy balance model.
+
+    Parameters:
+    -----------
+    T : float
+        Current temperature [K]
+    t : float
+        Time [years]
+    C : float
+        Heat capacity [J/m^2/K]
+    Delta_F_func : callable
+        Function returning radiative forcing at time t
+    """
+    F_in = S0 * (1 - alpha) / 4
+    F_out = sigma * T**4
+    Delta_F = Delta_F_func(t)
+
+    dTdt = (F_in - F_out + Delta_F) / C
+    return dTdt * 3.154e7  # Convert from K/s to K/year
+
+# Model parameters
+C_mixed_layer = 4e8  # Ocean mixed layer heat capacity [J/m^2/K]
+C_deep_ocean = 20e8  # Deep ocean heat capacity [J/m^2/K]
+
+# Forcing scenarios
+def step_forcing(t, t_start=10, magnitude=3.7):
+    """Step increase in forcing (like sudden CO2 doubling)"""
+    return magnitude if t >= t_start else 0
+
+def ramp_forcing(t, t_start=10, rate=0.037):
+    """Linear increase in forcing (like gradual CO2 rise)"""
+    return max(0, rate * (t - t_start))
+
+# Time array
+t_span = np.linspace(0, 200, 1000)
+T0 = T_equilibrium  # Start at no-atmosphere equilibrium
+
+# Solve for different scenarios
+scenarios = {
+    'Step forcing (mixed layer)': (C_mixed_layer, lambda t: step_forcing(t)),
+    'Step forcing (deep ocean)': (C_deep_ocean, lambda t: step_forcing(t)),
+    'Ramp forcing (1%/year)': (C_mixed_layer, lambda t: ramp_forcing(t, rate=0.037)),
+}
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Left: Temperature response
+ax = axes[0]
+colors = ['blue', 'red', 'green']
+for (name, (C, forcing)), color in zip(scenarios.items(), colors):
+    solution = odeint(energy_balance_ode, T0, t_span,
+                      args=(C, S0, alpha, sigma, forcing))
+    # Calculate Delta T relative to equilibrium
+    T_eq_new = ((S0*(1-alpha)/4 + 3.7) / sigma)**0.25 if 'Step' in name else None
+    ax.plot(t_span, solution[:, 0], color=color, linewidth=2, label=name)
+
+ax.axhline(T_equilibrium, color='gray', linestyle=':', alpha=0.7)
+ax.axvline(10, color='gray', linestyle='--', alpha=0.5)
+
+ax.set_xlabel('Time [years]')
+ax.set_ylabel('Temperature [K]')
+ax.set_title('Temperature Response to Forcing')
+ax.legend(loc='lower right')
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 200)
+
+# Right: Energy imbalance
+ax = axes[1]
+for (name, (C, forcing)), color in zip(scenarios.items(), colors):
+    solution = odeint(energy_balance_ode, T0, t_span,
+                      args=(C, S0, alpha, sigma, forcing))
+    # Calculate energy imbalance
+    imbalance = []
+    for i, t in enumerate(t_span):
+        T = solution[i, 0]
+        F_in = S0 * (1 - alpha) / 4
+        F_out = sigma * T**4
+        Delta_F = forcing(t)
+        imbalance.append(F_in - F_out + Delta_F)
+    ax.plot(t_span, imbalance, color=color, linewidth=2, label=name)
+
+ax.axhline(0, color='gray', linestyle=':', alpha=0.7)
+ax.axvline(10, color='gray', linestyle='--', alpha=0.5)
+
+ax.set_xlabel('Time [years]')
+ax.set_ylabel('Energy Imbalance [W/m$^2$]')
+ax.set_title('Top-of-Atmosphere Energy Imbalance')
+ax.legend(loc='upper right')
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 200)
+
+plt.tight_layout()
+plt.savefig('energy_balance_transient.pdf', bbox_inches='tight')
+plt.close()
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{energy_balance_transient.pdf}
+\caption{Transient response of the climate system to radiative forcing, solved using the time-dependent energy balance equation. Left: Temperature evolution after forcing begins at year 10. The mixed layer response ($\tau \approx 13$ years) is faster than the deep ocean response ($\tau \approx 65$ years). A gradual ramp forcing produces continuous warming. Right: The top-of-atmosphere energy imbalance---positive values indicate the planet is absorbing more energy than it radiates, driving warming. The imbalance gradually decreases as temperature rises and outgoing radiation increases.}
+\label{fig:transient}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Feedback Mechanisms}
+%------------------------------------------------------------------------------
+
+Climate feedbacks amplify or dampen the initial temperature response. The main feedbacks are:
+
+\subsection{Water Vapor Feedback (Positive)}
+
+As temperature increases, more water evaporates, and since water vapor is a greenhouse gas, this amplifies warming:
+
+\begin{equation}
+f_{\text{WV}} = \frac{\dd \ln(e_s)}{\dd T} \approx 0.07 \text{ K}^{-1}
+\end{equation}
+
+where $e_s$ is the saturation vapor pressure (Clausius-Clapeyron relation).
+
+\subsection{Ice-Albedo Feedback (Positive)}
+
+Warming melts ice and snow, which are highly reflective. The exposed ocean or land absorbs more sunlight:
+
+\begin{equation}
+f_{\text{ice}} = -\frac{\partial \alpha}{\partial T} \cdot \frac{S_0}{4\sigma T^3}
+\end{equation}
+
+\subsection{Planck Feedback (Negative)}
+
+This is the fundamental stabilizing feedback: as Earth warms, it radiates more energy to space:
+
+\begin{equation}
+f_{\text{Planck}} = -4\sigma T^3 \approx -3.2 \text{ W/m}^2/\text{K}
+\end{equation}
+
+\begin{pycode}
+# Feedback visualization
+fig, ax = plt.subplots(figsize=(10, 6))
+
+# Feedback contributions (approximate values from IPCC AR6)
+feedbacks = {
+    'Planck': -3.2,
+    'Water Vapor': 1.8,
+    'Lapse Rate': -0.6,
+    'Ice-Albedo': 0.4,
+    'Cloud (net)': 0.5,
+}
+
+names = list(feedbacks.keys())
+values = list(feedbacks.values())
+colors = ['green' if v < 0 else 'red' for v in values]
+
+bars = ax.barh(names, values, color=colors, alpha=0.7, edgecolor='black')
+ax.axvline(0, color='black', linewidth=1)
+
+# Net feedback
+net_feedback = sum(values)
+ax.axvline(net_feedback, color='purple', linestyle='--', linewidth=2)
+ax.annotate(f'Net: {net_feedback:.1f}', xy=(net_feedback, -0.5), fontsize=12, color='purple')
+
+ax.set_xlabel('Feedback Strength [W/m$^2$/K]')
+ax.set_title('Climate Feedback Contributions')
+ax.grid(True, alpha=0.3, axis='x')
+
+# Add legend
+from matplotlib.patches import Patch
+legend_elements = [
+    Patch(facecolor='green', alpha=0.7, edgecolor='black', label='Stabilizing (negative)'),
+    Patch(facecolor='red', alpha=0.7, edgecolor='black', label='Amplifying (positive)')
+]
+ax.legend(handles=legend_elements, loc='lower right')
+
+plt.tight_layout()
+plt.savefig('energy_balance_feedbacks.pdf', bbox_inches='tight')
+plt.close()
+
+# Calculate amplification factor
+lambda_0_value = 1 / 3.2  # No-feedback sensitivity [K/(W/m^2)]
+lambda_net = 1 / (-net_feedback)  # Net sensitivity
+amplification = lambda_net / lambda_0_value
+
+print(f'\\noindent Feedback analysis:')
+print(f'\\begin{{itemize}}')
+print(f'\\item No-feedback sensitivity: $\\lambda_0 = {lambda_0_value:.2f}$ K/(W/m$^2$)')
+print(f'\\item Net feedback: ${net_feedback:.1f}$ W/m$^2$/K')
+print(f'\\item Net sensitivity: $\\lambda = {lambda_net:.2f}$ K/(W/m$^2$)')
+print(f'\\item Amplification factor: ${amplification:.1f}\\times$')
+print(f'\\end{{itemize}}')
+\end{pycode}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{energy_balance_feedbacks.pdf}
+\caption{Climate feedback contributions based on IPCC AR6 estimates. The Planck feedback is the fundamental negative feedback that stabilizes climate. Water vapor provides the strongest positive feedback through the greenhouse effect. The lapse rate feedback is negative because warming increases the rate of temperature decrease with altitude. Ice-albedo and cloud feedbacks are both positive on average. The net feedback (purple line) is negative, meaning the climate is stable, but the positive feedbacks amplify the initial response by roughly a factor of 3.}
+\label{fig:feedbacks}
+\end{figure}
+
+%------------------------------------------------------------------------------
+\section{Conclusions}
+%------------------------------------------------------------------------------
+
+This analysis has developed the fundamental physics of Earth's energy balance:
+
+\begin{enumerate}
+    \item \textbf{Equilibrium temperature}: Without an atmosphere, Earth's equilibrium temperature would be \pyc{print(f'{T_equilibrium:.1f}')} K (\pyc{print(f'{T_equilibrium - 273.15:.1f}')}$^\circ$C), about 33 K colder than observed.
+
+    \item \textbf{Greenhouse effect}: The atmosphere acts like multiple absorbing layers, raising surface temperature to the observed \pyc{print(f'{288:.0f}')} K through absorption and re-emission of infrared radiation.
+
+    \item \textbf{Climate sensitivity}: A doubling of CO$_2$ produces \pyc{print(f'{Delta_F_2xCO2:.1f}')} W/m$^2$ of radiative forcing. With feedbacks, this translates to 2.5--4.0 K of warming.
+
+    \item \textbf{Thermal inertia}: The ocean's heat capacity delays the climate response, with adjustment timescales of decades to centuries depending on depth.
+
+    \item \textbf{Feedback amplification}: Positive feedbacks (water vapor, ice-albedo, clouds) amplify the initial response by a factor of approximately \pyc{print(f'{amplification:.1f}')}.
+\end{enumerate}
+
+The zero-dimensional model captures the essential physics while remaining tractable. More sophisticated models incorporate spatial variations, seasonal cycles, and coupled atmosphere-ocean dynamics, but the fundamental energy balance constraints remain.
+
+%------------------------------------------------------------------------------
+\section{References}
+%------------------------------------------------------------------------------
+
+\begin{enumerate}
+    \item Hartmann, D.L. (2016). \textit{Global Physical Climatology}, 2nd ed. Academic Press.
+
+    \item Pierrehumbert, R.T. (2010). \textit{Principles of Planetary Climate}. Cambridge University Press.
+
+    \item IPCC (2021). Climate Change 2021: The Physical Science Basis. Cambridge University Press.
+
+    \item Kiehl, J.T. \& Trenberth, K.E. (1997). Earth's Annual Global Mean Energy Budget. \textit{Bulletin of the American Meteorological Society}, 78(2), 197-208.
+
+    \item Roe, G. (2009). Feedbacks, Timescales, and Seeing Red. \textit{Annual Review of Earth and Planetary Sciences}, 37, 93-115.
+
+    \item Sherwood, S.C. et al. (2020). An Assessment of Earth's Climate Sensitivity Using Multiple Lines of Evidence. \textit{Reviews of Geophysics}, 58, e2019RG000678.
+\end{enumerate}
+
+\end{document}
