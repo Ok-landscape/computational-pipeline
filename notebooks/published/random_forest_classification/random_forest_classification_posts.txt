@@ -1,0 +1,179 @@
+================================================================================
+RANDOM FOREST CLASSIFICATION - Social Media Posts
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Why use 1 decision tree when 100 work better?
+
+Random Forest: Each tree votes, majority wins. Result? Smoother boundaries, less overfitting.
+
+Built one from scratch in Python - 96% accuracy on moons dataset.
+
+#MachineLearning #Python #DataScience
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Implemented Random Forest classification from scratch in Python.
+
+Key insight: Combining many weak learners (decision trees) via bootstrap aggregating reduces variance without increasing bias.
+
+Gini impurity: G(t) = 1 - sum of pk squared
+
+Test accuracy: 96% on a non-linear classification task.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Just built a Random Forest classifier from scratch - no sklearn, just numpy!
+
+The magic of ensemble learning:
+- Take N bootstrap samples from your data
+- Train a decision tree on each
+- Let them vote on the final prediction
+
+Why it works: Each tree sees different data + random feature subsets at each split. This decorrelates the trees, reducing overall variance.
+
+The math: Var(ensemble) = rho * sigma squared + (1-rho)/B * sigma squared
+
+Lower correlation rho = lower variance. Simple but powerful.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented Random Forest from first principles in Python.
+
+Core algorithm:
+1. Bootstrap sample: ~63.2% unique observations per tree (1 - e to the power of -1)
+2. At each split, randomly select m = sqrt(p) features
+3. Split using Gini impurity: G(t) = 1 - sum(pk squared)
+4. Aggregate via majority voting
+
+Out-of-bag samples provide free validation - no need for separate holdout set.
+
+Results on moons dataset: 96% test accuracy with 100 trees. Single tree: ~91%.
+
+#MachineLearning #Python #DataScience
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/datascience)
+--------------------------------------------------------------------------------
+
+Title: Built Random Forest from Scratch in Python - Here's What I Learned
+
+Body:
+
+I implemented a complete Random Forest classifier using only NumPy to really understand how ensemble methods work. Here's the breakdown:
+
+**What is Random Forest?**
+
+Think of it like asking 100 different experts to vote on a decision. Each expert (decision tree) sees a slightly different version of the data and focuses on different features. The final answer is whatever most experts agree on.
+
+**The Key Ideas:**
+
+1. **Bootstrap Aggregating (Bagging)**: Each tree trains on a random sample WITH replacement. About 63% of data points appear in each sample - the rest become "out-of-bag" samples for free validation.
+
+2. **Random Feature Selection**: At each split, only consider sqrt(total features) randomly chosen features. This decorrelates the trees.
+
+3. **Gini Impurity**: Measures how "mixed" the classes are at a node. Formula: G = 1 - (p0 squared + p1 squared). Pure node = 0, maximum impurity = 0.5 for binary classification.
+
+**Why It Works (The Math):**
+
+Ensemble variance = rho * sigma squared + (1-rho)/B * sigma squared
+
+Where rho is correlation between trees, sigma squared is individual tree variance, B is number of trees.
+
+By making trees less correlated (random features), we reduce rho, which reduces overall variance. More trees (larger B) also helps, but with diminishing returns.
+
+**My Results:**
+
+- Single Decision Tree: ~91% accuracy
+- Random Forest (100 trees): ~96% accuracy
+- OOB Score closely matched test accuracy
+
+The decision boundary plot really shows the difference - the forest produces much smoother boundaries than a single tree.
+
+**View the full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/random_forest_classification.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how Netflix knows what you'll watch next?
+
+Machine learning algorithms like Random Forest make predictions by combining hundreds of simple decision trees - each one votes, and majority wins.
+
+I built one from scratch to classify points in a "two moons" pattern (see the plot!). Single tree: 91% accurate. Forest of 100 trees: 96% accurate.
+
+The secret? Each tree is slightly different, so their mistakes cancel out.
+
+Explore the code: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/random_forest_classification.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Deepening ML Fundamentals: Random Forest Implementation from Scratch
+
+To truly understand machine learning algorithms, I implemented a complete Random Forest classifier using only NumPy - no scikit-learn abstractions.
+
+Key technical insights from this exercise:
+
+**Algorithm Architecture:**
+- Bootstrap aggregating (bagging) with ~63.2% unique samples per tree
+- Random feature selection: m = sqrt(p) features at each split
+- Gini impurity criterion for optimal splits: G(t) = 1 - sum(pk squared)
+
+**Variance Reduction Mechanism:**
+Ensemble variance = rho * sigma squared + (1-rho)/B * sigma squared
+
+The random feature selection decorrelates trees (reduces rho), while increasing B (tree count) reduces the second term.
+
+**Empirical Results:**
+- Single tree accuracy: ~91%
+- 100-tree forest accuracy: ~96%
+- OOB error estimate validated against holdout set
+
+**Skills Demonstrated:**
+- Algorithm implementation from first principles
+- Understanding of ensemble methods and bias-variance tradeoff
+- Clean, documented Python code with visualization
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/random_forest_classification.ipynb
+
+#MachineLearning #DataScience #Python #AlgorithmDesign
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+The wisdom of crowds - but make it math.
+
+Random Forest takes 100 decision trees, each trained on slightly different data, and lets them vote.
+
+Result? Beautiful smooth decision boundaries instead of the jagged mess a single tree creates.
+
+Left plots: decision boundary and probability landscape
+Right plots: how accuracy improves with more trees + comparison vs single tree
+
+Built entirely from scratch in Python.
+96% accuracy on this tricky non-linear pattern.
+
+#MachineLearning
+#DataScience
+#Python
+#Coding
+#AI
+#DataVisualization
+
+================================================================================
+END OF POSTS
+================================================================================

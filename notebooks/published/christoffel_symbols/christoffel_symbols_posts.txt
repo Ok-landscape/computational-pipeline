@@ -1,0 +1,157 @@
+# Social Media Posts: Christoffel Symbols
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Ever wonder how GPS satellites account for curved spacetime? Christoffel symbols! These geometric objects describe how space itself bends and twists. Built a Python calculator for them today.
+
+#Physics #Python #Math #GR
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Christoffel symbols: the mathematical machinery behind curved space. They tell us how coordinate systems twist as we move through a manifold.
+
+Built a numerical calculator in Python and visualized geodesics on spheres. The connection between geometry and physics is beautiful.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Here's something cool: why do objects in orbit follow curved paths even in "empty" space?
+
+The answer involves Christoffel symbols - mathematical objects that encode how space itself curves. They're not tensors (they transform weirdly under coordinate changes), but they're essential for understanding geodesics.
+
+I built a Python calculator that computes these symbols numerically from any metric tensor. Tested it on polar coordinates, spheres, and even the Schwarzschild black hole metric. The divergence near the event horizon is wild.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented a numerical Christoffel symbol calculator using finite differences. Three test cases:
+
+1. Polar coordinates: Gamma^r_{theta,theta} = -r (centrifugal term)
+2. 2-sphere: Gamma^theta_{phi,phi} = -sin(theta)cos(theta)
+3. Schwarzschild: symbols diverge as r approaches 2M
+
+The geodesic equation d²x^mu/ds² + Gamma^mu_{alpha,beta}(dx^alpha/ds)(dx^beta/ds) = 0 produces beautiful great circles on the sphere.
+
+Code uses numpy for matrix inversion and scipy.integrate for ODEs.
+
+#Physics #Python #DifferentialGeometry #GR
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/Physics)
+--------------------------------------------------------------------------------
+**Title:** Built a Christoffel symbol calculator in Python - visualizing curved space and geodesics
+
+**Body:**
+
+I've been learning differential geometry and wanted to understand Christoffel symbols intuitively, so I built a numerical calculator from scratch.
+
+**What are Christoffel symbols?**
+
+Think of them as "connection coefficients" that tell you how basis vectors rotate as you move through a curved space. The formula is:
+
+Gamma^lambda_{mu,nu} = (1/2) g^{lambda,sigma} (dg_{sigma,mu}/dx^nu + dg_{sigma,nu}/dx^mu - dg_{mu,nu}/dx^sigma)
+
+where g is the metric tensor.
+
+**The implementation:**
+
+- Takes any metric function as input
+- Uses central finite differences for derivatives
+- Computes inverse metric with numpy.linalg.inv
+- Returns a 3D array of all symbol values
+
+**Test cases I ran:**
+
+1. **Polar coordinates** - flat space, but curvilinear coordinates give non-zero symbols. Gamma^r_{theta,theta} = -r explains the "centrifugal force."
+
+2. **Sphere surface** - intrinsically curved 2D manifold. The symbols explain why great circles oscillate in latitude.
+
+3. **Schwarzschild metric** - spacetime around a black hole. Symbols diverge at the event horizon (r = 2M).
+
+**Coolest part:** Using the geodesic equation with these symbols to trace great circles on a sphere. The curves naturally follow the shortest paths!
+
+**What I learned:**
+
+- Christoffel symbols aren't tensors (they depend on coordinate choice)
+- They're the bridge between metric and equations of motion
+- Numerical differentiation works well but watch out for coordinate singularities
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/christoffel_symbols.ipynb
+
+Has anyone implemented symbolic computation for these using SymPy? I'd love to compare accuracy.
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just finished a fun computational project on Christoffel symbols - the mathematical objects that describe how space curves!
+
+These symbols are essential in Einstein's general relativity. They tell us how freely-falling objects move through curved spacetime (like satellites orbiting Earth, or light bending around a black hole).
+
+I built a Python calculator and visualized geodesics (shortest paths) on a sphere. Great circles emerge naturally from the math!
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/christoffel_symbols.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Combining Physics and Programming: A Computational Approach to Differential Geometry
+
+I recently developed a numerical calculator for Christoffel symbols - fundamental objects in differential geometry that describe how coordinate systems evolve across curved manifolds.
+
+Key technical components:
+- Metric tensor input via callable functions
+- Finite difference approximation for partial derivatives
+- Matrix inversion for raising indices
+- ODE integration for geodesic visualization
+
+The implementation handles three progressively complex cases:
+1. Polar coordinates (flat space, curvilinear coords)
+2. Spherical surfaces (intrinsic 2D curvature)
+3. Schwarzschild metric (4D spacetime around black holes)
+
+This project reinforced several valuable skills:
+- Translating mathematical formalism into working code
+- Numerical methods for differential geometry
+- Scientific visualization with matplotlib
+
+The geodesic visualizations particularly demonstrate how abstract mathematics connects to physical reality - shortest paths on a sphere are precisely the great circles that airlines use for long-haul routes.
+
+Full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/christoffel_symbols.ipynb
+
+#Python #Physics #DataScience #ComputationalScience #Mathematics
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Geodesics on a sphere - the math behind the shortest path
+
+These colorful curves are "great circles" - the straightest possible lines on a curved surface. They're what airplanes follow on long flights.
+
+The math that generates them? Christoffel symbols - objects that encode how space curves.
+
+Built a Python calculator from scratch and let the equations trace these paths automatically.
+
+Red: equator
+Blue/green/purple: tilted geodesics
+
+The universe speaks mathematics.
+
+#Physics #Math #Python #DataVisualization #Science #Geometry #Coding #GeneralRelativity #DifferentialGeometry
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,195 @@
+# Social Media Posts: Spring-Mass System
+# Generated for: spring_mass_system.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Why do car suspensions feel smooth? It's all about damping ratio ζ.
+
+Simulated 4 cases:
+• ζ = 0: endless oscillation
+• ζ < 1: decaying waves
+• ζ = 1: fastest return
+• ζ > 1: sluggish
+
+Critical damping = engineering sweet spot!
+
+#Physics #Python #Science
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored the spring-mass system: F = -kx leads to harmonic motion with natural frequency ω₀ = √(k/m).
+
+Adding damping reveals three regimes - underdamped oscillations, critical damping (optimal), and overdamped sluggishness.
+
+Python simulation shows phase space trajectories spiraling to equilibrium.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why doors don't slam or bounce when they close?
+
+It's all about critical damping! I simulated a spring-mass system with different damping ratios.
+
+The equation: m·(d²x/dt²) + c·(dx/dt) + kx = 0
+
+When ζ = 1 (critical), the system returns to rest fastest without oscillating. Too little damping = bouncing. Too much = sluggish.
+
+This same math governs car suspensions, seismometers, and even building stabilizers during earthquakes.
+
+Physics is everywhere!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New simulation: Spring-mass system with variable damping
+
+Solving m·(d²x/dt²) + c·(dx/dt) + kx = 0 numerically with scipy.odeint
+
+Key findings:
+• Undamped (ζ=0): Perfect sinusoidal oscillation, constant energy
+• Underdamped (ζ<1): Exponential decay envelope, E(t) = E₀·e^(-2γt)
+• Critical (ζ=1): Fastest non-oscillatory return
+• Overdamped (ζ>1): Slow exponential approach
+
+Phase space reveals spiraling trajectories for damped cases. Q-factor for underdamped: Q = 1/(2ζ)
+
+#Physics #Python #Simulation #SciPy
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/Physics)
+--------------------------------------------------------------------------------
+**Title:** [OC] Visualizing Spring-Mass Damping: From Undamped Oscillations to Critical Damping
+
+**Body:**
+
+I created a Python simulation exploring how damping affects a spring-mass system, and the results really helped me understand why engineers choose specific damping values.
+
+**The Setup:**
+
+A mass on a spring follows: m·(d²x/dt²) + c·(dx/dt) + kx = 0
+
+The damping ratio ζ = c/(2√(km)) determines everything:
+
+**What I Found:**
+
+1. **Undamped (ζ = 0):** The mass bounces forever with constant energy. Phase space shows a perfect ellipse.
+
+2. **Underdamped (ζ < 1):** This is most real-world systems. Oscillations decay exponentially. The phase trajectory spirals inward.
+
+3. **Critically damped (ζ = 1):** Returns to equilibrium FASTEST without overshooting. This is the sweet spot for shock absorbers and door closers.
+
+4. **Overdamped (ζ > 1):** No oscillation but slower return than critical damping. Useful when you absolutely can't have overshoot.
+
+**Real Applications:**
+
+- Car suspensions are slightly underdamped for comfort
+- Seismometers use critical damping for accuracy
+- Tall buildings use tuned mass dampers based on these principles
+
+The natural frequency ω₀ = √(k/m) ≈ 3.16 rad/s for my parameters. For the underdamped case, the Q-factor came out to 3.16, meaning the system rings for about 3 cycles before significant decay.
+
+**Code used:** NumPy, SciPy (odeint), Matplotlib
+
+View the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spring_mass_system.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why your car doesn't bounce endlessly after hitting a bump?
+
+I simulated a spring-mass system to visualize how damping works. The results are fascinating!
+
+When there's NO damping, a spring bounces forever. Add just the right amount (called "critical damping"), and it returns to rest as fast as possible without bouncing.
+
+Car suspensions use slightly LESS than critical damping - that's why you feel one gentle bounce instead of either endless bobbing or a sluggish response.
+
+The same physics applies to:
+- Door closers (that satisfying smooth close)
+- Earthquake-resistant buildings
+- Even your phone's accelerometer!
+
+The math: ω₀ = √(k/m) gives the natural frequency. The damping ratio ζ determines behavior.
+
+Science is everywhere once you start looking!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spring_mass_system.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Revisiting Fundamentals: Spring-Mass Dynamics and Engineering Applications
+
+Understanding damped harmonic motion remains essential for mechanical and structural engineers. I developed a computational simulation examining the spring-mass system across four damping regimes.
+
+**Technical Approach:**
+
+Solved the second-order ODE: m·(d²x/dt²) + c·(dx/dt) + kx = 0
+
+Using scipy.integrate.odeint for numerical integration across damping ratios from ζ = 0 (undamped) to ζ > 1 (overdamped).
+
+**Key Engineering Insights:**
+
+• Critical damping (ζ = 1) provides optimal transient response - fastest settling without overshoot
+• Q-factor analysis: Q = 1/(2ζ) quantifies energy storage vs. dissipation
+• Phase space visualization reveals system stability characteristics
+
+**Applications:**
+
+- Automotive suspension design (typically ζ ≈ 0.2-0.4)
+- Seismograph calibration (ζ ≈ 0.7)
+- Structural vibration control in high-rise buildings
+- RLC circuit analysis (electrical analogue)
+
+**Tools:** Python, NumPy, SciPy, Matplotlib
+
+This exercise reinforces how fundamental physics principles directly inform engineering design decisions.
+
+View the complete analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spring_mass_system.ipynb
+
+#Physics #Python #Engineering #DataVisualization #ComputationalScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The beauty of physics in motion
+
+This plot shows what happens when a mass on a spring is released - with different amounts of friction (damping).
+
+Blue = no friction, bounces forever
+Pink = light friction, decaying waves
+Orange = perfect friction, smoothest stop
+Red = heavy friction, sluggish return
+
+The spiral in the bottom-left? That's "phase space" - showing position vs velocity. Watch how it winds inward as energy dissipates.
+
+This same math explains:
+- Why car rides feel smooth
+- How doors close gently
+- Why buildings sway (but don't fall) in earthquakes
+
+Natural frequency: ω₀ = √(k/m)
+Damping ratio: ζ = c/(2√(km))
+
+When ζ = 1, you get "critical damping" - the fastest possible return to rest without overshooting.
+
+Physics is elegant.
+
+#Physics #DataVisualization #Python #Science #Engineering #Mechanics #Simulation #STEM #Mathematics #Coding
+
+--------------------------------------------------------------------------------

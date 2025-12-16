@@ -1,0 +1,176 @@
+================================================================================
+QUANTUM ERROR CORRECTION CODES - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Quantum computers can't just copy qubits for backup (no-cloning theorem). So how do they fix errors?
+
+By encoding 1 qubit into 3+, we detect AND correct mistakes without ever looking at the data.
+
+Error rate: O(p) → O(p²)
+
+#QuantumComputing #Python #Physics
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+The no-cloning theorem forbids copying quantum states, yet quantum error correction exists.
+
+The trick: encode |ψ⟩ = α|0⟩ + β|1⟩ into entangled states like α|000⟩ + β|111⟩. Measure syndromes (not the data!) to detect errors.
+
+Result: logical error drops from O(p) to O(p²).
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Here's a wild fact about quantum computing:
+
+You literally cannot copy a qubit. It's forbidden by physics (the no-cloning theorem).
+
+So how do we protect quantum information from errors?
+
+We spread 1 logical qubit across multiple physical qubits. Then we measure "syndromes" - clever checks that reveal IF an error happened and WHERE, without ever peeking at the actual quantum data.
+
+The 3-qubit code reduces errors from p to roughly 3p². Below a threshold, coding always wins.
+
+This is why fault-tolerant quantum computing is possible!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented quantum error correction codes in Python today.
+
+Key concepts:
+- Pauli errors: X (bit-flip), Z (phase-flip), Y (both)
+- 3-qubit code: |0⟩_L = |000⟩, |1⟩_L = |111⟩
+- Stabilizers Z₁Z₂ and Z₂Z₃ give syndrome (s₁,s₂)
+- Logical error rate: 3p² - 2p³ vs uncoded p
+
+The Shor [[9,1,3]] code concatenates bit-flip and phase-flip protection for arbitrary single-qubit error correction.
+
+Threshold theorem: if p < p_th, arbitrarily long quantum computation is achievable.
+
+#QuantumComputing #Physics #Python
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+
+Title: I simulated quantum error correction codes in Python - here's what I learned about protecting quantum information
+
+Body:
+
+**The Problem**
+
+Classical computers handle errors easily - just copy your bits and take a majority vote. But quantum mechanics has the "no-cloning theorem" that forbids copying quantum states. So how do quantum computers deal with errors?
+
+**The Solution: Quantum Error Correction**
+
+Instead of copying, we *encode* one logical qubit into multiple physical qubits using entanglement.
+
+For the 3-qubit bit-flip code:
+- |0⟩ becomes |000⟩
+- |1⟩ becomes |111⟩
+- A superposition α|0⟩ + β|1⟩ becomes α|000⟩ + β|111⟩
+
+**The Clever Part: Syndrome Measurement**
+
+We don't measure the qubits directly (that would destroy the superposition). Instead, we measure "stabilizers" - operators like Z₁Z₂ that tell us if adjacent qubits AGREE, without revealing what they actually are.
+
+The syndrome (s₁, s₂) uniquely identifies which qubit flipped:
+- (0,0) = no error
+- (1,0) = qubit 1 flipped
+- (1,1) = qubit 2 flipped
+- (0,1) = qubit 3 flipped
+
+**Results from My Simulation**
+
+I ran Monte Carlo simulations comparing coded vs uncoded qubits:
+
+- Uncoded error rate: p (linear)
+- Coded error rate: ≈ 3p² (quadratic!)
+
+Below the threshold p < 0.5, the code ALWAYS helps. At p = 0.1, that's a 3x improvement. At p = 0.01, it's 300x better!
+
+**The Shor Code**
+
+The 3-qubit code only handles bit-flips. The 9-qubit Shor code concatenates bit-flip AND phase-flip protection, correcting any single-qubit error. It's a [[9,1,3]] code: 9 physical qubits, 1 logical qubit, distance 3.
+
+**Why This Matters**
+
+The threshold theorem proves that if hardware error rates stay below ~1%, we can do arbitrarily long quantum computations by using error correction. This is the foundation of fault-tolerant quantum computing.
+
+View the full interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_error_correction_codes.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how quantum computers handle mistakes when you can't even copy quantum information?
+
+The answer is quantum error correction - one of the most elegant tricks in physics!
+
+Instead of copying, we spread quantum info across multiple qubits in a clever way. Then we can detect AND fix errors without ever looking at the actual data.
+
+My Python simulation shows error rates dropping from 10% to just 3% using only 3 qubits!
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_error_correction_codes.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring Quantum Error Correction: A Python Implementation
+
+Quantum error correction (QEC) is essential for fault-tolerant quantum computing. Unlike classical systems, quantum states cannot be copied due to the no-cloning theorem, requiring fundamentally different error protection strategies.
+
+Key technical implementations in this project:
+
+- 3-Qubit Bit-Flip Code: Encodes |ψ⟩ = α|0⟩ + β|1⟩ as α|000⟩ + β|111⟩. Stabilizer measurements Z₁Z₂ and Z₂Z₃ identify errors without collapsing the encoded state.
+
+- Monte Carlo Simulation: Validated theoretical error rate 3p² - 2p³ against numerical results across varying noise levels.
+
+- Shor Code Analysis: Implemented the [[9,1,3]] code demonstrating concatenated protection against arbitrary single-qubit Pauli errors.
+
+Key insight: Below the threshold probability (p < 0.5 for this code), error correction always improves reliability. This principle underlies the threshold theorem enabling scalable quantum computation.
+
+Technologies: Python, NumPy, Matplotlib
+
+Explore the full analysis with interactive code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_error_correction_codes.ipynb
+
+#QuantumComputing #Python #DataScience #Physics #Research
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+Quantum Error Correction visualized
+
+You can't copy quantum information. Physics literally forbids it.
+
+So how do quantum computers fix their mistakes?
+
+By encoding 1 qubit into many, we can detect errors WITHOUT looking at the data.
+
+This plot shows the magic:
+- Blue dashed = uncoded (errors grow linearly)
+- Red/Green = coded (errors grow as p²)
+
+Below the threshold, coding ALWAYS wins.
+
+This is why fault-tolerant quantum computing is possible.
+
+#QuantumComputing #Physics #Science #Python #DataVisualization #Coding #STEM #Research #Quantum
+
+================================================================================
+END OF POSTS
+================================================================================

@@ -1,0 +1,206 @@
+# Social Media Posts: Eigenvalue Problems - The Power Method
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+The Power Method finds the dominant eigenvalue of a matrix using just matrix-vector multiplication!
+
+Av = λv → iterate & normalize
+
+Convergence rate: |λ₂/λ₁|ᵏ
+
+Built it in Python with NumPy
+
+#Python #LinearAlgebra #Math #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented the Power Method for eigenvalue problems in Python.
+
+Starting from any vector v⁽⁰⁾, iterate:
+w = Av, then normalize
+
+The eigenvalue estimate converges at rate |λ₂/λ₁|ᵏ
+
+Simple, memory-efficient, and elegant. Only needs matrix-vector products—no full decomposition required.
+
+#NumericalMethods #Python
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how algorithms find eigenvalues without solving massive polynomial equations?
+
+The Power Method is beautifully simple:
+1. Start with any vector
+2. Multiply by matrix A
+3. Normalize
+4. Repeat
+
+Each iteration brings you closer to the dominant eigenvalue!
+
+The convergence rate depends on how "separated" the top two eigenvalues are. When |λ₂/λ₁| is small, it converges fast. When they're close (like 0.99), it's slow.
+
+Built a Python demo showing this in action with NumPy!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New notebook: Eigenvalue Problems with the Power Method
+
+The algorithm is elegant—given matrix A ∈ ℝⁿˣⁿ, finding Av = λv via iteration:
+
+w⁽ᵏ⁺¹⁾ = Av⁽ᵏ⁾
+v⁽ᵏ⁺¹⁾ = w/‖w‖
+
+Eigenvalue via Rayleigh quotient: λ = vᵀAv/vᵀv
+
+Key insight: convergence rate is O(|λ₂/λ₁|ᵏ)
+
+Tested with different eigenvalue separations—when |λ₂/λ₁| = 0.1, converges in ~10 iterations. At 0.99, needs 100+.
+
+Extensions: Inverse iteration, shifted inverse, Rayleigh quotient iteration.
+
+#NumericalAnalysis #LinearAlgebra #Python #SciPy
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I implemented the Power Method for finding eigenvalues in Python—here's what I learned about convergence rates
+
+**Body:**
+
+If you've taken linear algebra, you know eigenvalues are everywhere—from Google's PageRank to quantum mechanics. But how do you actually compute them?
+
+**The Problem**
+
+Given a matrix A, find scalar λ and vector v such that Av = λv. Solving the characteristic polynomial works in theory but is numerically unstable for large matrices.
+
+**The Power Method**
+
+This iterative approach is surprisingly simple:
+
+1. Start with random vector v
+2. Multiply: w = Av
+3. Normalize: v = w/‖w‖
+4. Estimate eigenvalue: λ = vᵀAv
+5. Repeat until convergence
+
+**What I Learned**
+
+The convergence rate is |λ₂/λ₁|ᵏ, where λ₁ is the dominant eigenvalue and λ₂ is the second largest.
+
+I tested this with different ratios:
+- |λ₂/λ₁| = 0.1 → converges in ~10 iterations
+- |λ₂/λ₁| = 0.5 → ~20 iterations
+- |λ₂/λ₁| = 0.99 → 100+ iterations
+
+When eigenvalues are close together, convergence is painfully slow!
+
+**Limitations**
+- Only finds the dominant eigenvalue
+- Fails for complex eigenvalues
+- Slow when eigenvalues aren't well-separated
+
+**Extensions**
+
+For other eigenvalues, use:
+- Inverse Power Method: apply to A⁻¹ for smallest eigenvalue
+- Shifted Inverse Iteration: find eigenvalue closest to any value σ
+
+The notebook includes visualization of convergence behavior and eigenvector component evolution.
+
+**View the full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/eigenvalue_problems_power_method.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built something cool: a Python implementation of the Power Method for finding eigenvalues!
+
+Eigenvalues are fundamental in science—they tell us about stability, vibrations, and principal components.
+
+The algorithm is elegant: just keep multiplying a vector by a matrix and normalizing. The ratio between the top two eigenvalues determines how fast it converges.
+
+The visualization shows how different eigenvalue "gaps" affect speed—well-separated eigenvalues converge fast, close ones are slow.
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/eigenvalue_problems_power_method.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Eigenvalue Computation: Implementing the Power Method in Python
+
+I've been exploring numerical methods for eigenvalue problems—fundamental computations that appear throughout data science and engineering.
+
+**The Challenge**
+
+Given matrix A ∈ ℝⁿˣⁿ, find eigenvalue λ and eigenvector v satisfying Av = λv. Direct polynomial methods are unstable; iterative approaches scale better.
+
+**The Power Method**
+
+This algorithm is remarkably simple:
+• Initialize with random vector
+• Iterate: w = Av, then v = w/‖w‖
+• Estimate λ via Rayleigh quotient
+
+**Key Insight: Convergence Analysis**
+
+The convergence rate is O(|λ₂/λ₁|ᵏ). I tested matrices with eigenvalue ratios from 0.1 to 0.99:
+- Well-separated (0.1): ~10 iterations
+- Poorly separated (0.99): 100+ iterations
+
+This has practical implications for applications like PageRank, where the eigenvalue gap determines algorithm efficiency.
+
+**Technical Skills Demonstrated**
+• NumPy for efficient linear algebra
+• Matplotlib for convergence visualization
+• Algorithm analysis and verification
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/eigenvalue_problems_power_method.ipynb
+
+#NumericalMethods #Python #LinearAlgebra #DataScience #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The Power Method: Finding Eigenvalues Through Iteration
+
+Ever wonder how computers find eigenvalues of huge matrices?
+
+The Power Method is beautifully simple:
+→ Start with any vector
+→ Multiply by matrix
+→ Normalize
+→ Repeat
+
+Each iteration gets closer to the dominant eigenvalue!
+
+The plot shows how different eigenvalue separations affect convergence speed.
+
+Well-separated eigenvalues? Fast convergence.
+Close together? Much slower.
+
+This is how algorithms like PageRank work under the hood!
+
+Built with Python + NumPy + Matplotlib
+
+#python #math #linearalgebra #datascience #coding #numericalanalysis #eigenvalues #visualization
+
+--------------------------------------------------------------------------------

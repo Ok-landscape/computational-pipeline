@@ -1,0 +1,159 @@
+# Social Media Posts: Multigrid Methods for Solving the Poisson Equation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Multigrid methods are algorithmic magic: solve PDEs in O(N) time instead of O(N²)!
+
+For a 66×66 grid, multigrid converges in ~15 cycles while Jacobi needs thousands of iterations.
+
+Smooth the highs, coarsen the lows.
+
+#Python #Math #NumericalMethods #HPC
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented a multigrid solver for the 2D Poisson equation ∇²u = f today.
+
+The key insight: relaxation damps high-frequency errors quickly, but low-frequency errors persist. Solution? Move to coarser grids where those slow modes become fast modes.
+
+Result: O(N) optimal complexity.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how supercomputers solve massive systems of equations so fast?
+
+The answer is multigrid methods! Instead of grinding through millions of iterations, multigrid uses a clever trick:
+
+1. Smooth out the "wiggly" errors on a fine grid
+2. Transfer remaining "smooth" errors to a coarser grid
+3. Repeat until you hit a tiny grid you can solve directly
+4. Interpolate corrections back up
+
+For the Poisson equation, this gives mesh-independent convergence. Mind = blown.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Multigrid Methods for the 2D Poisson equation
+
+∇²u(x,y) = f(x,y) discretized with 5-point stencil
+
+Key components implemented:
+- Weighted Jacobi relaxation (ω = 2/3)
+- Full-weighting restriction (fine → coarse)
+- Bilinear interpolation (coarse → fine)
+- Recursive V-cycle algorithm
+
+Results: Convergence factor ρ ≈ 0.1 independent of grid size N. For N=64, multigrid needs ~15 V-cycles vs. thousands of Jacobi iterations.
+
+#Numerics #PDE #ScientificComputing #Python
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I built a multigrid PDE solver from scratch in Python - here's how it achieves O(N) optimal complexity
+
+**Body:**
+
+Ever tried to solve a large system of linear equations with basic iterative methods like Jacobi? You'll wait forever. Here's why multigrid methods are a game-changer.
+
+**The Problem:**
+The Poisson equation ∇²u = f shows up everywhere: electrostatics, heat transfer, fluid flow. When you discretize it on a grid, you get a huge sparse linear system.
+
+**Why Simple Methods Fail:**
+Iterative methods like Jacobi are great at eliminating "wiggly" high-frequency errors but terrible at smooth, low-frequency ones. The smoother the error, the more iterations you need.
+
+**The Multigrid Insight:**
+A smooth error on a fine grid looks wiggly on a coarser grid! So multigrid:
+
+1. Smooths the solution on the fine grid (kills high-freq errors)
+2. Computes the residual and restricts it to a coarser grid
+3. Recursively solves for the error correction
+4. Interpolates the correction back and applies it
+5. Smooths again
+
+**Results:**
+- 66×66 grid: Multigrid converges in ~15 V-cycles
+- Same problem with Jacobi: needs thousands of iterations
+- Convergence rate ρ ≈ 0.1 is independent of grid size!
+
+The full notebook with visualizations and code is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/multigrid_methods_poisson_equation.ipynb
+
+What's your experience with numerical PDE solvers?
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built something cool: a multigrid solver for partial differential equations!
+
+The Poisson equation appears in physics all the time - from electrostatics to heat flow. But solving it on large grids is computationally expensive... unless you're clever.
+
+Multigrid exploits a beautiful idea: errors that are hard to eliminate on a fine grid become easy on a coarser one. By cycling between grid levels, you get optimal O(N) performance.
+
+Full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/multigrid_methods_poisson_equation.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Optimal Solvers: Multigrid Methods for PDEs
+
+I recently implemented a geometric multigrid solver for the 2D Poisson equation - a fundamental PDE appearing in computational physics, engineering simulations, and graphics.
+
+Technical highlights:
+
+• Discretization: 5-point finite difference stencil with O(h²) accuracy
+• Smoothing: Weighted Jacobi relaxation with optimal damping parameter ω = 2/3
+• Grid transfer: Full-weighting restriction and bilinear interpolation
+• Algorithm: V-cycle with recursive coarse-grid correction
+
+Key results:
+→ Convergence factor ρ ≈ 0.1 independent of grid size
+→ O(N) complexity per V-cycle (optimal!)
+→ For a 66×66 grid: ~15 V-cycles vs. thousands of Jacobi iterations
+
+This is why multigrid remains the gold standard for elliptic PDEs in production numerical codes, from weather modeling to reservoir simulation.
+
+Skills demonstrated: numerical analysis, algorithm design, Python scientific computing (NumPy, Matplotlib)
+
+Interactive notebook available at:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/multigrid_methods_poisson_equation.ipynb
+
+#NumericalMethods #ScientificComputing #Python #ComputationalScience #PDEs
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Multigrid Magic ✨
+
+This plot shows why multigrid methods are the gold standard for solving PDEs.
+
+Blue line: Multigrid V-cycle
+Red line: Basic Jacobi iteration
+
+See how multigrid plummets to machine precision in just ~15 cycles while Jacobi barely budges?
+
+The secret: smooth errors are hard to kill on fine grids but easy on coarse ones. Multigrid exploits this by bouncing between grid resolutions.
+
+Used for: weather prediction, physics simulations, computer graphics, and anywhere you need to solve big systems fast.
+
+#NumericalMethods #Math #Python #DataScience #Visualization #ScienceArt
+
+--------------------------------------------------------------------------------

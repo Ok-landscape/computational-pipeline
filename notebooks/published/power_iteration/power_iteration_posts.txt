@@ -1,0 +1,145 @@
+# Power Iteration - Social Media Posts
+
+---
+
+## 1. Twitter/X (280 chars)
+
+Power Iteration: the algorithm behind PageRank! Just multiply a matrix by a vector repeatedly & normalize. Converges to the dominant eigenvector. Simple yet foundational for modern search engines.
+
+#Python #LinearAlgebra #Math #DataScience #Eigenvalues
+
+---
+
+## 2. Bluesky (300 chars)
+
+The Power Iteration method finds a matrix's dominant eigenvalue by repeatedly computing Av and normalizing. Convergence rate depends on |λ₂/λ₁| - the smaller this ratio, the faster it converges.
+
+Used in PageRank, PCA, and forms the basis for advanced algorithms like QR decomposition.
+
+---
+
+## 3. Threads (500 chars)
+
+Ever wondered how Google's PageRank works at its core?
+
+It's Power Iteration - one of the simplest eigenvalue algorithms:
+1. Start with any vector x
+2. Multiply: y = Ax
+3. Normalize: x = y/||y||
+4. Repeat until convergence
+
+The vector converges to the dominant eigenvector because other components decay as (λ₂/λ₁)ᵏ → 0.
+
+Despite being ancient, it's still used for huge sparse matrices where you only need the top eigenvalue. Sometimes the classics just work!
+
+---
+
+## 4. Mastodon (500 chars)
+
+Implemented Power Iteration in Python - the foundational algorithm for finding dominant eigenvalues.
+
+Key insight: For A with eigenvalues |λ₁| > |λ₂| ≥ ... ≥ |λₙ|, repeatedly applying A to any vector amplifies the λ₁ component while others decay as O((λ₂/λ₁)ᵏ).
+
+Tested on:
+- SPD matrix with known eigenvalues
+- PCA on 2D correlated data
+
+Convergence rate directly tied to eigenvalue separation. With |λ₂/λ₁| = 0.5, converges in ~25 iterations to machine precision.
+
+#NumericalMethods #LinearAlgebra #Python
+
+---
+
+## 5. Reddit
+
+**Title:** Power Iteration: The Simple Algorithm Behind PageRank and PCA [Python Implementation]
+
+**Body:**
+
+Just built an implementation of Power Iteration, one of the oldest and simplest eigenvalue algorithms. Despite its age, it's still relevant - it's the core idea behind Google's PageRank!
+
+**How it works (ELI5):**
+
+Imagine you have a matrix A and want to find its "main direction" - the eigenvector with the largest eigenvalue. Power iteration does this by:
+
+1. Start with any random vector x
+2. Multiply it by A to get y = Ax
+3. Normalize y to prevent overflow
+4. Repeat
+
+Why does this work? When you multiply by A repeatedly, the component along the dominant eigenvector gets amplified more than all others. Eventually, everything else becomes negligible.
+
+**The math:** If eigenvalues are |λ₁| > |λ₂| ≥ ... , then after k iterations, the error decays as O((λ₂/λ₁)ᵏ). So the more separated your eigenvalues, the faster convergence.
+
+**What I learned:**
+- Convergence is linear but can be quite fast (10-30 iterations for well-separated eigenvalues)
+- It only finds ONE eigenvalue - need deflation or other methods for more
+- Forms the foundation for QR algorithm, Arnoldi iteration, etc.
+
+**Applications:** PageRank (importance of web pages), PCA (finding directions of maximum variance), stability analysis
+
+The implementation includes convergence plots showing how different eigenvalue ratios affect speed.
+
+**View the full notebook with interactive code:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/power_iteration.ipynb
+
+---
+
+## 6. Facebook (500 chars)
+
+How does Google rank web pages? At its core: Power Iteration!
+
+This elegant algorithm finds the most important direction in a matrix by simply multiplying and normalizing repeatedly. The dominant pattern emerges while everything else fades away.
+
+I implemented it in Python and tested it on PCA - finding the direction of maximum variance in data. The same principle that ranks billions of web pages can be understood in 20 lines of code!
+
+Check out the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/power_iteration.ipynb
+
+---
+
+## 7. LinkedIn (1000 chars)
+
+Exploring Numerical Linear Algebra: Power Iteration Method
+
+Just completed an implementation of the Power Iteration algorithm - a foundational technique in numerical linear algebra that remains relevant in modern applications.
+
+Technical Highlights:
+- Implemented the algorithm with Rayleigh quotient for eigenvalue estimation
+- Analyzed convergence rates across different eigenvalue ratio scenarios
+- Applied the method to PCA for finding principal components
+- Verified results against NumPy's eigen decomposition
+
+Key Findings:
+The convergence rate O((λ₂/λ₁)ᵏ) means eigenvalue separation is critical. With a ratio of 0.5, we achieve 10⁻¹⁰ precision in ~25 iterations.
+
+Real-world Applications:
+- Google's PageRank algorithm
+- Principal Component Analysis
+- Stability analysis of dynamical systems
+
+Skills Demonstrated:
+- Numerical algorithm implementation
+- Convergence analysis
+- Scientific visualization with Matplotlib
+- Mathematical foundations in linear algebra
+
+This project reinforces how classical algorithms underpin modern data science tools.
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/power_iteration.ipynb
+
+---
+
+## 8. Instagram (500 chars)
+
+The math behind Google's search ranking visualized
+
+Power Iteration finds the dominant "direction" in data by repeating one simple operation: multiply and normalize.
+
+The plot shows:
+- Top left: Eigenvalue converging to true value
+- Top right: Faster convergence with better eigenvalue separation
+- Bottom left: PCA finding main data direction
+- Bottom right: Theory matches practice
+
+This 70-year-old algorithm still powers modern search engines and data analysis. Sometimes the simplest ideas are the most powerful.
+
+#Math #DataScience #Python #Visualization #LinearAlgebra #MachineLearning #Eigenvalues #PCA #Algorithms

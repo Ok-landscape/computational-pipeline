@@ -1,0 +1,136 @@
+# Social Media Posts: Aharonov-Bohm Effect
+# Generated from: notebooks/published/aharonov_bohm_effect.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Electrons can "feel" magnetic fields they never touch. The Aharonov-Bohm effect shows quantum particles are influenced by electromagnetic potentials even where B=0. Physics is wild.
+
+#QuantumMechanics #Physics #Python #Science
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+The Aharonov-Bohm effect (1959) proved electromagnetic potentials aren't just math tricks - they have real physical meaning. Electrons passing around a solenoid shift their interference pattern based on enclosed flux, even in field-free regions.
+
+#QuantumPhysics #Science
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Here's something that'll bend your brain: electrons can be affected by magnetic fields they never actually encounter.
+
+The Aharonov-Bohm effect shows that in quantum mechanics, the electromagnetic potential A matters - not just the fields E and B.
+
+Electrons going around a solenoid (where B=0 outside) still pick up a phase shift:
+phi = 2pi(Phi/Phi_0)
+
+The pattern shifts even though the particles never touch the magnetic field. Quantum non-locality is real.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Simulated the Aharonov-Bohm effect in Python today.
+
+Key physics: electrons acquire phase exp(iq/hbar integral A dot dl) even in B=0 regions. The interference pattern shifts as flux changes, with period Phi_0 = h/e (the flux quantum).
+
+At Phi = Phi_0/2, maxima become minima. The effect is topological - only the enclosed flux matters.
+
+Central intensity: I(0) = cos²(pi * Phi/Phi_0)
+
+This 1959 prediction fundamentally changed how we view gauge potentials.
+
+#Physics #QuantumMechanics #Python
+
+================================================================================
+REDDIT (Title + Body for r/learnpython or r/physics)
+================================================================================
+
+**Title:** [OC] I simulated the Aharonov-Bohm effect in Python - electrons "feeling" magnetic fields without touching them
+
+**Body:**
+
+I created a Python simulation demonstrating one of quantum mechanics' most mind-bending phenomena: the Aharonov-Bohm effect.
+
+**What is it?**
+In classical physics, only the electric and magnetic fields (E and B) matter. The potentials (A and phi) are just mathematical conveniences. But in 1959, Aharonov and Bohm predicted that charged particles can be influenced by electromagnetic potentials even in regions where the actual fields are zero!
+
+**The setup:**
+Imagine electrons in a double-slit experiment, but with a solenoid (basically a magnet with all its field confined inside) placed between the slits. Outside the solenoid, B=0 - there's literally no magnetic field. Yet the electrons' interference pattern shifts based on the magnetic flux inside the solenoid.
+
+**The key equation:**
+The phase shift is: Delta_phi = 2pi * (Phi/Phi_0)
+
+Where Phi_0 = h/e is the magnetic flux quantum (about 4.14 x 10^-15 Weber).
+
+**What I learned:**
+- At Phi = Phi_0/2, the entire pattern shifts by half a fringe (maxima become minima)
+- The central intensity oscillates as I(0) = cos²(pi * Phi/Phi_0)
+- This effect is topological - it only depends on the flux enclosed by the electron paths, not local field values
+- This is why electromagnetic potentials are considered "real" in quantum mechanics
+
+The simulation uses numpy/matplotlib and models 50 keV electrons (typical transmission electron microscope energy).
+
+**Interactive notebook:** View and run it yourself:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/aharonov_bohm_effect.ipynb
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+What if I told you electrons can "sense" magnets they never touch?
+
+The Aharonov-Bohm effect is one of quantum mechanics' strangest predictions: particles change their behavior based on magnetic fields they never pass through!
+
+In my latest simulation, I show how electron interference patterns shift depending on magnetic flux - even when the electrons travel only through field-free regions. The effect was predicted in 1959 and has since been confirmed experimentally.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/aharonov_bohm_effect.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Quantum Non-locality: Simulating the Aharonov-Bohm Effect
+
+I recently developed a computational simulation of the Aharonov-Bohm effect - a cornerstone phenomenon in quantum mechanics that demonstrates the physical significance of electromagnetic potentials.
+
+Technical highlights:
+- Modeled electron interference in a double-slit configuration with varying magnetic flux
+- Implemented phase calculations: Delta_phi = 2pi * (Phi/Phi_0) where Phi_0 is the flux quantum
+- Visualized the continuous fringe shift as flux varies from 0 to 2 flux quanta
+- Analyzed central intensity oscillation: I(0) = cos²(pi * Phi/Phi_0)
+
+Key insight: Unlike classical electromagnetism, quantum mechanics treats the vector potential A as physically meaningful - not just a mathematical convenience. This has practical applications in SQUID magnetometers and electron holography.
+
+Tools: Python, NumPy, Matplotlib
+Methodology: Numerical simulation with realistic parameters (50 keV electrons, 500nm slit separation)
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/aharonov_bohm_effect.ipynb
+
+#QuantumMechanics #Physics #Python #DataScience #ScientificComputing
+
+================================================================================
+INSTAGRAM (< 500 chars, visual-focused caption)
+================================================================================
+
+Quantum mechanics is weird.
+
+These patterns show electrons interfering with themselves - but here's the twist: they shift based on a magnetic field the electrons never actually touch.
+
+It's called the Aharonov-Bohm effect.
+
+The bright yellow streaks? That's where electrons arrive most often. Watch how they slide sideways as we increase the magnetic flux.
+
+At half a flux quantum, maxima become minima.
+At one full flux quantum, we're back where we started.
+
+Non-locality isn't just theory. It's measurable.
+
+.
+.
+.
+#quantumphysics #physics #science #pythonprogramming #dataviz #quantummechanics #electrons #interference #scienceart

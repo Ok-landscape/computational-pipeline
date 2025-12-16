@@ -1,0 +1,176 @@
+# Social Media Posts: Hodgkin-Huxley Neuron Model
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Just simulated how neurons fire using the 1952 Nobel Prize-winning Hodgkin-Huxley model!
+
+Membrane potential: Cₘ dV/dt = Iₑₓₜ - gₙₐm³h(V-Eₙₐ) - gₖn⁴(V-Eₖ) - gₗ(V-Eₗ)
+
+Pure Python + NumPy 🧠⚡
+
+#Neuroscience #Python #CompBio
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented the Hodgkin-Huxley neuron model in Python - the mathematical framework that earned a Nobel Prize for explaining how action potentials work.
+
+Key insight: Ion channel dynamics (Na⁺ and K⁺) create the characteristic spike through coupled differential equations.
+
+#Neuroscience #Python #Science
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how your neurons actually fire?
+
+I just coded the Hodgkin-Huxley model - the 1952 breakthrough that cracked the neural code and won a Nobel Prize.
+
+The magic: Your neuron membrane acts like an electrical circuit. Sodium rushes in (depolarization), potassium rushes out (repolarization), and you get that classic action potential spike.
+
+The math: Four coupled differential equations tracking voltage + three gating variables (m, h, n).
+
+Built with Python, NumPy, and SciPy's ODE solver. Results match the textbook perfectly!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented the Hodgkin-Huxley neuron model - the foundational computational neuroscience framework from 1952.
+
+The model treats the membrane as a capacitor with parallel ionic conductances:
+
+Cₘ dV/dt = Iₑₓₜ - gₙₐm³h(V-Eₙₐ) - gₖn⁴(V-Eₖ) - gₗ(V-Eₗ)
+
+Gating variables m, h, n follow first-order kinetics with voltage-dependent rate constants α and β.
+
+Simulation shows classic action potential features: rapid depolarization to ~+40mV, repolarization, and brief hyperpolarization.
+
+Used scipy.integrate.odeint for numerical solution.
+
+#CompNeuro #Python #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/neuroscience)
+--------------------------------------------------------------------------------
+**Title:** I implemented the Hodgkin-Huxley neuron model in Python - here's how neurons actually fire
+
+**Body:**
+
+I've been learning computational neuroscience and just finished implementing the famous Hodgkin-Huxley model that won the 1952 Nobel Prize. Thought I'd share what I learned!
+
+**ELI5: How do neurons fire?**
+
+Your neuron membrane is like a tiny battery. It maintains a voltage difference (-65mV at rest) using ion pumps. When stimulated:
+
+1. Sodium (Na⁺) channels open → positive ions rush in → voltage spikes up
+2. Sodium channels close, Potassium (K⁺) channels open → positive ions rush out → voltage drops back down
+3. Brief "overshoot" below resting potential, then recovery
+
+This whole cycle takes about 1-2 milliseconds!
+
+**The Math (simplified)**
+
+The membrane voltage V follows:
+
+Cₘ dV/dt = I_external - I_Na - I_K - I_leak
+
+Where each ionic current depends on:
+- Maximum conductance (how "open" the channels can get)
+- Gating variables (probability channels are open)
+- Driving force (difference from equilibrium potential)
+
+The gating variables (m, h, n) are where it gets interesting - they follow their own differential equations with voltage-dependent rate constants.
+
+**What I learned:**
+
+- Action potentials are "all-or-none" - they either happen fully or not at all
+- The refractory period exists because channels need time to reset
+- Multiple spikes occur during sustained stimulation
+- scipy.integrate.odeint handles the coupled ODEs beautifully
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hodgkin_huxley_neuron_model.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built a simulation of how brain cells fire!
+
+The Hodgkin-Huxley model (1952 Nobel Prize) explains the electrical "spikes" neurons use to communicate. Turns out your brain cells work like tiny batteries with voltage-controlled gates.
+
+When stimulated: sodium ions rush in, voltage spikes to +40mV, then potassium ions rush out to reset it. All in ~1 millisecond!
+
+Built it in Python and the results match real neuron recordings perfectly.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hodgkin_huxley_neuron_model.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Computational Neuroscience: Implementing the Hodgkin-Huxley Model
+
+Recently completed a Python implementation of the Hodgkin-Huxley neuron model - the mathematical framework that earned Alan Hodgkin and Andrew Huxley the 1963 Nobel Prize in Physiology.
+
+Technical Implementation:
+• Modeled membrane dynamics as coupled ordinary differential equations
+• Implemented voltage-dependent rate constants for Na⁺ and K⁺ channel gating
+• Used scipy.integrate.odeint for numerical integration
+• Visualized membrane potential, gating variables, and ionic currents
+
+Key Results:
+• Successfully reproduced characteristic action potential waveform
+• Observed all-or-none threshold behavior at approximately -55mV
+• Demonstrated refractory period and repetitive firing under sustained stimulation
+
+The Hodgkin-Huxley formalism remains foundational in computational neuroscience, providing the template for modern neuron models used in brain simulation projects and neural network research.
+
+This project reinforced skills in differential equations, numerical methods, and scientific visualization - core competencies for computational biology and bioinformatics roles.
+
+View the complete notebook with code and analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hodgkin_huxley_neuron_model.ipynb
+
+#ComputationalNeuroscience #Python #DataScience #Bioinformatics #ScientificComputing
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+How do your neurons actually fire? ⚡🧠
+
+This is the Hodgkin-Huxley model - the Nobel Prize-winning math that explains action potentials.
+
+Your brain cells are tiny batteries:
+→ Stimulus arrives
+→ Sodium gates open, voltage spikes UP
+→ Potassium gates open, voltage drops DOWN
+→ Brief overshoot, then reset
+
+The whole cycle: ~1 millisecond
+Peak voltage: +40mV
+Resting voltage: -65mV
+
+Built this simulation in Python using NumPy and SciPy.
+
+The top panel shows the action potential spike. Below that: the gating variables (m, h, n) that control ion flow. Then the ionic currents. Bottom: the stimulus pulse.
+
+70+ years later, this model is still the foundation of computational neuroscience!
+
+#Neuroscience #Python #Science #DataVisualization #STEM #Coding #Brain #ComputationalBiology #ActionPotential #NobelPrize
+
+--------------------------------------------------------------------------------

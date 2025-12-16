@@ -1,0 +1,188 @@
+# Social Media Posts: Scale-Free Networks - Barabási-Albert Model
+
+================================================================================
+## 1. TWITTER/X (< 280 chars)
+================================================================================
+
+Why do some network nodes become "hubs"? The Barabási-Albert model shows: rich get richer!
+
+New nodes prefer connecting to popular ones → P(k) ~ k⁻³
+
+10,000 nodes simulated in Python
+
+#NetworkScience #Python #ComplexSystems
+
+================================================================================
+## 2. BLUESKY (< 300 chars)
+================================================================================
+
+Explored the Barabási-Albert model for scale-free networks.
+
+Key insight: preferential attachment creates power-law degree distributions.
+
+Probability of connection: Π(kᵢ) = kᵢ/Σⱼkⱼ (rich-get-richer)
+
+Result: P(k) ~ k⁻³ confirmed with 10,000-node simulation.
+
+#NetworkScience #Python #DataScience
+
+================================================================================
+## 3. THREADS (< 500 chars)
+================================================================================
+
+Ever wonder why some websites get all the links while others stay invisible?
+
+It's called preferential attachment - "the rich get richer"
+
+I simulated the Barabási-Albert model with 10,000 nodes:
+→ New nodes connect to popular nodes with probability proportional to their degree
+→ This creates hub nodes with HUGE connectivity
+→ Degree distribution follows a power law: P(k) ~ k⁻³
+
+The math is elegant: kᵢ(t) = m√(t/tᵢ)
+
+Early nodes grow bigger over time. Just like real social networks!
+
+#Python #Science #Networks
+
+================================================================================
+## 4. MASTODON (< 500 chars)
+================================================================================
+
+Implemented the Barabási-Albert scale-free network model from scratch.
+
+Preferential attachment mechanism:
+Π(kᵢ) = kᵢ / Σⱼkⱼ
+
+Simulated N=10,000 nodes, m=3 edges per new node.
+
+Results:
+• Mean degree ⟨k⟩ = 2m = 6 (confirmed)
+• Fitted γ ≈ 3.0 (matches theory)
+• Power-law degree distribution: P(k) ~ k⁻³
+
+The continuum theory derivation is beautiful - solving ∂kᵢ/∂t = kᵢ/2t gives degree evolution kᵢ(t) ~ t^(1/2).
+
+#NetworkScience #ComplexSystems #Python #Mathematics
+
+================================================================================
+## 5. REDDIT (Title + Body for r/learnpython or r/science)
+================================================================================
+
+**Title:** I built a Barabási-Albert scale-free network simulator in Python - here's how "rich get richer" creates network hubs
+
+**Body:**
+
+Hey everyone! I just finished a project exploring scale-free networks and wanted to share what I learned.
+
+**What's a scale-free network?**
+
+Unlike random networks where all nodes have similar connections, scale-free networks have a few "hub" nodes with tons of connections and many nodes with just a few. Think of it like social media influencers - a handful have millions of followers, most have a few dozen.
+
+**The Barabási-Albert Model**
+
+This model explains how scale-free networks form through two simple rules:
+1. Growth: Network keeps adding new nodes
+2. Preferential attachment: New nodes prefer connecting to already-popular nodes
+
+The probability that a new node connects to node i is:
+
+Π(kᵢ) = kᵢ / (sum of all degrees)
+
+So if node i has 100 connections and the total is 1000, there's a 10% chance the new node connects to it. Popular nodes get more popular!
+
+**The Math (ELI5 version)**
+
+This "rich get richer" leads to a power-law distribution: P(k) ~ k⁻³
+
+This means if you double the number of connections (k), the probability of having that many drops by 8x (2³). Very few hubs, lots of small nodes.
+
+**My Implementation**
+
+I simulated 10,000 nodes with m=3 edges per new node. Key results:
+- Mean degree: 6.0 (matches theory: 2m)
+- Fitted exponent γ ≈ 3.0 (exactly as predicted!)
+- Top hub had over 200 connections while average was 6
+
+**What I Learned**
+
+Simple local rules (connect to popular nodes) create complex global patterns (power-law distribution). This same mechanism appears in the World Wide Web, citation networks, and biological networks.
+
+The code is pure Python with numpy/matplotlib - no networkx needed!
+
+**View the full notebook with interactive code:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/scale_free_network_barabasi_albert.ipynb
+
+================================================================================
+## 6. FACEBOOK (< 500 chars)
+================================================================================
+
+Ever notice how some things just get more and more popular while others stay unknown?
+
+There's actually math behind this! It's called preferential attachment - "the rich get richer."
+
+I simulated a network of 10,000 nodes using the Barabási-Albert model. New nodes prefer connecting to already-popular nodes, which creates "hubs" - just like social media influencers or popular websites.
+
+The result? A power law: P(k) ~ k⁻³
+
+Simple rules → complex patterns!
+
+View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/scale_free_network_barabasi_albert.ipynb
+
+================================================================================
+## 7. LINKEDIN (< 1000 chars)
+================================================================================
+
+How do network hubs emerge? A Python implementation of the Barabási-Albert model.
+
+I recently completed a computational study of scale-free networks, implementing the Barabási-Albert (BA) model from scratch to understand preferential attachment dynamics.
+
+Key technical approach:
+• Built a generative network model simulating growth with preferential attachment
+• Implemented efficient sampling using repeated-node lists for O(1) attachment probability
+• Validated against theoretical predictions using power-law fitting
+
+Results from N=10,000 node simulation:
+• Degree distribution follows P(k) ~ k⁻γ with γ = 3.0 (matching Barabási & Albert's 1999 theory)
+• Mean degree ⟨k⟩ = 2m confirmed
+• Verified continuum theory: degree evolution kᵢ(t) = m√(t/tᵢ)
+
+The model demonstrates how simple local rules (preferential attachment) generate complex global structure (scale-free topology). This mechanism underlies many real networks: WWW hyperlinks, academic citations, and protein interactions.
+
+Skills demonstrated: Python, NumPy, statistical analysis, mathematical modeling, data visualization.
+
+View the complete implementation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/scale_free_network_barabasi_albert.ipynb
+
+================================================================================
+## 8. INSTAGRAM (< 500 chars, visual-focused caption)
+================================================================================
+
+Why do some accounts explode while others stay small?
+
+Preferential attachment: The rich get richer.
+
+This visualization shows a scale-free network simulation.
+
+The math is elegant:
+→ New nodes connect to popular nodes
+→ Probability: Π(k) = k / total_degree
+→ Result: P(k) ~ k⁻³
+
+Top left: Power-law degree distribution
+Top right: Cumulative distribution
+Bottom left: Degree histogram showing the "long tail"
+Bottom right: How early nodes grow over time
+
+10,000 nodes. Pure Python.
+Simple rules → Complex networks.
+
+#DataScience
+#Python
+#NetworkScience
+#Mathematics
+#DataVisualization
+#ComplexSystems
+#Coding
+#Science

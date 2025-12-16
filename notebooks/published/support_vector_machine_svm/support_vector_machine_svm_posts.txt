@@ -1,0 +1,138 @@
+# Social Media Posts: Support Vector Machines (SVM)
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Support Vector Machines find the WIDEST street between data classes. Only the points touching the curb (support vectors) matter - everything else is ignored. Elegant math, powerful results.
+
+#MachineLearning #Python #DataScience #AI
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented an SVM classifier from scratch today. The core insight: maximize the margin between classes by solving a quadratic optimization problem. Only support vectors (points on the margin boundary) determine the decision boundary. Beautiful duality between geometry and optimization.
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how machine learning separates cats from dogs in images?
+
+Support Vector Machines find the "widest road" between different categories. Imagine drawing a line between two groups - SVM finds the line with maximum breathing room on both sides.
+
+The wild part? Only a handful of data points (called support vectors) actually matter. You could delete most of your training data and get the same result.
+
+Built one from scratch in Python - 100% accuracy on test data!
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented a linear SVM from first principles using scipy's SLSQP optimizer.
+
+Key math: minimize (1/2)||w||² subject to yᵢ(wᵀxᵢ + b) ≥ 1
+
+The dual formulation reveals the kernel trick - we only need dot products between data points, enabling non-linear classification via K(x,z) = exp(-γ||x-z||²) without explicitly computing high-dimensional features.
+
+Achieved 100% training accuracy with only ~6% of points as support vectors.
+
+#MachineLearning #Python #SVM #Math
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** I implemented Support Vector Machines from scratch - here's what I learned about margin maximization
+
+**Body:**
+
+Just finished building an SVM classifier from the ground up using only NumPy and SciPy. Here's the ELI5 version:
+
+**The Core Idea**
+Imagine you have red and blue marbles scattered on a table. You want to draw a line separating them. There are infinite lines that work, but SVM finds the ONE line that has the most "breathing room" on both sides. This breathing room is called the **margin**.
+
+**Why This Matters**
+A wider margin = better generalization to new data. It's like leaving extra space when parking - more room for error.
+
+**The Math (simplified)**
+- We want to maximize 2/||w|| (the margin width)
+- Which means minimizing ||w||²
+- Subject to all points being correctly classified: yᵢ(wᵀxᵢ + b) ≥ 1
+
+**The Cool Part: Support Vectors**
+After training, only ~6% of my data points actually mattered! These "support vectors" are the points sitting right on the margin boundary. Delete any other point? Same classifier. This sparse representation is computationally elegant.
+
+**Results**
+- 100% training accuracy
+- Clean decision boundary visualization
+- Verified KKT optimality conditions
+
+**View the full interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/support_vector_machine_svm.ipynb
+
+The notebook includes the complete derivation from primal to dual formulation and a visualization showing the decision boundary, margins, and support vectors.
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (500 chars)
+--------------------------------------------------------------------------------
+How does a computer learn to tell cats from dogs?
+
+One elegant method: Support Vector Machines. Instead of memorizing every example, SVM finds the "widest street" between categories - the boundary with maximum separation.
+
+The surprising part? Only a tiny fraction of data points (called "support vectors") actually matter. My classifier achieved 100% accuracy using just 6% of the training data to define the boundary!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/support_vector_machine_svm.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+**Exploring the Mathematics of Support Vector Machines**
+
+Recently completed an implementation of Support Vector Machines from first principles, diving deep into the mathematical foundations that make this algorithm so effective for classification tasks.
+
+**Technical Highlights:**
+- Derived the primal optimization problem: minimize (1/2)||w||² subject to margin constraints
+- Transformed to dual formulation using Lagrangian multipliers, revealing the elegant property that the solution depends only on inner products between data points
+- Implemented using scipy's SLSQP optimizer for quadratic programming
+- Achieved 100% classification accuracy with only 6% of training points as support vectors
+
+**Key Insight:** The kernel trick allows SVMs to perform non-linear classification by implicitly mapping data to higher-dimensional spaces. Common kernels include RBF: K(x,z) = exp(-γ||x-z||²) and polynomial: K(x,z) = (xᵀz + c)ᵈ
+
+This project reinforced my appreciation for how mathematical rigor translates to practical machine learning tools. The connection between convex optimization, statistical learning theory, and geometric intuition is particularly elegant.
+
+Full implementation and visualization: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/support_vector_machine_svm.ipynb
+
+#MachineLearning #DataScience #Python #AI #Optimization
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (500 chars)
+--------------------------------------------------------------------------------
+The art of separation.
+
+This visualization shows a Support Vector Machine finding the optimal boundary between two classes of data.
+
+The solid line = decision boundary
+Dashed lines = margin boundaries
+Green circles = support vectors (the only points that matter!)
+
+SVM maximizes the "street width" between classes. Wider margin → better generalization.
+
+Built from scratch in Python.
+Only 6% of points determine the entire classifier.
+100% accuracy achieved.
+
+Mathematics meets machine learning.
+
+#MachineLearning #DataScience #Python #AI #Visualization #Math #SVM #Classification #CodingLife #TechArt
+
+--------------------------------------------------------------------------------

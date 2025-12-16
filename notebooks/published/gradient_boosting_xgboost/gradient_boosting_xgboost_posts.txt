@@ -1,0 +1,168 @@
+# Social Media Posts: Gradient Boosting and XGBoost
+# Generated from: gradient_boosting_xgboost.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+Built gradient boosting from scratch in Python! Each tree learns from the mistakes of all previous trees. The math: F(x) = Σ γₘhₘ(x)
+
+Key insight: gradient descent in function space
+
+#MachineLearning #Python #XGBoost #DataScience
+
+--------------------------------------------------------------------------------
+
+### BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented gradient boosting and XGBoost-style algorithms from scratch. The core idea is elegant: fit each new decision tree to the negative gradient of the loss function.
+
+XGBoost adds regularization: Ω(f) = γT + ½λΣwⱼ²
+
+#MachineLearning #Python #DataScience
+
+--------------------------------------------------------------------------------
+
+### THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how XGBoost actually works under the hood?
+
+I built it from scratch to find out. The key insight: gradient boosting does gradient descent in function space, not parameter space.
+
+Each tree learns to correct the errors of ALL previous trees combined. Add regularization on leaf weights and you get XGBoost.
+
+The optimal leaf weight formula: w* = -G/(H + λ)
+
+Where G is the sum of gradients and H is the sum of Hessians. Simple but powerful.
+
+#MachineLearning #Python
+
+--------------------------------------------------------------------------------
+
+### MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+Deep dive into gradient boosting mathematics:
+
+The additive model: F_M(x) = Σₘ γₘhₘ(x)
+
+At each step, we fit a tree to the negative gradient:
+rᵢₘ = -∂L(yᵢ,F(xᵢ))/∂F(xᵢ)
+
+XGBoost's innovation: second-order Taylor expansion using both gradient g and Hessian h.
+
+Split gain with regularization:
+Gain = ½[G_L²/(H_L+λ) + G_R²/(H_R+λ) - (G_L+G_R)²/(H_L+H_R+λ)] - γ
+
+Full implementation notebook available.
+
+#MachineLearning #Python #XGBoost
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### REDDIT (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** I built Gradient Boosting and XGBoost from scratch to understand how they really work
+
+**Body:**
+
+I've always used XGBoost as a black box, so I decided to implement it from scratch to truly understand the algorithm. Here's what I learned:
+
+**The Core Idea (ELI5):**
+Imagine you're trying to hit a target with darts. Gradient boosting is like having 100 people throw darts, where each person aims specifically at correcting the average miss of everyone who threw before them. By the end, the collective aim is incredibly accurate.
+
+**The Math (simplified):**
+- Start with a simple prediction (mean of target values)
+- Calculate residuals: how much each prediction is wrong
+- Train a decision tree to predict these residuals
+- Add the tree's predictions (scaled by learning rate) to your model
+- Repeat
+
+**What XGBoost adds:**
+1. Regularization to prevent overfitting: Ω(f) = γT + ½λΣw²
+2. Uses both first AND second derivatives (gradient + Hessian)
+3. Clever split-finding with gain formula
+
+**Key insight:** The learning rate controls how much we trust each tree. Small values (0.01-0.1) = slow but steady improvement. Large values (>0.3) = fast but risk overshooting.
+
+**What I built:**
+- GradientBoostingRegressorFromScratch: Basic gradient boosting
+- XGBoostStyleRegressor: With L2 regularization
+- GradientBoostingClassifierFromScratch: Using logistic loss
+
+Test MSE went from terrible to excellent as trees were added. The visualizations really helped me see how residuals shrink at each stage.
+
+**Interactive Notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gradient_boosting_xgboost.ipynb
+
+Would love to hear if others have done similar from-scratch implementations!
+
+--------------------------------------------------------------------------------
+
+### FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+Just finished building a machine learning algorithm from scratch!
+
+Gradient boosting is one of the most powerful ML techniques used by data scientists. The concept is surprisingly elegant: train a sequence of decision trees where each new tree specifically learns to fix the mistakes made by all the previous trees combined.
+
+The result? An ensemble that keeps getting better with each addition.
+
+Check out my full implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gradient_boosting_xgboost.ipynb
+
+--------------------------------------------------------------------------------
+
+### LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+From Black Box to First Principles: Implementing XGBoost from Scratch
+
+In competitive machine learning, XGBoost consistently ranks among the top algorithms. But how does it actually work?
+
+I implemented both gradient boosting and XGBoost-style algorithms from scratch to understand the mathematics:
+
+Key Technical Insights:
+- Sequential model building: F(x) = Σ γₘhₘ(x)
+- Gradient descent in function space, not parameter space
+- XGBoost's regularization: Ω(f) = γT + ½λ||w||²
+- Second-order optimization using gradient g and Hessian h
+- Optimal leaf weights: w* = -G/(H + λ)
+
+What This Demonstrates:
+- Deep understanding of ensemble methods
+- Ability to translate mathematical formulations into code
+- Skills in algorithm implementation and optimization
+- Proficiency with NumPy and scikit-learn
+
+The notebook includes visualizations showing convergence behavior, learning rate effects, and the bias-variance tradeoff.
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/gradient_boosting_xgboost.ipynb
+
+#MachineLearning #DataScience #Python #XGBoost #GradientBoosting
+
+--------------------------------------------------------------------------------
+
+### INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+Built XGBoost from scratch
+
+The plot shows how gradient boosting improves:
+- Each curve = different number of trees
+- More trees = better fit to the data
+- Residuals shrink with each iteration
+
+The secret sauce?
+Each tree learns specifically from the mistakes of ALL previous trees
+
+Learning rate η controls the speed
+Small η = slow but stable
+Large η = fast but risky
+
+Swipe to see the math
+
+#machinelearning #python #datascience #coding #xgboost #algorithms #programming #ai #tech
+
+--------------------------------------------------------------------------------

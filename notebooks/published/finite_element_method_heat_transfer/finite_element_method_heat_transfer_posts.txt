@@ -1,0 +1,168 @@
+# Social Media Posts: Finite Element Method for Heat Transfer
+# Generated from: finite_element_method_heat_transfer.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Built a 1D Finite Element solver for heat conduction in Python!
+
+Key insight: Linear elements give O(h²) convergence - halve element size, cut error by 4x.
+
+Sparse matrices + Gauss quadrature = elegant numerics.
+
+#Python #FEM #Engineering #HeatTransfer
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Implemented a Finite Element Method solver for steady-state heat conduction.
+
+The weak formulation transforms -k(d²T/dx²) = Q into a linear system KT = f.
+
+With linear shape functions, we achieve second-order convergence. Tested on composite rods with variable thermal conductivity.
+
+#Python #NumericalMethods
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Ever wondered how engineers simulate heat flow in materials?
+
+I built a Finite Element Method (FEM) solver from scratch in Python!
+
+The core idea: break a rod into tiny elements, approximate temperature with simple functions, and solve a matrix equation.
+
+Tested it on:
+- Uniform heat sources
+- Mixed boundary conditions
+- Composite materials with different conductivities
+
+The math checks out - FEM matches analytical solutions perfectly, with O(h²) convergence.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+New computational notebook: 1D FEM for steady-state heat conduction.
+
+Implemented the full pipeline:
+- Weak formulation via integration by parts
+- Galerkin discretization with linear shape functions
+- Element stiffness: K = (k/h)[[1,-1],[-1,1]]
+- 2-point Gaussian quadrature for load vectors
+- Sparse matrix assembly with scipy
+
+Verified O(h²) convergence and tested Dirichlet/Neumann BCs plus variable conductivity (composite rod).
+
+Code handles the thermal resistance formula R = ∑(Lᵢ/kᵢA) correctly.
+
+#Python #FEM #NumericalAnalysis #Engineering
+
+================================================================================
+REDDIT (Title + Body for r/learnpython or r/science)
+================================================================================
+
+**Title:** [OC] Built a Finite Element Method solver for heat transfer in Python - here's how it works
+
+**Body:**
+
+I created a Python notebook implementing the Finite Element Method (FEM) for 1D steady-state heat conduction. FEM is the backbone of engineering simulation software, and building one from scratch really helps understand the fundamentals.
+
+**The Problem:**
+
+We want to solve the heat equation: -k(d²T/dx²) = Q(x)
+
+Where T is temperature, k is thermal conductivity, and Q is a heat source.
+
+**How FEM Works (ELI5):**
+
+1. Chop your rod into small pieces (elements)
+2. Assume temperature varies linearly within each piece
+3. Use calculus tricks (integration by parts) to convert the differential equation into matrix multiplication
+4. Solve the matrix equation KT = f for nodal temperatures
+
+**What I Learned:**
+
+- Linear elements give O(h²) convergence - halving element size reduces error by 4x
+- Boundary conditions come in two flavors:
+  - Dirichlet: "Temperature at this point is 100°C"
+  - Neumann: "Heat flux at this boundary is 50 W/m²"
+- Composite materials (like a rod with two different metals) work naturally by varying k per element
+
+**Key Results:**
+
+The FEM solution matches analytical solutions for all test cases. The convergence plot confirms second-order accuracy.
+
+**Interactive Notebook:**
+
+You can view and run this notebook directly in your browser:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/finite_element_method_heat_transfer.ipynb
+
+Happy to answer questions about the implementation!
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+How do engineers figure out how heat flows through materials?
+
+I built a simulation using the Finite Element Method - the same technique behind professional engineering software!
+
+The cool part: you break a complex problem into tiny pieces, solve simple equations for each piece, then stitch the answers together.
+
+Tested it on composite materials (like a rod made of two different metals) and the math works beautifully.
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/finite_element_method_heat_transfer.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Sharing a computational notebook on Finite Element Method (FEM) for heat transfer analysis.
+
+FEM is fundamental to engineering simulation - from thermal management in electronics to structural analysis in aerospace. Understanding the mathematical foundations helps engineers use commercial tools more effectively.
+
+Key implementation highlights:
+
+- Weak formulation: Transforms the PDE -k(d²T/dx²) = Q into an integral form suitable for numerical solution
+
+- Galerkin discretization: Approximates temperature using piecewise linear shape functions
+
+- Sparse matrix assembly: Efficiently builds global stiffness matrix from element contributions
+
+- Boundary condition handling: Demonstrated both Dirichlet (prescribed temperature) and Neumann (prescribed flux) conditions
+
+- Validation: Achieved theoretical O(h²) convergence, confirmed against analytical solutions
+
+The notebook also tackles variable material properties - essential for analyzing composite structures and multi-material designs.
+
+Skills demonstrated: Python, NumPy, SciPy (sparse solvers), numerical methods, mathematical modeling
+
+View the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/finite_element_method_heat_transfer.ipynb
+
+#FEM #Engineering #Python #NumericalMethods #HeatTransfer #Simulation
+
+================================================================================
+INSTAGRAM (< 500 chars, visual-focused)
+================================================================================
+
+The Finite Element Method - how engineers simulate reality
+
+This plot shows heat distribution in a rod, solved 4 different ways:
+- Analytical (exact math)
+- FEM with 4, 8, 16, 32 elements
+
+More elements = more accuracy
+
+The convergence plot proves it: O(h²) means doubling elements cuts error by 4x
+
+Also tested:
+- Mixed boundary conditions
+- Composite materials (two metals joined)
+
+Built entirely in Python with NumPy and SciPy
+
+#Engineering #Python #Simulation #Physics #HeatTransfer #NumericalMethods #DataScience #Coding #STEM

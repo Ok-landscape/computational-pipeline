@@ -1,0 +1,185 @@
+================================================================================
+PARTITION FUNCTION CALCULATION - SOCIAL MEDIA POSTS
+================================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SHORT-FORM POSTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+The partition function Z = ∑ᵢ e^(-βEᵢ) is thermodynamics' Rosetta Stone. One formula → all equilibrium properties: energy, entropy, heat capacity.
+
+Built a Python notebook exploring 4 classic examples.
+
+#Physics #Python #StatisticalMechanics #Science
+
+[Characters: 271]
+
+--------------------------------------------------------------------------------
+
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+Explored the partition function in statistical mechanics with Python.
+
+From the two-level system's Schottky anomaly to the quantum harmonic oscillator to the 1D Ising model — one generating function Z = ∑ᵢ e^(-βEᵢ) encodes everything about a system in thermal equilibrium.
+
+#Physics #Python
+
+[Characters: 293]
+
+--------------------------------------------------------------------------------
+
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+Just finished a deep dive into partition functions — the backbone of statistical mechanics!
+
+Here's the magic: Z = ∑ᵢ e^(-βEᵢ) where β = 1/(k_B T)
+
+From this single sum, you get:
+→ Average energy: ⟨E⟩ = -∂(ln Z)/∂β
+→ Free energy: F = -k_B T ln Z
+→ Heat capacity, entropy, everything
+
+Built Python simulations for two-level systems, quantum oscillators, ideal gases, and the 1D Ising model. The math is beautiful.
+
+#Physics #Python #Science
+
+[Characters: 467]
+
+--------------------------------------------------------------------------------
+
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Partition Function Calculation in Statistical Mechanics
+
+Implemented 4 classic systems in Python:
+• Two-level system (Schottky anomaly at T ≈ 0.42ε/k_B)
+• Quantum harmonic oscillator (zero-point energy ℏω/2)
+• Ideal gas (derives PV = Nk_B T!)
+• 1D Ising model via transfer matrix
+
+Key insight: Z = ∑ᵢ e^(-βEᵢ) acts as a generating function. All thermodynamic observables are derivatives of ln Z.
+
+#StatisticalMechanics #Physics #Python #ComputationalPhysics
+
+[Characters: 493]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LONG-FORM POSTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. REDDIT (r/learnpython or r/Physics)
+--------------------------------------------------------------------------------
+TITLE: I built a Python notebook exploring the partition function — the "master key" of statistical mechanics
+
+BODY:
+
+**ELI5:** Imagine you have a box full of particles bouncing around. The partition function is like a magic calculator that, given just the energies of all possible arrangements, tells you *everything* about the system — average energy, pressure, heat capacity, you name it.
+
+**What is the partition function?**
+
+Z = ∑ᵢ e^(-βEᵢ)
+
+That's it. Sum over all possible states, weight each by e^(-E/k_B T). From this one number:
+- Free energy: F = -k_B T × ln(Z)
+- Average energy: ⟨E⟩ = -∂(ln Z)/∂β
+- Heat capacity: C_V = β² × variance of energy
+
+**What I implemented:**
+
+1. **Two-level system** — The simplest quantum system. Shows the "Schottky anomaly," a heat capacity peak when thermal energy matches the energy gap.
+
+2. **Quantum harmonic oscillator** — Energy levels E_n = ℏω(n + 1/2). At low T, only the ground state matters; at high T, classical equipartition kicks in.
+
+3. **Ideal gas** — Derived PV = Nk_B T directly from Z! Also explored the thermal de Broglie wavelength — when it approaches atomic spacing, quantum effects emerge.
+
+4. **1D Ising model** — Spins on a chain with nearest-neighbor interactions. Used the transfer matrix method for exact solution. Fun fact: no phase transition in 1D at finite temperature!
+
+**What I learned:**
+
+The partition function isn't just a mathematical trick — it's a *generating function*. Differentiate ln(Z) with respect to β and you get ⟨E⟩. Differentiate again for variance. It's elegant.
+
+**Interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/partition_function_calculation.ipynb
+
+Libraries used: NumPy, SciPy, Matplotlib
+
+Happy to answer questions!
+
+--------------------------------------------------------------------------------
+
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+Just finished a fun physics + coding project!
+
+The "partition function" is one of the most powerful concepts in physics. It's a single formula that connects the microscopic world (atoms, quantum states) to things we can measure (temperature, pressure, heat).
+
+Z = ∑ᵢ e^(-Eᵢ/k_B T)
+
+I built a Python notebook exploring four classic examples: quantum oscillators, ideal gases, magnetic spin chains, and more.
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/partition_function_calculation.ipynb
+
+[Characters: 498]
+
+--------------------------------------------------------------------------------
+
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+Exploring Statistical Mechanics Through Computational Methods
+
+Recently completed a Jupyter notebook implementing partition function calculations for four canonical systems in statistical mechanics:
+
+• Two-level system — Demonstrates the Schottky anomaly in heat capacity
+• Quantum harmonic oscillator — Einstein model showing quantum-classical transition
+• Ideal gas — Derivation of PV = NkT from first principles
+• 1D Ising model — Transfer matrix method for exact solution
+
+Technical approach:
+- Analytical solutions where tractable
+- Direct enumeration for small systems (2^N states)
+- Visualization of thermodynamic quantities vs temperature
+
+Key insight: The partition function Z = ∑ᵢ exp(-βEᵢ) serves as a generating function for all equilibrium thermodynamics. Derivatives of ln(Z) yield ensemble averages.
+
+Skills demonstrated: Python, NumPy, SciPy, Matplotlib, statistical mechanics, numerical methods
+
+The interactive notebook is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/partition_function_calculation.ipynb
+
+#Physics #Python #DataScience #ComputationalScience #STEM
+
+[Characters: 997]
+
+--------------------------------------------------------------------------------
+
+8. INSTAGRAM (< 500 chars, for plot.png)
+--------------------------------------------------------------------------------
+The partition function: one formula to rule them all.
+
+Z = ∑ᵢ e^(-βEᵢ)
+
+This single sum encodes everything about a system in thermal equilibrium.
+
+Today's exploration:
+→ Two-level systems
+→ Quantum oscillators
+→ Ideal gases
+→ 1D magnetic chains
+
+Swipe to see how temperature changes energy, heat capacity, and magnetization across these fundamental models.
+
+The math is beautiful. The physics is universal.
+
+#Physics
+#StatisticalMechanics
+#Python
+#Science
+#DataVisualization
+#Thermodynamics
+
+[Characters: 467]
+
+================================================================================
+END OF POSTS
+================================================================================

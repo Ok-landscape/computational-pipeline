@@ -1,0 +1,162 @@
+================================================================================
+MOLECULAR DYNAMICS SIMULATION - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (280 chars max)
+--------------------------------------------------------------------------------
+
+Just built a molecular dynamics simulator from scratch! 36 particles bouncing around with Lennard-Jones forces, watching energy conservation in real-time. Physics in action!
+
+#Python #MolecularDynamics #Physics #Simulation #ComputationalScience
+
+--------------------------------------------------------------------------------
+2. BLUESKY (300 chars max)
+--------------------------------------------------------------------------------
+
+Implemented a 2D molecular dynamics simulation using the Velocity Verlet algorithm. Watching 36 particles interact via Lennard-Jones potential with excellent energy conservation. The beauty of computational physics: Newton's laws playing out step by step.
+
+#Physics #Python #Simulation
+
+--------------------------------------------------------------------------------
+3. THREADS (500 chars max)
+--------------------------------------------------------------------------------
+
+Ever wonder how scientists simulate atoms moving around? I just built a molecular dynamics simulator!
+
+The idea: give each particle a position and velocity, then let Newton's laws take over. Forces come from the Lennard-Jones potential - particles attract at distance but repel when too close.
+
+Used the Velocity Verlet algorithm for integration (it's symplectic, so energy stays conserved). Started 36 particles on a lattice, now they're bouncing around like a real fluid!
+
+#Science #Physics #Python #Coding
+
+--------------------------------------------------------------------------------
+4. MASTODON (500 chars max)
+--------------------------------------------------------------------------------
+
+Built a 2D molecular dynamics simulation in Python using the Velocity Verlet integrator.
+
+Key physics:
+- Lennard-Jones potential: U(r) = 4ε[(σ/r)¹² - (σ/r)⁶]
+- Periodic boundary conditions for bulk behavior
+- Temperature from equipartition: T = 2Eₖ/(3Nkᵦ)
+
+Results show excellent energy conservation (<0.01% drift over 5000 steps). The symplectic nature of Verlet really shines here.
+
+Code uses reduced units (ε=σ=m=1) for generality.
+
+#Physics #Python #CompPhys #MolecularDynamics #Science
+
+--------------------------------------------------------------------------------
+5. REDDIT (Title + Body for r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+
+TITLE: I built a molecular dynamics simulation from scratch - here's how it works
+
+BODY:
+
+**What is Molecular Dynamics?**
+
+MD simulates atoms/molecules by numerically solving Newton's equations of motion. Think of it as a virtual chemistry set where you can watch particles bounce around and measure thermodynamic properties.
+
+**The Physics (ELI5 version)**
+
+Imagine you have marbles that:
+- Push each other away when too close (like magnets repelling)
+- Gently pull toward each other at medium distance
+- Don't interact when far apart
+
+That's the Lennard-Jones potential! The force looks like: F ∝ 24ε[2(σ/r)¹² - (σ/r)⁶]
+
+**How the Simulation Works**
+
+1. Place particles on a grid
+2. Give them random velocities (Maxwell-Boltzmann distribution)
+3. Calculate forces between all pairs
+4. Update positions and velocities using Velocity Verlet algorithm
+5. Repeat thousands of times
+
+**Why Velocity Verlet?**
+
+It's "symplectic" - meaning it preserves phase space volume. Translation: energy stays conserved over long simulations. My 5000-step run had <0.01% energy drift!
+
+**Cool Results**
+
+- Started with particles in a lattice → ended with fluid-like disorder
+- Temperature fluctuates around target (as expected for NVE ensemble)
+- The interplay between kinetic and potential energy is mesmerizing
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/molecular_dynamics.ipynb
+
+**What I learned:** Even "simple" physics simulations involve careful numerical methods. The choice of integrator, time step, and boundary conditions all matter enormously.
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (500 chars max)
+--------------------------------------------------------------------------------
+
+Ever wondered how scientists simulate what happens at the atomic level?
+
+I just built a molecular dynamics simulation - basically a virtual box of particles that follow Newton's laws! You give them starting positions and velocities, and physics does the rest.
+
+The particles attract and repel each other following the Lennard-Jones potential (the same physics that explains why gases become liquids when cooled).
+
+Watch them evolve from an orderly grid into chaotic motion - it's mesmerizing!
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/molecular_dynamics.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (1000 chars max)
+--------------------------------------------------------------------------------
+
+Computational Physics in Action: Building a Molecular Dynamics Simulator
+
+I recently implemented a 2D molecular dynamics (MD) simulation to deepen my understanding of computational methods in physics.
+
+**Technical Implementation:**
+- Lennard-Jones potential for pairwise interactions
+- Velocity Verlet integration (symplectic algorithm for energy conservation)
+- Periodic boundary conditions to simulate bulk behavior
+- Reduced units for generality across atomic species
+
+**Key Skills Demonstrated:**
+- Numerical methods and algorithm implementation
+- Scientific computing with NumPy
+- Data visualization with Matplotlib
+- Understanding of statistical mechanics
+
+**Results:**
+The simulation achieved excellent energy conservation (<0.01% drift over 5000 time steps), validating the numerical approach. Temperature fluctuations followed expected behavior for the microcanonical ensemble.
+
+**Why This Matters:**
+MD simulations are foundational in drug discovery, materials science, and chemical engineering. Understanding these methods from first principles provides insight into how computational tools drive modern research.
+
+Explore the full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/molecular_dynamics.ipynb
+
+#ComputationalPhysics #Python #MolecularDynamics #ScientificComputing #DataScience
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (500 chars max, visual-focused)
+--------------------------------------------------------------------------------
+
+Atoms in motion!
+
+This is what happens when you simulate 36 particles interacting through physics.
+
+Top left: Energy bouncing between kinetic (red) and potential (blue) - but total stays constant
+
+Top right: Temperature fluctuating around equilibrium
+
+Bottom: Particles going from orderly lattice → chaotic fluid
+
+Built this molecular dynamics simulator using:
+- Lennard-Jones potential
+- Velocity Verlet integration
+- Periodic boundaries
+
+The math is beautiful: F = 24ε[2(σ/r)¹² - (σ/r)⁶]
+
+#Physics #Science #Simulation #Python #Coding #ComputationalPhysics #DataViz #STEM #Learning #Atoms
+
+================================================================================
+END OF POSTS
+================================================================================

@@ -1,0 +1,171 @@
+================================================================================
+DELAUNAY TRIANGULATION - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder how to connect dots optimally? Delaunay triangulation ensures no point falls inside any triangle's circumcircle, creating the best possible mesh!
+
+Verified the empty circle property with Python + SciPy.
+
+#Python #CompGeom #Math #DataViz
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+Delaunay triangulation: the optimal way to connect scattered points in a plane.
+
+Key insight: maximizes minimum angles, avoiding skinny triangles. Each triangle's circumcircle contains no other points.
+
+Implemented verification in Python showing the empty circumcircle property holds for all triangles.
+
+#ComputationalGeometry #Python
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Just explored Delaunay triangulation - one of the most elegant algorithms in computational geometry!
+
+The core idea is beautifully simple: connect points so that no point lies inside any triangle's circumcircle.
+
+Why does this matter?
+- Maximizes minimum angles (no ugly skinny triangles)
+- Dual to Voronoi diagrams
+- Used everywhere: mesh generation, terrain modeling, pathfinding
+
+Built a verification system in Python that checks every triangle - the empty circumcircle property holds perfectly!
+
+#Python #Math #Algorithms
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+Implemented Delaunay triangulation verification in Python using SciPy.
+
+The algorithm satisfies the empty circumcircle property: for any triangle with vertices at points a, b, c, no other point p lies strictly inside the circumcircle.
+
+Circumcenter calculation uses the determinant formula:
+x_c = (1/2D) * |x₁²+y₁² y₁ 1; x₂²+y₂² y₂ 1; x₃²+y₃² y₃ 1|
+
+Complexity: O(n log n) expected time via Quickhull.
+
+Also visualized the Delaunay-Voronoi duality - they're dual graphs of each other!
+
+#CompGeom #Python #Mathematics
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** Implementing and Verifying Delaunay Triangulation in Python - Understanding the Empty Circumcircle Property
+
+**Body:**
+
+Hey everyone! I just worked through Delaunay triangulation and wanted to share what I learned.
+
+**ELI5: What is Delaunay Triangulation?**
+
+Imagine you have a bunch of dots on paper and want to connect them into triangles. There are many ways to do this, but Delaunay triangulation is special: it guarantees that if you draw a circle through the three corners of ANY triangle, no other dot will be inside that circle.
+
+**Why does this matter?**
+
+This "empty circumcircle" property means the triangles are as "fat" as possible - no super skinny triangles that cause problems in simulations. It maximizes the minimum angle across all triangles.
+
+**Cool fact:** Delaunay triangulation is the dual graph of Voronoi diagrams! Each Delaunay edge connects two points whose Voronoi cells share an edge.
+
+**The Math (simplified)**
+
+For a triangle with vertices (x₁,y₁), (x₂,y₂), (x₃,y₃), the circumcenter is found using determinants. To test if point d is inside the circumcircle, we compute:
+
+InCircle(a,b,c,d) > 0 means d is inside
+InCircle(a,b,c,d) < 0 means d is outside
+
+**Implementation**
+
+Using SciPy's `Delaunay` class (O(n log n) Quickhull algorithm), I:
+1. Generated 20 random points
+2. Computed the triangulation
+3. Verified EVERY triangle satisfies the empty circumcircle property
+4. Visualized the Delaunay-Voronoi duality
+
+**Triangle quality stats from my run:**
+- Minimum angle: ~20-30°
+- Maximum angle: ~120-130°
+- Mean angle: 60° (as expected for triangles!)
+
+**Applications:**
+- Finite element mesh generation
+- Terrain modeling (GIS)
+- Pathfinding/navigation meshes
+- Surface reconstruction from point clouds
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/delaunay_triangulation.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+How do you optimally connect scattered points into triangles?
+
+Delaunay triangulation solves this elegantly: draw triangles so that no point falls inside any triangle's circumcircle. This creates the "fattest" possible triangles - no ugly skinny ones!
+
+This 1934 algorithm is still used everywhere today: video game pathfinding, terrain mapping, 3D surface reconstruction, and scientific simulations.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/delaunay_triangulation.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+Computational Geometry Deep Dive: Delaunay Triangulation
+
+Just completed an implementation exploring one of the foundational algorithms in computational geometry - Delaunay triangulation.
+
+**Technical Highlights:**
+
+The algorithm satisfies the empty circumcircle property: for each triangle in the mesh, no input point lies strictly inside its circumcircle. This property ensures maximum minimum angles, producing high-quality meshes suitable for numerical simulations.
+
+**Implementation approach:**
+- Used SciPy's Delaunay class (Quickhull algorithm, O(n log n))
+- Built verification system to confirm empty circumcircle property
+- Computed and analyzed triangle angle distributions
+- Visualized Delaunay-Voronoi duality
+
+**Key insight:** Delaunay triangulation and Voronoi diagrams are dual graphs - each Delaunay vertex corresponds to a Voronoi cell, and each triangle's circumcenter is a Voronoi vertex.
+
+**Applications:** Finite element analysis, GIS terrain modeling, robotics pathfinding, computer graphics surface reconstruction.
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/delaunay_triangulation.ipynb
+
+#ComputationalGeometry #Python #SciPy #DataScience #Algorithms #NumericalMethods
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters)
+--------------------------------------------------------------------------------
+
+Delaunay Triangulation
+
+The art of connecting dots optimally.
+
+Every triangle's circumcircle is empty - no other points inside. This creates the best possible mesh with fat, well-shaped triangles.
+
+Named after Boris Delaunay (1934), it's the dual of Voronoi diagrams.
+
+Used in:
+- Game pathfinding
+- 3D surface reconstruction
+- Terrain modeling
+- Scientific simulations
+
+Python + SciPy + Matplotlib
+
+#ComputationalGeometry #Python #Mathematics #DataVisualization #Algorithms #CodingLife #ScienceArt #STEM
+
+================================================================================

@@ -1,0 +1,199 @@
+# Social Media Posts: Autoencoder
+# Neural Network for Unsupervised Representation Learning
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Built an autoencoder from scratch with NumPy! Compressed 2D spiral data into 1D latent space - that's 2x compression while preserving structure.
+
+z = σ(Wₑx + bₑ)
+x̂ = σ(Wₐz + bₐ)
+
+#Python #MachineLearning #NeuralNetworks #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented a simple autoencoder: 2D → 1D → 2D compression using gradient descent.
+
+The encoder maps x → z = σ(Wₑx + bₑ), decoder reconstructs x̂ = σ(Wₐz + bₐ).
+
+Trained on spiral data, the 1D latent space naturally captures position along the curve. Pure NumPy implementation.
+
+#MachineLearning #Python
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how neural networks learn to compress data?
+
+I built an autoencoder from scratch - a network that learns to squeeze data through a bottleneck and reconstruct it.
+
+The magic: 2D data → 1D latent code → 2D reconstruction
+
+Loss function: L = Σᵢ(xᵢ - x̂ᵢ)²
+
+Key insight: Even a single number (1D) can capture the essential structure of 2D spiral data. The latent code naturally orders points along the spiral's path.
+
+No TensorFlow, no PyTorch - just NumPy and backpropagation!
+
+#MachineLearning #Python #DeepLearning
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New notebook: Autoencoder implementation from scratch
+
+Architecture: encoder f_φ maps x → z, decoder g_θ reconstructs x̂
+
+Encoder: z = σ(Wₑx + bₑ)
+Decoder: x̂ = σ(Wₐz + bₐ)
+Loss: L = ||x - x̂||² = Σᵢ(xᵢ - x̂ᵢ)²
+
+Implemented full backprop with gradients:
+δ_out = (x̂ - x) ⊙ σ'(Wₐz + bₐ)
+δ_hidden = (Wₐᵀδ_out) ⊙ σ'(Wₑx + bₑ)
+
+2D spiral → 1D latent → 2D reconstruction
+Compression ratio: 2x
+
+Code uses Xavier initialization and sigmoid activations.
+
+#Python #MachineLearning #NeuralNetworks
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** Built an Autoencoder from Scratch with NumPy - Full Backpropagation Implementation
+
+**Body:**
+
+I created a complete autoencoder implementation using only NumPy to understand how these networks actually learn. No frameworks, just math and code.
+
+**What's an Autoencoder?**
+
+Think of it as a neural network that learns to compress and decompress data. It has two parts:
+- Encoder: Squeezes your data into a smaller representation
+- Decoder: Reconstructs the original from that compressed version
+
+**The Math (simplified):**
+
+Encoder: z = σ(Wₑ · x + bₑ)
+Decoder: x̂ = σ(Wₐ · z + bₐ)
+Loss: L = average of (x - x̂)²
+
+The network learns by minimizing reconstruction error using gradient descent.
+
+**What I Built:**
+
+- 2D input → 1D latent space → 2D output
+- That's 2x compression!
+- Trained on spiral data with noise
+
+**Key Findings:**
+
+1. Even a 1D bottleneck captures meaningful structure
+2. The latent code naturally orders data along the spiral
+3. Reconstruction error varies spatially - some regions compress better
+
+**What I Learned:**
+
+The backpropagation gradients flow backward through the network:
+- Output gradient: δ_out = (x̂ - x) ⊙ σ'(pre-activation)
+- Hidden gradient: δ_hidden = (Wₐᵀ · δ_out) ⊙ σ'(pre-activation)
+
+Xavier initialization really helps with training stability.
+
+The notebook includes full visualizations: loss curves, reconstruction comparisons, latent space distributions, and the learned decoder manifold.
+
+**Interactive Notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/autoencoder.ipynb
+
+Questions welcome! Happy to explain any part of the implementation.
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built something cool: a neural network that learns to compress and reconstruct data automatically!
+
+It's called an autoencoder - it squeezes 2D data into a single number, then reconstructs the original. Like extreme zip compression, but learned by the network itself.
+
+The fascinating part? That single number captures the essential structure of the data. The network figured out the most efficient way to represent it.
+
+Pure Python + NumPy, no fancy frameworks!
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/autoencoder.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Unsupervised Representation Learning: Autoencoder Implementation
+
+I recently completed a from-scratch implementation of an autoencoder neural network to deepen my understanding of unsupervised learning fundamentals.
+
+**Technical Approach:**
+
+Built the complete training pipeline using NumPy:
+- Forward propagation through encoder/decoder
+- MSE loss computation: L = ||x - x̂||²
+- Full backpropagation with gradient descent
+- Xavier weight initialization for training stability
+
+**Architecture:**
+Input (2D) → Encoder → Latent (1D) → Decoder → Output (2D)
+
+**Key Results:**
+- Achieved 2x compression ratio
+- Network learned to order data by position along spiral manifold
+- Visualized reconstruction error spatially across the dataset
+
+**Skills Demonstrated:**
+- Neural network architecture design
+- Gradient computation and backpropagation
+- Numerical optimization
+- Scientific visualization with matplotlib
+
+This foundational work connects to advanced architectures like VAEs and denoising autoencoders used in modern generative AI.
+
+Full implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/autoencoder.ipynb
+
+#MachineLearning #DeepLearning #Python #DataScience #NeuralNetworks #UnsupervisedLearning
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Neural networks that teach themselves to compress data ✨
+
+This is an autoencoder - a network that learns to squeeze information through a bottleneck and reconstruct it.
+
+2D spiral data → 1D latent code → 2D reconstruction
+
+The plot shows:
+📉 Training loss dropping
+🔴🔵 Original vs reconstructed points
+🌈 How reconstruction error varies
+📊 What the latent space learned
+
+The coolest part: The network discovered the spiral structure on its own. That single latent number captures where each point sits along the curve.
+
+Built from scratch with Python & NumPy!
+
+#MachineLearning #Python #DataScience #NeuralNetworks #DeepLearning #CodingLife #LearnToCode
+
+--------------------------------------------------------------------------------

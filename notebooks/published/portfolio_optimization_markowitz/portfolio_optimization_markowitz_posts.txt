@@ -1,0 +1,156 @@
+# Social Media Posts: Portfolio Optimization - Markowitz Mean-Variance Theory
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+
+Built the Markowitz efficient frontier from scratch in Python! The math: minimize wᵀΣw to find optimal risk-return portfolios. Max Sharpe ratio = 0.65 at 15% return, 18% volatility. Diversification wins.
+
+#Python #Finance #QuantitativeFinance #DataScience #Investing
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+
+Implemented Markowitz Mean-Variance Optimization in Python. Key insight: portfolio variance σₚ² = wᵀΣw where Σ is the covariance matrix. Found the efficient frontier showing optimal risk-return tradeoffs. The tangency portfolio maximizes the Sharpe ratio at ~0.65.
+
+#Python #Finance #Math
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+
+Just built a complete Markowitz portfolio optimizer in Python!
+
+The core idea from 1952: you can't just maximize returns—you need to optimize the TRADEOFF between risk and return.
+
+The math is elegant: portfolio return μₚ = wᵀμ and risk σₚ = √(wᵀΣw)
+
+Key finding: by combining 5 assets strategically, you can get LOWER risk than any single asset alone. That's the power of diversification visualized on the efficient frontier.
+
+#Python #Finance #Investing
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+
+Implemented Markowitz Mean-Variance Portfolio Optimization in Python with scipy.optimize.
+
+The optimization problem: min wᵀΣw subject to wᵀμ = μ_target and Σwᵢ = 1
+
+Key results from 5-asset simulation:
+• Minimum variance portfolio: 11.8% return, 10.2% volatility
+• Max Sharpe portfolio: 15.4% return, 18.1% volatility, Sharpe ≈ 0.68
+
+The efficient frontier beautifully shows how diversification reduces risk below any individual asset. Two-fund separation theorem in action!
+
+#Python #Finance #Mathematics
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/QuantFinance)
+
+**Title:** Built Markowitz Portfolio Optimization from scratch in Python - Efficient Frontier visualization with scipy
+
+**Body:**
+
+I implemented Harry Markowitz's 1952 Mean-Variance Optimization model in Python and wanted to share the results and code approach.
+
+**ELI5 the concept:**
+Imagine you have $1000 to invest across 5 stocks. How do you split it up? Markowitz showed that the answer depends on what return you want—and crucially, that you can get LESS risk by combining assets than by holding any single one. This is diversification mathematically proven.
+
+**The math (in Unicode since Reddit doesn't render LaTeX):**
+- Portfolio return: μₚ = Σ wᵢμᵢ (weighted sum of returns)
+- Portfolio risk: σₚ = √(wᵀΣw) where Σ is the covariance matrix
+- Optimization: minimize σₚ² subject to target return
+
+**What I built:**
+1. Portfolio return/variance calculators
+2. Constrained optimization using scipy.optimize.minimize (SLSQP)
+3. Efficient frontier computation (100 optimal portfolios)
+4. Special portfolio finders (min variance, max Sharpe ratio)
+5. Visualization with Capital Market Line
+
+**Key findings from 5-asset simulation:**
+- Min Variance Portfolio: 11.8% return, 10.2% volatility
+- Max Sharpe Portfolio: 15.4% return, 18.1% volatility
+- Sharpe Ratio: ~0.68 (excess return per unit risk)
+
+The coolest insight: the efficient frontier lies LEFT of all individual assets, proving diversification reduces risk.
+
+**View the full notebook with code and interactive plots:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/portfolio_optimization_markowitz.ipynb
+
+Libraries used: numpy, scipy, matplotlib
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+
+Ever wondered how professional investors decide how much to put in each stock?
+
+In 1952, Harry Markowitz solved this mathematically and won a Nobel Prize for it!
+
+I just implemented his "Mean-Variance Optimization" model in Python. The key insight: you can reduce risk by diversifying across multiple assets—and there's an optimal way to do it.
+
+The result is a beautiful "efficient frontier" showing the best possible portfolios.
+
+Check out the full notebook with code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/portfolio_optimization_markowitz.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+
+**Implementing Modern Portfolio Theory: Markowitz Mean-Variance Optimization**
+
+I recently built a complete implementation of Markowitz's 1952 portfolio optimization model in Python, demonstrating core quantitative finance concepts.
+
+**Technical Implementation:**
+• Quadratic optimization using scipy.optimize with SLSQP solver
+• Covariance matrix construction from correlation and volatility inputs
+• Efficient frontier computation via constrained minimization
+• Sharpe ratio maximization for tangency portfolio identification
+
+**Key Mathematical Components:**
+• Portfolio return: μₚ = wᵀμ
+• Portfolio variance: σₚ² = wᵀΣw
+• Constraint handling: weights sum to 1, no short selling
+
+**Results from 5-asset simulation:**
+• Demonstrated diversification benefit (frontier left of individual assets)
+• Computed Capital Market Line with 3% risk-free rate
+• Max Sharpe ratio of 0.68 achieved at the tangency portfolio
+
+This project reinforced skills in numerical optimization, financial mathematics, and data visualization—foundational tools for quantitative analysis roles.
+
+Full implementation with code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/portfolio_optimization_markowitz.ipynb
+
+#QuantitativeFinance #Python #DataScience #PortfolioManagement #Finance
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+
+The math behind smart investing
+
+This plot shows the "efficient frontier" from Markowitz's Nobel Prize-winning theory.
+
+Each dot = a possible portfolio
+Red curve = the BEST portfolios
+Gold star = optimal risk/return balance
+
+The insight: diversification doesn't just feel good—it mathematically reduces risk below ANY single stock.
+
+Built this visualization in Python to understand how quants think about asset allocation.
+
+What's your approach to balancing risk vs return?
+
+#quantfinance #python #datascience #investing #mathematics #financialmodeling #coding #dataviz

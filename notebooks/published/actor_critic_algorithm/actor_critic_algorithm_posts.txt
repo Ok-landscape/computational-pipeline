@@ -1,0 +1,195 @@
+# Social Media Posts: Actor-Critic Algorithm in Reinforcement Learning
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Actor-Critic combines the best of both worlds: an Actor picks actions, a Critic judges them. Result? Lower variance, faster learning.
+
+Trained a CartPole agent using TD error: δ = r + γV(s') - V(s)
+
+#ReinforcementLearning #Python #MachineLearning #AI
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented the Actor-Critic algorithm from scratch in Python.
+
+The key insight: use TD error as an advantage estimate to update both policy (Actor) and value function (Critic).
+
+The advantage A(s,a) = Q(s,a) - V(s) reduces variance while keeping gradients unbiased.
+
+#ReinforcementLearning #Python #ML
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Just built an Actor-Critic agent that learned to balance a pole on a cart!
+
+The magic is in combining two ideas:
+- Actor: learns which actions to take (policy π(a|s))
+- Critic: evaluates how good states are (value V(s))
+
+The TD error δ = r + γV(s') - V(s) serves as an unbiased advantage estimate, giving us lower variance than pure policy gradients.
+
+After 1000 episodes, the agent consistently balances for 195+ steps.
+
+This is the foundation for modern RL algorithms like PPO and SAC!
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented Actor-Critic with linear function approximation using random Fourier features.
+
+Key equations:
+- Critic update: w ← w + αw·δ·∇wV(s)
+- Actor update: θ ← θ + αθ·δ·∇θlog π(a|s)
+
+Where TD error δ = r + γV(s') - V(s) estimates the advantage function.
+
+Trained on CartPole with:
+- State: [x, ẋ, θ, θ̇]
+- Actions: left/right force
+- γ = 0.99
+
+The pole dynamics follow: θ̈ = [g·sin(θ) + cos(θ)·(...)]/[l·(4/3 - ...)]
+
+#ReinforcementLearning #Python #MachineLearning
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/reinforcementlearning)
+--------------------------------------------------------------------------------
+**Title:** Implemented Actor-Critic Algorithm from Scratch - Here's What I Learned
+
+**Body:**
+
+I just finished implementing the Actor-Critic algorithm in pure NumPy to solve CartPole, and I wanted to share the key insights.
+
+**ELI5: What is Actor-Critic?**
+
+Imagine you're learning to play darts. The "Actor" is you throwing darts (deciding actions). The "Critic" is your friend watching and saying "that was better than average" or "that was worse." Over time, you adjust your throws based on this feedback.
+
+**The Core Idea**
+
+Actor-Critic combines:
+- **Policy gradient** (Actor): directly learns which actions to take
+- **Value function** (Critic): estimates how good each state is
+
+The Critic's feedback (TD error) tells the Actor whether an action was better or worse than expected:
+
+δ = reward + γ·V(next_state) - V(current_state)
+
+If δ > 0, the action was better than expected → reinforce it
+If δ < 0, the action was worse than expected → discourage it
+
+**Why This Matters**
+
+Pure policy gradient methods (like REINFORCE) have high variance because they use actual returns. Actor-Critic reduces variance by using the Critic's estimate as a baseline, leading to faster, more stable learning.
+
+**Implementation Details**
+
+- Used random Fourier features for function approximation (256 features)
+- Softmax policy for the Actor
+- Linear value function for the Critic
+- Learning rates: αactor = 0.001, αcritic = 0.01, γ = 0.99
+
+**Results**
+
+After 1000 episodes, the agent achieves an average reward of ~195 over the last 100 episodes (the "solved" threshold). The TD error steadily decreases, showing the Critic is learning accurate value estimates.
+
+**What I Learned**
+
+1. The balance between actor and critic learning rates is crucial
+2. Feature representation matters a lot for linear methods
+3. This is the foundation for modern algorithms like A3C, PPO, and SAC
+
+View the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/actor_critic_algorithm.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just taught a computer to balance a pole using reinforcement learning!
+
+The Actor-Critic algorithm works like having two systems: one that decides what to do (Actor), and one that judges if it was a good decision (Critic).
+
+After 1000 practice attempts, my AI agent learned to balance perfectly - keeping the pole upright for 195+ time steps consistently.
+
+This is the foundation behind many modern AI systems!
+
+Check out the full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/actor_critic_algorithm.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Implemented the Actor-Critic Algorithm for Reinforcement Learning
+
+I recently completed a from-scratch implementation of the Actor-Critic algorithm, a foundational method that underpins modern RL systems like PPO, SAC, and A3C.
+
+**Technical Approach:**
+- Built a custom CartPole environment with full physics simulation
+- Implemented linear function approximation using random Fourier features
+- Developed both actor (policy) and critic (value function) update mechanisms
+
+**Key Technical Details:**
+- Used TD error δ = r + γV(s') - V(s) as an unbiased advantage estimate
+- Softmax policy with gradient: ∇θlog π(a|s) = φ(s)·(I[a] - π(a|s))
+- Achieved convergence to the solved threshold (195+ avg reward) within 1000 episodes
+
+**Skills Demonstrated:**
+- Reinforcement learning algorithm design
+- Function approximation techniques
+- Numerical optimization and gradient descent
+- Scientific computing with NumPy
+- Data visualization with Matplotlib
+
+This project reinforced my understanding of the bias-variance tradeoff in RL and the importance of proper feature engineering for linear methods.
+
+View the complete implementation and analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/actor_critic_algorithm.ipynb
+
+#ReinforcementLearning #MachineLearning #Python #DataScience #AI
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Actor-Critic Algorithm in Action
+
+Teaching AI to balance a pole through trial and error.
+
+The secret?
+
+Two neural networks working together:
+
+→ Actor: "I'll try pushing left"
+→ Critic: "That was 0.3 better than expected"
+→ Actor: "Got it, I'll do more of that"
+
+After 1000 episodes, perfect balance achieved.
+
+This is the foundation for modern AI systems that learn from experience - from game-playing AIs to robotics.
+
+The plot shows:
+- Learning curve (blue → red)
+- TD error convergence
+- Performance improvement over training phases
+
+#ReinforcementLearning #MachineLearning #Python #DataScience #AI #Coding #TechEducation
+
+--------------------------------------------------------------------------------

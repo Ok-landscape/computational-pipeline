@@ -1,0 +1,176 @@
+# Social Media Posts: Kolmogorov Forward Equation (Fokker-Planck Equation)
+# Generated from: notebooks/published/kolmogorov_forward_equation.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+How do random systems become predictable? The Fokker-Planck equation:
+
+∂p/∂t = -∂(μp)/∂x + ½∂²(Dp)/∂x²
+
+Drift vs diffusion - the eternal battle! Built a Python solver for 3 examples.
+
+#Python #Math #Physics #DataScience
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+The Kolmogorov Forward Equation elegantly describes how probability distributions evolve in stochastic systems.
+
+From Brownian motion to stock prices, one PDE governs them all:
+∂p/∂t = -∂(μp)/∂x + ½∂²(Dp)/∂x²
+
+Implemented a Crank-Nicolson solver in Python with 3 real-world examples.
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how we predict random things?
+
+The Fokker-Planck equation is basically magic - it turns chaotic randomness into smooth, predictable probability waves.
+
+I built a Python solver that handles:
+- Mean-reverting processes (like interest rates)
+- Bistable systems (like protein folding)
+- Stock prices (geometric Brownian motion)
+
+The key insight: randomness at the individual level creates deterministic patterns at the population level.
+
+Math is beautiful.
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented a numerical solver for the Kolmogorov Forward (Fokker-Planck) equation using Crank-Nicolson finite differences.
+
+The equation: ∂p/∂t = -∂(μp)/∂x + ½∂²(Dp)/∂x²
+
+Tested on three canonical systems:
+1. Ornstein-Uhlenbeck → Gaussian equilibrium
+2. Double-well potential → Boltzmann distribution
+3. Geometric Brownian Motion → Log-normal
+
+All numerical solutions converged to analytical stationary distributions. L² errors < 10⁻⁵.
+
+Code uses scipy.sparse for efficiency.
+
+#Physics #Python #StochasticProcesses #NumericalMethods
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+**Title:** I built a Python solver for the Fokker-Planck equation - here's what I learned about stochastic systems
+
+**Body:**
+
+**ELI5 Version:**
+Imagine you drop a ball at the top of a hill. You know exactly where it'll roll. Now imagine dropping millions of tiny balls while someone randomly shakes the hill. Where will they end up?
+
+The Fokker-Planck equation answers this! It tells you how the "cloud" of possible positions evolves over time.
+
+**The Math (in Unicode):**
+∂p/∂t = -∂(μp)/∂x + ½∂²(Dp)/∂x²
+
+Where:
+- p(x,t) = probability density at position x, time t
+- μ(x) = drift (deterministic push)
+- D(x) = diffusion (random spreading)
+
+**What I Built:**
+A Python class using Crank-Nicolson finite differences (unconditionally stable!) that solves this PDE for arbitrary drift and diffusion functions.
+
+**Three Examples:**
+
+1. **Ornstein-Uhlenbeck Process** - Models mean-reverting behavior (interest rates, stock prices returning to average). Converges to a Gaussian.
+
+2. **Double-Well Potential** - Think of a ball that can rest in one of two valleys. With noise, it can hop between them! The equilibrium follows the Boltzmann distribution: p ∝ exp(-2V/D).
+
+3. **Geometric Brownian Motion** - The foundation of the Black-Scholes model. State-dependent diffusion gives log-normal distributions.
+
+**Key Insight:**
+Individual particles are unpredictable, but their collective probability distribution evolves deterministically. It's order emerging from chaos!
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/kolmogorov_forward_equation.ipynb
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+What if I told you that randomness follows rules?
+
+The Fokker-Planck equation is one of the most beautiful ideas in physics - it shows how the probability of random events evolves over time in a completely predictable way.
+
+I created an interactive Python notebook exploring three examples: mean-reverting processes, bistable systems, and stock price modeling.
+
+The visualizations show probability "waves" settling into equilibrium. Science is art!
+
+View the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/kolmogorov_forward_equation.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Stochastic Modeling in Python: Implementing the Fokker-Planck Equation
+
+In quantitative finance and physics, understanding how probability distributions evolve is crucial. The Kolmogorov Forward Equation (also known as Fokker-Planck) provides this framework.
+
+I developed a numerical solver using:
+- Crank-Nicolson finite difference scheme for stability
+- Sparse matrix operations (scipy.sparse) for efficiency
+- Upwind differencing for advection terms
+
+Applications demonstrated:
+1. Ornstein-Uhlenbeck processes - modeling mean-reverting interest rates
+2. Bistable systems - understanding phase transitions and barrier crossing
+3. Geometric Brownian Motion - the foundation of Black-Scholes option pricing
+
+Key technical insight: The implicit scheme maintains unconditional stability while preserving probability conservation through careful boundary condition treatment.
+
+The numerical solutions match analytical stationary distributions with L² errors below 10⁻⁵.
+
+Skills demonstrated: Python, NumPy, SciPy, numerical PDEs, financial mathematics, stochastic calculus.
+
+Full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/kolmogorov_forward_equation.ipynb
+
+#Python #QuantitativeFinance #DataScience #Physics #Mathematics
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+Probability in motion.
+
+These visualizations show how random systems find order.
+
+The Fokker-Planck equation describes the evolution of probability - where particles MIGHT be, not where they ARE.
+
+What you're seeing:
+Top row: Final probability distributions
+Bottom row: The physics behind them
+
+From physics to finance to biology - one equation governs them all.
+
+Built with Python + NumPy + Matplotlib.
+
+.
+.
+.
+#physics #mathematics #python #datascience #visualization #science #coding #probabilitytheory #stochasticprocesses #quantfinance
+
+--------------------------------------------------------------------------------
+
+================================================================================
+END OF POSTS
+================================================================================

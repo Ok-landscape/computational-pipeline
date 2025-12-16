@@ -1,0 +1,174 @@
+# Social Media Posts: Hidden Markov Models and the Viterbi Algorithm
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Can you predict hidden patterns from what you observe? Hidden Markov Models + the Viterbi algorithm do exactly that. I built one to infer weather from daily activities using dynamic programming. O(N²T) complexity, 70%+ accuracy!
+
+#Python #MachineLearning #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored Hidden Markov Models today: statistical models that infer hidden states from observable data. The Viterbi algorithm uses dynamic programming to find the most likely sequence of hidden states.
+
+Built a weather predictor from activities: Walk/Shop/Clean → Sunny/Rainy. Elegant math, practical results.
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how your phone predicts your next word? Or how speech recognition works?
+
+The secret: Hidden Markov Models (HMMs)
+
+I implemented one from scratch to infer weather (hidden) from daily activities (observed):
+- Walk more when sunny
+- Clean more when rainy
+
+The Viterbi algorithm finds the optimal state sequence using dynamic programming. It considers ALL possible paths, not just greedy local decisions.
+
+Key insight: δₜ(j) = max[δₜ₋₁(i) · aᵢⱼ] · bⱼ(xₜ)
+
+70%+ decoding accuracy across 100 trials!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New notebook: Hidden Markov Models with Viterbi decoding
+
+An HMM is defined by λ = (S, O, A, B, π) where:
+- A = transition matrix: aᵢⱼ = P(state_j | state_i)
+- B = emission matrix: bⱼ(k) = P(obs_k | state_j)
+- π = initial distribution
+
+Viterbi finds Q* = argmax P(Q|X,λ) via dynamic programming:
+δₜ(j) = max[δₜ₋₁(i) · aᵢⱼ] · bⱼ(xₜ)
+
+Complexity: O(N²T) time, O(NT) space
+
+Implementation uses log probabilities to prevent underflow. Applied to weather inference from activities.
+
+#ComputationalScience #Python #Algorithms
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** I implemented Hidden Markov Models with Viterbi decoding from scratch - here's what I learned
+
+**Body:**
+
+Ever wondered how speech recognition, DNA sequence analysis, or predictive text work under the hood? Many use Hidden Markov Models (HMMs).
+
+**ELI5 Version:**
+Imagine you have a friend who texts you what they did today: "Walked", "Shopped", or "Cleaned". You can't see the weather where they are, but you know:
+- They're more likely to walk when it's sunny
+- They're more likely to clean when it's rainy
+
+Given a week of their activities, can you guess what the weather was each day? That's exactly what HMMs solve!
+
+**The Math (simplified):**
+An HMM has:
+- Hidden states (Sunny/Rainy) that follow a Markov chain
+- Observable outputs (Walk/Shop/Clean) that depend on the hidden state
+- Transition probabilities: P(tomorrow's weather | today's weather)
+- Emission probabilities: P(activity | weather)
+
+**The Viterbi Algorithm:**
+Instead of greedily picking the most likely state at each step, Viterbi uses dynamic programming to find the globally optimal sequence. The key recurrence:
+
+δₜ(j) = max[δₜ₋₁(i) · aᵢⱼ] · bⱼ(xₜ)
+
+where δₜ(j) is the probability of the best path ending in state j at time t.
+
+**What I Built:**
+- Complete Python implementation with NumPy
+- Log-probability handling to prevent numerical underflow
+- Weather inference demo achieving 70%+ accuracy
+- Visualization of the Viterbi trellis and state comparisons
+
+**Key Takeaways:**
+1. Use log probabilities for long sequences (avoid underflow)
+2. Viterbi gives the globally optimal path, not locally optimal
+3. O(N²T) complexity makes it practical for real applications
+
+View the full interactive notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hidden_markov_model_viterbi.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built something cool: a system that guesses hidden patterns from observable clues!
+
+Hidden Markov Models power speech recognition, DNA analysis, and predictive text. I implemented one that infers weather (hidden) from daily activities (what we observe).
+
+The Viterbi algorithm finds the most likely sequence of hidden states using dynamic programming. My model achieved 70%+ accuracy predicting Sunny vs Rainy days just from Walk/Shop/Clean activities!
+
+Check out the full notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hidden_markov_model_viterbi.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring the foundations of sequence modeling: Hidden Markov Models with Viterbi decoding
+
+Hidden Markov Models (HMMs) remain fundamental in machine learning despite newer architectures. They power applications from speech recognition to bioinformatics, providing interpretable probabilistic inference over sequential data.
+
+In this notebook, I implemented:
+
+- Complete HMM class with transition matrix A, emission matrix B, and initial distribution π
+- Viterbi algorithm using log-space computation to handle numerical precision
+- Demonstration: inferring weather states from observable daily activities
+
+Technical highlights:
+- Dynamic programming achieves O(N²T) time complexity
+- Log probabilities prevent underflow in long sequences
+- Backtracking recovers the optimal state sequence
+
+The implementation achieved consistent 70%+ decoding accuracy across 100 randomized trials, demonstrating the algorithm's robustness.
+
+Skills demonstrated: probabilistic modeling, dynamic programming, NumPy, algorithm implementation, scientific visualization
+
+Full implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hidden_markov_model_viterbi.ipynb
+
+#MachineLearning #Python #Algorithms #DataScience #ComputationalScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Hidden Markov Models: Finding patterns you can't directly see
+
+Imagine predicting the weather just by watching what someone does each day:
+Walk → probably sunny
+Clean → probably rainy
+
+That's what HMMs do!
+
+The Viterbi algorithm finds the most likely sequence of hidden states using dynamic programming.
+
+What you see in the plot:
+- Top left: Probability landscape (Viterbi trellis)
+- Top right: True vs decoded states
+- Bottom: Transition & emission matrices
+
+70%+ accuracy from activities alone!
+
+#Python #DataScience #MachineLearning #Algorithms #Coding #Science #Math #Programming
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,175 @@
+================================================================================
+CLIFFORD ALGEBRAS - SOCIAL MEDIA POSTS
+================================================================================
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Clifford algebras unify rotations, reflections & geometry in one elegant framework. Complex numbers (i²=-1), quaternions, and spacetime physics are ALL special cases!
+
+Implemented from scratch in Python.
+
+#Python #Math #Science #ComputerGraphics
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Clifford algebras are a mathematical superpower: they generalize complex numbers, quaternions, and handle rotations in ANY dimension using "rotors."
+
+Key insight: The geometric product uv = u·v + u∧v combines dot and wedge products naturally.
+
+Built a full Python implementation from scratch.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wondered what connects complex numbers, quaternions, and Einstein's spacetime?
+
+Clifford algebras! They're a unified framework where:
+- Complex numbers are Cl(0,1) with i²=-1
+- Quaternions are Cl(0,2) with i²=j²=k²=-1
+- Spacetime physics uses Cl(1,3)
+
+The magic: rotations become R·v·R† using "rotors" - works in ANY dimension!
+
+I implemented the full algebra in Python and visualized 3D rotations. Math is beautiful when you see the connections.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented Clifford algebra Cl(p,q) in Python from scratch.
+
+The geometric product is elegant:
+uv = u·v + u∧v
+
+Key properties verified:
+- Basis vectors: eᵢ² = ±1 (signature dependent)
+- Anticommutation: eᵢeⱼ = -eⱼeᵢ for i≠j
+- Bivectors e₁₂² = -1 act like imaginary units
+
+Rotors R = cos(θ/2) - B·sin(θ/2) double-cover SO(n).
+
+Complex numbers = Cl(0,1), Quaternions = Cl(0,2), Spacetime = Cl(1,3).
+
+#Mathematics #Python #GeometricAlgebra #Physics
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+Title: I implemented Clifford Algebras from scratch in Python - here's why they're fascinating
+
+Body:
+
+Clifford algebras (also called geometric algebras) are one of those mathematical structures that seem abstract until you realize they unify almost everything you know about rotations, complex numbers, and physics.
+
+**What I built:**
+A complete Python implementation of Cl(p,q) algebras supporting:
+- Arbitrary signatures (Euclidean, Minkowski, etc.)
+- Full geometric product with grade extraction
+- Rotors for n-dimensional rotations
+- Reflections through hyperplanes
+
+**The key insight:**
+
+The geometric product combines the dot and wedge products:
+
+uv = u·v + u∧v
+
+For orthonormal basis vectors, you get the fundamental relation eᵢeⱼ + eⱼeᵢ = 2ηᵢⱼ, meaning distinct basis vectors anticommute (eᵢeⱼ = -eⱼeᵢ).
+
+**Why this matters:**
+
+1. Complex numbers are just Cl(0,1) where one basis vector squares to -1
+2. Quaternions are Cl(0,2) - Hamilton's i,j,k fall out naturally
+3. 3D rotations use "rotors" R = exp(-Bθ/2) instead of matrices
+4. Spacetime physics uses Cl(1,3) for special relativity
+
+**The beautiful part:**
+
+Rotations become: v' = R·v·R†
+
+This formula works in ANY dimension, handles gimbal lock gracefully, and the rotor R = cos(θ/2) - B·sin(θ/2) directly encodes the rotation plane as a bivector B.
+
+I verified quaternion identities (i²=j²=k²=ijk=-1) emerge automatically from the Clifford product rules.
+
+**Interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/clifford_algebras.ipynb
+
+The visualization shows rotation trajectories in 3D and the multiplication table of Cl(3,0).
+
+Has anyone else explored geometric algebra? I'm curious about applications in physics simulations or computer graphics.
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever heard of Clifford algebras? They're a hidden gem in mathematics that unifies:
+
+- Complex numbers (where i²=-1)
+- Quaternions (used in 3D graphics)
+- Even Einstein's spacetime!
+
+I built a Python implementation from scratch and discovered how "rotors" elegantly handle rotations in any dimension.
+
+The formula v' = R·v·R† works whether you're rotating in 2D, 3D, or 4D spacetime!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/clifford_algebras.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring Mathematical Foundations: Clifford Algebras in Python
+
+I recently completed a computational exploration of Clifford algebras - the mathematical framework that unifies complex numbers, quaternions, and geometric transformations.
+
+Key technical accomplishments:
+
+- Implemented Cl(p,q) algebras for arbitrary metric signatures
+- Built geometric product, grade extraction, and rotor operations
+- Verified isomorphisms: Cl(0,1) = Complex numbers, Cl(0,2) = Quaternions
+- Demonstrated spacetime algebra Cl(1,3) properties
+
+The elegant insight: rotations in any dimension reduce to v' = R·v·R† using rotors R = cos(θ/2) - B·sin(θ/2), where B is the bivector defining the rotation plane.
+
+Applications span computer graphics (rotation interpolation), robotics (kinematics), physics (electromagnetism, relativity), and emerging geometric deep learning approaches.
+
+This project demonstrates proficiency in: Python OOP design, numerical computation, mathematical abstraction, and technical visualization.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/clifford_algebras.ipynb
+
+#Mathematics #Python #ComputerScience #Physics #DataScience
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+Clifford Algebras: Where Math Gets Geometric
+
+This visualization shows vectors being rotated using "rotors" - the Clifford algebra way.
+
+Instead of messy rotation matrices, you get one elegant formula:
+v' = R·v·R†
+
+The plots show:
+- Rotation trajectories in different planes
+- How vectors trace perfect circles
+- The multiplication table of an 8D algebra
+
+Mind-blowing fact: Complex numbers, quaternions, and spacetime physics are ALL special cases of Clifford algebras.
+
+Math is art when you can see it.
+
+#Mathematics #Physics #DataVisualization #Python #Science #Geometry #STEM #CodingLife

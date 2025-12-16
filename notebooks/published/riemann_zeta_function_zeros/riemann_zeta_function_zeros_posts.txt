@@ -1,0 +1,150 @@
+# Social Media Posts: Riemann Zeta Function Zeros
+# Generated from: riemann_zeta_function_zeros.ipynb
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (280 chars max)
+--------------------------------------------------------------------------------
+
+The Riemann Hypothesis is math's biggest unsolved puzzle. I computed ζ(s) zeros numerically and they ALL land on Re(s) = 1/2. The spacing? Matches random matrix theory predictions. Mind-blowing connection!
+
+#Python #Math #RiemannHypothesis #NumberTheory
+
+--------------------------------------------------------------------------------
+2. BLUESKY (300 chars max)
+--------------------------------------------------------------------------------
+
+Explored the Riemann zeta function ζ(s) = ∑(1/n^s) computationally. Found non-trivial zeros at t ≈ 14.13, 21.02, 25.01... all precisely on the critical line Re(s) = 1/2. The zero spacing follows GUE statistics from random matrix theory.
+
+#Mathematics #Python #Science
+
+--------------------------------------------------------------------------------
+3. THREADS (500 chars max)
+--------------------------------------------------------------------------------
+
+Just built a numerical explorer for one of math's deepest mysteries: the Riemann zeta function.
+
+ζ(s) = 1 + 1/2^s + 1/3^s + ...
+
+All non-trivial zeros should lie on the "critical line" where Re(s) = 1/2. That's the Riemann Hypothesis - unsolved for 165+ years!
+
+I computed zeros up to t = 100 and they ALL land exactly where Riemann predicted. The spacing between zeros even matches quantum chaos predictions. Pure mathematical magic.
+
+--------------------------------------------------------------------------------
+4. MASTODON (500 chars max)
+--------------------------------------------------------------------------------
+
+Implemented numerical computation of ζ(s) using the Dirichlet eta function with Euler acceleration for stability in the critical strip.
+
+Key findings:
+- Verified ζ(2) = π²/6, ζ(4) = π⁴/90
+- Located zeros at t ≈ 14.13, 21.02, 25.01, 30.42...
+- All zeros on critical line Re(s) = 1/2
+- Zero spacing matches GUE (Wigner surmise)
+
+The Montgomery-Dyson connection between prime zeros and random matrices remains one of math's most beautiful surprises.
+
+#Mathematics #Python #NumberTheory #RiemannHypothesis
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** I built a Python tool to hunt for zeros of the Riemann zeta function - here's what I learned
+
+**Body:**
+
+The Riemann zeta function is defined as:
+
+ζ(s) = 1 + 1/2^s + 1/3^s + 1/4^s + ...
+
+Where s is a complex number. This innocent-looking sum connects to prime numbers through Euler's product formula:
+
+ζ(s) = ∏(1/(1 - p^(-s))) over all primes p
+
+**The Riemann Hypothesis** (unsolved since 1859!) says all "interesting" zeros of this function lie on the line where Re(s) = 1/2. These zeros encode information about how primes are distributed.
+
+**What I built:**
+- Numerical ζ(s) computation using the Dirichlet eta function (converges better in the critical strip)
+- The Riemann-Siegel Z(t) function which is real-valued on the critical line
+- Zero-finding via sign changes + Brent's method refinement
+
+**Key results:**
+- Found zeros at t ≈ 14.13, 21.02, 25.01, 30.42, 32.94...
+- ALL computed zeros lie exactly on Re(s) = 1/2
+- The spacing between zeros follows the GUE distribution from random matrix theory
+
+**Mind-blowing fact:** The same statistics that describe energy level spacings in quantum systems describe the gaps between prime-related zeros. Nobody fully understands why.
+
+The full interactive notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/riemann_zeta_function_zeros.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (500 chars max)
+--------------------------------------------------------------------------------
+
+Ever heard of the million-dollar math problem?
+
+The Riemann Hypothesis asks: where does a special function called zeta equal zero?
+
+I wrote Python code to hunt for these zeros, and found something beautiful - they form a pattern that matches predictions from quantum physics! The connection between prime numbers and quantum chaos is one of math's greatest mysteries.
+
+Check out the interactive notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/riemann_zeta_function_zeros.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (1000 chars max)
+--------------------------------------------------------------------------------
+
+Exploring Computational Number Theory: The Riemann Zeta Function
+
+I recently built a numerical analysis tool to investigate one of mathematics' most famous unsolved problems - the Riemann Hypothesis.
+
+Technical approach:
+- Implemented ζ(s) computation using the Dirichlet eta function with Euler-Maclaurin acceleration
+- Developed the Riemann-Siegel Z function for precise zero location
+- Applied Brent's root-finding method to locate zeros to high precision
+
+Key findings:
+- Successfully verified known values: ζ(2) = π²/6, ζ(4) = π⁴/90
+- Located non-trivial zeros at t ≈ 14.13, 21.02, 25.01...
+- All computed zeros lie on the critical line Re(s) = 1/2
+- Zero spacing distribution matches GUE predictions from random matrix theory
+
+Skills demonstrated: NumPy, SciPy (special functions, optimization), Matplotlib, complex analysis, numerical methods
+
+This project reinforced the value of computational verification in pure mathematics. Over 10^13 zeros have been verified computationally, yet a proof remains one of math's greatest challenges.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/riemann_zeta_function_zeros.ipynb
+
+#DataScience #Python #Mathematics #NumericalComputing
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (500 chars max, visual-focused)
+--------------------------------------------------------------------------------
+
+The hunt for invisible zeros
+
+This visualization shows the Riemann zeta function - a mathematical object that holds secrets about prime numbers.
+
+The red dots? Those are zeros.
+The white dashed line? The "critical line."
+
+Every zero we've ever found lands exactly on that line. If they ALL do, it would solve a 165-year-old mystery worth $1 million.
+
+I computed these using Python and the patterns are hypnotic. Math is art.
+
+#Mathematics
+#DataVisualization
+#Python
+#Science
+#Coding
+#MathArt
+#RiemannHypothesis

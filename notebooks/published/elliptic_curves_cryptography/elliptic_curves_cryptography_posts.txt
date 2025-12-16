@@ -1,0 +1,164 @@
+================================================================================
+ELLIPTIC CURVE CRYPTOGRAPHY - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Why does Bitcoin use 256-bit keys while banks need 3072-bit RSA?
+
+Elliptic curves! The equation y² = x³ + ax + b creates math so hard to reverse that tiny keys = massive security.
+
+#Cryptography #Python #Math #Bitcoin
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Implemented Elliptic Curve Cryptography from scratch in Python.
+
+The magic: points on y² = x³ + ax + b form a group where finding k from kP is computationally intractable.
+
+Result: 256-bit ECC = 3072-bit RSA security. Same protection, 12x smaller keys.
+
+#Cryptography #Math
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Just built an Elliptic Curve Cryptography system from scratch!
+
+The wild part? It's all based on a simple curve: y² = x³ + ax + b
+
+You can add points together geometrically - draw a line through two points, find where it hits the curve again, flip it. That's your sum.
+
+This simple operation creates a one-way function so hard to reverse that 256-bit keys provide the same security as 3072-bit RSA.
+
+Bitcoin, Signal, and TLS all rely on this beautiful math.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented ECC with Diffie-Hellman key exchange in Python.
+
+Key insight: Points on y² = x³ + ax + b (mod p) form an abelian group. The ECDLP asks: given P and Q = kP, find k.
+
+Best known algorithms are O(√n), making 256-bit curves equivalent to 128-bit symmetric security.
+
+Demonstrated ECDH where Alice computes aB = abG and Bob computes bA = abG, arriving at the same shared secret without ever transmitting private keys.
+
+#Cryptography #Math #InfoSec
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/crypto)
+--------------------------------------------------------------------------------
+
+Title: I implemented Elliptic Curve Cryptography from scratch in Python - here's what I learned about why Bitcoin uses 256-bit keys
+
+Body:
+
+**TL;DR:** Built a complete ECC implementation including point addition, scalar multiplication, and Diffie-Hellman key exchange. The math is beautiful and the security comes from a simple geometric operation being computationally irreversible.
+
+**What are Elliptic Curves?**
+
+An elliptic curve is defined by: y² = x³ + ax + b
+
+Nothing to do with ellipses! The name comes from elliptic integrals. The cool part: points on this curve form a mathematical group.
+
+**The Group Operation**
+
+To "add" two points P and Q:
+1. Draw a line through them
+2. Find where it intersects the curve (always a third point)
+3. Reflect that point over the x-axis
+
+That's it. This geometric operation, when done in a finite field (mod p), creates a one-way function.
+
+**Why It's Secure**
+
+Given points P and Q where Q = kP (meaning you added P to itself k times), finding k is the Elliptic Curve Discrete Logarithm Problem (ECDLP).
+
+Best known attack: O(√n) - meaning 256-bit keys give 128-bit security.
+
+**Key Size Comparison:**
+- 256-bit ECC = 3072-bit RSA
+- 384-bit ECC = 7680-bit RSA
+
+Same security, much smaller keys = faster operations and less bandwidth.
+
+**What I Built:**
+- Point addition and doubling over reals and finite fields
+- Scalar multiplication using double-and-add
+- Full ECDH key exchange demonstration
+- Visualization of curve geometry
+
+**Explore the full notebook with interactive code:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/elliptic_curves_cryptography.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how your phone does secure banking with tiny processors?
+
+The answer is Elliptic Curve Cryptography - math so elegant that a 256-bit key provides the same security as a 3072-bit traditional key.
+
+I built the whole system from scratch in Python, from the curve equation y² = x³ + ax + b to a working key exchange.
+
+The visualization shows how "adding" points on a curve creates unbreakable encryption.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/elliptic_curves_cryptography.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Completed an implementation of Elliptic Curve Cryptography (ECC) from first principles in Python.
+
+The project demonstrates:
+
+- Mathematical foundations: Weierstrass curves y² = x³ + ax + b over both real numbers and finite fields
+- Group theory: Point addition with geometric interpretation and algebraic formulas
+- Scalar multiplication: Efficient O(log k) double-and-add algorithm
+- Key exchange: Full ECDH protocol implementation
+
+Key technical insight: The security of ECC relies on the Elliptic Curve Discrete Logarithm Problem. Given generator G and public key Q = kG, computing the private key k requires O(√n) operations with current algorithms.
+
+Practical impact: 256-bit ECC provides equivalent security to 3072-bit RSA, enabling:
+- Faster cryptographic operations
+- Reduced bandwidth for key exchange
+- Lower computational requirements for IoT devices
+
+This forms the cryptographic backbone of Bitcoin (secp256k1), TLS 1.3, and Signal Protocol.
+
+Full implementation with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/elliptic_curves_cryptography.ipynb
+
+#Cryptography #Python #Security #Mathematics #SoftwareEngineering
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+
+The math behind Bitcoin, visualized.
+
+This is an elliptic curve: y² = x³ + ax + b
+
+Those colored squares? Points created by "adding" a generator point to itself repeatedly.
+
+Here's the magic: computing kG is fast, but finding k from kG is nearly impossible.
+
+That one-way property secures:
+- Cryptocurrency wallets
+- Encrypted messaging
+- Your browser's HTTPS
+
+256-bit curve = 3072-bit RSA security
+
+Built the whole system from scratch in Python.
+
+#cryptography #mathematics #python #coding #bitcoin #security #datascience #visualization

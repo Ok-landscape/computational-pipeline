@@ -1,0 +1,165 @@
+================================================================================
+SPIN-1/2 PARTICLE STERN-GERLACH EXPERIMENT - SOCIAL MEDIA POSTS
+================================================================================
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+TWITTER/X (280 chars max)
+--------------------------------------------------------------------------------
+
+In 1922, Stern & Gerlach proved electrons have intrinsic spin. Their particles split into EXACTLY 2 beams - not a blur. Nature is quantized!
+
+Simulated spin-1/2 measurement with Python + NumPy. The math is beautiful: P(spin-up) = cos²(θ/2)
+
+#QuantumMechanics #Physics #Python #Science
+
+--------------------------------------------------------------------------------
+BLUESKY (300 chars max)
+--------------------------------------------------------------------------------
+
+The Stern-Gerlach experiment: fire silver atoms through an inhomogeneous magnetic field. Classical physics predicts a smear. Quantum mechanics predicts exactly 2 spots. Experiment confirms: angular momentum is quantized to ±ℏ/2.
+
+Built a Python simulation to explore this quantum phenomenon.
+
+--------------------------------------------------------------------------------
+THREADS (500 chars max)
+--------------------------------------------------------------------------------
+
+Just built a quantum mechanics simulation of the Stern-Gerlach experiment!
+
+Here's the wild part: if you prepare an electron spin-up along z, then measure along x, then measure along z again... you can get spin-DOWN. The intermediate measurement "erases" the original information.
+
+This is what "quantum measurements disturb the system" actually means. The non-commutativity of spin operators ([Sz, Sx] = iℏSy ≠ 0) has real, measurable consequences.
+
+Built with NumPy, visualized the Bloch sphere and deflection patterns.
+
+--------------------------------------------------------------------------------
+MASTODON (500 chars max)
+--------------------------------------------------------------------------------
+
+Simulated the Stern-Gerlach experiment for spin-1/2 particles using Python.
+
+Key physics implemented:
+- Pauli matrices (σx, σy, σz)
+- Bloch sphere state representation: |ψ⟩ = cos(θ/2)|+⟩ + e^(iφ)sin(θ/2)|−⟩
+- Measurement probabilities via Born rule
+- Sequential SG experiments showing non-commutativity
+
+The sequential experiment (SGz→SGx→SGz) beautifully demonstrates that [Ŝz, Ŝx] ≠ 0. Measuring x "forgets" the z-eigenstate.
+
+Spin magnitude: |S| = ℏ√(3)/2 ≈ 0.866ℏ
+
+#QuantumMechanics #Physics #Python #Science
+
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+REDDIT (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+
+Title: Built a Python simulation of the Stern-Gerlach experiment - quantum spin measurement visualized
+
+Body:
+
+**What I built:**
+
+A NumPy-based simulation of spin-1/2 particles in a Stern-Gerlach apparatus, complete with Bloch sphere visualization and deflection pattern plots.
+
+**The physics:**
+
+The Stern-Gerlach experiment (1922) demonstrated that angular momentum is quantized. When you send silver atoms through an inhomogeneous magnetic field, they don't spread out continuously - they split into exactly 2 beams corresponding to spin-up (+ℏ/2) and spin-down (−ℏ/2).
+
+**Cool features of the simulation:**
+
+1. **Pauli matrices** - Implemented σx, σy, σz as 2x2 complex matrices
+2. **Bloch sphere parameterization** - Any spin state can be written as |ψ⟩ = cos(θ/2)|+⟩ + e^(iφ)sin(θ/2)|−⟩
+3. **Measurement probabilities** - Uses the Born rule to calculate P(↑) and P(↓)
+4. **Sequential experiments** - Demonstrates how measuring along x "erases" z-information
+
+**The mind-bending result:**
+
+If you prepare a particle spin-up along z, then measure along x (selecting spin-up), then measure along z again - you can get spin-DOWN! This happens because [Sz, Sx] = iℏSy ≠ 0 (the operators don't commute).
+
+**What I learned:**
+
+- How to work with complex numpy arrays for quantum state vectors
+- Monte Carlo simulation of quantum measurements
+- 3D visualization with matplotlib's mplot3d
+
+View and run the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spin_half_particle_stern_gerlach.ipynb
+
+--------------------------------------------------------------------------------
+FACEBOOK (500 chars max)
+--------------------------------------------------------------------------------
+
+I simulated one of the most important experiments in physics history!
+
+In 1922, Stern and Gerlach discovered something shocking: when you send atoms through a magnetic field, they don't spread out smoothly. They split into exactly 2 groups. This proved that quantum "spin" only comes in specific values - like having only 2 channels on a TV, not a continuous dial.
+
+My Python simulation lets you explore this quantum weirdness interactively.
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spin_half_particle_stern_gerlach.ipynb
+
+--------------------------------------------------------------------------------
+LINKEDIN (1000 chars max)
+--------------------------------------------------------------------------------
+
+Exploring Quantum Mechanics Through Computational Simulation
+
+I recently developed a Python-based simulation of the Stern-Gerlach experiment, a foundational demonstration of quantum mechanical principles from 1922.
+
+Technical Implementation:
+- Pauli spin matrices for representing quantum observables
+- Bloch sphere parameterization for visualizing qubit states
+- Monte Carlo methods for simulating measurement statistics
+- NumPy complex array operations for quantum state evolution
+
+Key Concepts Demonstrated:
+1. Angular momentum quantization (spin values restricted to ±ℏ/2)
+2. Measurement probability calculations using the Born rule
+3. Non-commutativity of quantum observables and its physical consequences
+4. State collapse and information erasure in sequential measurements
+
+The simulation includes visualization of particle deflection patterns and a 3D Bloch sphere representation of spin states.
+
+This project reinforced skills in scientific computing, numerical methods, and translating physics concepts into working code.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spin_half_particle_stern_gerlach.ipynb
+
+#QuantumComputing #Python #ScientificComputing #Physics #DataVisualization
+
+--------------------------------------------------------------------------------
+INSTAGRAM (500 chars max, visual-focused)
+--------------------------------------------------------------------------------
+
+quantum mechanics, visualized
+
+This plot shows what happens when you measure an electron's spin.
+
+Each dot is a simulated particle.
+Red = spin-up
+Blue = spin-down
+
+The wild part?
+Prepare it pointing one way.
+Measure it another way.
+It "forgets" the original direction.
+
+That's quantum mechanics - measurement changes reality.
+
+Built with Python + NumPy + Matplotlib
+
+.
+.
+.
+#quantumphysics #physics #python #dataviz #science #coding #matplotlib #numpy #quantummechanics #stemgerlach #blochsphere #quantum
+
+================================================================================
+END OF POSTS
+================================================================================

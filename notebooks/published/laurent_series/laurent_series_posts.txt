@@ -1,0 +1,167 @@
+# Social Media Posts: Laurent Series
+
+## 1. Twitter/X (280 chars max)
+
+Just explored Laurent series in Python! Unlike Taylor series, these allow NEGATIVE powers - perfect for analyzing singularities in complex functions. Computed sin(z)/z² and verified the residue theorem numerically. 🧮✨ #Python #ComplexAnalysis #Math #Science
+
+---
+
+## 2. Bluesky (300 chars max)
+
+Laurent series generalize Taylor series by allowing negative powers: f(z) = ∑ aₙ(z-z₀)ⁿ where n can be negative. Used Python to analyze sin(z)/z², which has a simple pole at z=0 with residue = 1. Numerical contour integration confirms the residue theorem! #Mathematics #ComplexAnalysis
+
+---
+
+## 3. Threads (500 chars max)
+
+Ever wonder how mathematicians handle functions that blow up at certain points? Laurent series are the answer!
+
+Unlike regular Taylor series, Laurent series include negative powers, letting us analyze singularities systematically. I just coded up an example with sin(z)/z² - it has a "simple pole" at z=0.
+
+The coolest part? The coefficient of the 1/z term (called the "residue") tells you everything about contour integrals. Verified it numerically in Python! ∮ f(z)dz = 2πi × residue
+
+---
+
+## 4. Mastodon (500 chars max)
+
+Laurent series representation of f(z) = sin(z)/z² around z=0:
+
+f(z) = 1/z - z/6 + z³/120 - z⁵/5040 + ...
+
+The principal part (negative powers) has only one term: 1/z, making this a simple pole with residue = 1.
+
+Implemented numerical verification: computed ∮_C f(z)dz over circular contours at various radii. Results converge to 2πi, confirming the residue theorem. Error < 10⁻⁶ for r ∈ [0.5, 2.0].
+
+Code visualizes convergence in the complex plane using matplotlib. #ComplexAnalysis #ScientificPython
+
+---
+
+## 5. Reddit (Title + Body)
+
+**Title:** I computed Laurent series for sin(z)/z² and verified the residue theorem with Python - here's what I learned about singularities!
+
+**Body:**
+
+Hi everyone! I just finished working through Laurent series in complex analysis and wanted to share what I learned by implementing it in Python.
+
+**What are Laurent series?**
+
+You know how Taylor series expand functions as infinite sums of powers? Laurent series are similar, but they allow NEGATIVE powers too:
+
+f(z) = ... + a₋₂/(z-z₀)² + a₋₁/(z-z₀) + a₀ + a₁(z-z₀) + a₂(z-z₀)² + ...
+
+This makes them perfect for analyzing functions that have singularities (points where they blow up).
+
+**My example: f(z) = sin(z)/z²**
+
+Since sin(z) = z - z³/6 + z⁵/120 - ..., when we divide by z², we get:
+
+f(z) = 1/z - z/6 + z³/120 - z⁵/5040 + ...
+
+This has only ONE negative power term (1/z), which means it's a "simple pole" at z = 0.
+
+**The residue theorem connection**
+
+The coefficient of the 1/z term is called the "residue" (here it's 1). The residue theorem says that if you integrate around a closed loop containing the singularity:
+
+∮ f(z)dz = 2πi × (residue)
+
+So for our function, ∮ f(z)dz should equal 2πi.
+
+**Numerical verification**
+
+I tested this by numerically integrating around circles of different radii (0.5, 1.0, 1.5, 2.0). All results converged to 2πi with error less than 10⁻⁶! The theorem works!
+
+**Visualizations**
+
+I created plots comparing:
+- Real and imaginary parts: Laurent series vs exact function
+- Absolute error on different circular contours
+- Magnitude |f(z)| in the complex plane
+
+The Laurent series approximation is excellent near the singularity and matches the exact function beautifully.
+
+**Key takeaways:**
+1. Laurent series extend Taylor series to handle singularities
+2. The "principal part" (negative powers) classifies the singularity type
+3. The residue (coefficient of 1/z) is crucial for contour integration
+4. Numerical methods confirm theoretical predictions with high precision
+
+The notebook includes all the Python code for computing coefficients, evaluating the series, and creating visualizations. It's really cool how complex analysis connects pure theory with computational verification!
+
+**Interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/laurent_series.ipynb
+
+Anyone else working through complex analysis? Would love to hear about other interesting singularities to explore!
+
+---
+
+## 6. Facebook (500 chars max)
+
+🔬 Just explored Laurent series - a mathematical tool for analyzing functions that "blow up" at certain points!
+
+Unlike regular Taylor series, Laurent series allow negative powers, which is perfect for studying singularities in complex functions. I used Python to analyze sin(z)/z², computed its residue, and verified the famous residue theorem through numerical integration.
+
+The math is elegant, the code works beautifully, and it's amazing how theory and computation align so perfectly! 🧮✨
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/laurent_series.ipynb
+
+---
+
+## 7. LinkedIn (1000 chars max)
+
+**Computational Complex Analysis: Laurent Series and the Residue Theorem**
+
+I recently completed a technical deep-dive into Laurent series - a powerful mathematical framework for analyzing functions with singularities. This project demonstrates the integration of theoretical mathematics with scientific computing.
+
+**Technical Approach:**
+
+Laurent series generalize Taylor series by permitting negative powers: f(z) = ∑ aₙ(z-z₀)ⁿ for n ∈ ℤ. This extension is essential for complex analysis, enabling systematic study of poles and essential singularities.
+
+**Implementation Highlights:**
+
+• Derived analytical coefficients for f(z) = sin(z)/z², identifying a simple pole at z=0 with residue = 1
+• Implemented numerical evaluation using NumPy for arbitrary complex arguments
+• Validated the residue theorem via contour integration with <10⁻⁶ error across multiple radii
+• Created comprehensive visualizations comparing analytical approximations with exact solutions
+
+**Skills Demonstrated:**
+
+- Complex analysis and mathematical modeling
+- Scientific Python (NumPy, SciPy, Matplotlib)
+- Numerical methods and error analysis
+- Data visualization for multi-dimensional functions
+- Technical documentation in Jupyter notebooks
+
+**Key Result:** Numerical integration confirms ∮_C f(z)dz = 2πi for all tested contours, validating the theoretical residue theorem prediction.
+
+This work exemplifies how computational methods can verify and extend theoretical mathematics, providing both educational value and practical problem-solving capabilities.
+
+**View the interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/laurent_series.ipynb
+
+#Mathematics #ScientificComputing #Python #ComplexAnalysis #DataScience
+
+---
+
+## 8. Instagram (500 chars max, visual-first)
+
+🧮 Laurent Series in Action ✨
+
+This visualization shows sin(z)/z² in the complex plane - a function with a singularity at z=0.
+
+🔍 What's happening:
+• Unlike Taylor series, Laurent series include negative powers
+• The 1/z term has coefficient 1 (the "residue")
+• Colored regions show the function's magnitude
+• Red circles mark different convergence radii
+
+💡 The residue theorem connects this coefficient to contour integrals: ∮ f(z)dz = 2πi × residue
+
+Verified numerically with Python - theory meets computation! 🐍
+
+.
+.
+.
+#Mathematics #ComplexAnalysis #Python #Science #DataVisualization #Math #STEM #ScientificComputing #Coding #LearnPython

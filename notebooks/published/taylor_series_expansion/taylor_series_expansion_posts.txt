@@ -1,0 +1,167 @@
+# Social Media Posts: Taylor Series Expansion
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Ever wondered how your calculator computes sin(x) or eˣ? Taylor series break complex functions into simple polynomials that converge to the exact value!
+
+eˣ = 1 + x + x²/2! + x³/3! + ...
+
+#Math #Python #Science #Calculus
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Taylor series: the mathematical tool that lets us approximate any smooth function with polynomials.
+
+sin(x) = x - x³/3! + x⁵/5! - ...
+
+This notebook implements and visualizes convergence for eˣ, sin(x), cos(x), and ln(x). Beautiful math in action.
+
+#Mathematics #Python #Science
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Here's something cool about math: Taylor series let you express complex functions as infinite sums of polynomials.
+
+Your calculator doesn't actually "know" what sin(x) is—it uses Taylor series to compute it!
+
+sin(x) ≈ x - x³/6 + x⁵/120 - x⁷/5040 + ...
+
+The more terms you add, the better the approximation. In this notebook, I visualize how quickly these series converge for eˣ, sin(x), cos(x), and ln(x).
+
+Math is beautiful when you can see it!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented Taylor series approximations in Python with visualizations showing convergence behavior.
+
+Key results:
+• eˣ at x=1 reaches machine precision with ~11 terms
+• sin(x) and cos(x) converge rapidly due to factorial denominators
+• ln(x) around a=1 has radius of convergence |x-1| < 1
+
+The Lagrange remainder R_n(x) = f⁽ⁿ⁺¹⁾(ξ)/(n+1)! · (x-a)ⁿ⁺¹ bounds the error.
+
+Notebook includes error analysis and convergence rate plots.
+
+#Python #Mathematics #NumericalAnalysis #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** Visualizing Taylor Series Convergence in Python - How Your Calculator Actually Computes sin(x)
+
+**Body:**
+
+Ever wondered how calculators evaluate transcendental functions like eˣ or sin(x)? They use Taylor series—polynomial approximations that converge to the exact function value.
+
+**What is a Taylor Series?**
+
+For any smooth function f(x) at point a:
+
+f(x) = f(a) + f'(a)(x-a) + f''(a)/2! · (x-a)² + f'''(a)/3! · (x-a)³ + ...
+
+Or more compactly: f(x) = Σ f⁽ⁿ⁾(a)/n! · (x-a)ⁿ for n = 0 to ∞
+
+**Key Examples:**
+
+• eˣ = 1 + x + x²/2! + x³/3! + ...
+• sin(x) = x - x³/3! + x⁵/5! - ...
+• cos(x) = 1 - x²/2! + x⁴/4! - ...
+
+**What I Learned:**
+
+1. Error decreases exponentially with more terms (for functions with infinite radius of convergence)
+2. ln(x) expanded around a=1 only converges for 0 < x ≤ 2
+3. Factorials in denominators make convergence surprisingly fast
+
+**Error Analysis:**
+
+At x=1, approximating e with just 11 terms gives error < 10⁻¹⁰. The factorial growth in denominators dominates the polynomial growth in numerators.
+
+**Interactive Notebook:**
+
+You can view and run the full notebook with visualizations here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/taylor_series_expansion.ipynb
+
+The code implements taylor_exp(), taylor_sin(), taylor_cos(), and taylor_ln() functions using NumPy and visualizes convergence with Matplotlib.
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Math magic: how does your calculator know what sin(45°) equals?
+
+It uses Taylor series—a method to approximate complex functions with simple polynomials:
+
+sin(x) ≈ x - x³/6 + x⁵/120 - ...
+
+The more terms you add, the closer you get to the true value. With just 10 terms, you can match the exact value to 10+ decimal places!
+
+I created visualizations showing how these approximations converge. Check out the interactive notebook:
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/taylor_series_expansion.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Numerical Methods in Practice: Taylor Series Approximations**
+
+Taylor series are foundational to numerical computing, enabling efficient evaluation of transcendental functions in everything from scientific calculators to machine learning libraries.
+
+In this computational notebook, I implemented and analyzed Taylor series approximations for:
+• Exponential function (eˣ)
+• Trigonometric functions (sin, cos)
+• Natural logarithm (ln)
+
+**Key Technical Findings:**
+
+The error analysis demonstrates exponential convergence—approximating e with 11 terms achieves error < 10⁻¹⁰. This is because factorial growth in denominators (n!) dominates polynomial growth in numerators (xⁿ).
+
+The logarithm case illustrates an important constraint: Taylor series have finite radii of convergence. For ln(x) expanded around a=1, the series only converges for 0 < x ≤ 2.
+
+**Skills Demonstrated:**
+- NumPy/SciPy for numerical computation
+- Matplotlib for scientific visualization
+- Error analysis and convergence testing
+
+View the full interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/taylor_series_expansion.ipynb
+
+#NumericalMethods #Python #DataScience #Mathematics #ScientificComputing
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+The beauty of Taylor series
+
+How calculators compute sin(x), eˣ, and other "impossible" functions → they approximate them with polynomials that get closer and closer to the true value.
+
+eˣ = 1 + x + x²/2 + x³/6 + ...
+
+Each curve in this plot shows a different order approximation. Watch them converge to the exact function (black line) as we add more terms.
+
+Math is visual. Math is beautiful.
+
+.
+.
+.
+#mathematics #python #coding #datascience #visualization #calculus #mathisbeautiful #stem #science #numericalanalysis
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,68 @@
+================================================================================
+SOCIAL MEDIA POSTS: Monte Carlo Pi Estimation
+Generated: 2025-11-22
+================================================================================
+
+--------------------------------------------------------------------------------
+POST 1: Twitter/X (280 characters)
+--------------------------------------------------------------------------------
+
+How do you calculate pi with random numbers? Throw darts at a square!
+
+If N points land in a unit circle vs a 2x2 square:
+pi = 4 x (points inside) / N
+
+With 1M samples: pi = 3.141592...
+
+The magic of Monte Carlo methods!
+
+#MonteCarlo #Mathematics #DataScience #Python
+
+--------------------------------------------------------------------------------
+POST 2: Bluesky (300 characters)
+--------------------------------------------------------------------------------
+
+Monte Carlo estimation of pi - one of the most elegant algorithms in computational math.
+
+Generate random (x,y) points in [-1,1] x [-1,1]. Count how many satisfy x^2 + y^2 <= 1.
+
+pi = 4 x (inside count) / (total points)
+
+Convergence rate: O(N^(-1/2))
+
+Simple, beautiful, powerful.
+
+--------------------------------------------------------------------------------
+POST 3: LinkedIn (Professional Summary)
+--------------------------------------------------------------------------------
+
+Exploring Monte Carlo Methods: Estimating Pi Through Random Sampling
+
+Just published a new computational notebook demonstrating one of the foundational techniques in scientific computing: Monte Carlo simulation.
+
+Key highlights:
+
+- Mathematical Foundation: Using geometric probability and the ratio of circle area to square area (pi/4) to derive our estimator
+
+- Implementation: Clean Python code using NumPy for vectorized random sampling - processing 1 million points efficiently
+
+- Convergence Analysis: Verified the theoretical O(N^(-1/2)) error decay rate, showing how accuracy improves with sqrt(N)
+
+- Statistical Validation: Demonstrated the Central Limit Theorem through distribution analysis of repeated estimates
+
+Why this matters:
+Monte Carlo methods form the backbone of:
+- Financial modeling (options pricing, risk analysis)
+- Physics simulations (particle transport, quantum systems)
+- Machine learning (Bayesian inference, reinforcement learning)
+- Engineering (reliability analysis, optimization)
+
+The beauty of this approach is its generalization to high-dimensional integration problems where analytical solutions are intractable.
+
+View the full notebook: https://github.com/Ok-landscape/computational-pipeline/blob/main/notebooks/published/monte_carlo_pi_estimation.ipynb
+
+#ComputationalScience #MonteCarlo #Python #DataScience #ScientificComputing #Mathematics
+
+================================================================================
+END OF POSTS
+================================================================================

@@ -1,0 +1,288 @@
+# Social Media Posts: Cox-Ingersoll-Ross (CIR) Model
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+CIR model for interest rates: dr_t = κ(θ - r_t)dt + σ√r_t dW_t
+
+Mean-reverting, non-negative rates guaranteed by Feller condition: 2κθ ≥ σ²
+
+Simulated using exact non-central χ² distribution!
+
+#QuantFinance #Python #StochasticCalculus #InterestRates
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+The Cox-Ingersoll-Ross model ensures interest rates never go negative—critical for realistic financial modeling!
+
+Key: volatility term σ√r_t (not σr_t) makes the SDE well-behaved at zero.
+
+Stationary distribution is Gamma(α, β) with mean θ. Implemented both Euler-Maruyama and exact simulation methods.
+
+#Finance #Python #Math
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented the Cox-Ingersoll-Ross model for interest rate dynamics in Python.
+
+The SDE: dr_t = κ(θ - r_t)dt + σ√r_t dW_t combines:
+- Mean reversion to long-term rate θ
+- Speed of reversion κ
+- Volatility proportional to √r_t (prevents negative rates!)
+
+Feller condition 2κθ ≥ σ² ensures r_t ≥ 0 always.
+
+Simulated 1000 paths over 10 years. The stationary distribution converges to Gamma with mean θ = 5%.
+
+Used exact simulation via non-central χ² distribution—no discretization error!
+
+#QuantitativeFinance #Python
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+CIR model mathematics:
+
+Stochastic differential equation:
+dr_t = κ(θ - r_t)dt + σ√r_t dW_t
+
+Conditional distribution (exact):
+r_{t+Δt} ~ c·χ²_d(λ)
+
+Where:
+• c = σ²(1-e^{-κΔt})/(4κ)
+• d = 4κθ/σ² (degrees of freedom)
+• λ = 4κe^{-κΔt}r_t/[σ²(1-e^{-κΔt})] (non-centrality)
+
+Stationary: Gamma(2κθ/σ², σ²/(2κ))
+
+Bond pricing admits closed form P(t,T) = A(t,T)e^{-B(t,T)r_t}
+
+Applications: derivatives pricing, credit risk, Heston stochastic volatility.
+
+#Finance #StochasticProcesses
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/Python or r/quant)
+--------------------------------------------------------------------------------
+**Title:** Implemented Cox-Ingersoll-Ross Model - Interest Rates That Never Go Negative
+
+**Body:**
+
+The CIR model is a foundational tool in quantitative finance for modeling interest rate dynamics. Unlike simpler models, it guarantees non-negative rates—essential for realistic financial modeling.
+
+**The Problem with Negative Rates**
+
+Early interest rate models like Vasicek allow negative rates, which (until recent unconventional monetary policy) was considered unrealistic. The CIR model fixes this.
+
+**The Stochastic Differential Equation**
+
+dr_t = κ(θ - r_t)dt + σ√r_t dW_t
+
+Parameters:
+- κ (kappa): speed of mean reversion (how fast rates return to θ)
+- θ (theta): long-term mean rate
+- σ (sigma): volatility coefficient
+- W_t: Wiener process (Brownian motion)
+
+**Why the Square Root?**
+
+The key innovation is the σ√r_t diffusion term (not σr_t). This ensures:
+
+1. When r_t approaches zero, volatility decreases
+2. The drift κθ dominates near zero, pushing rates back up
+3. If Feller condition holds (2κθ ≥ σ²), rates never hit zero
+
+**Simulation Methods Compared**
+
+I implemented two approaches:
+
+**1. Euler-Maruyama (Approximate)**
+```python
+r_{t+Δt} = r_t + κ(θ - r_t)Δt + σ√r_t √Δt Z
+```
+Fast but can produce negative values—need reflection/absorption scheme.
+
+**2. Exact Simulation (Preferred)**
+
+The conditional distribution is exactly known:
+r_{t+Δt} ~ c × χ²_d(λ)
+
+Where χ²_d(λ) is non-central chi-squared with:
+- Degrees of freedom: d = 4κθ/σ²
+- Non-centrality: λ = (4κe^{-κΔt}r_t) / [σ²(1-e^{-κΔt})]
+- Scale: c = σ²(1-e^{-κΔt})/(4κ)
+
+This method has ZERO discretization error!
+
+**Theoretical Properties**
+
+Conditional mean: 𝔼[r_{t+Δt}|r_t] = r_t e^{-κΔt} + θ(1 - e^{-κΔt})
+
+Conditional variance: Var[r_{t+Δt}|r_t] = r_t(σ²/κ)(e^{-κΔt} - e^{-2κΔt}) + (θσ²/2κ)(1-e^{-κΔt})²
+
+As t→∞, stationary distribution is Gamma with:
+- Shape: α = 2κθ/σ²
+- Scale: β = σ²/(2κ)
+- Mean: θ
+- Variance: θσ²/(2κ)
+
+**Implementation Results**
+
+Parameters: κ=0.5, θ=0.05 (5%), σ=0.1, r₀=0.03 (3%)
+Feller check: 2×0.5×0.05 = 0.05 ≥ 0.01 = σ² ✓
+
+Simulated 1000 paths over 10 years:
+- Sample mean at t=10: 4.79% (theory: 5.00%)
+- Sample std at t=10: 2.10% (theory: 2.24%)
+- All paths remained non-negative!
+
+**Bond Pricing**
+
+The CIR model admits closed-form solutions for zero-coupon bonds:
+P(t,T) = A(t,T) exp[-B(t,T)r_t]
+
+Where A and B are known functions. This makes derivative pricing tractable.
+
+**Applications**
+
+✓ Fixed-income derivatives (caps, floors, swaptions)
+✓ Credit risk modeling (default intensity processes)
+✓ Stochastic volatility (Heston model uses CIR for variance)
+✓ Real options valuation
+✓ Pension liability modeling
+
+**Extensions**
+
+- Multi-factor CIR: Multiple correlated processes
+- CIR++: Time-dependent θ(t) for calibration
+- Jump-diffusion CIR: Add Poisson jumps for sudden rate changes
+
+The CIR model remains a cornerstone of quantitative finance 40 years after its introduction!
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Modeling interest rates in finance requires math that ensures rates never go negative.
+
+The Cox-Ingersoll-Ross (CIR) model uses a clever stochastic differential equation with square root volatility: dr = κ(θ-r)dt + σ√r dW
+
+This guarantees non-negative rates while capturing mean reversion and realistic volatility.
+
+Simulated 10 years of interest rate paths—beautiful convergence to equilibrium!
+
+Used in bond pricing, derivatives, and risk management.
+
+#Finance #Mathematics #Python #QuantitativeFinance
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Cox-Ingersoll-Ross Interest Rate Model: Implementation and Applications**
+
+I recently implemented the CIR model in Python, demonstrating both numerical approximation and exact simulation techniques for interest rate modeling.
+
+**Model Foundation**
+
+The CIR stochastic differential equation:
+dr_t = κ(θ - r_t)dt + σ√r_t dW_t
+
+Captures three essential features:
+• Mean reversion to long-term rate θ
+• Adjustment speed κ
+• State-dependent volatility σ√r_t
+
+**Mathematical Innovation**
+
+The √r_t diffusion coefficient ensures non-negative rates under the Feller condition (2κθ ≥ σ²), solving a fundamental limitation of earlier models like Vasicek.
+
+**Implementation Approach**
+
+Exact simulation leverages the known transition distribution:
+r_{t+Δt} ~ (σ²(1-e^{-κΔt})/4κ) × χ²_d(λ)
+
+Where d and λ are functions of model parameters and current state.
+
+This eliminates discretization error entirely—superior to Euler-Maruyama approximation for production systems.
+
+**Validation Results**
+
+Test configuration: κ=0.5, θ=5%, σ=0.1, r₀=3%
+- Feller condition satisfied: 0.05 ≥ 0.01 ✓
+- 1000-path Monte Carlo over 10 years
+- Stationary distribution matches theoretical Gamma
+- Mean convergence: 4.79% vs 5.00% theory
+- Zero negative rates across all simulations
+
+**Industry Applications**
+
+**Fixed Income:**
+• Zero-coupon bond pricing (closed-form solutions)
+• Interest rate derivatives (caps, floors, swaptions)
+• Yield curve modeling
+
+**Risk Management:**
+• Interest rate risk quantification
+• Stress testing frameworks
+• Economic capital models
+
+**Credit & Structured Products:**
+• Default intensity modeling
+• CDO pricing
+• Credit derivatives
+
+**Extensions & Modern Use:**
+• Heston stochastic volatility (variance follows CIR)
+• Multi-factor term structure models
+• CIR++ for market calibration
+
+**Technical Advantages:**
+
+✓ Analytical tractability (bond pricing formulas)
+✓ Non-negativity guarantee
+✓ Exact simulation available
+✓ Well-established calibration methods
+✓ Extensive empirical validation
+
+The CIR model remains a fundamental tool in quantitative finance, balancing mathematical rigor with practical applicability.
+
+Complete implementation with visualizations and parameter sensitivity analysis available.
+
+#QuantitativeFinance #RiskManagement #Python #InterestRates #FixedIncome #StochasticCalculus #FinancialEngineering
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Interest rate modeling with the CIR model!
+
+The plots show 1000 simulated interest rate paths over 10 years:
+📈 Mean path (blue): converges to 5% long-term rate
+🎯 Confidence bands: theoretical ±2σ
+🌈 Terminal distribution: matches Gamma shape
+
+The math: dr = κ(θ-r)dt + σ√r dW
+• Mean reversion keeps rates near 5%
+• Square root prevents negative rates
+• Used exact χ² simulation—no approximation!
+
+Applications: bond pricing, derivatives, risk management
+
+#Finance #Mathematics #Python #DataScience #Visualization #QuantFinance
+
+--------------------------------------------------------------------------------

@@ -1,0 +1,159 @@
+================================================================================
+POISSON PROCESS SIMULATION - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Simulated 10,000 Poisson processes to verify the math holds up. Inter-arrival times? Exponential. Event counts? Poisson distributed. The theory checks out beautifully.
+
+#Python #Probability #DataScience #Math #Simulation
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Explored the Poisson process: events occurring randomly at rate λ with exponentially distributed waiting times. Ran 10,000 Monte Carlo simulations and validated with Kolmogorov-Smirnov and chi-squared tests. Theory meets practice.
+
+#Math #Statistics #Python #Science
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how we model random events like customer arrivals or radioactive decay?
+
+The Poisson process is the answer. Events occur independently at a constant average rate λ, and the time between events follows an exponential distribution with mean 1/λ.
+
+I simulated 10,000 processes and ran statistical tests to prove it works. The inter-arrival times matched Exp(λ) perfectly, and event counts followed Poisson(λT) as predicted.
+
+Math is beautiful when theory matches simulation.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented two Poisson process simulation methods in Python:
+
+1. Inter-arrival time method: Generate Exp(λ) waiting times
+2. Order statistics method: Sample N~Poisson(λT), then sort uniform arrivals
+
+Verified with rigorous statistical tests:
+- KS test confirms inter-arrivals ~ Exp(λ)
+- χ² test confirms N(T) ~ Poisson(λT)
+
+E[N(t)] = λt and Var(N(t)) = λt both validated across 10,000 simulations.
+
+#Probability #Stochastics #Python #Science
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+**Title:** I simulated 10,000 Poisson processes to prove the textbook math actually works
+
+**Body:**
+
+The Poisson process is everywhere - customer arrivals at a store, radioactive decay, network packet arrivals. But does the theory actually hold up in practice?
+
+**What is a Poisson process?**
+
+Imagine events happening randomly over time, like customers walking into a coffee shop. If arrivals are:
+- Independent (one customer arriving doesn't affect when the next shows up)
+- Occurring at a constant average rate λ (say, 2 per hour)
+
+Then you have a Poisson process! The cool part: the waiting time between events follows an exponential distribution with mean 1/λ.
+
+**What I did:**
+
+I implemented two simulation methods in Python:
+1. **Inter-arrival method:** Generate random exponential waiting times and add them up
+2. **Order statistics method:** First decide how many events occur (Poisson distributed), then place them uniformly in the time interval
+
+**The results:**
+
+After 10,000 simulations with λ=2 over T=10 time units:
+- Expected events: 20, Sample mean: 20.0
+- Inter-arrival mean: 0.5 (theory: 1/λ = 0.5)
+- Kolmogorov-Smirnov test: p > 0.05 (inter-arrivals ARE exponential)
+- Chi-squared test: p > 0.05 (event counts ARE Poisson)
+
+**Real-world applications:**
+
+- Queueing theory (bank lines, call centers)
+- Reliability engineering (equipment failures)
+- Telecommunications (data packets)
+- Physics (Geiger counters, photon detection)
+- Finance (trade arrivals)
+
+**Try it yourself:**
+
+View the full interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/poisson_process_simulation.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Did you know random events follow predictable patterns?
+
+The Poisson process models things like customer arrivals, radioactive decay, and even when your phone gets notifications. Events happen independently at rate λ, and the waiting time between them follows an exponential distribution.
+
+I ran 10,000 computer simulations and the math checked out perfectly. Science is amazing when theory matches reality!
+
+Explore the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/poisson_process_simulation.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Validating Statistical Theory Through Monte Carlo Simulation
+
+Just completed a computational study of the Poisson process - one of the most important stochastic models in operations research, finance, and engineering.
+
+Key technical achievements:
+
+- Implemented two simulation algorithms: inter-arrival time method (generating exponential waiting times) and order statistics method (uniform conditioning)
+
+- Ran 10,000 Monte Carlo simulations to empirically validate theoretical properties
+
+- Applied rigorous hypothesis testing: Kolmogorov-Smirnov test confirmed exponential inter-arrivals; chi-squared goodness-of-fit validated Poisson event counts
+
+- Verified that E[N(t)] = λt and Var(N(t)) = λt hold empirically
+
+This methodology has applications in:
+- Queueing systems optimization
+- Reliability and maintenance planning
+- Network traffic modeling
+- Financial risk assessment
+
+The ability to validate theoretical models through simulation is a critical skill for data scientists and quantitative analysts.
+
+View the full analysis with Python code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/poisson_process_simulation.ipynb
+
+#DataScience #Python #Statistics #QuantitativeAnalysis #MonteCarlo
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+
+Randomness follows rules.
+
+The Poisson process models events occurring at rate λ:
+→ Customer arrivals
+→ Radioactive decay
+→ Network packets
+→ Stock trades
+
+Waiting time between events? Exponential.
+Number of events in time T? Poisson distributed.
+
+Simulated 10,000 processes.
+Theory matched perfectly.
+
+Math is beautiful.
+
+#mathematics #datascience #python #probability #coding #science #statistics #simulation #programming #datavisualization

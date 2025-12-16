@@ -1,0 +1,165 @@
+================================================================================
+LEVEL SET METHOD FOR INTERFACE TRACKING - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+How do you track a shape that splits or merges? The Level Set Method!
+
+Instead of tracking points, we embed interfaces as zero contours of a function φ. Topology changes happen automatically.
+
+#Python #ComputationalMath #Simulation
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+The Level Set Method elegantly solves interface tracking by representing boundaries implicitly as φ(x,t) = 0.
+
+Key insight: merging and splitting happen naturally without special handling.
+
+Implemented vortex advection, curvature flow, and reinitialization in Python.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Ever wondered how simulations track bubbles merging or cells dividing?
+
+The Level Set Method (Osher & Sethian, 1988) is brilliant: instead of tracking points on a boundary, you define a function φ where the interface is just where φ = 0.
+
+The magic? When two regions touch, they merge automatically. No special code needed.
+
+Built a complete implementation: vortex flows stretching circles, curvature smoothing stars into circles, and two bubbles merging into one.
+
+Pure NumPy + Matplotlib.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+Implemented the Level Set Method for interface tracking in Python.
+
+Core equations:
+• Interface: Γ = {x : φ(x) = 0}
+• Evolution: ∂φ/∂t + v·∇φ = 0
+• Curvature flow: ∂φ/∂t = κ|∇φ|
+
+Demonstrations:
+1. Vortex advection (time-reversing flow)
+2. Motion by mean curvature (star → circle)
+3. Topological change (two circles merging)
+4. Reinitialization to signed distance function
+
+Key advantage: topology changes are automatic!
+
+#Python #CompMath #NumericalMethods
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+Title: I built a Level Set Method simulation in Python - here's how it elegantly handles shape merging
+
+Body:
+
+**The Problem**
+
+Tracking moving boundaries in simulations (like bubbles, flames, or tumor growth) is tricky. If you track individual points on the boundary, what happens when two shapes merge? Or one splits in two? You need complicated logic to handle these "topological changes."
+
+**The Elegant Solution**
+
+The Level Set Method (1988) takes a different approach. Instead of tracking points ON the boundary, you create a function φ(x,y) where:
+- φ > 0 outside the shape
+- φ < 0 inside the shape
+- φ = 0 IS the boundary
+
+The interface just "falls out" as the zero contour.
+
+**Why This Is Brilliant**
+
+When two regions grow together, their φ functions naturally blend, and the zero contour automatically becomes one connected shape. No special merging code needed!
+
+**What I Implemented**
+
+1. **Vortex advection** - A circle getting stretched by a swirling velocity field
+2. **Curvature flow** - A star shape smoothing into a circle (high curvature regions move faster)
+3. **Merging** - Two circles expanding until they join into one blob
+4. **Reinitialization** - Restoring the "signed distance" property where |∇φ| = 1
+
+**Key Equations (simplified)**
+
+- Evolution: ∂φ/∂t + v·∇φ = 0 (advection by velocity v)
+- Normal speed: ∂φ/∂t + F|∇φ| = 0
+- Curvature: κ = ∇·(∇φ/|∇φ|)
+
+**Tech Stack**
+
+Pure NumPy for numerics, Matplotlib for visualization. About 200 lines of code for the core methods.
+
+View the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/level_set_method_interface_tracking.ipynb
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+How do computers simulate bubbles merging or cells dividing?
+
+The Level Set Method is one of the most elegant solutions in computational math. Instead of tracking boundary points (nightmare when shapes merge!), you define a height function where zero = the boundary.
+
+When two shapes touch, they automatically merge - no special code needed!
+
+Built a complete Python implementation with vortex flows and curvature smoothing.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/level_set_method_interface_tracking.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+Exploring Implicit Interface Tracking with the Level Set Method
+
+Just completed a computational implementation of the Level Set Method - a foundational technique in computational physics, computer graphics, and medical imaging.
+
+The core insight: represent boundaries implicitly as zero contours of a continuous function φ(x,t). This enables:
+
+• Automatic handling of topological changes (merging, splitting)
+• Direct computation of geometric quantities (normals, curvature)
+• Extensibility to any spatial dimension
+
+Implementation highlights:
+- Upwind finite difference schemes for advection
+- Central differences for curvature computation
+- PDE-based reinitialization to maintain signed distance property
+- Demonstrations: vortex deformation, mean curvature flow, bubble coalescence
+
+Technical stack: Python, NumPy, Matplotlib
+
+Applications span multiphase CFD, image segmentation, crystal growth simulation, and level set-based shape optimization.
+
+Full implementation with mathematical derivations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/level_set_method_interface_tracking.ipynb
+
+#ComputationalScience #Python #NumericalMethods #ScientificComputing
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters, visual-focused)
+--------------------------------------------------------------------------------
+
+The art of tracking moving boundaries
+
+This visualization shows the Level Set Method in action - a mathematical technique where interfaces are hidden inside a "height map."
+
+The black contours? They're just where the surface crosses zero.
+
+Watch how:
+→ A circle stretches in a vortex flow
+→ A star smooths into a circle
+→ Two bubbles merge into one
+
+The beautiful part: topology changes happen automatically.
+
+Built with Python + NumPy
+
+#ComputationalArt #MathVisualization #Python #ScienceIsBeautiful #DataViz

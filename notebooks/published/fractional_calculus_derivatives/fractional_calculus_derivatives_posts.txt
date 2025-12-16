@@ -1,0 +1,172 @@
+# Social Media Posts: Fractional Calculus Derivatives
+# Generated from: fractional_calculus_derivatives.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+What's the half-derivative of x²? Fractional calculus lets us differentiate to ANY order, not just integers.
+
+D^0.5(x²) = (4/√π)x^1.5
+
+Mind-bending math with real applications in physics!
+
+#Python #Math #FractionalCalculus #Science
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Fractional calculus extends derivatives beyond integers. Instead of just 1st or 2nd derivatives, we can compute the 0.5th derivative!
+
+For x²: D^α interpolates smoothly between the original function and its derivatives.
+
+The Gamma function Γ(z) makes this possible by generalizing factorials.
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wondered what a "half derivative" would look like?
+
+Fractional calculus answers exactly that. It extends differentiation to ANY real order α.
+
+The formula for power functions is elegant:
+D^α(x^β) = [Γ(β+1)/Γ(β-α+1)] · x^(β-α)
+
+So the half-derivative of x is: D^0.5(x) = (2/√π)·√x
+
+This isn't just math curiosity — fractional derivatives model memory effects in viscoelastic materials and anomalous diffusion in physics.
+
+Python + NumPy make this surprisingly easy to compute!
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented Grünwald-Letnikov fractional derivatives in Python today.
+
+The GL scheme uses recursive weights:
+w_k = w_(k-1) · (k-1-α)/k
+
+Key insight: fractional operators are NONLOCAL — they depend on the function's entire history, not just local values. This is why they model memory effects so well.
+
+Verified against analytical solutions for x^β:
+D^α(x^β) = Γ(β+1)/Γ(β-α+1) · x^(β-α)
+
+Convergence is O(h) as expected.
+
+#FractionalCalculus #Python #ScientificComputing #Mathematics
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I implemented fractional calculus in Python — here's how "half-derivatives" work
+
+**Body:**
+
+You know how regular calculus gives us the 1st derivative, 2nd derivative, etc.? Fractional calculus asks: what about the 0.5th derivative? Or the 1.7th derivative?
+
+**ELI5 version:** Imagine differentiation as a "slider" — normally it only has integer positions (0, 1, 2...). Fractional calculus lets you stop anywhere on that slider.
+
+**The key formula:**
+For f(x) = x^β, the fractional derivative of order α is:
+
+D^α(x^β) = [Γ(β+1) / Γ(β-α+1)] · x^(β-α)
+
+Where Γ is the Gamma function (which generalizes factorials to non-integers).
+
+**Example:** The half-derivative of x:
+- D^0.5(x) = Γ(2)/Γ(1.5) · x^0.5 = (2/√π)·√x
+
+**Why does this matter?**
+- Viscoelastic materials have "memory" — their stress depends on their entire strain history
+- Anomalous diffusion (particles spreading slower/faster than normal)
+- PID controllers with fractional orders for better control
+- The solutions decay as power laws, not exponentials — capturing real physical behavior better
+
+I used the Grünwald-Letnikov numerical scheme, which approximates the derivative using weighted sums. The weights follow a neat recursive formula, making it efficient to compute.
+
+**Interactive Notebook:** View and run the full implementation here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fractional_calculus_derivatives.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Did you know you can take the "half derivative" of a function?
+
+Regular calculus gives us 1st and 2nd derivatives. Fractional calculus extends this to ANY order — including 0.5!
+
+The half-derivative of x turns out to be (2/√π)·√x. Wild, right?
+
+This isn't just abstract math. Fractional derivatives model real phenomena like how materials "remember" past deformation and how particles spread in unusual ways.
+
+Check out my interactive Python notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fractional_calculus_derivatives.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Exploring Fractional Calculus: Derivatives Beyond Integer Orders
+
+I recently completed a computational study implementing fractional derivatives — extending classical differentiation to arbitrary real orders.
+
+Key technical highlights:
+
+• Implemented the Grünwald-Letnikov numerical scheme using efficient recursive weight computation
+• Verified O(h) convergence against analytical solutions
+• Computed the Mittag-Leffler function for fractional relaxation problems
+
+The mathematics is elegant: for f(x) = x^β, the α-th derivative is
+D^α(x^β) = [Γ(β+1)/Γ(β-α+1)] · x^(β-α)
+
+Real-world applications include:
+- Viscoelastic material modeling (memory-dependent behavior)
+- Anomalous diffusion processes
+- Fractional-order control systems
+- Signal processing and edge detection
+
+What makes fractional derivatives special is their nonlocality — they capture how systems "remember" their history, producing power-law rather than exponential decay.
+
+Tools: Python, NumPy, SciPy, Matplotlib
+
+View the full notebook with interactive code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fractional_calculus_derivatives.ipynb
+
+#Mathematics #Python #ScientificComputing #DataScience #ComputationalScience
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars, visual-focused caption)
+--------------------------------------------------------------------------------
+What happens between the 0th and 1st derivative?
+
+Fractional calculus fills in the gaps.
+
+This visualization shows how the α-th derivative of x² smoothly transitions as α goes from 0 → 1 → 2:
+
+• α = 0: Original parabola x²
+• α = 0.5: Something in between
+• α = 1: Linear function 2x
+• α = 2: Constant 2
+
+The half-derivative of x is (2/√π)·√x — a result dating back to Leibniz in 1695!
+
+Applications: physics, materials science, control systems.
+
+Built with Python + NumPy + Matplotlib
+
+#Math #Calculus #Python #DataVisualization #Science #STEM #Coding #Mathematics #Physics
+
+--------------------------------------------------------------------------------

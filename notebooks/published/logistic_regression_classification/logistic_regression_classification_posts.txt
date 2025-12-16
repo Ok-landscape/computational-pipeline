@@ -1,0 +1,173 @@
+# Social Media Posts: Logistic Regression Classification
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+
+Built logistic regression from scratch in Python! The sigmoid function σ(z) = 1/(1+e⁻ᶻ) maps any input to a probability between 0-1. Achieved 97% accuracy on test data.
+
+#Python #MachineLearning #DataScience #Classification
+
+---
+
+### Bluesky (< 300 chars)
+
+Implemented logistic regression classifier from scratch using gradient descent. The model learns weights w and bias b to create a linear decision boundary. Cross-entropy loss guarantees convergence to global minimum. Achieved 97% test accuracy with clean probability outputs.
+
+#Python #ML #DataScience
+
+---
+
+### Threads (< 500 chars)
+
+Just coded logistic regression from scratch - no sklearn!
+
+The magic is in the sigmoid function: σ(z) = 1/(1+e⁻ᶻ)
+
+It transforms the linear combination wᵀx + b into a probability between 0 and 1.
+
+What I love about it:
+- Interpretable: each weight shows feature importance
+- Probabilistic: gives calibrated confidence scores
+- Efficient: convex loss means guaranteed convergence
+
+Got 97% accuracy on a synthetic 2-class dataset!
+
+#Python #MachineLearning #LearnToCode
+
+---
+
+### Mastodon (< 500 chars)
+
+New notebook: Logistic Regression from scratch in Python
+
+The math:
+- Sigmoid: σ(z) = 1/(1+e⁻ᶻ)
+- Probability model: P(y=1|x) = σ(wᵀx + b)
+- Loss: Binary cross-entropy J = -1/m ∑[yᵢln(p̂ᵢ) + (1-yᵢ)ln(1-p̂ᵢ)]
+- Gradient: ∂J/∂wⱼ = 1/m ∑(p̂ᵢ - yᵢ)xᵢⱼ
+
+Implemented gradient descent optimization, train/test split, and full evaluation metrics. 97% test accuracy with clean decision boundaries.
+
+#Python #MachineLearning #Statistics #DataScience
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+
+**Title:** I built Logistic Regression from scratch in Python - here's what I learned
+
+**Body:**
+
+I just finished implementing logistic regression classification without using sklearn, and wanted to share what I learned!
+
+**The Core Idea (ELI5):**
+Imagine you want to predict yes/no outcomes (spam/not spam, pass/fail). Logistic regression takes your input features, combines them linearly (like regular regression), then squishes the result through a sigmoid function to get a probability between 0 and 1.
+
+**The Math (simplified):**
+- Sigmoid function: σ(z) = 1/(1+e⁻ᶻ)
+- Prediction: P(y=1|x) = σ(wᵀx + b)
+- We minimize cross-entropy loss using gradient descent
+
+**What I implemented:**
+- `_sigmoid()` - the activation function
+- `_compute_loss()` - binary cross-entropy
+- `fit()` - gradient descent training
+- `predict_proba()` and `predict()` - inference
+
+**Key insights:**
+1. The decision boundary is linear (wᵀx + b = 0)
+2. Weights are interpretable - each wⱼ shows how feature j affects log-odds
+3. Unlike SVMs, you get calibrated probabilities, not just class labels
+4. The loss is convex, so gradient descent finds the global minimum
+
+**Results:**
+- 97% test accuracy
+- Clean separation of classes
+- Smooth probability contours
+
+The visualization shows decision boundaries, training loss curve, probability contours, and the sigmoid function.
+
+**View the full interactive notebook here:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/logistic_regression_classification.ipynb
+
+Happy to answer questions about the implementation!
+
+---
+
+### Facebook (< 500 chars)
+
+Ever wondered how email spam filters work? Many use logistic regression!
+
+I just built one from scratch in Python. It takes features (like word frequencies) and predicts the probability something belongs to a category.
+
+The key is the sigmoid function - it turns any number into a probability between 0 and 1. Then gradient descent finds the best decision boundary.
+
+My model achieved 97% accuracy!
+
+Check out the interactive notebook with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/logistic_regression_classification.ipynb
+
+---
+
+### LinkedIn (< 1000 chars)
+
+Deepening my machine learning fundamentals: Implemented Logistic Regression from scratch.
+
+Understanding the mathematics behind ML algorithms is crucial for effective model development and debugging. This week I built a complete logistic regression classifier using only NumPy.
+
+Technical implementation:
+- Sigmoid activation: σ(z) = 1/(1+e⁻ᶻ)
+- Binary cross-entropy loss function
+- Gradient descent optimization with configurable learning rate
+- Full evaluation metrics: accuracy, precision, recall, F1-score
+
+Key engineering decisions:
+- Numerical stability via clipping in sigmoid computation
+- Epsilon padding to prevent log(0) in loss calculation
+- Vectorized operations for computational efficiency
+
+Results: 97% test accuracy on synthetic binary classification data
+
+Why this matters: While libraries like sklearn abstract these details, understanding the underlying optimization helps in:
+- Debugging convergence issues
+- Choosing appropriate hyperparameters
+- Extending to custom loss functions
+- Building intuition for more complex models
+
+View the complete notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/logistic_regression_classification.ipynb
+
+#MachineLearning #Python #DataScience #NeuralNetworks #AI
+
+---
+
+### Instagram (< 500 chars)
+
+LOGISTIC REGRESSION FROM SCRATCH
+
+Built a binary classifier using only NumPy!
+
+The sigmoid function is the heart of it all:
+σ(z) = 1/(1+e⁻ᶻ)
+
+It transforms any input into a probability between 0 and 1.
+
+Swipe to see:
+→ Decision boundary visualization
+→ Training loss convergence
+→ Probability contour maps
+→ The sigmoid curve
+
+97% accuracy achieved!
+
+Understanding the math behind ML makes you a better data scientist.
+
+.
+.
+.
+#machinelearning #python #datascience #coding #artificialintelligence #deeplearning #programming #learntocode #computerscience #ai

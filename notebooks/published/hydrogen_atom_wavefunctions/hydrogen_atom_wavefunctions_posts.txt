@@ -1,0 +1,170 @@
+# Social Media Posts: Hydrogen Atom Wavefunctions
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Where is an electron in a hydrogen atom? Quantum mechanics says: everywhere with probability!
+
+Built Python simulations to visualize orbitals from 1s to 3d using Laguerre polynomials.
+
+E_n = -13.6 eV/n²
+
+#QuantumMechanics #Python #Physics
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Visualizing hydrogen atom wavefunctions with Python.
+
+The electron probability density ψ²(r,θ,φ) shows where electrons are likely found. Key insight: the 1s orbital peaks at r = a₀ (Bohr radius ≈ 0.529 Å).
+
+Energy levels: E_n = -13.6 eV/n²
+
+Computed using SciPy's Laguerre polynomials.
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why we draw electron clouds the way we do?
+
+I coded up the exact quantum mechanical wavefunctions for hydrogen atoms in Python. The math is beautiful: ψ = R(r) × Y(θ,φ)
+
+Key findings:
+• 1s electrons most likely at r = a₀ (Bohr radius)
+• Higher orbitals have nodes where probability = 0
+• 2s has 1 node, 3s has 2 nodes
+
+The code uses associated Laguerre polynomials and spherical harmonics from SciPy.
+
+It's wild that we can exactly solve this quantum system!
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented hydrogen atom radial wavefunctions R_nl(r) in Python using scipy.special.genlaguerre.
+
+The wavefunction separates: ψ_nlm(r,θ,φ) = R_nl(r) × Y_l^m(θ,φ)
+
+Key results:
+• Radial nodes = n - l - 1
+• Most probable radius for 1s: r_max = a₀
+• Energy eigenvalues: E_n = -13.6 eV/n²
+
+Expectation value: ⟨r⟩ = (a₀/2)[3n² - l(l+1)]
+
+Visualized probability densities r²|R_nl|² for s, p, d orbitals up to n=3.
+
+#QuantumMechanics #Python #Physics #CompPhys
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/Physics)
+--------------------------------------------------------------------------------
+**Title:** I built a Python simulation of hydrogen atom wavefunctions - visualizing where electrons actually are
+
+**Body:**
+
+I've always found quantum mechanics fascinating but abstract. So I decided to actually compute and visualize the hydrogen atom wavefunctions in Python.
+
+**ELI5 version:** In quantum mechanics, we can't say exactly where an electron is. Instead, we have a wavefunction ψ that tells us the probability of finding it somewhere. For hydrogen, |ψ|² gives the probability density.
+
+**What I built:**
+
+The wavefunction separates into radial and angular parts:
+
+ψ(r,θ,φ) = R(r) × Y(θ,φ)
+
+I implemented the radial part R_nl(r) using:
+- Associated Laguerre polynomials (via scipy.special.genlaguerre)
+- Proper normalization factors
+- Calculated probability densities r²|R|²
+
+**Key insights from the visualization:**
+
+1. **Nodes matter**: The 1s orbital has no radial nodes, 2s has 1, 3s has 2. These are places where the probability of finding the electron is exactly zero.
+
+2. **Most probable radius**: For 1s, the electron is most likely at r = a₀ (Bohr radius ≈ 0.529 Å). This matches the old Bohr model prediction!
+
+3. **Higher orbitals spread out**: 3s electrons can be found much further from the nucleus than 1s electrons.
+
+4. **Energy levels**: E_n = -13.6 eV/n² - only depends on n, not l or m (this degeneracy is special to hydrogen).
+
+**Code highlights:**
+- Used numpy for numerical computation
+- scipy.special for Laguerre polynomials and spherical harmonics
+- matplotlib for visualization
+
+This is one of the few quantum systems we can solve exactly, which makes it perfect for learning.
+
+**View the full interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hydrogen_atom_wavefunctions.ipynb
+
+Happy to answer questions about the physics or implementation!
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just finished a fun physics coding project - visualizing where electrons actually live in hydrogen atoms!
+
+In quantum mechanics, electrons don't orbit like planets. Instead, they exist in probability clouds described by wavefunctions.
+
+I computed these wavefunctions in Python and plotted where electrons are most likely to be found. The math involves Laguerre polynomials (fancy!) but the results are intuitive.
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hydrogen_atom_wavefunctions.ipynb
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Computational Quantum Mechanics: Hydrogen Atom Wavefunctions**
+
+I recently completed a computational physics project implementing exact solutions for hydrogen atom wavefunctions using Python's scientific computing stack.
+
+**Technical Implementation:**
+• Radial wavefunctions R_nl(r) computed using associated Laguerre polynomials via scipy.special.genlaguerre
+• Angular components via spherical harmonics Y_l^m(θ,φ)
+• Visualization of probability densities for orbitals from 1s through 3d
+
+**Key Results:**
+• Demonstrated the node structure: n-l-1 radial nodes for each orbital
+• Computed most probable radii and expectation values
+• Verified energy eigenvalues E_n = -13.6 eV/n²
+
+**Skills Demonstrated:**
+- Scientific Python (NumPy, SciPy, Matplotlib)
+- Quantum mechanical theory implementation
+- Mathematical physics (special functions, PDEs)
+- Data visualization and scientific communication
+
+The hydrogen atom is foundational to quantum chemistry and atomic physics. This exact solution serves as a benchmark for approximate methods used in more complex systems.
+
+Full notebook with derivations and code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hydrogen_atom_wavefunctions.ipynb
+
+#QuantumMechanics #Python #ScientificComputing #Physics #DataScience
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Quantum electron clouds
+
+This is what hydrogen atom orbitals actually look like when you solve the Schrodinger equation and plot the probability densities.
+
+The brighter regions = higher probability of finding the electron
+
+From top to bottom:
+• 1s, 2s, 2p orbitals
+• 3s, 3p, 3d orbitals
+
+Each orbital has its own unique shape determined by quantum numbers (n, l, m).
+
+Built this visualization in Python using SciPy's special functions for the underlying math.
+
+The math is exact - hydrogen is one of the few quantum systems we can solve analytically!
+
+#QuantumMechanics
+#Physics
+#Python
+#Science
+#DataVisualization
+#Coding
+#ScienceArt

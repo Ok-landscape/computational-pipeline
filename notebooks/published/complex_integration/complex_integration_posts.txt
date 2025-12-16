@@ -1,0 +1,194 @@
+=== COMPLEX INTEGRATION - SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Why does ∮f(z)dz = 0 for analytic functions?
+
+Cauchy's theorem is pure magic: integrate ANY analytic function around a closed loop → zero!
+
+We verify this numerically with Python.
+
+#Python #Math #ComplexAnalysis #Science
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Complex integration unlocks powerful techniques for evaluating "impossible" real integrals.
+
+The residue theorem: ∮f(z)dz = 2πi·Σ(residues)
+
+We demonstrate Cauchy's theorem, integral formula, and compute ∫dx/(x²+1) = π using residues.
+
+#Mathematics #Python
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Ever tried to compute ∫dx/(x²+1) from -∞ to ∞?
+
+Complex analysis makes it elegant! Instead of struggling with real calculus, we:
+
+1. Extend to complex plane
+2. Find poles at z = ±i
+3. Apply residue theorem
+4. Get the answer: π
+
+The residue theorem says ∮f(z)dz = 2πi times the sum of residues inside the contour.
+
+We verify this numerically in Python - the error is ~10⁻¹⁵!
+
+Mind = blown.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented numerical verification of complex integration theorems in Python:
+
+• Cauchy's Integral Theorem: ∮f(z)dz = 0 for analytic f
+• Cauchy's Integral Formula: f(z₀) = (1/2πi)∮f(z)/(z-z₀)dz
+• Residue Theorem: ∮f(z)dz = 2πi·Σ Res(f, zₖ)
+
+Applied to evaluate ∫₋∞^∞ dx/(x²+1) = π
+
+Used trapezoidal integration over parametrized contours. Numerical errors on order of 10⁻¹⁵.
+
+#Mathematics #ComplexAnalysis #Python #Science #SciPy
+
+================================================================================
+REDDIT - r/learnpython or r/math (Title + Body)
+================================================================================
+
+TITLE: I implemented numerical verification of complex integration theorems (Cauchy, Residues) in Python
+
+BODY:
+
+**TL;DR:** Built a Python notebook that numerically verifies the major theorems of complex integration and shows how to evaluate "impossible" real integrals.
+
+---
+
+**What is this?**
+
+Complex integration extends calculus to functions of complex numbers. This leads to incredibly powerful results:
+
+**Cauchy's Integral Theorem:** If f(z) is analytic (differentiable everywhere in a region), then integrating around any closed loop gives zero:
+
+∮f(z)dz = 0
+
+**Cauchy's Integral Formula:** You can compute f(z₀) at any interior point using only boundary values:
+
+f(z₀) = (1/2πi) ∮ f(z)/(z - z₀) dz
+
+**Residue Theorem:** For functions with poles (singularities), the contour integral equals 2πi times the sum of residues:
+
+∮f(z)dz = 2πi · Σ Res(f, zₖ)
+
+---
+
+**The Cool Application**
+
+The real integral ∫₋∞^∞ dx/(x²+1) is tricky by standard methods. But with complex analysis:
+
+1. Extend to f(z) = 1/(z²+1)
+2. Note poles at z = i and z = -i
+3. Use semicircular contour in upper half-plane (encloses only z = i)
+4. Residue at z = i is 1/(2i)
+5. Result: 2πi · (1/2i) = π
+
+The notebook verifies this numerically - direct integration and residue theorem both give π!
+
+---
+
+**Implementation Details**
+
+- Used parametric contour integration with trapezoidal rule
+- Verified all three major theorems numerically
+- Errors on order of 10⁻¹⁵ (machine precision)
+- Visualizations show contours, poles, and function magnitudes
+
+**View the interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/complex_integration.ipynb
+
+---
+
+**What I Learned**
+
+Complex analysis isn't just abstract math - it's a computational tool. Problems that seem impossible in real calculus become elegant with residues.
+
+Would love feedback on the implementation or suggestions for other applications!
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+What if I told you there's a "cheat code" for calculus?
+
+Complex integration lets you solve integrals that seem impossible. The secret: extend to imaginary numbers!
+
+Example: ∫dx/(x²+1) from -∞ to ∞
+
+Instead of struggling, we find the "poles" at z = ±i, compute residues, and boom - the answer is π.
+
+I built a Python notebook demonstrating these magical theorems. The math checks out to 15 decimal places!
+
+Check it out: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/complex_integration.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Numerical Verification of Complex Integration Theorems
+
+I recently completed a computational project implementing and verifying the fundamental theorems of complex analysis in Python.
+
+**Technical Implementation:**
+
+• Developed parametric contour integration using trapezoidal numerical methods
+• Verified Cauchy's Integral Theorem (∮f(z)dz = 0 for analytic functions)
+• Implemented Cauchy's Integral Formula for computing function values from boundary data
+• Applied the Residue Theorem to evaluate challenging real integrals
+
+**Key Results:**
+
+The project demonstrates how complex analysis provides elegant solutions to problems intractable by real methods. For example, evaluating ∫₋∞^∞ dx/(x²+1) reduces to computing a single residue, yielding the exact answer π.
+
+Numerical verification achieved errors on the order of 10⁻¹⁵, confirming the theoretical predictions.
+
+**Skills Demonstrated:**
+- Complex analysis fundamentals
+- Numerical integration techniques
+- Scientific Python (NumPy, SciPy, Matplotlib)
+- Mathematical visualization
+
+View the complete implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/complex_integration.ipynb
+
+#Mathematics #Python #DataScience #ScientificComputing #NumericalMethods
+
+================================================================================
+INSTAGRAM (< 500 chars, visual-focused)
+================================================================================
+
+The beauty of complex integration ✨
+
+This plot shows contours in the complex plane wrapping around "poles" - points where functions blow up to infinity.
+
+The magic: integrate around a closed loop and you get 2πi times the sum of residues inside.
+
+This lets us solve "impossible" integrals.
+
+Example: ∫dx/(x²+1) from -∞ to ∞ = π
+
+The shaded area in the bottom-right shows this integral geometrically.
+
+Math is beautiful when you can see it.
+
+·
+·
+·
+
+#mathematics #complexanalysis #python #datascience #visualization #mathisbeautiful #coding #science #stem
+
+================================================================================

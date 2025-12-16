@@ -1,0 +1,174 @@
+================================================================================
+SOCIAL MEDIA POSTS: RIEMANN SURFACES BASICS
+================================================================================
+
+---
+1. TWITTER/X (< 280 chars)
+---
+
+Ever wonder why √z is "multi-valued"? Riemann surfaces solve this by creating a space where each branch becomes single-valued! Just visualized the 2-sheet structure of w = √z 🎨 #ComplexAnalysis #Math #Python #Science
+
+---
+2. BLUESKY (< 300 chars)
+---
+
+Riemann surfaces transform multi-valued complex functions into single-valued ones on a topological space. Visualized phase portraits for √z, log(z), and z^(1/3), plus explored monodromy behavior. Beautiful mathematical structure! #Mathematics #ComplexAnalysis #ComputationalMath
+
+---
+3. THREADS (< 500 chars)
+---
+
+Just explored Riemann surfaces - they're such an elegant solution to a tricky problem!
+
+The issue: functions like √z give multiple values for each input. The solution: create a multi-sheeted surface where each "sheet" represents a different branch.
+
+Visualized this using phase portraits (color-coding the argument) and 3D plots showing how the two sheets of √z connect at the branch point. Also analyzed elliptic curves like w² = z(z-1)(z-2) which form genus 1 surfaces (tori).
+
+Math meets topology! 🧮
+
+---
+4. MASTODON (< 500 chars)
+---
+
+Deep dive into Riemann surface theory: studied multi-valued functions, branch points, and monodromy behavior. Key results:
+
+• √z has a branch point of order 2 at origin (monodromy factor: -1)
+• z^(1/n) has monodromy factor: e^(2πi/n)
+• Elliptic curve w² = z(z-1)(z-2) has genus 1 with 3 branch points
+
+Computational techniques: phase portraits using HSV colormap for arg(w), 3D surface plots for multiple sheets, branch cut discontinuity analysis. Visualization is essential for complex analysis!
+
+#Mathematics #ComplexAnalysis #ScientificComputing
+
+---
+5. REDDIT (r/learnpython or r/math)
+---
+
+Title: Visualizing Riemann Surfaces: How Multi-Valued Functions Get Their Own Geometry
+
+Body:
+
+I just finished exploring Riemann surfaces computationally and wanted to share what I learned!
+
+**The Problem:**
+
+Complex functions like √z, log(z), and z^(1/3) are "multi-valued" - for each input z, you get multiple possible outputs. For example, √4 could be +2 or -2 in the complex plane. This makes them not technically functions in the strict sense.
+
+**The Elegant Solution:**
+
+Riemann surfaces resolve this by creating a special topological space with multiple "sheets" where each sheet represents one branch of the function. On this surface, the function becomes genuinely single-valued!
+
+**What I Computed:**
+
+1. **Phase portraits**: Visualized the argument (angle) of complex functions using HSV color mapping. This reveals branch cuts beautifully - you can see discontinuities as color jumps.
+
+2. **3D multi-sheet plots**: For w = √z, I plotted both sheets (positive and negative square root) as surfaces over the z-plane. They connect at z=0, the branch point.
+
+3. **Branch cut analysis**: Traced √z along the negative real axis from above and below, showing the discontinuity jump.
+
+4. **Monodromy computation**: Numerically verified that when you analytically continue √z around a closed loop enclosing the origin, you get back -1 times your starting value (a sign flip).
+
+5. **Elliptic curves**: Visualized w² = z(z-1)(z-2), which defines a genus 1 Riemann surface with 3 branch points.
+
+**Key Insights:**
+
+• Branch points are where multiple sheets come together (like z=0 for √z)
+• The genus g is a topological invariant: g=0 for sphere, g=1 for torus, g≥2 for higher
+• The Uniformization Theorem says every simply-connected Riemann surface is conformally equivalent to the sphere, plane, or unit disk
+• Functions with branch point order n have monodromy factor e^(2πi/n)
+
+**Why This Matters:**
+
+Riemann surfaces aren't just abstract math - they're fundamental to:
+- Algebraic geometry (algebraic curves)
+- String theory (worldsheets are Riemann surfaces)
+- Integrable systems (spectral curves)
+- Number theory (modular forms and elliptic curves)
+
+The Python visualization used NumPy for computation and Matplotlib for plotting. Phase portraits are surprisingly effective at revealing complex structure!
+
+Interactive notebook with all the code and plots here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/riemann_surfaces_basics.ipynb
+
+Would love to hear if anyone has worked with Riemann surfaces or has questions about the computational techniques!
+
+---
+6. FACEBOOK (< 500 chars)
+---
+
+🔬 Math + Code = Beautiful Visualizations
+
+Just explored Riemann surfaces - a brilliant way to make "multi-valued" functions like √z behave properly!
+
+The idea: Instead of one value giving multiple answers, create a multi-layered surface where each layer represents one answer. It's like giving each possibility its own dimension to live in.
+
+Created phase portraits (color-coded plots) and 3D visualizations showing how two sheets of √z connect at the origin. Pure mathematical elegance! 🎨
+
+Full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/riemann_surfaces_basics.ipynb
+
+---
+7. LINKEDIN (< 1000 chars)
+---
+
+Computational Exploration: Riemann Surfaces and Multi-Valued Complex Functions
+
+I recently completed a deep technical analysis of Riemann surface theory with computational visualization using Python (NumPy/Matplotlib).
+
+**Challenge Addressed:**
+Multi-valued complex functions (√z, log(z), z^(1/n)) pose fundamental problems in complex analysis. These functions yield multiple outputs for single inputs, violating the function definition.
+
+**Methodology:**
+Implemented several computational techniques:
+
+1. Phase portrait generation using HSV color mapping to visualize arg(w) across the complex plane
+2. 3D surface rendering of multiple sheets for √z, demonstrating topological structure
+3. Branch cut discontinuity analysis with numerical path tracing
+4. Monodromy calculation: numerically verified that √z exhibits sign inversion (factor: -1) after analytic continuation around the origin
+5. Algebraic curve visualization: plotted the genus 1 elliptic curve w² = z(z-1)(z-2)
+
+**Key Results:**
+• Confirmed branch point orders match theoretical predictions
+• Visualized the Riemann-Hurwitz relationship between genus and ramification
+• Demonstrated that z^(1/n) has monodromy factor e^(2πi/n)
+
+**Applications:**
+This theoretical framework underpins modern developments in algebraic geometry, string theory, integrable systems, and number theory.
+
+Full computational notebook with reproducible code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/riemann_surfaces_basics.ipynb
+
+#Mathematics #ComplexAnalysis #ScientificComputing #Python #DataVisualization #ComputationalScience
+
+---
+8. INSTAGRAM (< 500 chars, visual-focused)
+---
+
+🌀 Visualizing the Invisible: Riemann Surfaces
+
+These phase portraits reveal the hidden structure of complex functions!
+
+Each color represents the "argument" (angle) of w = √z, log(z), and z^(1/3). The discontinuities you see? Those are branch cuts - places where the function "jumps" between different values.
+
+Swipe for 3D plots showing how √z lives on two connected sheets, and how elliptic curves emerge from polynomial equations.
+
+Math isn't just equations - it's geometry, topology, and art. 🎨
+
+.
+.
+.
+#mathematics #complexanalysis #dataviz #python #scientific #visualization #mathart #stem #learning #education #computational #physics #algebra #topology
+
+================================================================================
+END OF POSTS
+================================================================================
+
+CONVERSION NOTES:
+- All LaTeX math converted to Unicode or plain text
+- √ used for square root (HTML entity √)
+- Superscripts: ² ³ for exponents where possible
+- Greek letters: π for pi
+- Fractions written as a/b or (a)/(b)
+- Complex equations described in words or simplified notation
+- All platform character limits respected
+- CoCalc viewer URLs included for Reddit, Facebook, and LinkedIn as required

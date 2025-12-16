@@ -1,0 +1,176 @@
+# Social Media Posts: Random Walk and Brownian Motion Simulation
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Ever wonder how pollen dances in water? It's Brownian motion!
+
+Simulated 500 random walks & proved:
+- Mean square displacement grows with time: ⟨r²⟩ ∝ t
+- Final positions form a perfect Gaussian
+
+Code + visualizations inside!
+
+#Python #Physics #DataScience
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Simulating Brownian Motion from First Principles
+
+Built a random walk simulator in Python to verify Einstein's 1905 diffusion theory.
+
+Key result: Mean square displacement ⟨X²⟩ = t perfectly matches 500 simulated trajectories.
+
+Central Limit Theorem in action: positions converge to Gaussian distribution.
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Just simulated Brownian motion - the random jiggling of particles that Einstein explained in 1905!
+
+Started with simple random walks (flip a coin: go left or right) and watched something beautiful emerge:
+
+After 1000 steps across 500 walks, the final positions form a perfect bell curve. That's the Central Limit Theorem doing its thing!
+
+Even cooler: the spread grows as √t, meaning particles diffuse predictably despite moving randomly.
+
+Physics is wild when you can see it in code.
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented 1D and 2D random walk simulations to verify Brownian motion theory.
+
+Results from 500 walks × 1000 steps:
+
+1D: MSD = N(Δx)² confirmed
+- Final distribution: Gaussian with σ = √N
+
+2D: Continuous angle distribution
+- Radial distances follow Rayleigh distribution
+- MSD scales linearly: ⟨r²⟩ = t
+
+Einstein's relation D = (Δx)²/(2dΔt) connects microscopic steps to macroscopic diffusion.
+
+NumPy + Matplotlib, full reproducibility with seed=42.
+
+#Physics #Python #Simulation #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+**Title:** I simulated 500 random walks to understand Brownian motion - here's what I learned
+
+**Body:**
+
+Hey everyone! I just finished a project simulating random walks and Brownian motion, and wanted to share some insights that really clicked for me.
+
+**What is a random walk?**
+
+Imagine flipping a coin at every step: heads you go right (+1), tails you go left (-1). After 1000 flips, where do you end up? Intuitively you might think "back near zero" - and on average, you're right! But individuals can wander surprisingly far.
+
+**The key insight: Mean Square Displacement**
+
+While the *average* position is zero, the *average squared distance* grows linearly with time:
+
+⟨X²⟩ = N × (step size)²
+
+This means the typical distance from origin grows as √N. After 1000 steps with step size 1, expect to be about √1000 ≈ 31.6 units away.
+
+**What I simulated:**
+
+- 500 independent 1D random walks, 1000 steps each
+- 500 independent 2D walks (random angles 0 to 2π)
+- Calculated mean square displacement at every time step
+
+**Mind-blowing results:**
+
+1. The simulated MSD perfectly matches the theoretical prediction ⟨X²⟩ = t
+2. Final positions form a near-perfect Gaussian distribution (Central Limit Theorem!)
+3. In 2D, radial distances follow a Rayleigh distribution
+
+**Why does this matter?**
+
+This is exactly how Einstein explained Brownian motion in 1905 - the random jiggling of pollen in water that botanist Robert Brown observed in 1827. The diffusion coefficient D = (Δx)²/(2Δt) connects microscopic random steps to macroscopic diffusion we can measure.
+
+**Tech stack:** NumPy for simulation, SciPy for statistics, Matplotlib for visualization. Used vectorized operations so 500 walks × 1000 steps runs almost instantly.
+
+The code is fully reproducible with np.random.seed(42). Happy to share if anyone's interested!
+
+**TL;DR:** Random walks look chaotic but follow beautiful statistical laws. Distance grows as √t, distributions become Gaussian, and this explains everything from diffusion to stock prices.
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why smoke spreads out in a room or why tea diffuses in hot water?
+
+I just simulated the physics behind it - Brownian motion!
+
+Even though each particle moves completely randomly, the collective behavior is perfectly predictable. The math shows that how far particles spread grows with the square root of time.
+
+Ran 500 simulations and the results match Einstein's 1905 theory exactly. Sometimes the universe is surprisingly orderly in its randomness!
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Exploring Stochastic Processes: Random Walk & Brownian Motion Simulation
+
+I recently completed a computational physics project simulating random walks and Brownian motion, demonstrating the connection between microscopic randomness and macroscopic diffusion.
+
+Key Technical Achievements:
+
+• Implemented vectorized 1D and 2D random walk algorithms using NumPy
+• Simulated 500 independent trajectories with 1000 steps each
+• Validated theoretical predictions for mean square displacement: ⟨r²⟩ = 2dDt
+• Confirmed Central Limit Theorem convergence to Gaussian distribution
+• Verified Rayleigh distribution for 2D radial distances
+
+The project reinforces Einstein's 1905 diffusion theory, showing how the diffusion coefficient D = (Δx)²/(2dΔt) bridges molecular-scale movements to observable diffusion phenomena.
+
+Skills Demonstrated:
+- Statistical mechanics fundamentals
+- Monte Carlo simulation methods
+- Scientific visualization with Matplotlib
+- Reproducible research practices (seeded RNG, documented methodology)
+
+This type of stochastic modeling has applications across quantitative finance, materials science, drug delivery modeling, and any domain requiring diffusion process analysis.
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+The beauty of randomness
+
+Each colorful line is a "random walk" - a particle taking random steps left or right.
+
+After 1000 steps, where do they end up?
+
+Individually: unpredictable
+Collectively: perfectly predictable
+
+The gray envelope shows ±2√t - where 95% of walks stay bounded. This is Brownian motion, the same physics that explains:
+
+• How smoke spreads
+• How molecules diffuse
+• Even stock market movements
+
+500 simulations, 1000 steps each.
+Pure math, pure beauty.
+
+#Physics #DataVisualization #Python #BrownianMotion #Science #Coding #Math #Simulation
+
+--------------------------------------------------------------------------------

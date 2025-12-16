@@ -1,0 +1,185 @@
+===========================================
+TENSOR CALCULUS & EINSTEIN NOTATION
+Social Media Posts
+===========================================
+
+-------------------------------------------
+1. TWITTER/X (< 280 characters)
+-------------------------------------------
+
+Einstein's genius notation: when an index repeats, you sum!
+
+aᵢbⁱ = a₁b¹ + a₂b² + a₃b³
+
+This simple rule powers general relativity and tensor calculus.
+
+NumPy's einsum() lets you write it directly in code!
+
+#Python #Physics #Math #Science
+
+-------------------------------------------
+2. BLUESKY (< 300 characters)
+-------------------------------------------
+
+Tensor calculus made elegant: Einstein notation automatically sums repeated indices.
+
+Write aᵢbⁱ instead of ∑ᵢaᵢbⁱ
+
+The metric tensor gᵢⱼ defines geometry - it raises/lowers indices and computes distances:
+ds² = gᵢⱼdxⁱdxʲ
+
+Implemented it all in Python with NumPy einsum!
+
+#Science #Math
+
+-------------------------------------------
+3. THREADS (< 500 characters)
+-------------------------------------------
+
+Just built a tensor calculus notebook exploring Einstein notation - the elegant shorthand that powers general relativity!
+
+The core idea: repeated indices mean "sum over all values"
+
+So instead of writing:
+∑ᵢaᵢbⁱ
+
+You just write:
+aᵢbⁱ
+
+We computed Christoffel symbols for spherical coordinates, showed how the metric tensor gᵢⱼ defines curved geometry, and visualized tensor transformations.
+
+NumPy's einsum() function implements this notation directly - matrix multiplication becomes einsum('ij,jk->ik', A, B)
+
+#Physics #Python #Mathematics
+
+-------------------------------------------
+4. MASTODON (< 500 characters)
+-------------------------------------------
+
+New computational notebook: Tensor Calculus & Einstein Notation
+
+Implemented core tensor operations using NumPy einsum:
+- Index contraction: Tⁱᵢ = trace
+- Metric operations: vᵢ = gᵢⱼvʲ (lowering indices)
+- Christoffel symbols: Γⁱⱼₖ = (1/2)gⁱˡ(∂ⱼgₗₖ + ∂ₖgⱼₗ - ∂ₗgⱼₖ)
+
+Computed these numerically for spherical coords (r, θ, φ) and verified against analytical solutions.
+
+Also showed stress-energy tensor contraction: T = gμνTμν = -ρ + 3p for a perfect fluid.
+
+#Physics #Python #Tensors #Science
+
+-------------------------------------------
+5. REDDIT (r/learnpython or r/Physics)
+-------------------------------------------
+
+Title: Implemented Einstein Notation and Tensor Calculus in Python using NumPy's einsum
+
+Body:
+
+I created an interactive Jupyter notebook exploring tensor calculus and Einstein's summation convention - the elegant notation that underlies general relativity.
+
+**What is Einstein Notation?**
+
+The key rule: when an index appears twice (once up, once down), you sum over it automatically.
+
+Instead of writing: sum over i of (aᵢ times bⁱ)
+
+You simply write: aᵢbⁱ
+
+**What the notebook covers:**
+
+1. **Basic operations** - inner products, matrix multiplication, tensor contraction using einsum
+2. **The metric tensor** - how gᵢⱼ defines geometry in curved spaces
+3. **Spherical coordinates** - computed the metric ds² = dr² + r²dθ² + r²sin²θ dφ²
+4. **Christoffel symbols** - the connection coefficients needed for covariant derivatives, computed numerically and verified analytically
+5. **Stress-energy tensor** - showed T = -ρ + 3p for a perfect fluid in special relativity
+
+**Key insight:** NumPy's einsum() directly implements Einstein notation!
+
+Matrix multiplication Cⁱₖ = AⁱⱼBʲₖ becomes:
+```python
+C = np.einsum('ij,jk->ik', A, B)
+```
+
+The visualization shows tensor transformations, metric geometry on a sphere, and how Christoffel symbols vary with position.
+
+**View and run the notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/tensor_calculus_einstein_notation.ipynb
+
+This was a great exercise in connecting abstract math notation to concrete computation. Happy to answer questions!
+
+-------------------------------------------
+6. FACEBOOK (< 500 characters)
+-------------------------------------------
+
+Ever wonder how Einstein wrote his theory of general relativity so compactly?
+
+He invented a clever notation: whenever an index repeats, you automatically sum over it. Simple rule, powerful results!
+
+I built an interactive Python notebook that:
+- Implements tensor operations with NumPy
+- Computes the geometry of curved spaces
+- Visualizes how vectors transform
+
+The same math describes black holes and GPS satellites!
+
+Try it yourself: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/tensor_calculus_einstein_notation.ipynb
+
+-------------------------------------------
+7. LINKEDIN (< 1000 characters)
+-------------------------------------------
+
+Tensor Calculus Implementation: From Theory to Code
+
+I developed a computational notebook demonstrating tensor calculus and Einstein notation - the mathematical framework underlying general relativity, machine learning (attention mechanisms), and continuum mechanics.
+
+Key implementations:
+
+- Einstein summation convention using NumPy's einsum() for efficient tensor contractions
+- Metric tensor operations in spherical coordinates, including index raising/lowering
+- Numerical computation of Christoffel symbols with analytical verification
+- Stress-energy tensor analysis for relativistic fluids
+
+Technical highlights:
+- Demonstrated that matrix multiplication Cⁱₖ = AⁱⱼBʲₖ maps directly to einsum('ij,jk->ik', A, B)
+- Computed non-zero Christoffel symbols: Γʳθθ = -r, Γθrθ = 1/r, Γφθφ = cot(θ)
+- Verified metric tensor identity: gⁱᵏgₖⱼ = δⁱⱼ
+
+This project bridges abstract mathematical notation with practical numerical computation - a valuable skill for anyone working in scientific computing, physics simulations, or geometric deep learning.
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/tensor_calculus_einstein_notation.ipynb
+
+#ScientificComputing #Python #Physics #Mathematics #MachineLearning
+
+-------------------------------------------
+8. INSTAGRAM (< 500 characters)
+-------------------------------------------
+
+Einstein's Secret Notation
+
+The math that describes black holes, curved spacetime, and the fabric of the universe - made visual.
+
+Einstein notation: repeated indices = automatic summation
+aᵢbⁱ means "sum over all i values"
+
+This simple rule lets you write general relativity compactly.
+
+Swipe to see:
+- How vectors transform under rotation
+- The metric tensor on a sphere
+- Christoffel symbols that encode curvature
+
+Built with Python + NumPy
+
+#Physics
+#Mathematics
+#DataVisualization
+#Science
+#Python
+#Coding
+#Einstein
+#GeneralRelativity
+
+===========================================
+END OF POSTS
+===========================================

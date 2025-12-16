@@ -1,0 +1,186 @@
+# Social Media Posts: Bayesian Inference with MCMC
+# Generated from: bayesian_inference_mcmc.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+What if you could update your beliefs mathematically?
+
+Bayesian inference does exactly that. Built an MCMC sampler from scratch to estimate hidden parameters from noisy data.
+
+P(θ|D) ∝ P(D|θ)·P(θ)
+
+#Python #BayesianStats #MCMC #DataScience
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented Metropolis-Hastings MCMC from scratch to demonstrate Bayesian inference.
+
+Given 100 noisy observations, the sampler recovered the true parameters (μ=5, σ=2) with tight 95% credible intervals.
+
+The posterior tells the full story of parameter uncertainty.
+
+#Statistics #Python #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how scientists update their beliefs with new data?
+
+That's Bayesian inference in a nutshell.
+
+I built a Markov Chain Monte Carlo sampler from scratch. Fed it 100 noisy measurements. It figured out the hidden parameters behind the data.
+
+The magic: you don't just get point estimates. You get full probability distributions showing exactly how certain (or uncertain) you should be.
+
+The acceptance rate hit 23% - right in the optimal zone for 2D problems.
+
+Full interactive notebook in my bio.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Bayesian Inference with MCMC
+
+Implemented Metropolis-Hastings from scratch to infer parameters of a normal distribution.
+
+Key results:
+• 50,000 iterations, 10,000 burn-in
+• Acceptance rate: 23% (optimal ~23.4% for 2D)
+• ESS shows good mixing
+• Posterior predictive checks validate model fit
+
+The posterior captures full uncertainty:
+μ: mean ≈ 5.0, 95% CI recovered true value
+σ: mean ≈ 2.0, 95% CI recovered true value
+
+Bayes' theorem: P(θ|D) ∝ P(D|θ)·P(θ)
+
+#Statistics #Bayesian #MCMC #Python #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/statistics)
+--------------------------------------------------------------------------------
+**Title:** I built an MCMC sampler from scratch to learn Bayesian inference - here's what clicked
+
+**Body:**
+
+Hey everyone! I've been learning Bayesian statistics and finally built something that made it all click: a Metropolis-Hastings MCMC sampler from scratch in Python (numpy/scipy only, no PyMC or Stan).
+
+**The Problem:**
+You have 100 noisy measurements. You know they came from a normal distribution, but you don't know the mean (μ) or standard deviation (σ). How do you figure them out AND quantify your uncertainty?
+
+**The Bayesian Approach:**
+Instead of point estimates, Bayes gives you probability distributions:
+
+P(θ|D) ∝ P(D|θ) · P(θ)
+
+- P(θ|D) = posterior (what we want - our updated beliefs)
+- P(D|θ) = likelihood (how probable is our data given parameters)
+- P(θ) = prior (what we believed before seeing data)
+
+**The Challenge:**
+Computing the posterior exactly requires an integral that's often impossible to solve. That's where MCMC comes in - it samples from the posterior without computing the nasty integral.
+
+**How Metropolis-Hastings Works (ELI5):**
+1. Start somewhere in parameter space
+2. Propose a random step
+3. If the new spot has higher probability, accept it
+4. If lower probability, accept it sometimes (proportional to the ratio)
+5. Repeat 50,000 times
+6. The places you visit most often ARE the posterior distribution
+
+**Results:**
+- True values: μ=5.0, σ=2.0
+- Posterior recovered both with tight 95% credible intervals
+- Acceptance rate hit 23% (textbook says optimal is ~23.4% for 2D)
+- Trace plots show good mixing after burn-in
+
+**What I Learned:**
+- Burn-in matters - first 10,000 samples are garbage while the chain finds its footing
+- Proposal step size is crucial - too small = slow exploration, too big = lots of rejections
+- Effective Sample Size (ESS) tells you how many independent samples you really have
+- Posterior predictive checks are essential - sample from your posterior, generate fake data, compare to real data
+
+Check out the full interactive notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bayesian_inference_mcmc.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how scientists deal with uncertainty?
+
+I built a computer program that learns from data the Bayesian way. Instead of saying "the answer is exactly 5," it says "the answer is probably between 4.6 and 5.4, and here's how confident I am."
+
+Fed it 100 noisy measurements. It figured out the hidden truth AND told me exactly how sure it was.
+
+This is how modern AI handles uncertainty too.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bayesian_inference_mcmc.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Bayesian Inference & MCMC: A Hands-On Implementation
+
+Just completed a deep dive into Bayesian statistics by implementing a Metropolis-Hastings MCMC sampler from scratch.
+
+The Project:
+Built a computational notebook demonstrating how to infer unknown parameters from noisy data using only numpy, scipy, and matplotlib - no black-box probabilistic programming libraries.
+
+Technical Highlights:
+• Implemented the full Metropolis-Hastings algorithm with random walk proposals
+• Achieved optimal acceptance rate (~23%) for 2D parameter space
+• Developed convergence diagnostics: trace plots, autocorrelation analysis, ESS calculation
+• Validated results with posterior predictive checks
+
+Key Insight:
+The power of Bayesian inference lies in uncertainty quantification. Rather than point estimates, we get full posterior distributions - invaluable for decision-making under uncertainty.
+
+This methodology underpins modern applications in A/B testing, clinical trials, risk assessment, and probabilistic machine learning.
+
+View the interactive notebook with full code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/bayesian_inference_mcmc.ipynb
+
+#BayesianStatistics #DataScience #MachineLearning #Python #MCMC #Statistics
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars, assumes plot.png as image)
+--------------------------------------------------------------------------------
+Bayesian inference visualized
+
+These plots show a computer learning from data.
+
+Top: Watch the algorithm explore parameter space over 50,000 steps
+
+Middle: The final answer isn't a single number - it's a probability distribution showing all plausible values
+
+Bottom: Every point is a sample from the "posterior" - our updated beliefs after seeing data
+
+The red stars mark the true hidden values. The algorithm found them.
+
+This is how modern AI quantifies uncertainty.
+
+.
+.
+.
+#bayesian #statistics #datascience #python #mcmc #machinelearning #datavisualization #coding #probability #science
+
+--------------------------------------------------------------------------------

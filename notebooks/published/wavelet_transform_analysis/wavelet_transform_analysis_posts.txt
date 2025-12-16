@@ -1,0 +1,180 @@
+# Social Media Posts: Wavelet Transform Analysis
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Wavelets reveal what Fourier can't: WHERE and WHEN frequencies occur in signals.
+
+Built a Morlet CWT to analyze a chirp + transient burst. The scalogram shows perfect time-frequency localization.
+
+#Python #SignalProcessing #DataScience #Math
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented Continuous Wavelet Transform analysis in Python using the Morlet wavelet.
+
+Unlike FFT's fixed resolution, wavelets provide adaptive multi-resolution: better time resolution at high frequencies, better frequency resolution at low frequencies.
+
+The Heisenberg principle applies: Δt·Δf ≥ 1/4π
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how scientists analyze signals that change frequency over time?
+
+The wavelet transform is the answer. Unlike regular Fourier analysis, wavelets tell you WHEN different frequencies occur, not just which ones exist.
+
+I implemented the Morlet wavelet CWT to analyze a chirp signal (10→100 Hz sweep) with a hidden burst at t=1s. The scalogram beautifully captures both the gradual sweep AND the transient event.
+
+This is the same math behind JPEG 2000 compression, EEG analysis, and earthquake detection.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Continuous Wavelet Transform analysis with Morlet wavelet
+
+Key implementation details:
+- Morlet: ψ(t) = π^(-1/4) · exp(iω₀t) · exp(-t²/2)
+- Scale-frequency relation: f = ω₀/(2πaΔt)
+- Convolution-based CWT with proper normalization
+
+Test signal: linear chirp (10-100 Hz) + Gaussian-windowed 50 Hz burst
+
+Results show excellent time-frequency localization compared to STFT. The uncertainty principle trade-off (Δt·Δf ≥ 1/4π) is clearly visible in the scalogram.
+
+#SignalProcessing #Python #DSP #Wavelets #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/DSP)
+--------------------------------------------------------------------------------
+**Title:** Implemented Continuous Wavelet Transform from scratch - here's what I learned about time-frequency analysis
+
+**Body:**
+
+I just finished a notebook implementing the Continuous Wavelet Transform (CWT) using the Morlet wavelet, and wanted to share some insights.
+
+**The Problem with Fourier:**
+Regular FFT tells you which frequencies exist in a signal, but not when they occur. For non-stationary signals (where frequency changes over time), you need something better.
+
+**Enter Wavelets:**
+The CWT uses a "mother wavelet" that gets stretched (scaled) and shifted (translated) across your signal:
+
+W(a,b) = (1/√a) · ∫ f(t) · ψ*((t-b)/a) dt
+
+- a = scale (inversely related to frequency)
+- b = translation (time position)
+- ψ = mother wavelet
+
+**My Test Signal:**
+- Linear chirp: frequency sweeps from 10 Hz to 100 Hz
+- Transient burst: 50 Hz Gaussian-windowed pulse at t=1.0s
+- Added noise for realism
+
+**Key Insight - The Uncertainty Principle:**
+You literally cannot have perfect time AND frequency resolution simultaneously. Δt·Δf ≥ 1/4π
+
+At low frequencies (large scales): great frequency resolution, poor time resolution
+At high frequencies (small scales): great time resolution, poor frequency resolution
+
+This is why the scalogram shows wider "blobs" at low frequencies and narrower ones at high frequencies.
+
+**Why Morlet?**
+ψ(t) = π^(-1/4) · exp(iω₀t) · exp(-t²/2)
+
+It's a complex sinusoid modulated by a Gaussian - provides optimal joint time-frequency localization.
+
+**Practical Applications:**
+- Seismic analysis (detecting P and S waves)
+- Medical: ECG/EEG pattern detection
+- JPEG 2000 uses discrete wavelet transform
+- Financial time series anomaly detection
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/wavelet_transform_analysis.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built something cool: a wavelet transform analyzer that reveals hidden patterns in signals!
+
+Unlike regular frequency analysis, wavelets show you exactly WHEN different frequencies occur. Think of it like a musical score vs just knowing which notes are in a song.
+
+My test caught both a smoothly rising tone (10→100 Hz chirp) AND a brief 50 Hz pulse hidden in noise.
+
+This is the same math used in medical scanners, earthquake detectors, and image compression!
+
+Check out the full notebook with code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/wavelet_transform_analysis.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Time-Frequency Analysis with Continuous Wavelet Transforms
+
+I recently completed a computational analysis implementing the Continuous Wavelet Transform (CWT) using the Morlet wavelet for signal processing applications.
+
+**Technical Approach:**
+- Implemented CWT via convolution with scaled/translated Morlet wavelets
+- Analyzed a test signal containing linear frequency modulation (10-100 Hz chirp) and a transient burst
+- Compared results against Short-Time Fourier Transform (STFT)
+
+**Key Findings:**
+The wavelet approach provides adaptive multi-resolution analysis that outperforms fixed-window STFT for non-stationary signals. The scalogram successfully captured both gradual frequency evolution and localized transient events.
+
+**Skills Demonstrated:**
+- Signal processing algorithm implementation
+- NumPy/SciPy for scientific computing
+- Mathematical modeling (convolution, complex analysis)
+- Data visualization with Matplotlib
+
+**Applications:**
+This methodology applies to biomedical signal analysis (ECG/EEG), financial time series, seismic data processing, and audio analysis.
+
+View the complete analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/wavelet_transform_analysis.ipynb
+
+#SignalProcessing #Python #DataScience #ScientificComputing #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Wavelets: The time-frequency microscope
+
+This scalogram reveals a signal's hidden structure:
+
+→ The diagonal line = frequency sweeping from 10 to 100 Hz
+→ The bright spot at t=1s = a brief 50 Hz burst
+→ Colors = signal energy (brighter = stronger)
+
+Why wavelets matter:
+Regular Fourier analysis tells you WHAT frequencies exist.
+Wavelets tell you WHERE and WHEN.
+
+Same math powers:
+- Medical brain scans
+- Earthquake detection
+- JPEG 2000 compression
+- Music analysis
+
+The uncertainty principle limits resolution: you can't perfectly know both time AND frequency (Δt·Δf ≥ 1/4π)
+
+#Wavelets #SignalProcessing #DataVisualization #Python #Math #Science #Coding #DataScience #SciArt
+
+--------------------------------------------------------------------------------

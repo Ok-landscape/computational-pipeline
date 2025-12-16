@@ -1,0 +1,160 @@
+# Social Media Posts: Density Functional Theory (DFT)
+# Generated from: notebooks/published/density_functional_theory_dft.ipynb
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+How do we calculate electron behavior in molecules? DFT replaces the impossible 3N-dimensional wavefunction with just the electron density n(r). Implemented a 1D Kohn-Sham solver in Python showing SCF convergence.
+
+#Physics #QuantumMechanics #Python #DFT
+
+--------------------------------------------------------------------------------
+BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Density Functional Theory simplifies quantum mechanics: instead of tracking every electron's wavefunction, we use just the electron density n(r). Built a pedagogical 1D Kohn-Sham DFT solver in Python demonstrating the self-consistent field procedure that powers modern computational chemistry.
+
+#Science #Physics #Python
+
+--------------------------------------------------------------------------------
+THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how scientists predict molecular properties without solving impossible equations?
+
+Density Functional Theory (DFT) is the answer. The many-body Schrodinger equation depends on 3N coordinates for N electrons - computationally intractable.
+
+DFT's insight: the ground-state energy depends only on electron density n(r), a function of just 3 coordinates!
+
+I implemented a 1D Kohn-Sham solver showing how the self-consistent field loop converges. The effective potential V_eff = V_ext + V_H + V_xc captures all the physics.
+
+--------------------------------------------------------------------------------
+MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented a pedagogical 1D Kohn-Sham DFT solver in Python.
+
+Key concepts demonstrated:
+- Hohenberg-Kohn theorems: density uniquely determines ground state
+- Kohn-Sham mapping: interacting system → non-interacting auxiliary system
+- SCF convergence with linear density mixing
+- LDA exchange: V_x = -(3n/pi)^(1/3)
+- Hartree potential via softened Coulomb
+
+The HOMO-LUMO gap from KS eigenvalues underestimates the true fundamental gap - a known DFT limitation.
+
+#Physics #QuantumMechanics #Python #CompChem
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+REDDIT (r/learnpython or r/Physics)
+--------------------------------------------------------------------------------
+
+Title: I built a 1D Density Functional Theory (DFT) solver in Python to understand quantum computational chemistry
+
+Body:
+
+**What is DFT?**
+
+Density Functional Theory is one of the most important methods in computational physics and chemistry. The problem: solving the Schrodinger equation for N interacting electrons requires a wavefunction with 3N coordinates - computationally impossible for real molecules.
+
+DFT's revolutionary insight (Hohenberg-Kohn, 1964): the ground-state properties are uniquely determined by just the electron density n(r), which only has 3 coordinates!
+
+**The Kohn-Sham Trick**
+
+Kohn and Sham (1965) mapped the interacting system to a fictitious non-interacting system with the same density. We solve single-particle equations:
+
+[-1/2 nabla^2 + V_eff(r)] phi_i(r) = epsilon_i phi_i(r)
+
+where V_eff = V_ext + V_H + V_xc includes:
+- V_ext: external potential (nuclear attraction)
+- V_H: Hartree (classical electrostatic) repulsion
+- V_xc: exchange-correlation (all quantum magic)
+
+**What I implemented:**
+
+- 1D finite-difference Kohn-Sham solver
+- Self-consistent field (SCF) iteration with linear mixing
+- Local Density Approximation (LDA) for exchange-correlation
+- Softened Coulomb interaction for Hartree potential
+
+The SCF loop: guess density → build V_eff → solve KS equations → get new density → repeat until converged.
+
+**Key results:**
+
+- Demonstrated SCF convergence to self-consistent ground state
+- Visualized how V_eff differs from V_ext due to electron-electron interactions
+- Computed HOMO-LUMO gap (which underestimates true gap - known DFT issue)
+
+**Libraries used:** NumPy, SciPy, Matplotlib
+
+View the full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/density_functional_theory_dft.ipynb
+
+--------------------------------------------------------------------------------
+FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+How do scientists predict molecular properties on computers?
+
+The secret is Density Functional Theory (DFT). Instead of tracking every electron individually (impossible for large molecules), we just track where electrons are likely to be found - the electron density.
+
+I built a simplified version in Python to understand how it works. The algorithm iterates until the electron density becomes "self-consistent" with the forces acting on it.
+
+This method earned Walter Kohn the 1998 Nobel Prize in Chemistry!
+
+Explore the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/density_functional_theory_dft.ipynb
+
+--------------------------------------------------------------------------------
+LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring Computational Quantum Mechanics: A Pedagogical DFT Implementation
+
+I recently implemented a 1D Density Functional Theory (DFT) solver to deepen my understanding of computational quantum chemistry methods.
+
+DFT is the workhorse of materials science and computational chemistry, enabling predictions of electronic structure for systems where direct solution of the Schrodinger equation is intractable. The key insight: ground-state properties depend only on electron density n(r), not the full many-body wavefunction.
+
+Technical implementation highlights:
+- Kohn-Sham equations solved via finite-difference discretization
+- Self-consistent field (SCF) iteration with linear density mixing
+- Local Density Approximation (LDA) for exchange-correlation functional
+- Tridiagonal eigenvalue solver for computational efficiency
+
+Skills demonstrated: Scientific computing, numerical methods, quantum mechanics fundamentals, Python (NumPy/SciPy/Matplotlib)
+
+This foundational understanding is essential for anyone working with computational materials discovery, drug design, or quantum chemistry software.
+
+Full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/density_functional_theory_dft.ipynb
+
+#QuantumComputing #ComputationalChemistry #Python #Science #MaterialsScience
+
+--------------------------------------------------------------------------------
+INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+
+Quantum mechanics made practical.
+
+Density Functional Theory transforms an impossible problem (tracking every electron) into a tractable one (just track the electron density).
+
+This plot shows:
+- The effective potential electrons feel
+- Kohn-Sham orbitals (wavefunctions)
+- Self-consistent electron density
+- How the calculation converges
+
+DFT powers drug discovery, materials science, and nanotechnology research.
+
+Built with Python + NumPy + Matplotlib
+
+.
+.
+.
+#physics #quantummechanics #python #coding #science #datascience #visualization #learning #computational #chemistry

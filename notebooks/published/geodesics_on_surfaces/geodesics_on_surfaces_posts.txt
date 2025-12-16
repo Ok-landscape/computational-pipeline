@@ -1,0 +1,201 @@
+==============================================
+SOCIAL MEDIA POSTS: Geodesics on Surfaces
+==============================================
+
+-------------------
+1. TWITTER/X (280 chars)
+-------------------
+What's the shortest path between two points on a curved surface? Geodesics! 🌐
+
+Computed great circles on spheres & complex winding paths on tori using Python + differential geometry.
+
+ds² = E du² + 2F du dv + G dv²
+
+#DifferentialGeometry #Python #Math #SciComp
+
+-------------------
+2. BLUESKY (300 chars)
+-------------------
+Explored geodesics - the "straight lines" of curved surfaces. On a sphere, they're great circles (like airplane routes). On a torus, they wind in fascinating patterns.
+
+Used scipy to solve geodesic equations with Christoffel symbols.
+
+Computational differential geometry in action! 🧮
+
+-------------------
+3. THREADS (500 chars)
+-------------------
+Ever wonder why planes don't fly in "straight" lines on a map? They follow geodesics - the shortest paths on Earth's curved surface!
+
+I just computed geodesics on spheres and tori by solving the geodesic equation: d²u/dt² + Γⁱⱼₖ (duʲ/dt)(duᵏ/dt) = 0
+
+On spheres → great circles
+On tori → complex winding paths that can densely cover the surface
+
+The Christoffel symbols Γⁱⱼₖ encode how the surface curves. Used Python + scipy's odeint to numerically integrate these second-order ODEs.
+
+Pretty cool how calculus of variations meets numerical computing!
+
+-------------------
+4. MASTODON (500 chars)
+-------------------
+Implemented geodesic computation on parametric surfaces using differential geometry.
+
+Key components:
+• First fundamental form: ds² = E du² + 2F du dv + G dv²
+• Christoffel symbols Γⁱⱼₖ from metric coefficients
+• Geodesic equation as 2nd-order ODE system
+• Numerical integration via scipy.integrate.odeint
+
+Results:
+- Sphere: Great circles as expected
+- Torus: Non-trivial winding behavior depending on initial velocity
+
+Applications: GR (geodesics = free-fall paths), robotics (motion planning on manifolds), optimal control.
+
+Code: Python + NumPy + Matplotlib
+
+-------------------
+5. REDDIT (r/learnpython)
+-------------------
+Title: I computed geodesics on curved surfaces using scipy - here's what I learned about differential geometry!
+
+Body:
+
+Hey everyone! I just finished a computational geometry project and wanted to share what I learned about finding the shortest paths on curved surfaces.
+
+**What are geodesics?**
+
+A geodesic is the generalization of a "straight line" to curved surfaces. It's the shortest path between two points. On Earth, these are the great circles that airplanes follow!
+
+**The Math (simplified):**
+
+Any surface can be described with two coordinates (u, v). The metric tells you how to measure distances:
+
+ds² = E du² + 2F du dv + G dv²
+
+Where E, F, G depend on how the surface curves.
+
+To find geodesics, you solve the geodesic equation - a system of second-order differential equations involving Christoffel symbols (Γⁱⱼₖ). These symbols encode the curvature information.
+
+**What I implemented:**
+
+1. **Sphere geodesics** - These turn out to be great circles, which makes sense! For a sphere with radius R:
+   - Metric: ds² = R² dθ² + R² sin²(θ) dφ²
+   - The Christoffel symbols tell you how the path curves
+
+2. **Torus geodesics** - Way more interesting! A torus has major radius R and minor radius r. Geodesics can:
+   - Go around the outer/inner equators
+   - Wind around in complex patterns
+   - Potentially cover the surface densely
+
+**Technical approach:**
+
+- Used numpy for array operations
+- scipy.integrate.odeint to solve the ODE system
+- matplotlib for 3D visualization
+- Created mesh surfaces with plot_surface()
+- Overlaid geodesic paths in contrasting colors
+
+**Key lessons learned:**
+
+1. Differential geometry isn't just abstract math - it's computable!
+2. The geodesic equation is stiff; needed many integration points
+3. Christoffel symbols have lots of terms but many are zero by symmetry
+4. Initial velocity vector determines the geodesic path completely
+
+**Why this matters:**
+
+- **General Relativity**: Planets/light follow geodesics in curved spacetime
+- **Computer Graphics**: Texture mapping and surface parameterization
+- **Robotics**: Path planning on configuration spaces (which are manifolds)
+- **Optimal Control**: Energy-minimizing trajectories
+
+The full notebook shows the derivations, Christoffel symbol calculations, and generates beautiful 3D plots of the surfaces with geodesics traced on them.
+
+Interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/geodesics_on_surfaces.ipynb
+
+If you're interested in computational science, this is a great way to combine numerical methods, differential equations, and geometry!
+
+Happy to answer questions about the implementation! 🚀
+
+-------------------
+6. FACEBOOK (500 chars)
+-------------------
+Ever notice how airplane flight paths look curved on flat maps? That's because they follow geodesics - the shortest routes on Earth's curved surface! ✈️🌍
+
+I just used Python to calculate these "straight lines on curved surfaces" for both spheres (like Earth) and tori (donut shapes). The math involves something called Christoffel symbols that describe how space curves.
+
+On a torus, geodesics can wind around in wild patterns! Pretty amazing how geometry + coding reveals these hidden paths.
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/geodesics_on_surfaces.ipynb
+
+-------------------
+7. LINKEDIN (1000 chars)
+-------------------
+Computational Differential Geometry: Geodesic Path Finding on Parametric Surfaces
+
+I recently completed a project implementing geodesic computation for curved surfaces, combining differential geometry theory with numerical methods.
+
+**Technical Overview:**
+
+Geodesics are curves that locally minimize arc length on a surface - the generalization of straight lines to curved spaces. Computing them requires:
+
+1. Parameterizing the surface r(u,v) in R³
+2. Computing the first fundamental form (metric tensor) with coefficients E, F, G
+3. Deriving Christoffel symbols Γⁱⱼₖ from metric derivatives
+4. Solving the geodesic equation (second-order ODE system)
+5. Numerical integration using adaptive step-size methods
+
+**Implementation:**
+
+- Python stack: NumPy (vectorization), SciPy (ODE solver), Matplotlib (3D visualization)
+- Surfaces tested: sphere and torus with analytical metric tensors
+- Method: scipy.integrate.odeint for solving stiff ODEs
+- Validation: sphere geodesics converge to great circles (analytical solution)
+
+**Key Insights:**
+
+• Initial velocity vector completely determines geodesic trajectory
+• Torus geodesics exhibit complex winding behavior depending on starting conditions
+• Christoffel symbol computation benefits from metric symmetries
+
+**Applications:**
+
+This methodology applies to: general relativity simulations (geodesics = free-fall paths), robotics motion planning on configuration manifolds, computer graphics (texture coordinate generation), and optimal control theory.
+
+The full computational notebook with derivations, code, and visualizations is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/geodesics_on_surfaces.ipynb
+
+#ComputationalScience #DifferentialGeometry #Python #NumericalMethods #ScientificComputing
+
+-------------------
+8. INSTAGRAM (500 chars with line breaks)
+-------------------
+The shortest path on a curved surface 🌐
+
+These are geodesics - the "straight lines" of curved geometry
+
+🔹 LEFT: Great circle on a sphere (why planes fly in arcs!)
+🔹 RIGHT: Complex winding path on a torus
+
+The math? Solving geodesic equations:
+d²u/dt² + Γⁱⱼₖ (du/dt)(dv/dt) = 0
+
+Christoffel symbols Γ encode how the surface curves
+
+Built with Python + scipy + differential geometry
+
+Applications:
+✈️ Flight navigation
+🌌 General relativity
+🤖 Robot path planning
+🎮 Computer graphics
+
+#Python #Math #Geometry #DataVisualization #STEM #Science #Coding #ComputationalScience
+
+==============================================
+END OF POSTS
+==============================================

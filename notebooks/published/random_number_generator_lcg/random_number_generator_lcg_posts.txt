@@ -1,0 +1,167 @@
+# Social Media Posts: Linear Congruential Generator (LCG)
+
+================================================================================
+## 1. TWITTER/X (< 280 chars)
+================================================================================
+
+How do computers generate "random" numbers? With a simple formula:
+
+X(n+1) = (a·X(n) + c) mod m
+
+Built an LCG from scratch in Python & discovered why IBM's 1960s RANDU was catastrophically bad.
+
+#Python #Math #ComputerScience
+
+================================================================================
+## 2. BLUESKY (< 300 chars)
+================================================================================
+
+Explored the Linear Congruential Generator - a 1949 algorithm still teaching us about pseudorandomness.
+
+The core formula: X(n+1) = (a·X(n) + c) mod m
+
+Key insight: IBM's RANDU looked random in 1D and 2D, but all 3D points fell on just 15 planes.
+
+#Python #Mathematics #Programming
+
+================================================================================
+## 3. THREADS (< 500 chars)
+================================================================================
+
+Ever wonder how your computer generates random numbers? Spoiler: they're not actually random.
+
+I built a Linear Congruential Generator from scratch - an algorithm from 1949 that's still foundational today.
+
+The formula is elegantly simple:
+X(n+1) = (a·X(n) + c) mod m
+
+But parameter choice is CRITICAL. IBM's RANDU generator from the 1960s passed 1D and 2D tests, but in 3D all points lie on just 15 planes!
+
+Tested glibc, MINSTD, and more using KS and Chi-square tests.
+
+================================================================================
+## 4. MASTODON (< 500 chars)
+================================================================================
+
+Implemented various Linear Congruential Generators in Python to study their statistical properties.
+
+Core recurrence: X(n+1) = (a·X(n) + c) mod m
+
+Tested parameters from glibc, MINSTD, Numerical Recipes, and IBM's infamous RANDU.
+
+Key findings:
+- All passed KS uniformity tests
+- RANDU's lattice structure fails in 3D (15 hyperplanes!)
+- Serial correlation stays within confidence bounds
+- Monte Carlo π estimation worked well across all
+
+The spectral test reveals what 1D statistics hide.
+
+#Python #Mathematics #RandomNumbers #Algorithms
+
+================================================================================
+## 5. REDDIT
+================================================================================
+
+**Subreddit:** r/learnpython or r/programming
+
+**Title:** I built Linear Congruential Generators from scratch to understand why "random" numbers aren't random
+
+**Body:**
+
+**What I Built**
+
+A Python implementation of Linear Congruential Generators (LCGs) - one of the oldest pseudorandom number generation algorithms, dating back to 1949.
+
+**The Core Concept**
+
+LCGs generate sequences using this simple recurrence:
+
+X(n+1) = (a · X(n) + c) mod m
+
+Where a is the multiplier, c is the increment, and m is the modulus. The sequence is deterministic - same seed gives same sequence.
+
+**What I Learned**
+
+1. **Parameter choice matters enormously.** I implemented glibc (a=1103515245), MINSTD (a=16807), Numerical Recipes, and IBM's RANDU.
+
+2. **1D tests lie.** All generators passed the Kolmogorov-Smirnov and Chi-square tests for uniformity.
+
+3. **The RANDU disaster.** IBM's 1960s generator with a=65539 looks fine in 1D and 2D. But in 3D, ALL points (U(n), U(n+1), U(n+2)) lie on just 15 planes! This is because X(n+2) = 6·X(n+1) - 9·X(n) mod 2^31.
+
+4. **Modern alternatives exist for a reason.** Mersenne Twister (period 2^19937-1), PCG, and Xoroshiro128+ solve these lattice problems.
+
+**Practical Application**
+
+Used the generators to estimate π via Monte Carlo - all got within ~0.001 of the true value with 100k points.
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/random_number_generator_lcg.ipynb
+
+================================================================================
+## 6. FACEBOOK (< 500 chars)
+================================================================================
+
+Did you know computer "randomness" is actually completely predictable?
+
+I explored Linear Congruential Generators - algorithms from 1949 that generate pseudorandom numbers using simple arithmetic:
+
+Next number = (a × current + c) mod m
+
+The coolest part? IBM's RANDU generator from the 1960s passed basic randomness tests but had a fatal flaw: when you plot three consecutive numbers in 3D, they ALL fall on just 15 planes!
+
+This is why testing matters - and why modern generators are more sophisticated.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/random_number_generator_lcg.ipynb
+
+================================================================================
+## 7. LINKEDIN (< 1000 chars)
+================================================================================
+
+**Understanding Pseudorandom Number Generation: A Deep Dive into Linear Congruential Generators**
+
+I recently completed a computational study of Linear Congruential Generators (LCGs), implementing and analyzing several historical parameter sets including glibc, MINSTD, Numerical Recipes, and IBM's RANDU.
+
+**Technical Implementation:**
+- Built a flexible LCG class in Python with configurable parameters
+- Generated 10,000+ samples per configuration
+- Applied Kolmogorov-Smirnov and Chi-square goodness-of-fit tests
+- Analyzed lattice structure through 2D and 3D visualizations
+- Computed serial autocorrelation across multiple lags
+
+**Key Findings:**
+The study demonstrates why parameter selection is critical. IBM's RANDU generator (a=65539, m=2^31) passes univariate tests but exhibits severe lattice degeneration in higher dimensions - all 3D points lie on 15 hyperplanes.
+
+**Practical Application:**
+Validated generators through Monte Carlo estimation of π, achieving accuracy within 0.001 using 100,000 samples.
+
+This work reinforces the importance of understanding algorithmic limitations when selecting tools for simulation and modeling tasks.
+
+Full analysis with code: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/random_number_generator_lcg.ipynb
+
+#DataScience #Python #Algorithms #MonteCarlo #Statistics #ComputationalScience
+
+================================================================================
+## 8. INSTAGRAM (< 500 chars)
+================================================================================
+
+PSEUDORANDOM NUMBERS
+
+Your computer's "random" numbers follow a simple formula from 1949:
+
+X(n+1) = (a·X(n) + c) mod m
+
+Swipe to see why IBM's RANDU generator was a disaster:
+
+- Looked random in 1D
+- Looked random in 2D
+- But in 3D? ALL points fall on just 15 planes
+
+This is why we test randomness in multiple dimensions.
+
+Built visualizations comparing glibc, MINSTD, and RANDU.
+
+Used them to estimate π via Monte Carlo.
+
+The math is simple. Getting it right is not.
+
+#Python #Mathematics #DataVisualization #Coding #ComputerScience #Statistics #Algorithms #LearnToCode

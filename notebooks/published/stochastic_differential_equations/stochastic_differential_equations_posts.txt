@@ -1,0 +1,178 @@
+# Social Media Posts: Stochastic Differential Equations
+# Generated from: stochastic_differential_equations.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+How do stock prices and particles in water share the same math?
+
+Stochastic differential equations! Built a Python simulator for Brownian motion with Euler-Maruyama & Milstein methods.
+
+#Python #DataScience #Math #QuantFinance
+
+--------------------------------------------------------------------------------
+
+### BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+Explored stochastic differential equations (SDEs) - the math behind random fluctuations in finance, physics, and biology.
+
+Implemented Euler-Maruyama and Milstein numerical methods in Python. Milstein achieves O(dt) convergence vs O(sqrt(dt)) for Euler-Maruyama.
+
+#Python #Science #Math
+
+--------------------------------------------------------------------------------
+
+### THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how we model things that are inherently random?
+
+Stochastic Differential Equations (SDEs) are the answer. They add randomness to calculus!
+
+I built a Python simulator exploring:
+- Geometric Brownian Motion (used in stock pricing)
+- Ornstein-Uhlenbeck process (models mean-reverting systems)
+- Euler-Maruyama vs Milstein numerical methods
+
+The key insight: Milstein's method converges faster (O(dt)) than Euler-Maruyama (O(sqrt(dt))) by accounting for the derivative of volatility.
+
+--------------------------------------------------------------------------------
+
+### MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+Deep dive into Stochastic Differential Equations:
+
+The general Ito SDE: dXt = mu(Xt,t)dt + sigma(Xt,t)dWt
+
+Where mu is drift (deterministic trend) and sigma is diffusion (noise amplitude).
+
+Implemented both Euler-Maruyama and Milstein schemes in Python. Key findings:
+- Euler-Maruyama: strong order 1/2, error ~ O(sqrt(dt))
+- Milstein: strong order 1, error ~ O(dt)
+
+The Milstein correction term: (1/2)*sigma*sigma'*[(dW)^2 - dt]
+
+#ScienceMastodon #Python #Mathematics #StochasticProcesses
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I built a Python simulator for Stochastic Differential Equations (SDEs) - here's what I learned about modeling randomness
+
+**Body:**
+
+Hey everyone!
+
+I've been learning about Stochastic Differential Equations (SDEs) and wanted to share my implementation and what I learned.
+
+**What are SDEs?**
+
+Think of regular differential equations (ODEs) as describing how things change over time deterministically. SDEs add randomness to the mix using something called a Wiener process (basically mathematical Brownian motion).
+
+The general form is:
+
+dX = mu(X,t)dt + sigma(X,t)dW
+
+Where:
+- mu is the "drift" (predictable trend)
+- sigma is the "diffusion" (how much randomness)
+- dW is a random increment from the Wiener process
+
+**What I implemented:**
+
+1. **Geometric Brownian Motion (GBM)** - Used in the Black-Scholes model for stock prices. The cool thing: the solution is lognormally distributed!
+
+2. **Ornstein-Uhlenbeck Process** - Models mean-reverting behavior. Great for interest rates or anything that tends to return to an average value.
+
+3. **Numerical Methods:**
+   - Euler-Maruyama (simple but converges slowly at O(sqrt(dt)))
+   - Milstein (adds a correction term, converges at O(dt))
+
+**Key takeaway:**
+
+Milstein's method adds this correction term: (1/2)*sigma*sigma'*[(dW)^2 - dt]
+
+This accounts for Ito's lemma (the stochastic version of the chain rule) and dramatically improves accuracy.
+
+**View the interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/stochastic_differential_equations.ipynb
+
+The code is clean NumPy/Matplotlib with no external dependencies. Happy to answer any questions!
+
+--------------------------------------------------------------------------------
+
+### FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how scientists model things that are inherently unpredictable - like stock prices or particles bouncing around in water?
+
+The answer: Stochastic Differential Equations (SDEs)!
+
+I created a Python notebook exploring how to simulate randomness mathematically. The visualization shows 1000 simulated stock price paths - all starting at the same point but ending up wildly different due to random fluctuations.
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/stochastic_differential_equations.ipynb
+
+--------------------------------------------------------------------------------
+
+### LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+Stochastic Differential Equations: Bridging Theory and Simulation
+
+Just completed a comprehensive Python implementation exploring Stochastic Differential Equations (SDEs) - fundamental tools in quantitative finance, physics, and engineering.
+
+Key implementations:
+
+1. Geometric Brownian Motion - The foundation of the Black-Scholes option pricing model. Validated simulated distributions against analytical lognormal solutions.
+
+2. Ornstein-Uhlenbeck Process - Essential for modeling mean-reverting phenomena like interest rates and commodity prices.
+
+3. Numerical Methods Comparison:
+   - Euler-Maruyama: O(sqrt(dt)) strong convergence
+   - Milstein: O(dt) strong convergence via Ito-Taylor expansion
+
+Technical highlights:
+- 1000-path Monte Carlo simulations
+- Rigorous convergence analysis across multiple time steps
+- Clean, vectorized NumPy implementation
+
+The notebook demonstrates that Milstein's correction term significantly improves pathwise accuracy - critical for applications requiring precise trajectory simulation rather than just distributional properties.
+
+View the full analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/stochastic_differential_equations.ipynb
+
+#QuantitativeFinance #Python #DataScience #Mathematics #StochasticProcesses
+
+--------------------------------------------------------------------------------
+
+### INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+The mathematics of randomness, visualized.
+
+These aren't just squiggly lines - they're solutions to Stochastic Differential Equations (SDEs).
+
+Top left: Stock price simulations (Geometric Brownian Motion)
+Top right: Mean-reverting process (Ornstein-Uhlenbeck)
+Bottom left: The beautiful lognormal distribution emerging from chaos
+Bottom right: How numerical methods converge to the truth
+
+Built with Python.
+No external dependencies.
+Just NumPy, Matplotlib, and math.
+
+When randomness meets calculus, patterns emerge.
+
+#Python
+#Mathematics
+#DataVisualization
+#QuantFinance
+#CodingLife
+#ScienceIsBeautiful
+
+--------------------------------------------------------------------------------

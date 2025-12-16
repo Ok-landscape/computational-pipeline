@@ -1,0 +1,178 @@
+================================================================================
+HOMOTOPY THEORY BASICS - SOCIAL MEDIA POSTS
+================================================================================
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Can you deform a coffee cup into a donut? Homotopy theory says yes!
+
+Explored how loops classify spaces: S1 has winding numbers (Z), torus has two generators (Z x Z).
+
+Visualized with Python.
+
+#Math #Topology #Python #Science
+
+--------------------------------------------------------------------------------
+BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Homotopy theory: the math of continuous deformation.
+
+Two paths are "homotopic" if you can smoothly morph one into the other.
+
+This fundamental idea gives us tools like the fundamental group pi_1(X), which classifies loops in a space.
+
+Visualized key concepts with Python.
+
+#Math #Topology
+
+--------------------------------------------------------------------------------
+THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how mathematicians decide if two shapes are "the same"?
+
+Homotopy theory answers this! Two maps are homotopic if one can be continuously deformed into the other.
+
+The fundamental group pi_1(X) captures this: it classifies all possible loops in a space.
+
+Cool results:
+- Circle S1: loops classified by winding number (integers Z)
+- Torus: two independent loop types (Z x Z)
+- Flat plane: all loops can shrink to a point (trivial)
+
+Built Python visualizations showing path deformations in action!
+
+--------------------------------------------------------------------------------
+MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented a visual exploration of homotopy theory fundamentals.
+
+Key concepts covered:
+- Homotopy H: X x [0,1] -> Y as continuous deformation
+- Path homotopy with fixed endpoints
+- Fundamental group pi_1(X, x_0) = homotopy classes of loops
+- Covering space R -> S1 via p(x) = e^(2*pi*i*x)
+
+Computed examples:
+- pi_1(S1) = Z (winding number is the invariant)
+- pi_1(T2) = Z x Z (meridian + longitude generators)
+- Contractible spaces have trivial pi_1
+
+Python + matplotlib for 3D torus and path homotopy animations.
+
+#AlgebraicTopology #Mathematics #Python
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+Title: Visualizing Homotopy Theory with Python - How Loops Classify Topological Spaces
+
+Body:
+
+I created a Jupyter notebook exploring homotopy theory basics with Python visualizations. Here's what I learned:
+
+**What is homotopy?**
+
+Imagine you have two paths connecting point A to point B. If you can smoothly morph one path into the other (keeping endpoints fixed), they're "homotopic." Mathematically, a homotopy is a continuous map H: X x [0,1] -> Y where H(x,0) = f(x) and H(x,1) = g(x).
+
+**The Fundamental Group**
+
+The fundamental group pi_1(X) consists of equivalence classes of loops (paths that start and end at the same point). Two loops are equivalent if one can be deformed into the other.
+
+This turns out to be incredibly powerful for classifying spaces:
+
+- The circle S1 has pi_1 = Z (integers) - loops are classified by how many times they wind around
+- The torus T2 has pi_1 = Z x Z - two independent generators (around the tube and around the hole)
+- The plane R2 has pi_1 = 0 - every loop can shrink to a point
+
+**The Code**
+
+I used numpy and matplotlib to visualize:
+1. Path homotopy: showing H(s,t) = (s, t*sin(pi*s)) deforming a line into an arc
+2. Loops on punctured plane: demonstrating why winding matters
+3. Torus generators: 3D visualization of meridian and longitude loops
+4. Covering spaces: how loops in S1 lift to paths in R
+
+**What I learned**
+
+The winding number is a homotopy invariant - you can wiggle and deform a loop however you want, but if it winds twice around, it stays in the same homotopy class. This connects beautifully to covering space theory where the covering map R -> S1 makes this concrete.
+
+Check out the full notebook with interactive visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/homotopy_theory_basics.ipynb
+
+Happy to answer questions about the topology or the Python implementation!
+
+--------------------------------------------------------------------------------
+FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever tried to understand why a donut and a coffee cup are "the same" to mathematicians?
+
+It's all about homotopy - the idea that shapes are equivalent if you can smoothly deform one into the other without tearing or gluing.
+
+I built some Python visualizations exploring how loops in different spaces behave. Turns out the circle has infinitely many different types of loops (classified by how many times they wind around), while a flat plane has only one type (everything can shrink to a point).
+
+Math is beautiful!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/homotopy_theory_basics.ipynb
+
+--------------------------------------------------------------------------------
+LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring Algebraic Topology Through Computational Visualization
+
+I recently developed a Jupyter notebook demonstrating core concepts in homotopy theory, a foundational area of algebraic topology with applications in data analysis (topological data analysis), robotics (configuration spaces), and theoretical physics.
+
+Key concepts implemented:
+
+- Path Homotopy Visualization: Animated continuous deformation between curves using parameterized families H: X x [0,1] -> Y
+
+- Fundamental Group Computation: Demonstrated how pi_1(X) classifies loops in different spaces (S1 yields Z, T2 yields Z x Z)
+
+- Covering Space Theory: Visualized the universal cover R -> S1 and its connection to winding numbers
+
+- 3D Torus Rendering: Built interactive visualizations of generator loops on T2
+
+Technical stack: Python, NumPy, Matplotlib (including mplot3d)
+
+This project demonstrates how computational tools can make abstract mathematical concepts tangible and accessible.
+
+View the complete notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/homotopy_theory_basics.ipynb
+
+#Mathematics #Python #DataScience #AlgebraicTopology #Visualization #STEM
+
+--------------------------------------------------------------------------------
+INSTAGRAM (< 500 chars)
+--------------------------------------------------------------------------------
+
+The art of continuous deformation
+
+Homotopy theory asks: when are two shapes "essentially the same"?
+
+If you can smoothly morph one into the other - they're homotopic.
+
+This visualization shows path homotopy in action: a straight line transforming into an arc, frame by frame.
+
+The fundamental group captures all possible loops in a space.
+
+Circle: infinite loop types (wind once, twice, three times...)
+Torus: two independent directions
+Plane: everything shrinks to nothing
+
+Where topology meets code.
+
+#mathematics #topology #python #dataviz #stem #coding #visualization #science #mathisbeautiful

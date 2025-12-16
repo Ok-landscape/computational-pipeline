@@ -1,0 +1,147 @@
+# Social Media Posts: Kuramoto Model Synchronization
+
+## SHORT-FORM POSTS
+
+### Twitter/X (280 chars)
+How do fireflies sync their flashing? The Kuramoto model explains it mathematically!
+
+dθᵢ/dt = ωᵢ + (K/N)∑sin(θⱼ - θᵢ)
+
+When coupling K exceeds K_c, chaos becomes harmony.
+
+#Physics #Python #Synchronization #ComplexSystems
+
+---
+
+### Bluesky (300 chars)
+Explored the Kuramoto model of coupled oscillators today. 100 oscillators with random frequencies spontaneously synchronize when coupling strength K exceeds the critical value K_c = 2γ.
+
+The order parameter r jumps from 0 to ~0.8 at the phase transition. Beautiful emergence!
+
+---
+
+### Threads (500 chars)
+Ever wonder how your heart cells beat together, or how fireflies sync up?
+
+I simulated the Kuramoto model - a mathematical framework showing how coupled oscillators synchronize.
+
+Key insight: There's a critical coupling strength K_c. Below it? Total chaos. Above it? Order emerges from disorder.
+
+The order parameter r measures coherence:
+- r = 0: completely random
+- r = 1: perfect sync
+
+Real applications: neural rhythms, power grids, circadian clocks!
+
+---
+
+### Mastodon (500 chars)
+Implemented the Kuramoto model for N=100 coupled phase oscillators with Lorentzian frequency distribution (γ=0.5).
+
+The governing equation:
+dθᵢ/dt = ωᵢ + (K/N)∑ⱼsin(θⱼ - θᵢ)
+
+Observed the synchronization phase transition at K_c = 2γ = 1.0. Order parameter r exhibits mean-field behavior, with steady-state scaling as r ≈ √((K - K_c)/K) for K > K_c.
+
+The emergence of collective rhythm from individual chaos remains one of the most elegant phenomena in nonlinear dynamics.
+
+#Physics #NonlinearDynamics #Python #Science
+
+
+## LONG-FORM POSTS
+
+### Reddit (r/learnpython or r/physics)
+
+**Title:** I simulated the Kuramoto model to understand how oscillators synchronize - here's what I learned
+
+**Body:**
+
+**The Question:** How do independent oscillators (like neurons, fireflies, or power generators) spontaneously synchronize?
+
+**The Model:**
+
+The Kuramoto model describes N oscillators, each with its own natural frequency ωᵢ. They're coupled through sine interactions:
+
+dθᵢ/dt = ωᵢ + (K/N)∑ⱼsin(θⱼ - θᵢ)
+
+The coupling term pulls each oscillator toward the others. When coupling strength K is weak, everyone does their own thing. But increase K past a critical value K_c, and order emerges!
+
+**Key Findings:**
+
+1. **Phase transition exists** - Below K_c, r ≈ 0 (no sync). Above K_c, synchronization emerges suddenly.
+
+2. **Partial sync is normal** - Even with strong coupling, oscillators with extreme frequencies can't lock to the group. You get r ≈ 0.8, not perfect r = 1.
+
+3. **Mean-field magic** - Oscillators don't "see" each other directly; they couple to the collective rhythm.
+
+**The Code:**
+
+Used NumPy + SciPy's odeint for integration. The trick is computing pairwise phase differences efficiently with broadcasting.
+
+**Real applications:** neural synchronization, cardiac pacemakers, power grid stability, chemical oscillators.
+
+**Interactive Notebook:** You can view and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/kuramoto_model_synchronization.ipynb
+
+---
+
+### Facebook (500 chars)
+
+What makes fireflies flash in unison? How do billions of heart cells beat together?
+
+I explored the Kuramoto model - a beautiful mathematical framework showing how independent oscillators spontaneously synchronize.
+
+The key: there's a tipping point. Below a critical coupling strength, everything is chaotic. Above it, order magically emerges from disorder!
+
+This explains phenomena from brain waves to power grids.
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/kuramoto_model_synchronization.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+**Exploring Emergent Synchronization: A Computational Study of the Kuramoto Model**
+
+I recently completed a computational investigation of the Kuramoto model, a foundational framework in nonlinear dynamics that describes how coupled oscillators achieve synchronization.
+
+**Technical Approach:**
+- Simulated N=100 phase oscillators with Lorentzian-distributed natural frequencies
+- Solved coupled ODEs using SciPy's odeint with efficient NumPy broadcasting
+- Analyzed the order parameter r across varying coupling strengths K
+
+**Key Results:**
+The system exhibits a clear phase transition at K_c = 2γ. Below this threshold, oscillators remain incoherent (r ≈ 0). Above it, collective synchronization emerges with the steady-state order parameter following mean-field predictions.
+
+**Applications:**
+This model provides insights into neural synchronization, cardiac rhythm coordination, power grid stability, and chemical reaction dynamics.
+
+**Skills demonstrated:** Numerical ODE solving, scientific visualization, dynamical systems analysis, Python (NumPy/SciPy/Matplotlib)
+
+View the complete analysis:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/kuramoto_model_synchronization.ipynb
+
+---
+
+### Instagram (500 chars)
+
+Order from chaos.
+
+100 oscillators, each with its own rhythm.
+Increase the coupling between them...
+And suddenly, synchronization emerges.
+
+This is the Kuramoto model - explaining everything from:
+- Fireflies flashing together
+- Heart cells beating in unison
+- Brain waves coordinating thought
+
+The math is elegant:
+dθ/dt = ω + (K/N)∑sin(θⱼ - θᵢ)
+
+When coupling K crosses a threshold, disorder transforms into harmony.
+
+Nature's favorite phase transition.
+
+#Physics #Mathematics #Python #DataVisualization #Science #Synchronization #ComplexSystems #NonlinearDynamics #Coding #ScienceArt

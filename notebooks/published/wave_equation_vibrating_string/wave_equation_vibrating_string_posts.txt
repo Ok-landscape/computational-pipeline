@@ -1,0 +1,190 @@
+# Social Media Posts: Wave Equation - Vibrating String
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Why do guitars sound the way they do?
+
+I simulated the wave equation: ∂²u/∂t² = c²∂²u/∂x²
+
+Surprising finding: plucking a string at center excites only ODD harmonics (1, 3, 5...). Even harmonics stay silent!
+
+This is Fourier in action.
+
+#Python #Physics #Math
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Built a vibrating string simulator using finite differences.
+
+Key insight from Fourier analysis: a triangular pluck gives coefficients Aₙ = 8h/(nπ)² · sin(nπ/2)
+
+Since sin(nπ/2) = 0 for even n, only odd harmonics ring out!
+
+Energy conserved to <0.01% with Courant number r ≤ 1.
+
+#Physics #Python #Fourier
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (500 chars)
+--------------------------------------------------------------------------------
+Just built a complete wave equation solver in Python!
+
+The wave equation ∂²u/∂t² = c²∂²u/∂x² describes everything from guitar strings to sound waves.
+
+What I learned:
+• Plucking a string at the center excites only ODD harmonics
+• The Courant number r = c·Δt/Δx must be ≤ 1 for stability
+• Energy stays perfectly conserved in the numerical solution
+
+The math is beautiful - separation of variables gives eigenvalues λₙ = (nπ/L)² with sine wave solutions.
+
+This is Fourier's legacy in action!
+
+#Python #Physics #Science #Coding
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented the 1D wave equation for a vibrating string using finite differences.
+
+PDE: ∂²u/∂t² = c²∂²u/∂x²
+
+Key results:
+• Triangular pluck → Fourier coefficients Aₙ = 8h/(nπ)² · sin(nπ/2)
+• Only odd harmonics excited (even terms vanish)
+• CFL stability requires r = c·Δt/Δx ≤ 1
+• Energy drift < 0.01% over 2 seconds
+
+The explicit scheme u[j+1,i] = 2u[j,i] - u[j-1,i] + r²(u[j,i+1] - 2u[j,i] + u[j,i-1]) is simple but powerful.
+
+#Python #Physics #NumericalMethods #PDE #Fourier
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+**Title:** I built a wave equation solver in Python - here's what I learned about vibrating strings and Fourier analysis
+
+**Body:**
+
+Hey everyone! I just finished building a numerical solver for the 1D wave equation and wanted to share what I learned.
+
+**The Physics**
+
+When you pluck a guitar string, you're creating a wave that bounces back and forth between the fixed ends. The wave equation describes this:
+
+∂²u/∂t² = c²∂²u/∂x²
+
+where u(x,t) is the string displacement, c is the wave speed (√(T/μ) where T is tension and μ is linear density).
+
+**The Numerical Method**
+
+I used finite differences with the explicit scheme:
+
+u[j+1,i] = 2u[j,i] - u[j-1,i] + r²(u[i+1,j] - 2u[i,j] + u[i-1,j])
+
+The key insight is the CFL stability condition: r = c·Δt/Δx must be ≤ 1 or the simulation explodes!
+
+**The Cool Part - Fourier Analysis**
+
+Here's what surprised me: when you pluck a string with a triangular shape, only the ODD harmonics get excited (1, 3, 5, 7...).
+
+Why? The Fourier coefficients are Aₙ = 8h/(nπ)² · sin(nπ/2)
+
+Since sin(nπ/2) = 0 for even n, those modes don't contribute!
+
+**Results**
+
+• Energy conservation: drift < 0.01% over 2 seconds
+• Standing wave patterns emerge beautifully
+• Analytical and numerical Fourier coefficients match perfectly
+
+This is why musical instruments have their characteristic timbre - different plucking/striking positions excite different harmonic patterns.
+
+**Try it yourself:**
+
+View and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/wave_equation_vibrating_string.ipynb
+
+Happy to answer any questions!
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (500 chars)
+--------------------------------------------------------------------------------
+Ever wonder why a guitar sounds different from a piano?
+
+I just simulated how strings vibrate using the wave equation in Python!
+
+The cool discovery: when you pluck a string in the middle, only odd harmonics (1st, 3rd, 5th...) ring out. Even harmonics stay silent!
+
+This is why the same note sounds different on different instruments - it's all about which harmonics get excited.
+
+Check out my interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/wave_equation_vibrating_string.ipynb
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+**Computational Physics: Wave Equation Solver for Vibrating Strings**
+
+I recently completed a numerical simulation project exploring the classical wave equation - a foundational PDE in physics and engineering.
+
+**Technical Implementation:**
+• Finite difference method with explicit time-stepping
+• CFL stability analysis (Courant number r ≤ 1)
+• Fourier mode decomposition and reconstruction
+• Energy conservation verification
+
+**Key Findings:**
+The triangular pluck initial condition excites only odd harmonics, with Fourier coefficients following Aₙ = 8h/(nπ)² · sin(nπ/2). This mathematical property explains the timbral characteristics of plucked string instruments.
+
+**Skills Demonstrated:**
+• Numerical PDE solving
+• Stability analysis
+• Signal processing (Fourier analysis)
+• Scientific visualization (matplotlib, 3D surface plots)
+• Python (NumPy, SciPy)
+
+The complete analysis with derivations and code is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/wave_equation_vibrating_string.ipynb
+
+#ComputationalPhysics #Python #NumericalMethods #DataScience #Engineering
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (500 chars)
+--------------------------------------------------------------------------------
+The physics of a plucked string 🎸
+
+This simulation shows how a guitar string vibrates over time using the wave equation:
+
+∂²u/∂t² = c²∂²u/∂x²
+
+What makes this special:
+→ Only ODD harmonics ring out (1, 3, 5...)
+→ Energy stays perfectly conserved
+→ Standing waves form between fixed ends
+
+The space-time plot reveals the beautiful interference patterns as waves bounce back and forth.
+
+The math behind music is absolutely stunning.
+
+Built with Python + NumPy + Matplotlib
+
+#physics #python #coding #science #math #waves #music #simulation #datascience #matplotlib
+
+--------------------------------------------------------------------------------

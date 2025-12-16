@@ -1,0 +1,179 @@
+=================================================================
+SOCIAL MEDIA POSTS: Recurrent Neural Networks (LSTM)
+=================================================================
+
+-----------------------------------------------------------------
+TWITTER/X (< 280 chars)
+-----------------------------------------------------------------
+Why do vanilla RNNs fail at long sequences? Vanishing gradients.
+
+LSTMs fix this with gates: forget (f), input (i), output (o).
+
+Key equation: C_t = f_t * C_{t-1} + i_t * C_new
+
+Built one from scratch in NumPy!
+
+#DeepLearning #Python #LSTM #NeuralNetworks
+
+-----------------------------------------------------------------
+BLUESKY (< 300 chars)
+-----------------------------------------------------------------
+Implemented an LSTM neural network from scratch to understand how gating mechanisms solve the vanishing gradient problem.
+
+The cell state acts like a conveyor belt: C_t = f * C_{t-1} + i * C_new
+
+Trained it to predict sine waves with NumPy and backpropagation through time.
+
+#MachineLearning #Python
+
+-----------------------------------------------------------------
+THREADS (< 500 chars)
+-----------------------------------------------------------------
+Ever wondered how neural networks learn patterns in sequences?
+
+Standard RNNs struggle because gradients vanish over long sequences. LSTMs solve this elegantly with three gates:
+
+- Forget gate: what to discard
+- Input gate: what to store
+- Output gate: what to reveal
+
+The magic is in the cell state equation:
+C_t = f * C_{t-1} + i * C_new
+
+When the forget gate is near 1, information flows unchanged through time!
+
+Built one from scratch in Python - it learned to predict sine waves beautifully.
+
+-----------------------------------------------------------------
+MASTODON (< 500 chars)
+-----------------------------------------------------------------
+Deep dive into LSTM architecture today.
+
+The vanishing gradient problem in vanilla RNNs:
+h_t = tanh(W_hh * h_{t-1} + W_xh * x_t)
+
+Gradients decay exponentially when |lambda_max(W)| < 1.
+
+LSTMs introduce a cell state C_t that bypasses this via additive updates:
+C_t = f_t * C_{t-1} + i_t * tanh(W_C * [h_{t-1}, x_t])
+
+Implemented forward and backward passes (BPTT) from scratch with NumPy. Gradient clipping at 5.0 prevents explosions.
+
+#DeepLearning #NeuralNetworks #Python
+
+-----------------------------------------------------------------
+REDDIT (r/learnpython or r/MachineLearning)
+-----------------------------------------------------------------
+Title: I built an LSTM from scratch in NumPy to understand how it solves the vanishing gradient problem
+
+Body:
+I've been studying recurrent neural networks and wanted to really understand why LSTMs work. So I implemented one completely from scratch using only NumPy.
+
+**The Problem with Vanilla RNNs**
+
+In a standard RNN, the hidden state updates as:
+h_t = tanh(W * h_{t-1} + W * x_t)
+
+During backpropagation, gradients get multiplied repeatedly. When the weight matrix has eigenvalues < 1, these gradients shrink exponentially - making it impossible to learn dependencies spanning many timesteps.
+
+**How LSTMs Fix This**
+
+LSTMs introduce a "cell state" that acts like a conveyor belt. Three gates control information flow:
+
+1. **Forget gate (f)**: sigmoid that decides what to discard
+2. **Input gate (i)**: sigmoid that decides what to store
+3. **Output gate (o)**: sigmoid that decides what to output
+
+The key equation is the cell state update:
+C_t = f * C_{t-1} + i * C_new
+
+When the forget gate is close to 1, gradients flow unchanged through time!
+
+**My Implementation**
+
+I built:
+- LSTMCell class with forward() and backward() methods
+- Full LSTM class with sequence processing
+- Backpropagation Through Time (BPTT)
+- Gradient clipping to prevent explosions
+
+Trained it to predict sine wave sequences and it converged nicely.
+
+**Key Learnings**
+- Initialize forget gate bias to 1.0 (helps gradient flow)
+- Use Xavier initialization for weights
+- Gradient clipping is essential (I used clip value of 5.0)
+- Numerically stable sigmoid matters for edge cases
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/recurrent_neural_network_lstm.ipynb
+
+Happy to answer questions about the implementation!
+
+-----------------------------------------------------------------
+FACEBOOK (< 500 chars)
+-----------------------------------------------------------------
+Ever tried to teach a computer to remember things? It's harder than it sounds.
+
+I built an LSTM neural network from scratch to understand how AI learns patterns in sequences - like predicting what comes next in a series.
+
+The key insight: information flows through the network like a conveyor belt, with "gates" controlling what to remember and what to forget.
+
+Trained it to predict sine waves and watched it learn!
+
+Full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/recurrent_neural_network_lstm.ipynb
+
+-----------------------------------------------------------------
+LINKEDIN (< 1000 chars)
+-----------------------------------------------------------------
+Understanding Deep Learning Fundamentals: LSTM Implementation from Scratch
+
+As part of my ongoing exploration of neural network architectures, I implemented a Long Short-Term Memory (LSTM) network using only NumPy to deeply understand the mechanisms that enable learning long-range dependencies in sequential data.
+
+Key technical achievements:
+- Implemented complete forward and backward passes
+- Backpropagation Through Time (BPTT) algorithm
+- Xavier weight initialization
+- Gradient clipping for training stability
+
+The core insight: LSTMs solve the vanishing gradient problem through their cell state architecture. The update equation C_t = f * C_{t-1} + i * C_new allows gradients to flow unchanged when the forget gate approaches 1.
+
+Practical implementation details:
+- Initialize forget gate bias to 1.0
+- Use numerically stable sigmoid computation
+- Clip gradients at 5.0 to prevent explosions
+
+This hands-on approach revealed why design choices like gate initialization matter so much in practice.
+
+Interactive notebook with full code: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/recurrent_neural_network_lstm.ipynb
+
+#DeepLearning #MachineLearning #Python #NeuralNetworks #AI #DataScience
+
+-----------------------------------------------------------------
+INSTAGRAM (< 500 chars)
+-----------------------------------------------------------------
+Building an AI that remembers
+
+Ever wondered how neural networks learn patterns over time?
+
+Standard networks forget quickly.
+LSTMs solve this with three gates:
+
+Forget - what to discard
+Input - what to store
+Output - what to reveal
+
+The cell state flows through like a conveyor belt, carrying memories across time.
+
+Built one from scratch in Python.
+Trained it to predict waves.
+Watched it learn.
+
+The math is beautiful.
+The code is satisfying.
+
+#DeepLearning #Python #NeuralNetworks #MachineLearning #AI #CodingLife #DataScience #TechEducation
+
+=================================================================
+END OF POSTS
+=================================================================

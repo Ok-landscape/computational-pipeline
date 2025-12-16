@@ -1,0 +1,174 @@
+=== IMAGE CLASSIFICATION CNN SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+Build a CNN from scratch with just NumPy!
+
+This notebook implements convolution, pooling, and backpropagation to classify handwritten digits. See exactly how feature detectors emerge during training.
+
+No frameworks, just math.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+#DeepLearning #CNN #Python
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+How do CNNs actually learn to see?
+
+This notebook builds a convolutional neural network from scratch using only NumPy. Watch as the network learns edge detectors, spatial features, and classification patterns.
+
+Understanding > black boxes.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+Want to truly understand Convolutional Neural Networks?
+
+This notebook implements every component from scratch:
+- 2D convolution with sliding kernels
+- ReLU activation and max pooling
+- Backpropagation through spatial layers
+- Mini-batch gradient descent training
+
+Watch the network learn edge detectors, then combine them for digit classification. All in pure NumPy - see every gradient computation.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+New notebook: Build a CNN from Scratch!
+
+Implements a complete convolutional neural network for image classification:
+- ConvLayer with learnable 3x3 filters
+- ReLU, MaxPool, Flatten, Dense layers
+- Full backpropagation with gradient computation
+- Training loop with loss/accuracy tracking
+
+Uses sklearn's digits dataset (8x8 images, 10 classes). Pure NumPy - no PyTorch, no TensorFlow.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+#Python #DeepLearning #MachineLearning #ComputerVision
+
+================================================================================
+REDDIT (< 40,000 chars)
+================================================================================
+**Title:** [Tutorial] Build a CNN from Scratch with NumPy - Understanding Convolution, Pooling, and Backpropagation
+
+**Body:**
+I created an educational Jupyter notebook that implements a Convolutional Neural Network from first principles. No PyTorch, no TensorFlow - just NumPy and math.
+
+**Why build from scratch?**
+
+Most tutorials use `model.fit()` and call it a day. But when your model doesn't work, you're stuck. Understanding the internals lets you:
+- Debug training issues (vanishing gradients, dead neurons)
+- Design better architectures for your specific problem
+- Optimize for deployment (quantization, pruning)
+- Actually understand what "convolution" means!
+
+**What the notebook covers:**
+
+1. **Convolution Operation** - Implementing the 2D convolution from scratch, with hand-crafted edge detection filters to visualize what convolution does
+
+2. **Building CNN Layers**:
+   - `ConvLayer`: Learnable filters with Xavier initialization
+   - `ReLU`: Simple non-linearity
+   - `MaxPool2D`: Spatial downsampling for translation invariance
+   - `Dense`: Fully connected classification head
+
+3. **Backpropagation Through Spatial Operations** - This is the hard part! The notebook shows how to:
+   - Compute gradients of the convolution operation
+   - Propagate gradients through pooling (sparse gradients)
+   - Update filter weights with SGD
+
+4. **Training and Visualization**:
+   - Mini-batch training loop
+   - Loss/accuracy curves
+   - Learned filter visualization
+   - Feature map activations for different inputs
+   - Confusion matrix analysis
+
+**Architecture:**
+```
+Input (8x8x1)
+  -> Conv(4 filters, 3x3) -> ReLU -> (6x6x4)
+  -> MaxPool(2x2) -> (3x3x4)
+  -> Flatten -> (36)
+  -> Dense(10) -> Softmax
+  -> Output (10 classes)
+```
+
+**Key insight:** The convolution gradient is itself a convolution - correlate the input with the output gradient to get the filter gradient, and full-convolve the output gradient with the flipped filter to get the input gradient.
+
+The notebook uses sklearn's digits dataset (8x8 grayscale images) for fast iteration, but the concepts apply to any image classification task.
+
+Link: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+Happy to answer questions!
+
+Suggested subreddits: r/MachineLearning, r/learnmachinelearning, r/deeplearning, r/computervision, r/Python
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+What will YOU learn from this notebook?
+
+How Convolutional Neural Networks actually work - from the inside out!
+
+This step-by-step tutorial implements:
+- The convolution operation that extracts visual features
+- Pooling for spatial invariance
+- Backpropagation through all spatial layers
+- Training that learns edge detectors automatically
+
+Pure NumPy, no frameworks. Watch filters evolve from random noise into pattern detectors.
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+Convolutional Neural Networks power everything from facial recognition to autonomous vehicles. But how do they actually work?
+
+I've created an educational notebook that builds a CNN from scratch using only NumPy - no deep learning frameworks. This is how I believe ML practitioners should learn: by implementing, not just importing.
+
+Key concepts covered:
+
+1. The convolution operation: How sliding filters extract local features from images
+
+2. Feature hierarchies: How simple edge detectors combine into complex pattern recognizers
+
+3. Backpropagation through spatial operations: The math that makes CNNs trainable
+
+4. Training dynamics: Watching random filters evolve into meaningful feature detectors
+
+The notebook includes visualizations of learned filters, feature map activations, and a confusion matrix analysis of classification performance.
+
+Whether you're interviewing for ML roles, building production systems, or just curious about the tech, understanding these fundamentals will serve you well.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/image_classification_cnn/image_classification_cnn.ipynb
+
+#MachineLearning #DeepLearning #ComputerVision #Python #DataScience
+
+================================================================================
+INSTAGRAM (< 2200 chars)
+================================================================================
+CNNs from scratch - no frameworks needed!
+
+This notebook teaches you how Convolutional Neural Networks really work:
+- Convolution operation explained
+- Max pooling for spatial invariance
+- Backpropagation through images
+- Training that learns automatically
+
+All in pure NumPy. See every calculation!
+
+Link in bio or visit cocalc.com
+
+#DeepLearning #MachineLearning #CNN #ComputerVision #Python #DataScience #AI #NeuralNetworks #Coding #Programming #STEM #Education #Learning #Tutorial #ImageClassification #DigitRecognition #NumPy #OpenSource #ScientificComputing #Visualization #Backpropagation #Convolution

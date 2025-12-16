@@ -1,0 +1,158 @@
+# Social Media Posts: Hypergeometric Functions
+# Generated from: notebooks/published/hypergeometric_functions.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Did you know most special functions are just hypergeometric functions in disguise?
+
+From ln(1+z) to Legendre polynomials, one formula rules them all:
+
+₂F₁(a,b;c;z) = ∑(aₙ)(bₙ)zⁿ/((cₙ)n!)
+
+#Python #Math #SciPy #Physics
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Hypergeometric functions are the "Swiss Army knife" of mathematical physics.
+
+One series definition → countless special functions
+
+Key insight: ₂F₁(a,b;c;z) unifies binomial series, logarithms, and orthogonal polynomials under one roof.
+
+Explored this with Python + SciPy. Fascinating stuff.
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Ever wonder how mathematicians found connections between completely different-looking functions?
+
+Hypergeometric functions are the answer. The Gaussian hypergeometric ₂F₁(a,b;c;z) is like a master template:
+
+- Set the right parameters → get (1-z)⁻ᵃ
+- Different parameters → get ln(1+z)
+- Negative integers → Legendre polynomials pop out
+
+Even hydrogen atom wavefunctions use these! Built a Python notebook exploring this with series implementations and SciPy. The math is beautiful.
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented hypergeometric function computation from scratch and compared against SciPy's hyp2f1.
+
+Key findings:
+- Series ₂F₁(a,b;c;z) = ∑[(a)ₙ(b)ₙ/(c)ₙ] zⁿ/n! converges for |z|<1
+- Euler/Pfaff transformations enable analytic continuation
+- Contiguous relations: 15 algebraic identities connecting shifted parameters
+
+Application: hydrogen atom radial wavefunctions R_nl(r) involve confluent ₁F₁
+
+Code verified against SciPy with <10⁻¹⁰ relative error.
+
+#Python #Mathematics #SpecialFunctions #Physics
+
+================================================================================
+REDDIT (r/learnpython or r/math)
+================================================================================
+
+Title: Exploring Hypergeometric Functions: The "Universal" Special Functions
+
+Body:
+
+I created a computational notebook exploring hypergeometric functions - one of the most important (and underappreciated) classes of special functions in mathematics.
+
+**What are hypergeometric functions?**
+
+The Gaussian hypergeometric function ₂F₁(a,b;c;z) is defined by:
+
+₂F₁(a,b;c;z) = ∑ [(a)ₙ(b)ₙ / (c)ₙ] × zⁿ/n!
+
+where (q)ₙ is the Pochhammer symbol (rising factorial).
+
+**Why should you care?**
+
+Here's the cool part - tons of "different" functions are actually just hypergeometric functions with special parameters:
+
+| Function | Hypergeometric Form |
+|----------|-------------------|
+| (1-z)⁻ᵃ | ₂F₁(a,b;b;z) |
+| ln(1+z) | z × ₂F₁(1,1;2;-z) |
+| arcsin(z) | z × ₂F₁(1/2,1/2;3/2;z²) |
+| Legendre Pₙ(z) | ₂F₁(-n,n+1;1;(1-z)/2) |
+
+**What I implemented:**
+
+1. Series computation from scratch using the Pochhammer symbol
+2. Verification against SciPy's hyp2f1 (errors < 10⁻¹⁰)
+3. Visualization of different parameter choices
+4. Verified Euler's and Pfaff's transformation formulas
+5. Applied to hydrogen atom radial wavefunctions
+
+**Key insight:** The hypergeometric differential equation z(1-z)w'' + [c-(a+b+1)z]w' - abw = 0 has exactly three regular singular points, making ₂F₁ the canonical solution for this class of ODEs.
+
+You can view and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hypergeometric_functions.ipynb
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+I explored hypergeometric functions - the "universal" special functions of mathematics!
+
+Here's the amazing part: functions that look completely different (logarithms, polynomials, trigonometric functions) are all secretly the same formula with different parameters.
+
+Even the electron orbitals in hydrogen atoms are described by these functions!
+
+Built a Python notebook implementing the series and visualizing how one elegant formula unifies so much of mathematics.
+
+Explore it yourself: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hypergeometric_functions.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Computational Exploration: Hypergeometric Functions in Python
+
+Just completed a technical deep-dive into hypergeometric functions - a foundational class of special functions with applications spanning mathematical physics, statistics, and engineering.
+
+Key technical work:
+- Implemented the Gaussian hypergeometric ₂F₁(a,b;c;z) series from first principles
+- Achieved numerical agreement with SciPy's optimized implementation (relative errors < 10⁻¹⁰)
+- Verified classical transformation formulas (Euler, Pfaff) computationally
+- Demonstrated the connection to Legendre polynomials and hydrogen atom wavefunctions
+
+What makes hypergeometric functions powerful is their unifying property: logarithms, binomial series, orthogonal polynomials, and quantum mechanical wavefunctions all emerge as special cases.
+
+Skills demonstrated: numerical methods, special function theory, scientific Python (NumPy, SciPy, Matplotlib), validation methodology.
+
+The full computational notebook is available for review:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/hypergeometric_functions.ipynb
+
+#Mathematics #Python #ScientificComputing #Physics #DataScience
+
+================================================================================
+INSTAGRAM (< 500 chars, visual-focused caption)
+================================================================================
+
+The elegant mathematics of hypergeometric functions
+
+This plot shows hydrogen atom electron probability densities - calculated using confluent hypergeometric functions ₁F₁
+
+One formula, many forms:
+- Quantum wavefunctions
+- Classical polynomials
+- Elementary functions
+
+From Gauss & Euler in the 1800s to modern computational physics
+
+Built with Python + SciPy
+
+.
+.
+.
+#mathematics #physics #python #dataviz #quantum #science #coding #scientificcomputing #visualization #hydrogenatom

@@ -1,0 +1,188 @@
+# Social Media Posts: Quantum Tunneling
+# Generated from: quantum_tunneling.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Particles can pass through walls they shouldn't. That's quantum tunneling.
+
+We simulated an electron tunneling through a 0.5nm barrier with 5eV height.
+
+At E=2.5eV: T=0.0899
+At E=4.0eV: T=0.4172
+
+The math is wild: T ≈ e^(-2κa)
+
+#Python #QuantumPhysics #Physics
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Quantum tunneling: where particles ignore classical physics and pass through energy barriers they "shouldn't" be able to cross.
+
+Simulated electron transmission through a rectangular barrier using the Schrodinger equation.
+
+Key insight: Transmission drops exponentially with barrier width (T ≈ e^(-2κa)).
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how particles can pass through solid barriers? That's quantum tunneling!
+
+In classical physics, a ball can't roll through a hill if it doesn't have enough energy. But quantum particles? They can "tunnel" through.
+
+I built a Python simulation showing:
+- Wave function decay inside the barrier
+- Transmission coefficient calculations
+- How doubling barrier width drops transmission by ~1000x
+
+This is the physics behind scanning tunneling microscopes, nuclear fusion, and tunnel diodes.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented quantum tunneling simulation in Python using the time-independent Schrodinger equation.
+
+For a rectangular barrier (V₀=5eV, a=0.5nm):
+- Solved for wave functions in all three regions
+- Calculated transmission coefficient using exact formula
+- T = 1/(1 + V₀²sinh²(κa)/(4E(V₀-E)))
+
+Results for electron at E=3eV:
+- 0.2nm width: T = 2.45×10⁻¹
+- 0.5nm width: T = 1.49×10⁻¹
+- 1.0nm width: T = 9.45×10⁻⁴
+- 1.5nm width: T = 5.24×10⁻⁶
+
+Exponential suppression in action.
+
+#QuantumMechanics #Physics #Python #Science
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+**Title:** I simulated quantum tunneling in Python - here's how particles pass through "impossible" barriers
+
+**Body:**
+
+**What is quantum tunneling?**
+
+In classical physics, if you roll a ball toward a hill and it doesn't have enough energy to get over, it bounces back. Simple.
+
+In quantum mechanics, particles don't play by these rules. Due to their wave-like nature, they have a non-zero probability of appearing on the other side of energy barriers even when they "shouldn't" have enough energy. This is quantum tunneling.
+
+**What I built:**
+
+A Python simulation that:
+1. Solves the Schrodinger equation for a particle hitting a rectangular potential barrier
+2. Calculates the exact transmission coefficient
+3. Visualizes the wave function showing exponential decay inside the barrier
+
+**Key parameters:**
+- Barrier height: V₀ = 5 eV
+- Barrier width: a = 0.5 nm
+- Particle: electron
+
+**Results:**
+
+At E = 2.5 eV (half the barrier height), transmission is about 9%. At E = 4.0 eV, it jumps to 42%.
+
+The formula for tunneling probability:
+T = 1/(1 + V₀²sinh²(κa)/(4E(V₀-E)))
+
+Where κ = √(2m(V₀-E))/h-bar
+
+**Why this matters:**
+
+Quantum tunneling enables:
+- Nuclear fusion in stars (protons tunnel through Coulomb barriers)
+- Scanning tunneling microscopes (atomic-scale imaging)
+- Tunnel diodes and flash memory
+- Enzyme catalysis in biology
+
+**What I learned:**
+
+The exponential dependence on barrier width is striking. Doubling the width from 0.5nm to 1.0nm drops transmission from ~15% to ~0.09%. This sensitivity is what makes STM imaging possible.
+
+**View the full notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling.ipynb
+
+Libraries used: NumPy, SciPy, Matplotlib
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Mind-bending physics: Quantum particles can pass through barriers they shouldn't be able to cross!
+
+I simulated this with Python - an electron hitting an energy wall. Classically, it should bounce back. Quantum mechanically? It has a real chance of appearing on the other side.
+
+This isn't science fiction. It's how scanning tunneling microscopes image individual atoms, and it's happening right now in the nuclear fusion powering our Sun.
+
+Check out the full simulation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Computational Physics Project: Quantum Tunneling Simulation**
+
+I developed a Python-based simulation of quantum mechanical tunneling through potential barriers, demonstrating the wave-like nature of matter at nanometer scales.
+
+**Technical Implementation:**
+- Solved the time-independent Schrodinger equation analytically
+- Implemented exact transmission coefficient calculations using transfer matrix methods
+- Visualized wave function probability densities across three spatial regions
+- Analyzed exponential dependence of tunneling on barrier parameters
+
+**Key Results:**
+For an electron encountering a 5 eV barrier:
+- Transmission varies from 90% (near barrier top) to 0.0005% (at 1.5nm width)
+- Demonstrated the characteristic T ~ e^(-2κa) exponential suppression
+
+**Skills Demonstrated:**
+- Quantum mechanics and mathematical physics
+- Scientific Python (NumPy, SciPy, Matplotlib)
+- Numerical analysis and visualization
+- Technical documentation
+
+This phenomenon underpins technologies from scanning tunneling microscopy to quantum computing with Josephson junctions.
+
+Explore the complete notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling.ipynb
+
+#QuantumPhysics #Python #ComputationalPhysics #DataVisualization #STEM
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Quantum particles break the rules.
+
+In classical physics, not enough energy = no passage.
+
+In quantum mechanics? Particles can tunnel straight through barriers.
+
+This simulation shows:
+- An electron hitting a 5eV energy wall
+- The wave function decaying exponentially inside
+- Real probability of appearing on the other side
+
+This is how we image individual atoms with scanning tunneling microscopes.
+
+This is how the Sun produces energy through nuclear fusion.
+
+Quantum mechanics is wild.
+
+#QuantumPhysics #Physics #Python #Science #STEM #Coding #DataVisualization #QuantumMechanics #Electrons #WaveFunction
+
+--------------------------------------------------------------------------------

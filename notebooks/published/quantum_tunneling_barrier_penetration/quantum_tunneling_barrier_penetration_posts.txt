@@ -1,0 +1,167 @@
+=============================================================
+SOCIAL MEDIA POSTS: Quantum Tunneling Through a Potential Barrier
+=============================================================
+
+CoCalc Viewer URL: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling_barrier_penetration.ipynb
+
+-------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+-------------------------------------------------------------
+
+Quantum tunneling: particles can pass through barriers they shouldn't be able to cross! The transmission probability drops exponentially: T ~ e^(-2ka). This powers STM microscopes and tunnel diodes.
+
+#QuantumMechanics #Physics #Python #Science
+
+-------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+-------------------------------------------------------------
+
+Simulated quantum tunneling through a 5 eV rectangular barrier. The math is elegant: transmission coefficient T depends on barrier width exponentially. Even at E = 2 eV (below barrier), electrons still tunnel through with probability ~10^-4. Quantum mechanics is wild.
+
+#Physics #QuantumMechanics
+
+-------------------------------------------------------------
+3. THREADS (< 500 chars)
+-------------------------------------------------------------
+
+Just built a quantum tunneling simulator in Python!
+
+Imagine throwing a ball at a wall - classically it bounces back. But quantum particles? They can pass straight through.
+
+The key insight: transmission probability T drops exponentially with barrier width. Double the barrier thickness and T can drop by orders of magnitude.
+
+This isn't just theory - it's how scanning tunneling microscopes work, how alpha decay happens, and how tunnel diodes function.
+
+The Schrodinger equation predicts it all.
+
+-------------------------------------------------------------
+4. MASTODON (< 500 chars)
+-------------------------------------------------------------
+
+New computational notebook: Quantum tunneling through a rectangular potential barrier.
+
+Solved the time-independent Schrodinger equation for E < V0 case. The transmission coefficient:
+
+T = [1 + V0^2 sinh^2(ka) / 4E(V0-E)]^-1
+
+where k = sqrt(2m(V0-E))/h-bar
+
+For thick barriers (ka >> 1): T ~ 16E(V0-E)/V0^2 * e^(-2ka)
+
+Visualized wave function decay inside the barrier and resonance phenomena above V0.
+
+#QuantumMechanics #Physics #Python #ComputationalPhysics
+
+-------------------------------------------------------------
+5. REDDIT (r/learnpython or r/physics)
+-------------------------------------------------------------
+
+Title: I built a quantum tunneling simulator in Python - here's what I learned about wave functions passing through barriers
+
+Body:
+
+**What is quantum tunneling?**
+
+In classical physics, if you don't have enough energy to climb over a hill, you can't get to the other side. Period. But in quantum mechanics, particles can "tunnel" through barriers even when their energy E is less than the barrier height V0.
+
+**The math (simplified)**
+
+The probability of tunneling through depends on:
+- Barrier height (V0)
+- Barrier width (a)
+- Particle energy (E)
+- Particle mass (m)
+
+The key result is the transmission coefficient T, which for thick barriers approximates to:
+
+T ~ e^(-2ka)
+
+where k = sqrt(2m(V0-E))/h-bar is the decay constant.
+
+This exponential dependence is crucial - doubling barrier width can reduce transmission by many orders of magnitude.
+
+**What I simulated**
+
+- Electron tunneling through a 5 eV barrier, 1 nm wide
+- At E = 2 eV (below barrier), T ~ 10^-4
+- Visualized wave function: oscillating outside, exponentially decaying inside
+- Showed resonance peaks when E > V0
+
+**Real-world applications**
+
+This isn't just academic - quantum tunneling enables:
+- Scanning tunneling microscopy (imaging atoms!)
+- Tunnel diodes in electronics
+- Alpha decay in nuclear physics
+- Josephson junctions in superconducting circuits
+
+**Check out the interactive notebook:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling_barrier_penetration.ipynb
+
+Built with NumPy, SciPy, and Matplotlib. The code solves the Schrodinger equation analytically and visualizes the wave function across all regions.
+
+-------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+-------------------------------------------------------------
+
+Ever wondered how particles can pass through walls?
+
+In quantum mechanics, they actually can! It's called quantum tunneling, and I just built a simulation to explore it.
+
+The wild part: the probability of tunneling drops exponentially with barrier thickness. A 1 nm barrier lets some electrons through, but 2 nm? Almost none.
+
+This phenomenon powers the microscopes that let us see individual atoms!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling_barrier_penetration.ipynb
+
+-------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+-------------------------------------------------------------
+
+Computational Physics Project: Quantum Tunneling Simulation
+
+I developed a Python-based simulation exploring quantum tunneling through rectangular potential barriers - a foundational phenomenon in semiconductor physics and nanotechnology.
+
+Technical highlights:
+- Solved the time-independent Schrodinger equation analytically across three spatial regions
+- Implemented transmission coefficient calculations using boundary condition matching
+- Visualized wave function behavior: incident/reflected waves, evanescent decay through barriers, and transmitted waves
+- Demonstrated resonance phenomena for above-barrier energies
+
+Key parameters studied:
+- Barrier: 5 eV height, 1 nm width
+- Particle: electron
+- Energy range: 0-10 eV
+
+The exponential dependence of transmission on barrier width (T ~ e^-2ka) has direct implications for:
+- Scanning tunneling microscopy resolution
+- Tunnel diode design
+- Flash memory operation
+- Quantum computing qubit coupling
+
+Tools: Python, NumPy, SciPy, Matplotlib
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/quantum_tunneling_barrier_penetration.ipynb
+
+#QuantumPhysics #Python #ComputationalScience #Nanotechnology #Physics
+
+-------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+-------------------------------------------------------------
+
+Quantum tunneling visualized.
+
+Particles passing through barriers they shouldn't be able to cross.
+
+The wave function tells the story:
+- Oscillating on the left (incoming particle)
+- Exponentially decaying through the barrier
+- Emerging smaller on the right
+
+T ~ e^(-2ka)
+
+That exponential is why tunneling is so sensitive to barrier width. A few extra angstroms can make the difference between "some transmission" and "essentially none."
+
+This is real physics. It's how we image atoms. It's how nuclear decay works.
+
+#QuantumMechanics #Physics #Science #DataVisualization #Python #STEM #ScienceArt

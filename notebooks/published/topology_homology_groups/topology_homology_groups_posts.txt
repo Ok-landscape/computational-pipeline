@@ -1,0 +1,189 @@
+# Social Media Posts: Topology Homology Groups
+# Generated: 2025-11-25
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+How do mathematicians count holes in shapes?
+
+Homology groups! The Betti numbers tell us:
+- B0 = connected pieces
+- B1 = loops/tunnels
+- B2 = voids/cavities
+
+A torus has B1=2 (two ways around the donut!)
+
+#Math #Topology #Python #DataScience
+
+--------------------------------------------------------------------------------
+BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Explored algebraic topology through code today. Homology groups assign numbers (Betti numbers) to shapes that count their "holes" in each dimension.
+
+A sphere has one void (B2=1), a torus has two loops (B1=2), and the Klein bottle has torsion in H1.
+
+Topology is beautiful.
+
+--------------------------------------------------------------------------------
+THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how mathematicians rigorously define what a "hole" is?
+
+Enter homology theory. We break shapes into triangles, track their boundaries with matrices, and compute quotient groups.
+
+The result: Betti numbers that count holes by dimension.
+
+B0 = connected components
+B1 = 1D holes (loops)
+B2 = 2D holes (voids)
+
+A coffee mug and a donut both have B1=1... that's why topologists say they're the same!
+
+Implemented this from scratch in Python using the Smith Normal Form algorithm.
+
+--------------------------------------------------------------------------------
+MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented simplicial homology computation in Python today.
+
+Key insight: Chain complexes C_n with boundary operators d_n satisfy d_n . d_{n+1} = 0, meaning im(d_{n+1}) is in ker(d_n).
+
+Homology H_n = ker(d_n) / im(d_{n+1}) measures cycles that aren't boundaries.
+
+Computed Betti numbers for:
+- S1: B0=1, B1=1
+- S2: B0=1, B1=0, B2=1
+- T2: B0=1, B1=2, B2=1
+- Klein bottle: H1 = Z + Z/2Z (torsion!)
+- RP2: H1 = Z/2Z
+
+Smith Normal Form makes this tractable.
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+REDDIT (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+
+Title: I built a homology calculator in Python - here's how algebraic topology counts "holes" in shapes
+
+Body:
+
+**What is homology?**
+
+Homology theory is a branch of algebraic topology that associates sequences of groups (called homology groups) to topological spaces. These groups encode information about "holes" of various dimensions.
+
+**The key ideas:**
+
+1. We represent a shape as a **simplicial complex** - basically triangles glued together
+2. The **boundary operator** maps each triangle to its edges with alternating signs
+3. The crucial property: taking the boundary twice always gives zero (d . d = 0)
+4. **Homology** = cycles that aren't themselves boundaries
+
+**Betti numbers tell us:**
+- B0 = number of connected components
+- B1 = number of 1-dimensional holes (loops/tunnels)
+- B2 = number of 2-dimensional voids (cavities)
+
+**Results from my implementation:**
+
+| Space | H0 | H1 | H2 | Euler Char |
+|-------|-----|-----|-----|-----|
+| Circle S1 | Z | Z | 0 | 0 |
+| Sphere S2 | Z | 0 | Z | 2 |
+| Torus T2 | Z | Z+Z | Z | 0 |
+| Klein bottle | Z | Z + Z/2Z | 0 | 0 |
+| RP2 | Z | Z/2Z | 0 | 1 |
+
+The torsion (Z/2Z terms) in non-orientable surfaces like the Klein bottle and projective plane is fascinating - it captures the "twisting" that happens when you can't consistently orient the surface.
+
+**The algorithm:**
+
+I used the Smith Normal Form to diagonalize the boundary matrices over the integers. This gives you both the rank (free part) and the torsion coefficients directly.
+
+**ELI5:** Imagine you have a rubber band on a basketball vs. on a donut. On the basketball, you can always shrink it to a point. On the donut, some loops can't shrink (the ones going through the hole). Homology counts these "unshrinkable" loops at each dimension.
+
+Check out the full notebook with code and visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/topology_homology_groups.ipynb
+
+--------------------------------------------------------------------------------
+FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+How do mathematicians count holes in shapes?
+
+I built a Python program that computes "homology groups" - the algebraic structures that count holes by dimension.
+
+Cool findings:
+- A sphere has one void inside (B2=1)
+- A donut has two independent loops (B1=2)
+- The Klein bottle has mathematical "twisting" called torsion
+
+This is why topology is called "rubber sheet geometry" - it's about what stays the same when you stretch and bend!
+
+Explore the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/topology_homology_groups.ipynb
+
+--------------------------------------------------------------------------------
+LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Exploring Algebraic Topology Through Computational Methods
+
+I recently implemented a complete homology computation pipeline in Python, demonstrating how abstract mathematical concepts translate into practical algorithms.
+
+Key technical achievements:
+
+1. Built a SimplicialComplex data structure supporting arbitrary-dimensional simplices
+2. Implemented boundary matrix construction for chain complexes
+3. Developed a Smith Normal Form algorithm for integer matrices
+4. Computed Betti numbers and torsion coefficients for classical surfaces
+
+Results validated against theoretical predictions for S1, S2, T2, Klein bottle, and RP2.
+
+The Euler characteristic formula X = B0 - B1 + B2 was verified computationally for all test cases.
+
+This project demonstrates:
+- Translation of abstract math into working code
+- Matrix algorithms over integers (not just real numbers)
+- Clean object-oriented design for mathematical structures
+- Visualization of topological concepts
+
+These techniques have applications in topological data analysis (TDA), persistent homology for machine learning, and computational geometry.
+
+Full implementation with visualizations:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/topology_homology_groups.ipynb
+
+#AlgebraicTopology #Python #Mathematics #DataScience #ComputationalMath
+
+--------------------------------------------------------------------------------
+INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+Counting holes in shapes - mathematically!
+
+This visualization shows how topologists classify surfaces by their "homology groups."
+
+B0 = connected pieces
+B1 = loops you can't shrink
+B2 = enclosed voids
+
+A sphere (B2=1) has a void inside.
+A torus (B1=2) has two different loops.
+The Klein bottle has "torsion" - a mathematical twist!
+
+The Euler characteristic X = V - E + F connects it all.
+
+Swipe to see the code that computes this.
+
+#topology #mathematics #dataviz #python #mathisbeautiful #coding #stem #science #algebraictopology

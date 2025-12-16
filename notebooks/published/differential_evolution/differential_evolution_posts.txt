@@ -1,0 +1,170 @@
+# Social Media Posts: Differential Evolution
+
+## SHORT-FORM POSTS
+
+### Twitter/X (< 280 chars)
+
+Differential Evolution: nature-inspired optimization that finds global minima without gradients. Mutation + crossover + selection = powerful search.
+
+Tested on Rastrigin's 100+ local optima: found global minimum in 150 generations.
+
+#Python #Optimization #MachineLearning #Math
+
+---
+
+### Bluesky (< 300 chars)
+
+Implemented Differential Evolution from scratch in Python. This evolutionary algorithm optimizes multimodal functions where gradient descent fails.
+
+Key insight: population diversity through mutation (F=0.8) and crossover (CR=0.9) prevents getting trapped in local optima.
+
+The Rastrigin function has 100+ local minima - DE found the global one.
+
+---
+
+### Threads (< 500 chars)
+
+Ever wondered how to find the lowest point in a landscape with hundreds of fake valleys?
+
+Differential Evolution does this by evolving a population of candidate solutions. Each generation:
+- Mutation: vᵢ = xᵣ₁ + F·(xᵣ₂ - xᵣ₃)
+- Crossover: mix parent with mutant
+- Selection: keep the better one
+
+Applied to the Rastrigin function (100+ local minima), DE converged to near-zero fitness in ~150 generations.
+
+No gradients needed. Just evolution.
+
+---
+
+### Mastodon (< 500 chars)
+
+New notebook: Differential Evolution optimization
+
+Implemented DE/rand/1/bin from scratch. Key equations in Unicode:
+
+Population init: xᵢⱼ = xⱼₘᵢₙ + r·(xⱼₘₐₓ - xⱼₘᵢₙ)
+Mutation: vᵢ = xᵣ₁ + F·(xᵣ₂ - xᵣ₃)
+Selection: keep xᵢ if f(uᵢ) ≤ f(xᵢ)
+
+Tested on 2D Rastrigin: f(x) = 10n + Σ[xᵢ² - 10·cos(2πxᵢ)]
+
+Result: Found global minimum (f ≈ 0) within machine precision.
+
+Parameter study shows F=0.8, CR=0.9 works well for this problem.
+
+#optimization #python #evolutionary
+
+---
+
+## LONG-FORM POSTS
+
+### Reddit
+
+**Title:** [OC] Implemented Differential Evolution from scratch - found global optimum in landscape with 100+ local minima
+
+**Body:**
+
+I built a complete implementation of the Differential Evolution (DE) algorithm in Python and wanted to share what I learned.
+
+**What is DE?**
+
+DE is a population-based optimization algorithm that doesn't need gradients. It works by evolving a population of candidate solutions through:
+
+1. **Mutation**: Create a "mutant" vector by adding scaled differences between random population members
+2. **Crossover**: Mix the mutant with the current solution
+3. **Selection**: Keep whichever is better
+
+**The Test**
+
+I used the Rastrigin function - a notorious benchmark with ~100 local minima that looks like an egg carton. The global minimum is at the origin with f(0,0) = 0.
+
+**Results**
+
+With population size 50, mutation factor F=0.8, and crossover rate CR=0.9:
+- Found solution within 10⁻⁶ of the global optimum
+- Converged in ~150 generations
+- Population naturally clusters around the optimum over time
+
+**Key Takeaways**
+
+- F controls exploration: too low = premature convergence, too high = instability
+- CR controls information exchange: higher values speed up convergence but may reduce robustness
+- DE is remarkably simple to implement (~50 lines of core logic)
+
+The notebook includes 3D surface plots, convergence curves, and a parameter sensitivity analysis.
+
+Full interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/differential_evolution.ipynb
+
+---
+
+### Facebook (< 500 chars)
+
+How do you find the lowest point when there are 100+ fake valleys trying to trick you?
+
+I explored Differential Evolution - an algorithm inspired by biological evolution that "breeds" better solutions over generations.
+
+Think of it as survival of the fittest for math problems. Each candidate solution mutates, combines with others, and only the best survive.
+
+Applied to a notoriously tricky test function, it found the global minimum with stunning precision.
+
+Check out the full notebook with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/differential_evolution.ipynb
+
+---
+
+### LinkedIn (< 1000 chars)
+
+Exploring Global Optimization with Differential Evolution
+
+I recently implemented Differential Evolution (DE) from scratch in Python to better understand stochastic optimization methods.
+
+**Technical Overview:**
+
+DE is a population-based metaheuristic that optimizes continuous, multimodal functions without requiring gradient information. The algorithm uses three operators:
+
+- Mutation: vᵢ = xᵣ₁ + F·(xᵣ₂ - xᵣ₃)
+- Binomial crossover with probability CR
+- Greedy selection
+
+**Implementation Highlights:**
+
+• Built complete DE/rand/1/bin variant
+• Applied to the Rastrigin benchmark (100+ local optima)
+• Conducted parameter sensitivity analysis across F and CR values
+• Visualized population evolution and convergence dynamics
+
+**Results:**
+
+The algorithm successfully found the global optimum within machine precision, demonstrating DE's robustness against local optima traps.
+
+**Skills Demonstrated:**
+Numerical optimization, algorithm implementation, scientific visualization (matplotlib), experimental design
+
+This type of optimization is fundamental in machine learning hyperparameter tuning, engineering design, and signal processing.
+
+Full notebook with code and analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/differential_evolution.ipynb
+
+---
+
+### Instagram (< 500 chars)
+
+Evolution isn't just for biology.
+
+This is Differential Evolution finding the lowest point in a mathematical landscape with over 100 fake valleys.
+
+Each dot is a candidate solution. Watch them evolve:
+- Gen 0: scattered randomly
+- Gen 50: clustering
+- Final: converged on target
+
+No gradients. No calculus. Just mutation, crossover, and selection.
+
+The algorithm found f(x) ≈ 0 starting from random guesses.
+
+Nature-inspired optimization at its finest.
+
+.
+.
+.
+
+#optimization #python #datascience #algorithms #machinelearning #evolution #coding #math #visualization #science

@@ -1,0 +1,195 @@
+# Social Media Posts: Time-Dependent Schrödinger Equation Animation
+# Topic: Quantum Tunneling with Gaussian Wavepacket Dynamics
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Quantum particles don't care about your walls.
+
+Simulated the Schrödinger equation: a wavepacket with E < V₀ STILL tunnels through a barrier.
+
+Classical physics says no. Quantum says yes.
+
+#QuantumMechanics #Python #Physics #Simulation
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Visualizing quantum tunneling with the time-dependent Schrödinger equation.
+
+A Gaussian wavepacket (E < V₀) hits a potential barrier and partially transmits through — impossible classically, routine quantum mechanically.
+
+Split-operator FFT method preserves unitarity beautifully.
+
+#Physics #Python
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Just built an animation of quantum tunneling and it's wild.
+
+The setup: a particle (wavepacket) moving toward a wall it doesn't have enough energy to climb over. Classical physics says it bounces back. Every time.
+
+Quantum mechanics? The wavefunction splits — part reflects, part tunnels THROUGH the barrier.
+
+This is real. This is how electrons escape atoms, how nuclear fusion works, how your flash drive stores data.
+
+The Schrödinger equation: iℏ(∂Ψ/∂t) = ĤΨ
+
+#QuantumPhysics #Python
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented a split-operator FFT solver for the time-dependent Schrödinger equation in Python.
+
+Simulation: Gaussian wavepacket (k₀=1.5, σ=3.0) incident on rectangular barrier (V₀=1.5).
+
+Results:
+→ Kinetic energy E = ℏ²k₀²/2m < V₀
+→ Classical prediction: 100% reflection
+→ Quantum result: partial transmission + reflection
+→ Wavepacket splits, momentum space shows peaks at ±k₀
+→ Normalization preserved (unitary evolution)
+
+The split-step method: O(N log N) per timestep, symplectic, time-reversible.
+
+#Physics #Python #QuantumMechanics
+
+================================================================================
+REDDIT (Title + Body)
+================================================================================
+
+TITLE: I animated quantum tunneling by solving the time-dependent Schrödinger equation — here's what I learned
+
+BODY:
+
+**The Question**
+
+What happens when a quantum particle hits a wall it doesn't have enough energy to climb over?
+
+Classical physics has a simple answer: it bounces back. If you throw a ball at a wall and it doesn't have enough energy to go over, it reflects. Every time. No exceptions.
+
+Quantum mechanics disagrees.
+
+**The Simulation**
+
+I wrote a Python simulation using the split-operator method (also called split-step Fourier method) to solve:
+
+iℏ(∂Ψ/∂t) = ĤΨ
+
+where Ĥ = −(ℏ²/2m)(∂²/∂x²) + V(x)
+
+The initial condition is a Gaussian wavepacket — think of it as a localized "blob" of probability moving to the right with momentum p₀ = ℏk₀.
+
+The barrier is a rectangular potential with height V₀ greater than the particle's kinetic energy E = ℏ²k₀²/2m.
+
+**What Happens**
+
+The wavepacket hits the barrier and *splits*. Part of it reflects back (as classical physics predicts), but part of it *tunnels through* the barrier and appears on the other side.
+
+In momentum space, you can see this clearly: the initial distribution peaked at +k₀ splits into two peaks at +k₀ (transmitted) and −k₀ (reflected).
+
+**Why This Matters**
+
+Quantum tunneling isn't just a curiosity — it's everywhere:
+- Alpha decay in radioactive nuclei
+- Electron tunneling in flash memory and SSDs
+- Scanning tunneling microscopes (STM)
+- Nuclear fusion in stars
+
+**The Math**
+
+The split-operator method works by decomposing the time evolution:
+
+exp(−iĤΔt/ℏ) ≈ exp(−iVΔt/2ℏ) · exp(−iT̂Δt/ℏ) · exp(−iVΔt/2ℏ)
+
+The kinetic operator T̂ is diagonal in momentum space (after FFT), so each step is O(N log N). The method is symplectic, unitary, and time-reversible — normalization is preserved exactly.
+
+**Try It Yourself**
+
+Full interactive notebook with animation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/time_dependent_schrodinger_animation.ipynb
+
+Libraries used: NumPy, Matplotlib, IPython for animation.
+
+---
+
+TL;DR: Quantum particles tunnel through barriers they "shouldn't" be able to pass. I animated it and the wavefunction literally splits in two — part bounces, part phases through like a ghost.
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+Ever wonder how electrons can pass through walls?
+
+I built a simulation of the Schrödinger equation — the fundamental law of quantum mechanics — and watched a particle encounter a barrier it doesn't have enough energy to cross.
+
+Classical physics says: impossible, turn back.
+Quantum physics says: hold my beer.
+
+The wavefunction SPLITS. Part reflects, part tunnels through. This is real physics — it's how your USB drive works!
+
+Watch the animation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/time_dependent_schrodinger_animation.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Quantum Tunneling: From Theory to Simulation
+
+I recently completed a computational physics project simulating the time-dependent Schrödinger equation to visualize quantum tunneling — one of the most counterintuitive phenomena in physics.
+
+Technical approach:
+• Split-operator (split-step Fourier) method for time evolution
+• Gaussian wavepacket initial conditions with defined momentum
+• Rectangular potential barrier with V₀ > particle kinetic energy
+• O(N log N) complexity per timestep via FFT
+• Preserved unitarity and probability normalization
+
+Key results:
+The simulation demonstrates wavepacket splitting upon barrier interaction — partial transmission (tunneling) and partial reflection — despite classical mechanics predicting 100% reflection.
+
+This numerical technique has applications beyond academic interest:
+• Semiconductor device modeling
+• Quantum chemistry simulations
+• Nanoscale electronics design
+• Nuclear physics calculations
+
+Skills demonstrated: Python, NumPy, scientific visualization, numerical methods, physics simulation.
+
+View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/time_dependent_schrodinger_animation.ipynb
+
+#ComputationalPhysics #Python #QuantumMechanics #DataScience #Simulation
+
+================================================================================
+INSTAGRAM (< 500 chars)
+================================================================================
+
+Quantum particles are weird.
+
+This is a simulation of the Schrödinger equation — the master equation of quantum mechanics.
+
+A particle approaches a wall it CAN'T climb over (not enough energy).
+
+Classical physics: bounces back
+Quantum physics: splits in two
+
+Part reflects.
+Part tunnels THROUGH.
+
+This is how flash memory works.
+This is how stars fuse hydrogen.
+This is quantum tunneling.
+
+iℏ(∂Ψ/∂t) = ĤΨ
+
+The equation that broke classical intuition.
+
+#quantumphysics #physics #science #python #coding #simulation #quantum #scienceisbeautiful

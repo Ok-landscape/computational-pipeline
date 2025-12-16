@@ -1,0 +1,163 @@
+# Social Media Posts: Inverse Iteration Method
+
+---
+
+## SHORT-FORM POSTS
+
+---
+
+### Twitter/X (280 chars)
+
+Know an eigenvalue but need the eigenvector? Inverse iteration finds it FAST. The closer your guess, the faster it converges. Built a Python demo showing how shift quality affects speed.
+
+#Python #LinearAlgebra #NumericalMethods #Math #Science
+
+---
+
+### Bluesky (300 chars)
+
+Inverse iteration: when you have an approximate eigenvalue and need the eigenvector. The algorithm solves (A - μI)w = v repeatedly, converging rapidly when μ is close to the true eigenvalue.
+
+Implemented it in Python with convergence analysis and Rayleigh quotient refinement.
+
+---
+
+### Threads (500 chars)
+
+Ever wondered how numerical libraries find eigenvectors so efficiently?
+
+Inverse iteration is the secret sauce. Give it a matrix and a guess for an eigenvalue, and it rapidly converges to the corresponding eigenvector.
+
+The math is elegant: by shifting and inverting the matrix, the target eigenvector becomes dominant. Better guesses = faster convergence.
+
+My Python notebook demonstrates this with visualizations showing how shift quality affects convergence speed. Rayleigh quotient iteration takes it further with cubic convergence!
+
+---
+
+### Mastodon (500 chars)
+
+Implemented inverse iteration for eigenvalue problems in Python.
+
+Key insight: (A - μI)⁻¹ has eigenvalues 1/(λᵢ - μ). When μ ≈ λⱼ, that eigenvalue dominates, so power method on the inverse converges to the eigenvector vⱼ.
+
+Algorithm:
+1. Solve (A - μI)w = v
+2. Normalize: v = w/‖w‖
+3. Repeat until ‖Av - λv‖ < tolerance
+
+Also implemented Rayleigh quotient iteration which updates μ dynamically for cubic convergence. LU factorization makes repeated solves efficient.
+
+#NumericalAnalysis #LinearAlgebra #Python #Mathematics
+
+---
+
+## LONG-FORM POSTS
+
+---
+
+### Reddit
+
+**Title:** Inverse Iteration: Finding Eigenvectors When You Know the Eigenvalue [Python Implementation]
+
+**Body:**
+
+**The Problem**
+
+You have a matrix and know (approximately) one of its eigenvalues. Now you need the corresponding eigenvector. How do you find it efficiently?
+
+**The Solution: Inverse Iteration**
+
+Here's the clever insight: if λ is an eigenvalue of A, then 1/(λ - μ) is an eigenvalue of (A - μI)⁻¹. When your shift μ is close to λ, that eigenvalue becomes huge compared to the others.
+
+So we apply the power method to the inverse matrix:
+
+1. Start with random vector v
+2. Solve (A - μI)w = v (not explicitly inverting!)
+3. Normalize: v = w/‖w‖
+4. Repeat until convergence
+
+**Why It's Fast**
+
+The convergence rate depends on |λⱼ - μ|/|λₙₑₐᵣₑₛₜ - μ|. When μ is close to your target eigenvalue, this ratio is tiny, giving rapid (sometimes cubic!) convergence.
+
+**What I Learned**
+
+- LU decomposition is key for efficiency - factor once, solve many times
+- Rayleigh quotient iteration updates μ dynamically and converges even faster
+- The "nearly singular" matrix when μ ≈ λ isn't actually a problem - the solution direction is preserved
+
+**The Notebook**
+
+I built a Python implementation with:
+- Basic inverse iteration with LU factorization
+- Rayleigh quotient iteration for comparison
+- Convergence visualizations for different shift qualities
+- Demo on symmetric positive definite matrices
+
+View and run the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/inverse_iteration.ipynb
+
+This is fundamental stuff that powers production eigensolvers. Understanding it helps you appreciate what NumPy/SciPy are doing under the hood.
+
+---
+
+### Facebook (500 chars)
+
+How do computers find eigenvectors? One elegant method: inverse iteration.
+
+If you have a rough idea where an eigenvalue is, this algorithm rapidly homes in on the corresponding eigenvector. The closer your initial guess, the faster it converges.
+
+I coded this up in Python with visualizations showing how guess quality affects convergence speed. It's satisfying to watch the residual drop exponentially!
+
+This is the kind of numerical method that powers everything from Google's PageRank to quantum chemistry simulations.
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/inverse_iteration.ipynb
+
+---
+
+### LinkedIn (1000 chars)
+
+Eigenvalue algorithms are fundamental to scientific computing, machine learning, and data analysis. This week I implemented inverse iteration, a method for computing eigenvectors when eigenvalue approximations are available.
+
+**Technical Approach**
+
+Inverse iteration exploits a key property: if λ is an eigenvalue of matrix A, then 1/(λ - μ) is an eigenvalue of (A - μI)⁻¹. By choosing shift μ close to the target eigenvalue, we make the corresponding eigenvector dominant in the inverse matrix.
+
+**Implementation Details**
+
+- Used LU factorization for O(n²) repeated solves after O(n³) initial factorization
+- Implemented Rayleigh quotient iteration for adaptive shift updates achieving cubic convergence
+- Validated against NumPy's eigh() for accuracy verification
+
+**Key Findings**
+
+Shift quality dramatically affects convergence: a perturbation of 0.001 from the true eigenvalue converged in 3 iterations, while 0.5 required 15+ iterations. This demonstrates why inverse iteration pairs well with methods like QR algorithm that provide good eigenvalue estimates.
+
+**Applications**
+
+This technique is essential for sparse matrix problems, selective eigenpair computation, and eigenvector refinement in production numerical libraries.
+
+Notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/inverse_iteration.ipynb
+
+#NumericalAnalysis #LinearAlgebra #Python #ScientificComputing #DataScience
+
+---
+
+### Instagram (500 chars)
+
+The art of finding eigenvectors
+
+This visualization shows inverse iteration convergence for different shift qualities. Better initial guesses (darker lines) = faster convergence to the eigenvector.
+
+The algorithm is beautifully simple:
+→ Shift the matrix
+→ Solve a linear system
+→ Normalize
+→ Repeat
+
+What makes it powerful is the math behind it. When your shift is close to an eigenvalue, the method converges exponentially fast.
+
+The right panel shows the eigenvalue spectrum with different shifts marked. You can see how closer shifts lead to fewer iterations needed.
+
+Built with Python, NumPy, and Matplotlib.
+
+#Python #Math #LinearAlgebra #DataVisualization #NumericalMethods #Science #Coding #STEM #Learning

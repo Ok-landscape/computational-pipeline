@@ -1,0 +1,169 @@
+# Social Media Posts: Transformer Architecture - Attention Mechanism
+# Generated from: transformer_architecture_attention.ipynb
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Just implemented the Transformer attention mechanism from scratch!
+
+Attention(Q,K,V) = softmax(QK^T/√d_k)V
+
+The √d_k scaling prevents gradient vanishing in softmax. Elegant math, powerful results.
+
+#Python #MachineLearning #AI #Transformers
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Built the Transformer attention mechanism from scratch in Python.
+
+The core equation: Attention(Q,K,V) = softmax(QK^T/√d_k)V
+
+Scaling by √d_k normalizes variance to 1, preventing softmax saturation. Multi-head attention lets the model attend to different representation subspaces simultaneously.
+
+#AI #DeepLearning
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wondered how ChatGPT and other LLMs actually work under the hood?
+
+I just coded the Transformer attention mechanism from scratch! Here's the key insight:
+
+The attention formula: softmax(QK^T/√d_k)V
+
+It computes a weighted sum of Values, where weights come from Query-Key compatibility. The √d_k scaling is crucial - it keeps gradients healthy by normalizing variance.
+
+Multi-head attention runs this in parallel across different subspaces. It's why Transformers can capture long-range dependencies so well!
+
+#AI #MachineLearning #Python
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented Transformer self-attention from scratch in NumPy.
+
+Key equations:
+- Scaled dot-product: Attention(Q,K,V) = softmax(QK^T/√d_k)V
+- Multi-head: MultiHead = Concat(head_1,...,head_h)W^O
+
+Why scale by √d_k? For d_k dimensions with unit variance inputs:
+Var(q·k) = d_k
+
+Without scaling, large d_k pushes softmax into saturation regions with vanishing gradients.
+
+Complexity: O(n²·d) time, O(n²) space - the quadratic bottleneck driving research into efficient attention variants.
+
+#MachineLearning #DeepLearning #Transformers
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (Title + Body for r/learnpython or r/machinelearning)
+--------------------------------------------------------------------------------
+**Title:** I implemented the Transformer attention mechanism from scratch - here's what I learned about the math behind ChatGPT
+
+**Body:**
+
+I built the core attention mechanism from the "Attention Is All You Need" paper using just NumPy. Here's an ELI5 breakdown:
+
+**What is attention?**
+
+Think of it like a smart search. You have:
+- Queries (Q): What you're looking for
+- Keys (K): Labels on information
+- Values (V): The actual information
+
+Attention computes: softmax(QK^T/√d_k)V
+
+This gives you a weighted combination of Values, where the weights depend on how well Queries match Keys.
+
+**Why the √d_k scaling?**
+
+This was my "aha" moment. Without it, the dot products can get huge (variance = d_k). Large values push softmax outputs toward 0 or 1, causing vanishing gradients. Dividing by √d_k keeps variance at 1.
+
+**Multi-head attention**
+
+Instead of one attention operation, we run several in parallel with different learned projections. This lets the model attend to different types of relationships simultaneously.
+
+**Causal masking**
+
+For autoregressive models (like GPT), we mask future positions so the model can't "cheat" by looking ahead. It's just a lower-triangular matrix applied before softmax.
+
+**The quadratic problem**
+
+Attention is O(n²) in sequence length - this is why context windows are limited. My timing tests confirmed the quadratic scaling perfectly.
+
+Interactive notebook with visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/transformer_architecture_attention.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just built the attention mechanism that powers ChatGPT, BERT, and every modern AI language model - from scratch!
+
+The elegant core idea: compute weighted averages where the weights are learned. The formula softmax(QK^T/√d_k)V does exactly this.
+
+The visualization shows how different "attention heads" focus on different word relationships in a sentence.
+
+This is the foundation of the AI revolution we're living through!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/transformer_architecture_attention.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Transformer Deep Dive: Implementing Attention from Scratch
+
+I recently completed a technical exploration of the attention mechanism - the core innovation behind modern language models like GPT and BERT.
+
+Key technical insights:
+
+1. Scaled Dot-Product Attention: The formula Attention(Q,K,V) = softmax(QK^T/√d_k)V computes query-key compatibility to weight values. The √d_k scaling is critical for gradient stability.
+
+2. Multi-Head Attention: Running parallel attention operations with different learned projections allows the model to capture diverse relationship types simultaneously.
+
+3. Causal Masking: For autoregressive generation, lower-triangular masks prevent information leakage from future tokens.
+
+4. Complexity Analysis: O(n²) scaling with sequence length remains the fundamental bottleneck driving research into efficient attention variants.
+
+The implementation includes comprehensive visualizations of attention patterns and empirical validation of theoretical complexity bounds.
+
+Skills demonstrated: NumPy, mathematical modeling, algorithm implementation, scientific visualization.
+
+Full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/transformer_architecture_attention.ipynb
+
+#MachineLearning #AI #DeepLearning #Python #DataScience #Transformers
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+The math behind AI language models, visualized.
+
+This heatmap shows how a Transformer "pays attention" to different words in a sentence.
+
+Brighter colors = stronger attention.
+
+Notice how different "heads" focus on different relationships - some look at nearby words, others capture long-range dependencies.
+
+The core equation:
+Attention = softmax(QK^T/√d_k)V
+
+It's elegant, it's powerful, and it's revolutionizing how machines understand language.
+
+Built from scratch in Python.
+
+#AI #MachineLearning #DataVisualization #Python #DeepLearning #Transformers #TechArt #CodingLife
+
+--------------------------------------------------------------------------------

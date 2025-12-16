@@ -1,0 +1,151 @@
+# Social Media Posts: Generative Adversarial Networks (GANs)
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Built a GAN from scratch in NumPy! Two neural networks battle it out: Generator creates fake data, Discriminator spots fakes. At equilibrium, D(x) ≈ 0.5 - can't tell real from fake anymore.
+
+#Python #MachineLearning #GAN #DeepLearning #AI
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Implemented a Generative Adversarial Network from scratch using only NumPy. The minimax game between Generator and Discriminator converges when D(x) ≈ 1/2 - the discriminator becomes unable to distinguish real from generated samples. Fascinating optimization dynamics.
+
+#MachineLearning #Python #AI
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how AI generates realistic images? It's a game between two neural networks!
+
+The Generator creates fake data from random noise. The Discriminator tries to spot the fakes.
+
+They train together, each getting better until the Discriminator can't tell real from fake anymore (D(x) approaches 1/2).
+
+I built one from scratch in pure NumPy to learn a Gaussian distribution. The math is beautiful: it minimizes the Jensen-Shannon divergence between real and generated distributions.
+
+#AI #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented a GAN from scratch in NumPy to understand the fundamentals.
+
+Key insight: The minimax objective min_G max_D V(D,G) reformulates as minimizing Jensen-Shannon divergence:
+C(G) = -log(4) + 2·D_JS(p_data ‖ p_g)
+
+At Nash equilibrium: p_g = p_data and D*(x) = 1/2 everywhere.
+
+Used non-saturating loss (max log D(G(z))) for better gradients. Successfully learned N(4.0, 1.25) with accurate mean and variance recovery.
+
+#MachineLearning #DeepLearning #Python #Science
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** Built a GAN from scratch in NumPy - Here's what I learned about the math behind generative AI
+
+**Body:**
+I implemented a Generative Adversarial Network using only NumPy (no PyTorch/TensorFlow) to really understand how they work. Here's the key takeaway:
+
+**The Core Idea (ELI5):**
+Imagine a counterfeiter (Generator) trying to make fake money, and a detective (Discriminator) trying to catch them. They keep getting better at their jobs until the counterfeiter makes perfect fakes.
+
+**The Math:**
+- Generator G(z) maps random noise z to data
+- Discriminator D(x) outputs probability that x is real
+- They play a minimax game: min_G max_D V(D,G)
+- At equilibrium, D(x) = 1/2 (can't tell real from fake)
+
+**What I Learned:**
+1. Non-saturating loss is crucial - using max log(D(G(z))) instead of min log(1-D(G(z))) prevents vanishing gradients
+2. The optimal discriminator gives D*(x) = p_data(x) / (p_data(x) + p_g(x))
+3. GAN training minimizes Jensen-Shannon divergence between real and generated distributions
+4. Xavier initialization matters a lot for stable training
+
+My simple GAN learned to generate samples from N(4.0, 1.25) and matched both mean and variance accurately.
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/generative_adversarial_network_gan.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Just built an AI that learns to create data from scratch!
+
+It's called a GAN (Generative Adversarial Network) - two neural networks competing against each other. One creates fake data, the other tries to spot the fakes. They keep improving until the fakes are indistinguishable from real data.
+
+This is the same technology behind AI art generators and deepfakes. I implemented it from scratch to understand how it works.
+
+Check out the full interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/generative_adversarial_network_gan.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+Deepening my understanding of generative AI by implementing a GAN from first principles.
+
+Generative Adversarial Networks, introduced by Goodfellow et al. (2014), underpin modern AI image generation. To truly understand them, I built one using only NumPy - no deep learning frameworks.
+
+Key technical insights:
+
+The Architecture: Two networks in a minimax game
+- Generator G(z; θ_g): Maps latent noise to data space
+- Discriminator D(x; θ_d): Classifies real vs. generated
+
+The Objective: min_G max_D E[log D(x)] + E[log(1 - D(G(z)))]
+
+At Nash equilibrium, the generator perfectly matches the data distribution (p_g = p_data), and the discriminator outputs 0.5 for all inputs.
+
+Implementation details:
+- Leaky ReLU activations for gradient flow
+- Xavier initialization for stable training
+- Non-saturating generator loss for stronger gradients
+
+Skills demonstrated: Neural network implementation, backpropagation, optimization theory, statistical validation.
+
+Interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/generative_adversarial_network_gan.ipynb
+
+#MachineLearning #AI #DeepLearning #Python #DataScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+The art of AI deception
+
+Two neural networks locked in an endless battle:
+The Generator - creating fakes from pure noise
+The Discriminator - hunting for imperfections
+
+Round after round, they sharpen each other.
+
+Until the Discriminator surrenders.
+D(x) → 0.5
+"I can't tell what's real anymore."
+
+That's when we know the Generator has won.
+
+This is how AI learns to create.
+This is the heart of GANs.
+
+Built from scratch. Pure NumPy. Pure math.
+
+#AI #MachineLearning #DeepLearning #ArtificialIntelligence #DataScience #Python #Coding #Tech #NeuralNetworks #GenerativeAI
+
+--------------------------------------------------------------------------------

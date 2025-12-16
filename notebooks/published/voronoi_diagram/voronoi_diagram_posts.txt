@@ -1,0 +1,344 @@
+# Social Media Posts: Voronoi Diagrams
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### 1. Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Voronoi diagrams partition space based on proximity to generator points!
+
+Each region contains all points closest to its generator. The dual of Delaunay triangulation.
+
+Applications: nearest neighbor search, mesh generation, spatial analysis.
+
+#ComputationalGeometry #Python #DataStructures
+
+--------------------------------------------------------------------------------
+
+### 2. Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Voronoi diagrams are everywhere: cell territories in biology, service areas in GIS, texture synthesis in graphics!
+
+Mathematical beauty: each cell is the intersection of half-planes, bounded by perpendicular bisectors.
+
+Euler's formula holds: V - E + F = 2 for bounded diagrams.
+
+#Geometry #Python #DataScience
+
+--------------------------------------------------------------------------------
+
+### 3. Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Implemented Voronoi diagrams in Python using scipy.spatial!
+
+For 25 random sites:
+• 41 vertices (Voronoi points)
+• 65 edges (boundaries)
+• Mean 5.48 edges per cell (theory predicts ~6)
+
+The Delaunay triangulation is the geometric dual—each:
+- Voronoi vertex ↔ Delaunay triangle
+- Voronoi edge ↔ Delaunay edge
+
+Fun fact: Voronoi vertices are circumcenters of Delaunay triangles!
+
+Applications: nearest neighbor queries, mesh generation, spatial interpolation, path planning.
+
+#ComputationalGeometry #Python #DataStructures
+
+--------------------------------------------------------------------------------
+
+### 4. Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+Voronoi diagram mathematics:
+
+For sites P = {p₁, p₂, ..., pₙ}, the Voronoi cell:
+V(pᵢ) = {x : d(x,pᵢ) ≤ d(x,pⱼ) ∀j≠i}
+
+Where d is Euclidean distance.
+
+Each cell is a convex polygon (intersection of half-planes):
+V(pᵢ) = ⋂_{j≠i} H(pᵢ,pⱼ)
+
+Boundary between V(pᵢ) and V(pⱼ) lies on perpendicular bisector of segment pᵢpⱼ.
+
+Complexity: O(n log n) construction via Fortune's algorithm.
+
+Duality: Voronoi ↔ Delaunay (vertex ↔ triangle, edge ↔ edge)
+
+#ComputationalGeometry #Algorithms
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### 5. Reddit (r/Python or r/compsci)
+--------------------------------------------------------------------------------
+**Title:** Voronoi Diagrams: Beautiful Math for Spatial Partitioning
+
+**Body:**
+
+Voronoi diagrams are a fundamental data structure in computational geometry with applications ranging from biology to robotics.
+
+**What is a Voronoi Diagram?**
+
+Given n points (called sites or generators) in a plane, the Voronoi diagram partitions the plane into n regions. Each region contains all points closer to one particular site than to any other site.
+
+Mathematically, for site pᵢ, its Voronoi cell is:
+V(pᵢ) = {x ∈ ℝ² : d(x, pᵢ) ≤ d(x, pⱼ) for all j ≠ i}
+
+Where d(x,y) is Euclidean distance.
+
+**Geometric Properties**
+
+**1. Half-Plane Representation**
+
+Each Voronoi cell can be expressed as an intersection of half-planes:
+V(pᵢ) = ⋂_{j≠i} H(pᵢ, pⱼ)
+
+Where H(pᵢ, pⱼ) = {x : d(x,pᵢ) ≤ d(x,pⱼ)} is the half-plane of points closer to pᵢ than pⱼ.
+
+This guarantees that Voronoi cells are convex polygons!
+
+**2. Perpendicular Bisectors**
+
+The boundary between adjacent cells V(pᵢ) and V(pⱼ) lies on the perpendicular bisector of the line segment connecting pᵢ and pⱼ.
+
+This bisector is: {x : d(x,pᵢ) = d(x,pⱼ)}
+
+**3. Euler's Formula**
+
+For n sites in general position (no four cocircular), the diagram has:
+- Vertices: V ≤ 2n - 5
+- Edges: E ≤ 3n - 6
+- Faces: F = n
+
+Satisfying: V - E + F = 2
+
+**Delaunay Duality**
+
+The Voronoi diagram has a beautiful dual relationship with the Delaunay triangulation:
+
+- Each Voronoi vertex ↔ One Delaunay triangle
+- Each Voronoi edge ↔ One Delaunay edge
+- Each Voronoi cell ↔ One Delaunay vertex
+
+Key insight: Voronoi vertices are circumcenters of Delaunay triangles. The Delaunay triangulation has the "empty circumcircle property"—no site lies inside the circumcircle of any triangle.
+
+**Implementation Results**
+
+Used scipy.spatial.Voronoi on 25 random sites:
+
+```python
+vor = Voronoi(points)
+```
+
+Results:
+- 41 Voronoi vertices
+- 65 edges
+- 25 regions
+- Average 5.48 edges per cell (theoretical expectation ≈ 6 for random points)
+
+**Handling Infinite Regions**
+
+Scipy returns some regions extending to infinity. I implemented a reconstruction algorithm to:
+1. Detect infinite ridges (one vertex at -1 index)
+2. Compute direction perpendicular to site-pair midpoint
+3. Extend edge to bounding box
+4. Close polygons properly
+
+This allows proper visualization and area computation!
+
+**Cell Statistics**
+
+Computed areas using the shoelace formula:
+- Mean area: 4.46 square units
+- Std deviation: 3.05
+- Min: 0.09, Max: 13.67
+
+For uniformly random sites in a bounded domain, cells near boundaries tend to be larger (edge effects).
+
+**Applications**
+
+**1. Nearest Neighbor Search**
+Given a query point, find which Voronoi cell it belongs to → that site is the nearest neighbor. Preprocessing: O(n log n), Query: O(log n) with point location.
+
+**2. Geographic Information Systems (GIS)**
+- Service area analysis (hospital coverage zones)
+- Thiessen polygons for rainfall interpolation
+- Territory assignment
+
+**3. Computer Graphics**
+- Mesh generation (Voronoi-based quadrilaterals)
+- Texture synthesis (Worley noise)
+- Procedural generation
+
+**4. Robotics**
+- Configuration space decomposition
+- Sensor placement optimization
+- Coverage path planning
+
+**5. Biology**
+- Cellular territory modeling
+- Protein structure analysis
+- Ecological niche modeling
+
+**6. Materials Science**
+- Crystal grain boundary analysis
+- Polycrystalline structure simulation
+
+**Complexity**
+
+Fortune's algorithm constructs Voronoi diagrams in O(n log n) time using a sweep line approach. This is optimal since sorting n points requires Ω(n log n).
+
+Space complexity: O(n) for the output structure.
+
+**Variants and Extensions**
+
+- **Weighted Voronoi**: Sites have weights (power diagrams)
+- **Higher dimensions**: 3D Voronoi for point clouds
+- **Distance metrics**: Manhattan, Chebyshev, Minkowski
+- **Farthest-point Voronoi**: Regions farthest from sites
+- **Dynamic Voronoi**: Efficient updates as sites move
+
+**Visualization**
+
+Created four plots showing:
+1. Basic Voronoi with vertices
+2. Colored cells for visual clarity
+3. Delaunay triangulation (dual graph)
+4. Voronoi-Delaunay overlay showing duality
+
+The duality is striking—Delaunay edges (red) cross Voronoi edges (blue) at right angles!
+
+The elegance of Voronoi diagrams lies in their simple definition leading to rich geometric structure with deep theoretical properties and practical applications.
+
+--------------------------------------------------------------------------------
+
+### 6. Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Voronoi diagrams: divide space into regions based on proximity!
+
+Each colored region shows the area closest to one point (black dots). The boundaries are perpendicular bisectors.
+
+These patterns appear in nature (giraffe spots, dragonfly wings), urban planning (service areas), and computer graphics (procedural textures).
+
+The math: O(n log n) construction using Fortune's sweep line algorithm.
+
+Applications: nearest neighbor search, mesh generation, spatial analysis!
+
+#Mathematics #ComputationalGeometry #DataScience #Python
+
+--------------------------------------------------------------------------------
+
+### 7. LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+**Voronoi Diagrams: Computational Geometry for Spatial Analysis**
+
+I implemented Voronoi tessellation algorithms demonstrating both theoretical properties and practical applications in Python.
+
+**Mathematical Foundation**
+
+For point set P = {p₁, ..., pₙ}, the Voronoi partition defines regions:
+V(pᵢ) = {x : ‖x - pᵢ‖ ≤ ‖x - pⱼ‖ ∀j ≠ i}
+
+Each region is a convex polygon formed by intersecting half-spaces—a fundamental result ensuring computational tractability.
+
+**Delaunay Duality**
+
+The Voronoi diagram is geometrically dual to the Delaunay triangulation:
+• Voronoi vertices = Delaunay triangle circumcenters
+• Empty circumcircle property ensures optimality
+
+This duality enables efficient algorithms and robust numerical computation.
+
+**Implementation Details**
+
+Leveraged scipy.spatial for O(n log n) construction via Fortune's sweep line algorithm.
+
+Test configuration: 25 random sites
+- Topological validation: V - E + F = 2 (Euler characteristic)
+- Statistical analysis: mean 5.48 edges/cell (theoretical ≈ 6)
+- Finite polygon reconstruction for visualization
+
+**Engineering Applications**
+
+**Geographic Information Systems:**
+• Service coverage analysis (emergency services, retail)
+• Spatial interpolation (Thiessen polygons)
+• Resource allocation optimization
+
+**Robotics & Autonomous Systems:**
+• Configuration space decomposition
+• Multi-robot coverage
+• Sensor network placement
+
+**Computer Graphics:**
+• Mesh generation (finite element preprocessing)
+• Procedural content generation
+• Texture synthesis (Worley/cellular noise)
+
+**Manufacturing & Materials:**
+• Grain boundary analysis in metallurgy
+• Particle distribution characterization
+• Quality control in coating processes
+
+**Computational Biology:**
+• Protein active site analysis
+• Cellular territory modeling
+• Tissue structure quantification
+
+**Performance Characteristics**
+
+Algorithmic complexity:
+• Construction: O(n log n) time, O(n) space
+• Nearest neighbor query: O(log n) with point location
+• Dynamic updates: O(log² n) for incremental construction
+
+**Advanced Variants Implemented:**
+
+✓ Infinite region handling
+✓ Area computation via shoelace formula
+✓ Dual Delaunay triangulation
+✓ Statistical property validation
+
+**Industrial Relevance:**
+
+Voronoi methods appear in:
+• VLSI design (placement algorithms)
+• Telecommunications (cell tower coverage)
+• Logistics (depot assignment)
+• Urban planning (facility location)
+
+The combination of elegant mathematical structure, efficient algorithms, and broad applicability makes Voronoi diagrams a cornerstone of computational geometry.
+
+Complete implementation includes visualization suite, statistical analysis, and duality demonstrations.
+
+#ComputationalGeometry #DataScience #Python #Engineering #Algorithms #GIS #SpatialAnalysis #MachineLearning
+
+--------------------------------------------------------------------------------
+
+### 8. Instagram (< 500 chars)
+--------------------------------------------------------------------------------
+Voronoi tessellation beauty!
+
+Each color represents a region closest to one black point. The patterns emerge from pure geometry—no randomness in the boundaries!
+
+🔵 Blue lines: Voronoi edges
+🔴 Red triangles: Delaunay dual
+⚫ Black dots: generator sites
+
+These structures appear everywhere:
+• Animal patterns (giraffe, dragonfly)
+• Crystal grain boundaries
+• City planning zones
+• Procedural game worlds
+
+Math + art + nature = Voronoi diagrams
+
+#Mathematics #Geometry #DataVisualization #Python #Science #GenerativeArt #ComputationalGeometry #STEM
+
+--------------------------------------------------------------------------------

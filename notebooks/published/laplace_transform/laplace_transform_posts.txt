@@ -1,0 +1,168 @@
+# Social Media Posts: Laplace Transform
+# Generated for: laplace_transform.ipynb
+
+================================================================================
+TWITTER/X (280 chars max)
+================================================================================
+
+The Laplace transform turns messy differential equations into simple algebra!
+
+L{f(t)} = F(s) = ∫₀^∞ f(t)e^(-st) dt
+
+Explored step responses, Bode plots & pole-zero analysis with Python.
+
+#Math #Python #Engineering #Science
+
+================================================================================
+BLUESKY (300 chars max)
+================================================================================
+
+The Laplace transform converts time-domain functions f(t) into complex frequency F(s):
+
+L{f(t)} = ∫₀^∞ f(t)e^(-st) dt
+
+This elegant tool transforms differential equations into algebraic ones. My notebook explores numerical computation, pole-zero analysis, and Bode plots.
+
+#Math #Engineering
+
+================================================================================
+THREADS (500 chars max)
+================================================================================
+
+Ever wondered how engineers solve complex differential equations so quickly?
+
+The answer: Laplace transforms!
+
+This mathematical trick converts functions of time into functions of complex frequency:
+L{f(t)} = F(s) = ∫₀^∞ f(t)e^(-st) dt
+
+The magic? Differential equations become simple algebra!
+
+My latest notebook explores:
+- Numerical Laplace transforms
+- Second-order system responses (underdamped vs overdamped)
+- Pole-zero analysis in the s-plane
+- Bode plots for frequency response
+
+All in Python with NumPy and SciPy!
+
+================================================================================
+MASTODON (500 chars max)
+================================================================================
+
+New computational notebook: The Laplace Transform
+
+Implemented numerical computation of:
+L{f(t)} = F(s) = ∫₀^∞ f(t)e^(-st) dt
+
+Key explorations:
+- Transform pairs visualization (exponential, sine, damped sine)
+- Second-order system step responses for various damping ratios ζ
+- Pole-zero plots showing stability regions
+- Bode magnitude & phase plots
+- Convolution theorem demonstration
+
+Poles with negative real parts → stable system. The left half-plane is your friend!
+
+#Python #Math #SignalProcessing #ControlSystems #Science
+
+================================================================================
+REDDIT (r/learnpython or r/science)
+================================================================================
+
+**Title:** Exploring the Laplace Transform with Python: From Theory to Visualization
+
+**Body:**
+
+The Laplace transform is one of the most powerful tools in engineering mathematics. It converts functions of time f(t) into functions of complex frequency F(s):
+
+L{f(t)} = F(s) = ∫₀^∞ f(t)·e^(-st) dt
+
+**Why is this useful?**
+
+It transforms differential equations into algebraic equations. Instead of solving:
+
+y'' + 2ζωₙy' + ωₙ²y = ωₙ²u(t)
+
+You can work with the transfer function:
+
+H(s) = ωₙ² / (s² + 2ζωₙs + ωₙ²)
+
+**What I explored:**
+
+1. **Numerical Laplace transforms** - Computing transforms via numerical integration
+2. **Transform pairs** - Visualizing exponentials, sine waves, and damped oscillations
+3. **Step responses** - How damping ratio ζ affects system behavior (underdamped oscillates, overdamped is sluggish)
+4. **Pole-zero analysis** - Why poles in the left half-plane mean stability
+5. **Bode plots** - Frequency response in magnitude (dB) and phase
+6. **Convolution theorem** - Time-domain convolution = frequency-domain multiplication
+
+**Key insight:** A system is stable if and only if ALL poles have negative real parts (left side of s-plane).
+
+Built with NumPy, SciPy, and Matplotlib. The notebook demonstrates how these abstract mathematical concepts connect to real engineering applications in control systems, signal processing, and circuit analysis.
+
+**View the interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/laplace_transform.ipynb
+
+================================================================================
+FACEBOOK (500 chars max)
+================================================================================
+
+Ever wonder how engineers design stable systems?
+
+The Laplace transform is the secret weapon! It converts complex differential equations into simple algebra by transforming time functions f(t) into frequency functions F(s).
+
+My latest Python notebook explores this fascinating tool:
+- Why some systems oscillate while others don't
+- How pole locations determine stability
+- The beautiful mathematics behind control systems
+
+If the math seems intimidating, the visualizations make it click!
+
+View the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/laplace_transform.ipynb
+
+================================================================================
+LINKEDIN (1000 chars max)
+================================================================================
+
+Exploring the Laplace Transform: A Computational Approach
+
+The Laplace transform remains a cornerstone of engineering analysis, converting time-domain problems into algebraic ones that are more tractable.
+
+In this computational notebook, I implemented:
+
+• Numerical Laplace transform computation using SciPy's integration tools
+• Visualization of common transform pairs (exponential, sinusoidal, damped oscillations)
+• Second-order system analysis with varying damping ratios
+• Pole-zero plots demonstrating stability criteria
+• Bode plot generation for frequency response analysis
+• Convolution theorem verification
+
+Key engineering insight: System stability is determined entirely by pole locations. Poles in the left half of the s-plane (negative real parts) guarantee stability—a principle fundamental to control system design.
+
+The transfer function H(s) = ωₙ²/(s² + 2ζωₙs + ωₙ²) elegantly captures how natural frequency and damping ratio shape system response.
+
+Skills demonstrated: Python, NumPy, SciPy, signal processing, control systems theory, technical visualization.
+
+View the full analysis: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/laplace_transform.ipynb
+
+#Engineering #Python #Mathematics #SignalProcessing #ControlSystems #DataScience
+
+================================================================================
+INSTAGRAM (500 chars max)
+================================================================================
+
+The Laplace Transform: Math Magic for Engineers
+
+This transform converts messy differential equations into simple algebra:
+
+L{f(t)} → F(s)
+
+What the visualization shows:
+• Left: Time-domain signals (what you measure)
+• Right: Frequency response (how the system behaves)
+
+Damped sine waves, exponential decays, and pure oscillations—each has a unique "fingerprint" in the s-domain.
+
+Fun fact: If all poles are on the left side of the s-plane, your system is stable. Right side = unstable = bad news!
+
+#math #engineering #python #science #dataviz #physics #controlsystems #signalprocessing

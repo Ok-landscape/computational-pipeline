@@ -1,0 +1,166 @@
+# Social Media Posts: Stratonovich Calculus
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (< 280 chars)
+--------------------------------------------------------------------------------
+Why does physics prefer Stratonovich calculus over Itô? The chain rule WORKS.
+
+dX = a(X)dt + b(X)∘dW
+
+No correction terms needed for df(X) = f'(X)∘dX
+
+Code + math: bit.ly/strat-calc
+
+#Python #Math #StochasticCalculus #Physics
+
+--------------------------------------------------------------------------------
+
+### Bluesky (< 300 chars)
+--------------------------------------------------------------------------------
+Stratonovich vs Itô calculus: when modeling physical noise, the interpretation matters.
+
+Stratonovich preserves the ordinary chain rule: df(X) = f'(X)∘dX
+
+The Wong-Zakai theorem explains why: smooth noise limits converge to Stratonovich solutions.
+
+Implemented both numerical schemes in Python.
+
+--------------------------------------------------------------------------------
+
+### Threads (< 500 chars)
+--------------------------------------------------------------------------------
+Just built a Python notebook comparing Itô and Stratonovich stochastic calculus!
+
+Here's the key insight: if your noise comes from smooth physical processes, Stratonovich is the right choice.
+
+Why? The Wong-Zakai theorem shows that when you smooth out white noise, the limit gives you Stratonovich — not Itô.
+
+Plus, the regular chain rule works! No extra correction terms like in Itô's formula.
+
+Implemented Euler-Maruyama (Itô) and Heun (Stratonovich) schemes. The convergence rates are 0.5 vs 1.0!
+
+--------------------------------------------------------------------------------
+
+### Mastodon (< 500 chars)
+--------------------------------------------------------------------------------
+New computational notebook: Stratonovich Calculus implementation
+
+Key results:
+• Stratonovich integral uses midpoint evaluation: f((Xᵢ + Xᵢ₊₁)/2)
+• Chain rule preserved: df(X) = f'(X)∘dX
+• Wong-Zakai correction for Itô conversion: a_Itô = a_Strat + ½b(x)b'(x)
+• Heun scheme achieves strong order 1.0 (vs 0.5 for Euler-Maruyama)
+
+Using wrong interpretation introduces systematic bias — verified with 10,000 Monte Carlo paths.
+
+Essential for stochastic differential geometry and Hamiltonian systems.
+
+#StochasticCalculus #Python #Mathematics #Physics
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I built a Python notebook comparing Itô vs Stratonovich stochastic calculus — here's what I learned
+
+**Body:**
+
+Hey everyone! I've been diving into stochastic differential equations (SDEs) and created an interactive notebook exploring the differences between Itô and Stratonovich calculus.
+
+**ELI5 version:** When you have a system with random noise (like a particle bouncing around), there are two ways to mathematically define how that noise integrates over time. They give DIFFERENT answers, and picking the wrong one introduces systematic errors.
+
+**The key difference:**
+- Itô integral evaluates the function at the START of each interval
+- Stratonovich integral evaluates at the MIDPOINT
+
+This seems minor but has huge consequences:
+
+1. **Chain rule**: In Stratonovich calculus, the ordinary chain rule df(X) = f'(X)dX works! In Itô, you need a correction term (the famous Itô formula with the ½f''(X)b²dt term).
+
+2. **Physical meaning**: The Wong-Zakai theorem proves that if your "white noise" is actually the limit of smooth colored noise (which is true in real physics), the system converges to the Stratonovich solution.
+
+3. **Conversion formula**: You can convert between them:
+   a_Itô(x) = a_Strat(x) + ½b(x)b'(x)
+
+**What I implemented:**
+- Euler-Maruyama scheme (for Itô SDEs) — strong order 0.5
+- Heun predictor-corrector scheme (for Stratonovich SDEs) — strong order 1.0
+- Monte Carlo verification with 10,000 paths showing the bias from using wrong interpretation
+
+The notebook includes geometric Brownian motion and a nonlinear multiplicative noise example with α=0.5.
+
+**Interactive notebook:** https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/stratonovich_calculus.ipynb
+
+Would love to hear from anyone working on SDEs in physics or finance!
+
+--------------------------------------------------------------------------------
+
+### Facebook (< 500 chars)
+--------------------------------------------------------------------------------
+Ever wonder how physicists model systems with random noise?
+
+I built a Python notebook exploring Stratonovich calculus — a mathematical framework where the ordinary chain rule still works, unlike its cousin Itô calculus.
+
+The punchline: use the wrong one and you'll get systematically biased results. My simulations show exactly how much!
+
+Perfect for anyone curious about stochastic processes in physics or quantitative finance.
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/stratonovich_calculus.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (< 1000 chars)
+--------------------------------------------------------------------------------
+New Technical Implementation: Stratonovich Calculus for Stochastic Differential Equations
+
+I've developed a comprehensive Python notebook demonstrating the theoretical foundations and numerical implementation of Stratonovich calculus, with direct comparison to Itô calculus.
+
+Key Technical Highlights:
+
+• Implemented Heun predictor-corrector scheme achieving strong convergence order 1.0 (vs 0.5 for standard Euler-Maruyama)
+
+• Demonstrated Wong-Zakai correction: a_Itô = a_Strat + ½b(x)b'(x) — critical for converting between interpretations
+
+• Monte Carlo validation with 10,000 sample paths showing statistical convergence
+
+• Analyzed both linear (geometric Brownian motion) and nonlinear (multiplicative noise with α=0.5) test cases
+
+Applications: Stochastic differential geometry, Hamiltonian systems with noise, Langevin equations, and any physical system where noise originates from smooth underlying processes.
+
+Skills demonstrated: Numerical methods, Monte Carlo simulation, scientific Python (NumPy, SciPy, Matplotlib), mathematical modeling
+
+View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/stratonovich_calculus.ipynb
+
+--------------------------------------------------------------------------------
+
+### Instagram (< 500 chars, visual-focused caption)
+--------------------------------------------------------------------------------
+Stratonovich vs Itô: when math interpretation actually matters
+
+This plot shows 10,000 simulated paths of a stochastic process.
+
+Blue = correct Stratonovich method
+Red = wrong Itô interpretation (no conversion)
+
+See that gap? That's systematic bias from ignoring the Wong-Zakai correction.
+
+The fix:
+a_Itô = a_Strat + ½b(x)b'(x)
+
+Physics prefers Stratonovich because the chain rule works normally.
+Finance prefers Itô because it's a martingale.
+
+Choose wisely.
+
+#Mathematics #Physics #Python #DataScience #StochasticProcesses #Coding #Science #Visualization
+
+--------------------------------------------------------------------------------

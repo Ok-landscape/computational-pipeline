@@ -1,0 +1,158 @@
+# Social Media Posts: Autoencoder Dimensionality Reduction
+# Generated from: notebooks/published/autoencoder_dimensionality_reduction.ipynb
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+
+Compressed 10D data into 2D using a neural network autoencoder - and it preserved all 3 clusters perfectly! Built from scratch with NumPy, no frameworks needed.
+
+Loss: ||x - x'||² → minimize reconstruction error
+
+#Python #MachineLearning #DataScience #NeuralNetworks
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+
+Implemented an autoencoder from scratch to reduce 10-dimensional data to 2D while preserving cluster structure.
+
+Key insight: Unlike PCA's linear projections, autoencoders use nonlinear activations (ReLU) to capture complex manifold structure.
+
+Encoder: x → z (compress)
+Decoder: z → x' (reconstruct)
+
+#Python #ML
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+
+Just built a neural network autoencoder from scratch using only NumPy!
+
+The concept is elegant:
+- Encoder compresses 10D data → 2D
+- Decoder reconstructs 2D → 10D
+- Train to minimize ||x - x'||²
+
+What surprised me: the learned 2D representation preserved all three clusters from the original data, even though the network never saw the labels during training.
+
+This is unsupervised learning at its finest - finding hidden structure without being told what to look for.
+
+#MachineLearning #Python #DataScience
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+
+Implemented a fully-connected autoencoder for dimensionality reduction:
+
+Architecture: 10 → 32 → 2 → 32 → 10
+- Encoder f(x) = ReLU(Wx + b)
+- Bottleneck z ∈ ℝ² (latent space)
+- Decoder reconstructs x' ≈ x
+
+Loss function: L = (1/m)∑||x⁽ⁱ⁾ - x'⁽ⁱ⁾||²
+
+Using Adam optimizer with Xavier initialization. Compared results to PCA - both separate clusters, but AE can capture nonlinear manifolds.
+
+Full implementation in pure NumPy, ~200 lines.
+
+#MachineLearning #Python #NeuralNetworks #DataScience
+
+================================================================================
+REDDIT (Title + Body for r/learnpython or r/datascience)
+================================================================================
+
+**Title:** Built an autoencoder from scratch in NumPy - here's how it compresses 10D data to 2D while preserving cluster structure
+
+**Body:**
+
+I implemented a neural network autoencoder using only NumPy (no PyTorch/TensorFlow) to understand how dimensionality reduction works at a fundamental level.
+
+**What's an autoencoder?**
+
+Think of it as a "bottleneck" network:
+- Encoder: Takes your high-dimensional data and squeezes it through a narrow layer
+- Decoder: Tries to reconstruct the original from that compressed representation
+- Training: Minimize the difference between input and output
+
+The math is straightforward:
+- Encoder: z = ReLU(W₁x + b₁)
+- Decoder: x' = W₂z + b₂
+- Loss: ||x - x'||² (mean squared error)
+
+**My experiment:**
+
+Generated synthetic data with 3 clusters living in 10 dimensions (but really lying on a 2D manifold). The autoencoder learned to compress this to 2D while keeping the clusters perfectly separated - and it never saw the cluster labels during training!
+
+**Key learnings:**
+
+1. Xavier initialization matters - prevents vanishing/exploding gradients
+2. Adam optimizer converges much faster than vanilla SGD
+3. Compared to PCA: both work, but autoencoders can capture nonlinear relationships
+
+**Variance explained:** ~87% with just 2 latent dimensions
+
+The full notebook walks through the math (encoder/decoder equations, backpropagation, Adam updates) and includes visualizations of the latent space vs. the true underlying coordinates.
+
+View and run the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/autoencoder_dimensionality_reduction.ipynb
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+
+Ever wonder how Netflix compresses your viewing history or how image compression works?
+
+I built a neural network called an "autoencoder" that does something similar - it learns to compress 10-dimensional data down to just 2 dimensions, then reconstructs the original.
+
+The cool part? It automatically discovered the hidden structure in the data without being told what to look for. Three distinct groups emerged in the compressed representation!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/autoencoder_dimensionality_reduction.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Neural Network Fundamentals: Autoencoder Implementation from Scratch
+
+Understanding deep learning requires going beyond frameworks. I implemented a fully-connected autoencoder using only NumPy to deeply understand the mechanics of unsupervised representation learning.
+
+Technical Approach:
+- Architecture: Input(10) → Hidden(32) → Latent(2) → Hidden(32) → Output(10)
+- Activation: ReLU with Xavier initialization
+- Optimizer: Adam with adaptive learning rates
+- Loss: Mean squared reconstruction error
+
+Key Results:
+- Achieved 87% variance explained with 2D encoding
+- Cluster structure preserved without supervised labels
+- Comparable performance to PCA on this dataset
+
+The implementation covers backpropagation derivation, mini-batch gradient descent, and the Adam optimizer equations - essential knowledge for anyone working in ML/AI.
+
+Skills demonstrated: Neural networks, NumPy, mathematical foundations, scientific computing
+
+Full technical notebook with equations and visualizations: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/autoencoder_dimensionality_reduction.ipynb
+
+#MachineLearning #DataScience #Python #NeuralNetworks #DeepLearning
+
+================================================================================
+INSTAGRAM (< 500 chars, visual-focused caption)
+================================================================================
+
+Autoencoder magic in action
+
+This neural network learned to compress 10 dimensions → 2 dimensions and back again.
+
+Top left: Training loss dropping as the network learns
+Top right: What the network "sees" - 3 clusters emerge automatically
+Bottom left: The true hidden structure it discovered
+Bottom right: How well it reconstructs each point
+
+Built from scratch in Python.
+No frameworks. Just math.
+
+The beauty of unsupervised learning - finding patterns nobody told it to find.
+
+#machinelearning #datascience #python #neuralnetworks #coding #ai #datavisualization

@@ -1,0 +1,156 @@
+# Social Media Posts: Fast Multipole Method for N-Body Simulations
+
+================================================================================
+## TWITTER/X (< 280 chars)
+================================================================================
+
+The Fast Multipole Method turns O(N²) particle simulations into O(N) — one of the "top 10 algorithms of the 20th century." Instead of computing every pair, use multipole expansions for distant clusters.
+
+#Python #ComputationalPhysics #Algorithms #Science
+
+================================================================================
+## BLUESKY (< 300 chars)
+================================================================================
+
+Simulating N particles? Direct computation scales as O(N²) — painful for large N. The Fast Multipole Method uses hierarchical tree structures and multipole expansions to achieve O(N) complexity. Revolutionary for astrophysics, molecular dynamics, and electromagnetics.
+
+#Science #Physics #Python
+
+================================================================================
+## THREADS (< 500 chars)
+================================================================================
+
+Ever wonder how scientists simulate galaxies with billions of stars?
+
+The secret: Fast Multipole Method (FMM)
+
+The problem: Computing forces between N particles requires N² calculations. For a million particles, that's a trillion operations!
+
+The solution: Group distant particles together and approximate their collective effect using multipole expansions. Near particles? Compute directly. Far particles? Use the approximation.
+
+Result: O(N²) becomes O(N). Billions of particles become tractable.
+
+================================================================================
+## MASTODON (< 500 chars)
+================================================================================
+
+Implemented the Fast Multipole Method for 2D N-body simulations in Python.
+
+Key insight: Distant particle clusters can be represented by multipole expansions. The potential due to sources at positions zᵢ with charges qᵢ becomes:
+
+Φ(z) = a₀·log(z) + Σ aₖ/zᵏ
+
+Three translation operators (M2M, M2L, L2L) enable hierarchical evaluation.
+
+For N=1600 particles, FMM significantly outperforms direct O(N²) summation while maintaining high accuracy with expansion order p=15.
+
+#ComputationalPhysics #Algorithms #Python
+
+================================================================================
+## REDDIT (r/learnpython or r/science)
+================================================================================
+
+**Title:** I implemented the Fast Multipole Method — how scientists simulate billions of particles in O(N) time
+
+**Body:**
+
+If you want to simulate N particles interacting (gravity, electrostatics, etc.), the naive approach requires computing every pair of interactions: O(N²) operations. For a million particles, that's a trillion calculations per timestep. Impossible.
+
+**Enter the Fast Multipole Method (FMM)**
+
+Developed in 1987 by Greengard and Rokhlin, FMM is considered one of the "top 10 algorithms of the 20th century." The key insight:
+
+1. **Distant particles can be grouped**: Instead of computing individual contributions from far-away particles, represent their collective influence using a multipole expansion
+
+2. **Hierarchical decomposition**: Organize particles into a quadtree (2D) or octree (3D). At each level, near-field interactions are computed directly, while far-field interactions use multipole approximations
+
+3. **Translation operators**: Three operators (M2M, M2L, L2L) shift expansions between tree levels efficiently
+
+**The math (simplified)**
+
+The potential from a cluster of charges becomes:
+- Φ(z) = a₀·log(z) + Σ aₖ/zᵏ
+
+Instead of N terms, you compute p terms (p ~ 10-20 for high accuracy).
+
+**Results from my implementation:**
+
+- Direct method: O(N²) scaling confirmed
+- FMM: Near-linear scaling achieved
+- Error with p=15: ~10⁻⁶ relative error
+- Speedup grows with N (the whole point!)
+
+**Applications:**
+- Galaxy simulations (billions of stars)
+- Molecular dynamics (protein folding)
+- Boundary element methods
+- Vortex methods for fluid simulation
+
+The notebook includes a full Python implementation with quadtree decomposition, multipole computation, and translation operators.
+
+View and run the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fast_multipole_method_n_body.ipynb
+
+================================================================================
+## FACEBOOK (< 500 chars)
+================================================================================
+
+How do scientists simulate entire galaxies with billions of stars?
+
+They use the Fast Multipole Method — one of the most important algorithms ever invented.
+
+The trick: Instead of calculating the gravitational pull between every pair of stars (impossible for billions), group distant stars together and approximate their combined effect.
+
+Near stars? Calculate precisely.
+Far stars? Use clever math to bundle them together.
+
+Result: Simulations that would take years now run in hours.
+
+View the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fast_multipole_method_n_body.ipynb
+
+================================================================================
+## LINKEDIN (< 1000 chars)
+================================================================================
+
+Exploring Computational Complexity: Implementing the Fast Multipole Method
+
+The N-body problem — computing interactions between N particles — has O(N²) complexity that becomes prohibitive at scale. The Fast Multipole Method (FMM), developed by Greengard and Rokhlin in 1987, reduces this to O(N) or O(N log N).
+
+Key technical contributions in this implementation:
+
+- Hierarchical spatial decomposition using quadtrees
+- Multipole expansion computation for particle clusters
+- Translation operators (M2M, M2L, L2L) for efficient tree traversal
+- Empirical validation of complexity scaling and error convergence
+
+The algorithm demonstrates a fundamental principle in scientific computing: trading exact computation for controlled approximation enables previously intractable problems.
+
+Applications span astrophysics (galaxy formation), computational chemistry (molecular dynamics), electromagnetics (antenna design), and fluid dynamics (vortex methods).
+
+Skills demonstrated: Algorithm implementation, numerical methods, complexity analysis, scientific visualization
+
+Explore the full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fast_multipole_method_n_body.ipynb
+
+#ScientificComputing #Algorithms #Python #Physics #DataScience
+
+================================================================================
+## INSTAGRAM (< 500 chars)
+================================================================================
+
+The algorithm that made galaxy simulations possible.
+
+Computing forces between N particles?
+Direct method: N² calculations
+Fast Multipole Method: N calculations
+
+The secret: Treat distant particle clusters as single entities using multipole expansions.
+
+This 1987 breakthrough is called one of the "top 10 algorithms of the 20th century."
+
+Today it powers:
+- Galaxy formation simulations
+- Protein folding predictions
+- Electromagnetic field calculations
+
+Swipe to see the potential field visualization.
+
+#Science #Physics #Algorithms #Python #DataVisualization #Coding #Astrophysics #ComputationalScience

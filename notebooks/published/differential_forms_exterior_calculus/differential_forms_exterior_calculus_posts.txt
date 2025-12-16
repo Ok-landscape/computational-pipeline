@@ -1,0 +1,160 @@
+# Social Media Posts: Differential Forms & Exterior Calculus
+
+================================================================================
+SHORT-FORM POSTS
+================================================================================
+
+## Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Differential forms unify gradient, curl & divergence into ONE elegant framework.
+
+The key? The exterior derivative d with d² = 0
+
+This identity encodes:
+- curl(grad f) = 0
+- div(curl F) = 0
+
+Math beauty in action!
+
+#Math #Physics #Python #Science
+
+## Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Explored differential forms in Python today. The exterior derivative d maps k-forms to (k+1)-forms, unifying classical vector calculus.
+
+The fundamental identity d² = 0 captures deep mathematical truths: the curl of a gradient is always zero.
+
+Coordinate-free mathematics at its finest.
+
+## Threads (500 chars)
+--------------------------------------------------------------------------------
+What if I told you that gradient, curl, and divergence are all the same operation?
+
+In exterior calculus, the exterior derivative "d" does it all:
+- d on functions = gradient
+- d on 1-forms = curl
+- d on 2-forms = divergence
+
+The magic property? d applied twice always gives zero (d² = 0).
+
+This explains why curl(grad f) = 0 and div(curl F) = 0 - they're both just d² = 0 in disguise!
+
+Built a Python implementation to explore this. The wedge product (written as a ^ b) handles the antisymmetric multiplication beautifully.
+
+## Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented differential forms in Python using exterior calculus.
+
+Key structures:
+- k-forms: antisymmetric multilinear maps
+- Wedge product (^): anticommutative, nilpotent (dx ^ dx = 0)
+- Exterior derivative d: maps k-forms to (k+1)-forms
+
+Verified computationally:
+1. d² = 0 (within numerical precision)
+2. Stokes' theorem: integral of dw over region = integral of w over boundary
+3. de Rham cohomology: the angular form dtheta on R² \ {0} is closed but not exact
+
+#Mathematics #Physics #Python #ExteriorCalculus #DifferentialGeometry
+
+================================================================================
+LONG-FORM POSTS
+================================================================================
+
+## Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+Title: I built a differential forms calculator in Python - here's what I learned about exterior calculus
+
+Body:
+
+**TL;DR:** Differential forms let you write gradient, curl, and divergence as a single operation called the exterior derivative (d). I implemented this in Python and verified key theorems numerically.
+
+**What are differential forms?**
+
+Think of them as a coordinate-independent way to do calculus. A 0-form is just a function. A 1-form is like a "dual" to a vector field - it eats vectors and spits out numbers. A 2-form measures oriented areas.
+
+**The exterior derivative (d)**
+
+This single operator d does everything:
+- Apply d to a function f, you get its gradient
+- Apply d to a 1-form, you get something like curl
+- Apply d to a 2-form, you get divergence
+
+**The magic: d² = 0**
+
+Apply d twice, you always get zero. This one equation encodes:
+- curl(grad f) = 0
+- div(curl F) = 0
+
+**What I implemented:**
+- A DifferentialForm class storing coefficients and basis elements
+- Wedge product with automatic antisymmetrization
+- Numerical exterior derivative using central differences
+- Verified Stokes' theorem (line integral = area integral)
+
+**Coolest finding:**
+
+The angular form w = (-y dx + x dy)/(x² + y²) on the punctured plane is CLOSED (dw = 0) but NOT EXACT (it's not d of anything). Integrating it around the origin gives 2pi, not zero. This captures the topology - the "hole" at the origin is detected by differential forms!
+
+View and run the full notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/differential_forms_exterior_calculus.ipynb
+
+## Facebook (500 chars)
+--------------------------------------------------------------------------------
+Mind = blown by differential forms today!
+
+Here's the cool part: gradient, curl, and divergence from vector calculus? They're ALL the same operation in disguise, called the exterior derivative.
+
+And this one rule - that applying it twice gives zero - explains why the curl of a gradient is always zero.
+
+It's like discovering that three separate tools in your toolbox are actually one Swiss Army knife.
+
+Built a Python notebook to explore this. Link to try it yourself:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/differential_forms_exterior_calculus.ipynb
+
+## LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring the Mathematics Behind Modern Physics: Differential Forms
+
+I recently built a computational notebook exploring differential forms and exterior calculus - the mathematical language underlying electromagnetism, general relativity, and modern computational methods.
+
+Key technical achievements:
+
+1. Implemented a DifferentialForm class supporting arbitrary dimension and degree
+2. Built the wedge product with proper antisymmetrization and sign tracking
+3. Computed exterior derivatives numerically with verification against analytical results
+4. Demonstrated Stokes' theorem numerically (boundary integrals matching region integrals)
+5. Explored de Rham cohomology - showing how differential forms detect topological features
+
+The central insight: the exterior derivative d unifies gradient, curl, and divergence into a single coordinate-independent operation. The identity d² = 0 has profound implications across physics and mathematics.
+
+Skills demonstrated: Python, NumPy, mathematical modeling, scientific visualization, computational differential geometry.
+
+The full interactive notebook is available here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/differential_forms_exterior_calculus.ipynb
+
+## Instagram (500 chars)
+--------------------------------------------------------------------------------
+The hidden unity of calculus
+
+What you're looking at:
+visualizations of differential forms
+
+Top left: Level curves + gradient vectors
+Top right: A rotational 1-form (like fluid flow)
+Bottom left: A 2-form showing area density
+Bottom right: Proving d² = 0 numerically
+
+One equation to rule them all:
+d² = 0
+
+This single identity explains why
+curl(grad f) = 0 and div(curl F) = 0
+
+Math is beautiful when you see
+the connections beneath the surface
+
+.
+.
+.
+#mathematics #physics #python #coding #datascience #visualization #calculus #differentialgeometry #science #mathisbeautiful

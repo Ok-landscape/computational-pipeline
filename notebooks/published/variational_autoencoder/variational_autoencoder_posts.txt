@@ -1,0 +1,155 @@
+================================================================================
+VARIATIONAL AUTOENCODER (VAE) - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Built a VAE from scratch in NumPy! The magic: z = μ + σ·ε lets you backprop through random sampling. Balances reconstruction vs KL divergence to learn smooth latent spaces.
+
+#MachineLearning #Python #DeepLearning #GenerativeAI
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Variational Autoencoders combine neural networks with Bayesian inference. The key insight: approximate intractable posterior p(z|x) with a learned q(z|x), then maximize the Evidence Lower Bound (ELBO). Implemented from scratch in NumPy with full backprop derivation.
+
+#ML #Python #Science
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Just built a Variational Autoencoder from scratch using only NumPy!
+
+VAEs are generative models that learn probabilistic latent spaces. Instead of encoding to a single point, they learn μ and σ parameters for a Gaussian distribution.
+
+The clever trick? The "reparameterization": z = μ + σ·ε where ε ~ N(0,I). This lets gradients flow through sampling!
+
+Loss = Reconstruction + KL divergence
+
+The KL term keeps the latent space smooth and centered. So cool to see it generate new samples from pure noise.
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented a VAE from scratch in NumPy to understand the math deeply.
+
+Core idea: maximize the ELBO
+L(θ,φ;x) = E[log p(x|z)] - D_KL(q(z|x) || p(z))
+
+The reparameterization trick z = μ + σ·ε enables backprop through stochastic nodes.
+
+For Gaussians, KL has closed form:
+D_KL = -½ Σ(1 + log(σ²) - μ² - σ²)
+
+Training balances reconstruction accuracy vs latent regularization. Generated samples follow the training distribution beautifully.
+
+#MachineLearning #DeepLearning #GenerativeModels
+
+--------------------------------------------------------------------------------
+5. REDDIT (Title + Body for r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+
+TITLE: I built a Variational Autoencoder from scratch in NumPy - here's what I learned about generative models
+
+BODY:
+
+I wanted to deeply understand VAEs beyond just using PyTorch's built-in layers, so I implemented one from scratch with only NumPy. Here's what clicked for me:
+
+**The Problem VAEs Solve**
+
+Regular autoencoders compress data to a single point in latent space. But this creates "holes" - points between encodings that decode to garbage. VAEs fix this by learning a *distribution* instead.
+
+**The Key Insight**
+
+VAEs encode each input to parameters μ (mean) and σ (standard deviation) of a Gaussian. Then they sample z from this distribution. But wait - you can't backprop through random sampling!
+
+**The Reparameterization Trick**
+
+Instead of sampling z ~ N(μ, σ²), we compute:
+z = μ + σ · ε, where ε ~ N(0, 1)
+
+Now the randomness is in ε (which doesn't need gradients), and μ and σ are deterministic functions we can differentiate!
+
+**The Loss Function**
+
+VAE loss has two parts:
+1. Reconstruction loss - how well does the decoder recreate the input?
+2. KL divergence - how close is q(z|x) to the prior N(0, I)?
+
+The KL term acts as regularization, keeping the latent space smooth and preventing the model from just memorizing.
+
+**What I Learned**
+
+- Implementing backprop for the KL term manually really clarified how the gradients flow
+- The balance between reconstruction and KL is crucial - too much KL and outputs are blurry
+- Watching samples improve from random noise to structured data is incredibly satisfying
+
+The full notebook with derivations and visualizations is here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/variational_autoencoder.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Just finished a deep dive into Variational Autoencoders - one of the coolest ideas in machine learning!
+
+VAEs can generate new data by learning the underlying patterns in training data. The clever trick: instead of encoding to fixed points, they learn probability distributions. This lets them generate smooth variations and entirely new samples.
+
+Built one from scratch using just NumPy. Watching it learn to generate data from pure random noise is magical!
+
+Check out the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/variational_autoencoder.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Deep Dive: Implementing a Variational Autoencoder from First Principles
+
+I recently implemented a VAE using only NumPy to solidify my understanding of generative models and variational inference.
+
+Key technical components:
+
+• Variational Inference: Approximating intractable posteriors p(z|x) with learned distributions q(z|x)
+
+• Evidence Lower Bound (ELBO): The training objective that balances reconstruction accuracy with latent space regularization via KL divergence
+
+• Reparameterization Trick: Enabling gradient flow through stochastic sampling using z = μ + σ·ε
+
+• Manual Backpropagation: Deriving and implementing gradients for both the reconstruction and KL divergence terms
+
+The implementation demonstrates:
+- Complete forward and backward passes
+- Training dynamics visualization
+- Latent space structure analysis
+- Sample generation from the learned prior
+
+Understanding these fundamentals is essential for working with modern generative architectures like diffusion models, which build on similar variational principles.
+
+Full notebook with mathematical derivations and code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/variational_autoencoder.ipynb
+
+#MachineLearning #DeepLearning #GenerativeAI #Python #DataScience
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused caption)
+--------------------------------------------------------------------------------
+
+Teaching machines to dream
+
+This is what happens when you train a Variational Autoencoder from scratch:
+
+Top row: Loss curves, original data, and how it's encoded
+Bottom row: Reconstructions, NEW samples generated from random noise, and a map of the latent space
+
+VAEs learn probability distributions, not just fixed encodings. That's what lets them create entirely new data that looks like the training set.
+
+Built with pure NumPy - no deep learning frameworks.
+
+#MachineLearning #GenerativeAI #DataScience #Python #DeepLearning #AI #NeuralNetworks #Coding #DataVisualization #STEM

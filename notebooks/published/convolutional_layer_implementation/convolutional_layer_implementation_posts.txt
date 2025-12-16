@@ -1,0 +1,205 @@
+# Social Media Posts: Convolutional Layer Implementation from Scratch
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Built a CNN convolutional layer from scratch in Python!
+
+The math: Y[i,j] = ΣΣ X[i+m, j+n] · W[m,n] + b
+
+Implemented forward pass, backprop, and gradient checking. Tested with Sobel edge detection.
+
+#Python #DeepLearning #MachineLearning #NeuralNetworks
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Implemented a 2D convolutional layer from first principles in NumPy.
+
+Key insight: Deep learning frameworks use cross-correlation, not true convolution.
+
+Output dimensions: H' = floor((H + 2p - K)/s) + 1
+
+Includes full backpropagation derivation and numerical gradient verification.
+
+#Python #DeepLearning
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Ever wondered what actually happens inside a CNN?
+
+I built a complete convolutional layer from scratch - just NumPy, no frameworks.
+
+The core operation:
+Y[i,j] = ΣΣ X[i·s + m, j·s + n] · W[m,n] + b
+
+What I implemented:
+- Forward pass with padding and stride
+- Backprop gradients for weights AND inputs
+- Xavier initialization
+- Gradient checking (passed!)
+
+Tested it with Sobel and Laplacian edge detectors. Then trained it to distinguish vertical vs horizontal lines.
+
+Understanding the math makes debugging so much easier.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+New notebook: Convolutional Layer Implementation from Scratch
+
+Derived and implemented the full 2D convolution operation:
+
+For multi-channel inputs with C_in channels and C_out filters:
+Y[c_out, i, j] = Σ_{c_in} ΣΣ X[c_in, i·s+m, j·s+n] · W[c_out, c_in, m, n] + b[c_out]
+
+Weight tensor shape: W ∈ R^(C_out × C_in × K_h × K_w)
+
+Includes:
+- Complete backprop derivation
+- Numerical gradient verification (rel error < 10⁻⁵)
+- Edge detection demo with Sobel/Laplacian
+- Training example for pattern detection
+
+#Python #MachineLearning #DeepLearning #NumPy #ComputerVision
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/MachineLearning)
+--------------------------------------------------------------------------------
+**Title:** I implemented a CNN convolutional layer from scratch in NumPy - here's what I learned
+
+**Body:**
+
+I just finished building a complete 2D convolutional layer implementation from first principles. No PyTorch, no TensorFlow - just NumPy and math.
+
+**Why do this?**
+
+Frameworks are great, but I wanted to really understand what happens when you call `nn.Conv2d()`. Turns out there's some elegant math underneath.
+
+**The core operation**
+
+The 2D convolution (actually cross-correlation in deep learning) is:
+
+Y[i, j] = ΣΣ X[i·s + m, j·s + n] · W[m, n] + b
+
+Where s is stride, and the sums run over the kernel dimensions.
+
+**What surprised me**
+
+1. **It's not actually convolution** - DL frameworks use cross-correlation (no kernel flip)
+2. **Backprop through conv = another convolution** - the gradient w.r.t. input is a "full convolution" with the flipped kernel
+3. **Xavier initialization matters** - proper scaling: std = sqrt(2/(fan_in + fan_out))
+
+**What I implemented**
+
+- Forward pass with configurable padding and stride
+- Full backward pass (gradients for weights, bias, AND input)
+- Gradient checking using numerical differentiation
+- Edge detection demo with Sobel and Laplacian kernels
+- A training loop that learns to detect vertical vs horizontal lines
+
+**Key insight**
+
+The gradient check was crucial. Numerical gradient formula:
+
+grad ≈ (f(x+eps) - f(x-eps)) / (2·eps)
+
+My implementation passed with relative error < 10⁻⁵.
+
+**Interactive notebook**
+
+You can run the full notebook with all the code and visualizations here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/convolutional_layer_implementation.ipynb
+
+Happy to answer questions about the implementation details!
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Just built a neural network convolutional layer completely from scratch!
+
+Convolution is the core operation in image recognition AI. The math:
+Y[i,j] = ΣΣ X[i+m, j+n] · W[m,n] + b
+
+I implemented the forward pass, backpropagation (the learning part), and tested it with classic edge detection filters like Sobel.
+
+The cool part: I then trained it to learn on its own to detect whether lines in images are vertical or horizontal. It works!
+
+Try the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/convolutional_layer_implementation.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Building Deep Learning Fundamentals: Convolutional Layer from Scratch
+
+I recently completed an educational project implementing a 2D convolutional layer entirely from first principles using NumPy.
+
+Key technical components:
+
+Mathematical Foundation
+- Derived the cross-correlation operation used in modern DL frameworks
+- Output dimension formula: H' = floor((H + 2p - K_h)/s) + 1
+- Multi-channel convolution with weight tensor W ∈ R^(C_out × C_in × K_h × K_w)
+
+Implementation Details
+- Forward pass with configurable stride and padding
+- Complete backpropagation for weight gradients, bias gradients, and input gradients
+- Xavier/Glorot initialization for stable training
+
+Validation
+- Numerical gradient checking with central differences
+- Achieved relative error < 10⁻⁵ confirming correct backprop implementation
+
+Practical Applications
+- Edge detection using Sobel and Laplacian kernels
+- Pattern classification training loop
+
+This exercise reinforced my understanding of the mathematical foundations underlying convolutional neural networks - knowledge that proves invaluable when debugging model behavior or optimizing architectures.
+
+Full implementation with interactive code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/convolutional_layer_implementation.ipynb
+
+#DeepLearning #MachineLearning #Python #ComputerVision #NeuralNetworks #DataScience
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+Built a CNN from scratch
+
+Ever wondered how image AI actually works?
+
+I implemented the core building block - a convolutional layer - using only NumPy.
+
+The math is beautiful:
+Y[i,j] = ΣΣ X · W + b
+
+This sliding window extracts features like edges, textures, and shapes.
+
+Swipe to see:
+→ Original image
+→ Sobel edge detection (vertical)
+→ Sobel edge detection (horizontal)
+→ Laplacian (all edges)
+→ Edge magnitude map
+
+Understanding fundamentals = better debugging.
+
+#DeepLearning #MachineLearning #Python #NeuralNetworks #ComputerVision #DataScience #CodingLife #AI #Programming #LearnToCode
+
+--------------------------------------------------------------------------------

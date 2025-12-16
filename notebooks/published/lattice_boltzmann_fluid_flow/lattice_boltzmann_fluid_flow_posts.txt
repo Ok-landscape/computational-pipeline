@@ -1,0 +1,171 @@
+================================================================================
+LATTICE BOLTZMANN FLUID FLOW - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 characters)
+--------------------------------------------------------------------------------
+
+Simulated fluid flow around a cylinder using the Lattice Boltzmann Method - watching the von Karman vortex street emerge is mesmerizing! Re=100, vortices shedding alternately like clockwork.
+
+#Python #FluidDynamics #CFD #Physics #Simulation
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 characters)
+--------------------------------------------------------------------------------
+
+Implemented the Lattice Boltzmann Method to simulate 2D flow past a cylinder. At Reynolds number ~100, the flow becomes unstable and produces the beautiful von Karman vortex street - alternating vortices shedding from the wake.
+
+The math: f_out = f - (1/tau)(f - f_eq)
+
+#CFD #Physics #Python
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 characters)
+--------------------------------------------------------------------------------
+
+Just built a fluid dynamics simulator from scratch using the Lattice Boltzmann Method!
+
+Instead of solving Navier-Stokes directly, LBM tracks particle distributions on a grid. Simple rules: particles collide, then stream to neighbors.
+
+The result? Beautiful vortex shedding behind a cylinder at Re=100. Those alternating vortices you see behind bridge pillars in rivers? Same physics!
+
+The Strouhal number St = fD/U is around 0.2 - matching real experiments.
+
+#FluidDynamics #Python #Physics
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 characters)
+--------------------------------------------------------------------------------
+
+New simulation: Lattice Boltzmann Method for 2D viscous flow
+
+D2Q9 lattice with BGK collision operator:
+f_i^out = f_i - omega(f_i - f_i^eq)
+
+where omega = 1/tau and viscosity nu = c_s^2(tau - 1/2)
+
+At Re=100, the cylinder wake shows classic von Karman instability. Strouhal number St approx 0.18 matches experimental data.
+
+Boundary conditions:
+- Zou-He at inlet
+- Bounce-back on obstacle
+- Zero-gradient outlet
+
+Code: pure NumPy, 400x100 lattice, 15k steps
+
+#CFD #FluidDynamics #Python #Physics #Simulation
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+
+**Title:** I built a fluid dynamics simulator using the Lattice Boltzmann Method in pure Python/NumPy - here's how it works
+
+**Body:**
+
+Hey everyone! I've been learning about computational fluid dynamics and wanted to share a project that finally made the concepts click for me.
+
+**What is the Lattice Boltzmann Method?**
+
+Instead of directly solving the Navier-Stokes equations (which describe fluid motion), LBM works at a "mesoscopic" scale. Imagine tracking probabilities of finding particles moving in certain directions on a grid. Two simple steps repeat:
+
+1. **Collision** - particles at each point redistribute according to local equilibrium
+2. **Streaming** - particles move to neighboring grid points
+
+That's it! From these simple rules, complex fluid behavior emerges.
+
+**The simulation**
+
+I simulated flow around a cylinder (think: wind past a bridge pillar). At Reynolds number 100, something beautiful happens - the wake becomes unstable and starts shedding vortices alternately from top and bottom. This is called the "von Karman vortex street."
+
+**Key equations (in plain English)**
+
+- Equilibrium distribution: basically a Maxwell-Boltzmann distribution discretized onto the lattice
+- Viscosity: controlled by the "relaxation time" tau - how quickly particles return to equilibrium
+- Strouhal number: relates shedding frequency to flow speed and obstacle size (got St around 0.18, matching experiments!)
+
+**What I learned**
+
+- Bounce-back boundaries naturally create no-slip walls
+- The D2Q9 lattice (9 velocities in 2D) is surprisingly powerful
+- LBM is embarrassingly parallel - great for GPU acceleration
+
+The whole thing runs in pure NumPy. No fancy CFD libraries needed!
+
+**View the full notebook with code and visualizations:**
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lattice_boltzmann_fluid_flow.ipynb
+
+Happy to answer questions about the implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 characters)
+--------------------------------------------------------------------------------
+
+Ever wonder why you see swirling patterns in rivers flowing past rocks?
+
+I built a computer simulation of exactly this phenomenon! Using something called the Lattice Boltzmann Method, I modeled fluid flowing around a cylinder.
+
+At the right speed, the flow becomes unstable and creates alternating vortices - like a zipper of spinning water. Scientists call this the "von Karman vortex street."
+
+Nature is beautifully mathematical!
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lattice_boltzmann_fluid_flow.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 characters)
+--------------------------------------------------------------------------------
+
+Computational Fluid Dynamics with the Lattice Boltzmann Method
+
+I recently implemented a 2D fluid flow simulator using the Lattice Boltzmann Method (LBM) - a mesoscopic approach that bridges kinetic theory and continuum mechanics.
+
+Key technical achievements:
+- D2Q9 lattice discretization with BGK collision operator
+- Zou-He velocity boundary conditions at inlet
+- Bounce-back scheme for solid boundaries
+- Reynolds number Re=100 simulation capturing von Karman vortex shedding
+
+Why LBM matters in industry:
+- Inherently parallel (ideal for GPU/HPC)
+- Handles complex geometries naturally
+- Widely used in automotive aerodynamics, porous media flow, and microfluidics
+
+The simulation correctly reproduces the Strouhal number (St approx 0.18) for vortex shedding frequency, validating the implementation against experimental data.
+
+Tools: Python, NumPy, Matplotlib
+Domain: 400x100 lattice points, 15,000 time steps
+
+Explore the full implementation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/lattice_boltzmann_fluid_flow.ipynb
+
+#CFD #FluidDynamics #Python #ComputationalScience #Engineering #Simulation
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 characters, visual-focused)
+--------------------------------------------------------------------------------
+
+fluid dynamics is pure art
+
+this simulation shows what happens when fluid flows past a cylinder
+
+at the right Reynolds number, the wake becomes unstable
+
+vortices start shedding alternately from top and bottom
+
+creating this beautiful pattern called the von Karman vortex street
+
+you see this in nature everywhere:
+clouds behind islands
+water behind bridge pillars
+even caused the Tacoma Narrows Bridge collapse
+
+built with the Lattice Boltzmann Method
+pure Python
+zero external CFD libraries
+
+#fluiddynamics #physics #simulation #python #coding #cfd #vortex #science #mathematics #engineering #visualization #computationalphysics
+
+================================================================================
+END OF POSTS
+================================================================================

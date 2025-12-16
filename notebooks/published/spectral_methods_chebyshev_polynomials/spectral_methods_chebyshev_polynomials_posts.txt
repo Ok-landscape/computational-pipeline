@@ -1,0 +1,154 @@
+# Social Media Posts: Spectral Methods with Chebyshev Polynomials
+
+================================================================================
+## SHORT-FORM POSTS
+================================================================================
+
+### Twitter/X (280 chars)
+--------------------------------------------------------------------------------
+Why do weather models use spectral methods? Because Chebyshev polynomials achieve EXPONENTIAL convergence - errors drop from 10⁻2 to 10⁻14 as you increase N. That's going from "close enough" to "basically exact."
+
+#Python #Math #NumericalMethods #Science
+
+--------------------------------------------------------------------------------
+
+### Bluesky (300 chars)
+--------------------------------------------------------------------------------
+Spectral methods with Chebyshev polynomials: where T_n(x) = cos(n*arccos(x)) gives you exponential convergence for smooth problems. Built a differentiation matrix that computes derivatives via matrix multiplication - errors vanish exponentially with polynomial degree N.
+
+#Science #Math #Python
+
+--------------------------------------------------------------------------------
+
+### Threads (500 chars)
+--------------------------------------------------------------------------------
+Just built a spectral solver using Chebyshev polynomials and the results are wild.
+
+Instead of approximating derivatives with finite differences (slow, O(h^p) convergence), spectral methods use global polynomial bases. The magic? Chebyshev-Gauss-Lobatto points cluster near boundaries, avoiding the dreaded Runge phenomenon.
+
+Solved a BVP: -u'' + u = f. Error dropped from 10⁻3 to 10⁻14 just by increasing N from 8 to 32. That's exponential convergence - the holy grail of numerical methods.
+
+--------------------------------------------------------------------------------
+
+### Mastodon (500 chars)
+--------------------------------------------------------------------------------
+Implemented spectral collocation with Chebyshev polynomials today.
+
+Key insight: T_n(x) = cos(n*arccos(x)) forms an orthogonal basis w.r.t. weight w(x) = (1-x²)⁽-1/2). The Chebyshev-Gauss-Lobatto points xⱼ = cos(pij/N) give optimal interpolation.
+
+Built the differentiation matrix D where u'(xᵢ) = sumⱼ Dᵢj * u(xⱼ). Solved -u'' + u = f with homogeneous Dirichlet BCs. Achieved 10⁻14 error with N=32.
+
+Exponential convergence >> algebraic convergence.
+
+#NumericalAnalysis #Python #ScientificComputing
+
+--------------------------------------------------------------------------------
+
+================================================================================
+## LONG-FORM POSTS
+================================================================================
+
+### Reddit (r/learnpython or r/math)
+--------------------------------------------------------------------------------
+**Title:** I built a spectral solver with Chebyshev polynomials - here's why they achieve exponential convergence
+
+**Body:**
+
+Ever wondered why weather prediction models and turbulence simulations use spectral methods instead of finite differences? I just implemented one from scratch and finally understand the magic.
+
+**The Problem with Finite Differences**
+
+Finite difference methods approximate derivatives locally: f'(x) ≈ (f(x+h) - f(x-h))/(2h). The error is O(h²) or O(h⁴) - you need LOTS of points for high accuracy.
+
+**Enter Chebyshev Polynomials**
+
+Chebyshev polynomials T_n(x) are defined by a beautiful identity: T_n(x) = cos(n*arccos(x)). They satisfy a simple recurrence:
+
+- T₀(x) = 1
+- T₁(x) = x
+- Tn₊₁(x) = 2x*T_n(x) - Tn₋₁(x)
+
+**Why They're Special**
+
+1. They're orthogonal with respect to weight w(x) = 1/sqrt(1-x²)
+2. The Chebyshev-Gauss-Lobatto points xⱼ = cos(pij/N) cluster near boundaries, avoiding the Runge phenomenon
+3. You can build a differentiation MATRIX - derivatives become matrix-vector multiplication!
+
+**The Results**
+
+I solved the BVP: -u'' + u = (2+4x)e^x with u(-1) = u(1) = 0.
+
+| N | Max Error |
+|---|-----------|
+| 8 | 2.5 x 10⁻5 |
+| 16 | 1.8 x 10⁻10 |
+| 32 | 2.2 x 10⁻14 |
+
+That's **exponential convergence** - errors decay like e⁽-cN) instead of h^p. For smooth problems, spectral methods are unbeatable.
+
+**Try it yourself:** You can view and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spectral_methods_chebyshev_polynomials.ipynb
+
+--------------------------------------------------------------------------------
+
+### Facebook (500 chars)
+--------------------------------------------------------------------------------
+Today I learned why scientists use "spectral methods" for predicting weather and simulating turbulence.
+
+The secret? Chebyshev polynomials. Instead of approximating derivatives point-by-point, you use a clever mathematical trick that achieves EXPONENTIAL accuracy.
+
+I coded it up: increasing the polynomial degree from 8 to 32 dropped the error from 0.00003 to 0.00000000000002. That's 9 orders of magnitude better!
+
+Check out the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spectral_methods_chebyshev_polynomials.ipynb
+
+--------------------------------------------------------------------------------
+
+### LinkedIn (1000 chars)
+--------------------------------------------------------------------------------
+Exploring Spectral Methods: Why Chebyshev Polynomials Matter for High-Accuracy Computing
+
+I recently implemented a spectral collocation solver from scratch, demonstrating why these methods are the gold standard for applications demanding extreme precision - weather modeling, turbulence simulation, and quantum chemistry.
+
+Key Technical Insights:
+
+1. Chebyshev polynomials T_n(x) = cos(n*arccos(x)) form an optimal interpolation basis on bounded domains
+
+2. The Chebyshev-Gauss-Lobatto points xⱼ = cos(pi*j/N) naturally cluster near boundaries, eliminating the Runge phenomenon
+
+3. Derivatives become matrix-vector operations via the Chebyshev differentiation matrix
+
+4. For smooth problems, convergence is exponential - errors decay as O(e⁽-cN)) rather than algebraic O(h^p)
+
+Results from solving a second-order BVP:
+- N=8: error ~ 10⁻5
+- N=16: error ~ 10⁻10
+- N=32: error ~ 10⁻14 (machine precision)
+
+This exponential convergence is why spectral methods remain essential in computational science despite their complexity.
+
+Skills demonstrated: Numerical analysis, Python, Scientific computing, Algorithm implementation
+
+View the full implementation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/spectral_methods_chebyshev_polynomials.ipynb
+
+--------------------------------------------------------------------------------
+
+### Instagram (500 chars)
+--------------------------------------------------------------------------------
+The beauty of Chebyshev polynomials
+
+Those curves? They're T₀ through T₅ - mathematical functions that achieve something remarkable: EXPONENTIAL convergence.
+
+While regular numerical methods slowly improve accuracy, spectral methods using these polynomials jump from "pretty good" to "essentially perfect" with just a few more terms.
+
+Used in:
+- Weather prediction
+- Turbulence simulation
+- Quantum chemistry
+
+Sometimes the most elegant math is also the most powerful.
+
+#mathematics #coding #python #science #numericalanalysis #datascience #physics #visualization #scientificcomputing #chebyshev
+
+--------------------------------------------------------------------------------

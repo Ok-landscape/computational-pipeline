@@ -1,0 +1,159 @@
+EXTERIOR ALGEBRA: SOCIAL MEDIA POSTS
+=====================================
+Generated from: exterior_algebra.ipynb
+
+================================================================================
+1. TWITTER/X (< 280 chars)
+================================================================================
+
+The wedge product u ∧ v captures oriented area, while u ∧ v ∧ w gives volume. Built a Python implementation proving anticommutativity: u ∧ v = -(v ∧ u). 140+ years after Grassmann, his algebra is still essential.
+
+#Python #Math #LinearAlgebra #Science
+
+================================================================================
+2. BLUESKY (< 300 chars)
+================================================================================
+
+Explored exterior algebra computationally: the wedge product ∧ generalizes the cross product to any dimension. Key insight: dim(Λᵏ(Rⁿ)) = C(n,k), giving a total dimension of 2ⁿ. Bivectors represent oriented areas, trivectors represent volumes. Implementation in Python.
+
+#Math #Science #Programming
+
+================================================================================
+3. THREADS (< 500 chars)
+================================================================================
+
+Just implemented exterior algebra from scratch in Python!
+
+What is it? A way to extend vectors into higher-dimensional objects called multivectors.
+
+The wedge product (∧) has two beautiful properties:
+- Anticommutativity: u ∧ v = -(v ∧ u)
+- v ∧ v = 0 (wedging a vector with itself gives zero)
+
+The coolest part? The coefficient of u ∧ v ∧ w equals the determinant - so exterior algebra unifies geometry and linear algebra!
+
+#Math #Python #Science
+
+================================================================================
+4. MASTODON (< 500 chars)
+================================================================================
+
+Implemented exterior algebra (Grassmann algebra) in Python.
+
+Key results:
+- Wedge product ∧ is anticommutative: u ∧ v = -(v ∧ u)
+- Bivector ||u ∧ v|| = ||u|| ||v|| sin(θ) (oriented parallelogram area)
+- Trivector coefficient = determinant (parallelepiped volume)
+- dim(Λᵏ(Rⁿ)) = C(n,k), total dim = 2ⁿ
+
+Also showed: cross product = Hodge star of wedge product (u × v = ★(u ∧ v))
+
+Foundation for differential forms, GR, and gauge theory.
+
+#Mathematics #Python #Science
+
+================================================================================
+5. REDDIT (r/learnpython or r/math)
+================================================================================
+
+Title: I built an exterior algebra implementation in Python - here's what I learned about wedge products, determinants, and geometric intuition
+
+Body:
+
+**TL;DR:** Exterior algebra is a beautiful framework that unifies vectors, areas, volumes, and determinants. I implemented it in Python and learned a lot about the connections between geometry and linear algebra.
+
+**What is Exterior Algebra?**
+
+Invented by Hermann Grassmann in 1844, exterior algebra extends vectors to include higher-dimensional objects called k-vectors:
+- 0-vectors: scalars
+- 1-vectors: ordinary vectors (directed line segments)
+- 2-vectors (bivectors): oriented plane segments representing area
+- 3-vectors (trivectors): oriented volumes
+
+**The Wedge Product**
+
+The key operation is the wedge product (∧), which satisfies:
+- Anticommutativity: u ∧ v = -(v ∧ u)
+- Alternating property: v ∧ v = 0
+
+**Cool Results from My Implementation**
+
+1. The norm of a bivector ||u ∧ v|| equals the parallelogram area spanned by u and v
+2. For three vectors, the coefficient of u ∧ v ∧ w equals the determinant - so the wedge product computes volumes!
+3. The dimension of k-vectors in Rⁿ is C(n,k), and the total exterior algebra dimension is 2ⁿ
+4. Linear independence test: vectors are independent iff their wedge product is non-zero
+5. The cross product is just the Hodge dual of the wedge product: u × v = ★(u ∧ v)
+
+**Why It Matters**
+
+Exterior algebra is the foundation for:
+- Differential forms (integration on manifolds)
+- General relativity
+- Quantum mechanics and gauge theories
+- Computer graphics and robotics
+
+Check out the full interactive notebook with visualizations here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/exterior_algebra.ipynb
+
+================================================================================
+6. FACEBOOK (< 500 chars)
+================================================================================
+
+Ever wondered how mathematicians think about area and volume in higher dimensions?
+
+I just explored exterior algebra - a 180-year-old mathematical framework that's still essential today. The key idea: the "wedge product" u ∧ v represents an oriented parallelogram, and u ∧ v ∧ w represents an oriented box.
+
+The beautiful part? When you compute u ∧ v ∧ w, the result equals the determinant - connecting geometry to linear algebra!
+
+Full notebook with interactive code:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/exterior_algebra.ipynb
+
+================================================================================
+7. LINKEDIN (< 1000 chars)
+================================================================================
+
+Computational Mathematics: Implementing Exterior Algebra from Scratch
+
+I recently built a Python implementation of exterior algebra (Grassmann algebra), a fundamental algebraic structure with applications across mathematics, physics, and engineering.
+
+Key Technical Highlights:
+
+- Implemented the wedge product with proper anticommutativity handling
+- Developed k-vector representation using sparse dictionaries for efficiency
+- Demonstrated that ||u ∧ v|| = ||u|| ||v|| sin(θ), confirming the geometric interpretation
+- Verified the connection to determinants: u ∧ v ∧ w = det([u;v;w]) * (e₁ ∧ e₂ ∧ e₃)
+- Implemented the Hodge star operator to derive the cross product
+
+Applications demonstrated:
+- Linear independence testing via wedge products
+- Volume computation for parallelepipeds
+- Dimension analysis: dim(Λᵏ(Rⁿ)) = C(n,k)
+
+This work reinforces skills in numerical computing, mathematical abstraction, and algorithm design - all essential for roles in scientific computing, ML, and quantitative fields.
+
+Explore the full implementation:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/exterior_algebra.ipynb
+
+#Mathematics #Python #ScientificComputing #DataScience #MachineLearning
+
+================================================================================
+8. INSTAGRAM (< 500 chars, visual-focused)
+================================================================================
+
+Exterior Algebra: Where Geometry Meets Linear Algebra
+
+This visualization shows:
+- Bivectors as oriented parallelograms (purple)
+- Trivectors as oriented boxes (cyan)
+- The dimension formula dim(Λᵏ(Rⁿ)) = C(n,k)
+- Anticommutativity: u ∧ v = -(v ∧ u)
+
+The wedge product ∧ generalizes the cross product to any dimension.
+
+Fun fact: The coefficient of u ∧ v ∧ w equals the determinant!
+
+#Math #Mathematics #Python #Coding #Science #Physics #LinearAlgebra #DataScience #STEM #Visualization
+
+================================================================================
+END OF POSTS
+================================================================================

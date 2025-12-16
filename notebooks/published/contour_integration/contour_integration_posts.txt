@@ -1,0 +1,203 @@
+SOCIAL MEDIA POSTS: CONTOUR INTEGRATION IN COMPLEX ANALYSIS
+================================================================
+
+### 1. TWITTER/X (< 280 chars)
+----------------------------------------------------------------
+Exploring contour integration in complex analysis! 🔄
+
+Computed ∫₋∞^∞ dx/(1+x²) = π using the Residue Theorem.
+
+Evaluated Fresnel integrals & visualized the Cornu spiral. Complex analysis makes "impossible" integrals possible!
+
+#Python #Mathematics #ComplexAnalysis #ComputationalMath
+
+
+### 2. BLUESKY (< 300 chars)
+----------------------------------------------------------------
+Just computed real integrals using complex analysis techniques. The Residue Theorem transforms ∫₋∞^∞ dx/(1+x²) into a simple pole calculation, yielding π exactly.
+
+Visualized contour paths, poles at ±i, and Fresnel spirals. Beautiful intersection of theory and computation.
+
+#Mathematics #Python
+
+
+### 3. THREADS (< 500 chars)
+----------------------------------------------------------------
+Ever wonder how mathematicians evaluate "impossible" integrals? 🤔
+
+I just explored contour integration - a technique that uses complex numbers to solve real integrals!
+
+Key examples:
+• ∫₋∞^∞ dx/(1+x²) = π (using poles at ±i)
+• Trigonometric integrals via z = e^(iθ)
+• Fresnel integrals creating beautiful spirals
+
+The Residue Theorem turns integration into algebra. Computed residues at poles, multiplied by 2πi, and boom - exact answers verified numerically!
+
+#Math #Python #Learning
+
+
+### 4. MASTODON (< 500 chars)
+----------------------------------------------------------------
+Implemented contour integration examples in Python, demonstrating the power of the Residue Theorem for evaluating real definite integrals.
+
+Key results:
+- ∫₀^(2π) dθ/(a + b cos θ) = 2π/√(a² - b²)
+- ∫₋∞^∞ dx/(1+x²) = π via residue at z=i
+- Fresnel integrals: ∫₀^∞ e^(it²) dt = √(π/8)(1+i)
+
+Visualized function magnitudes, contour paths, and the Cornu spiral. All analytical results verified numerically with <0.001% error.
+
+#ComplexAnalysis #SciComp #Mathematics
+
+
+### 5. REDDIT (Title + Body, for r/learnpython or r/math)
+----------------------------------------------------------------
+TITLE: Visualizing Contour Integration: From Theory to Python Implementation
+
+BODY:
+
+I just created a computational notebook exploring contour integration in complex analysis, and wanted to share what I learned!
+
+**What is Contour Integration?**
+
+Contour integration extends real integration to complex-valued functions along paths in the complex plane. The key insight: many "difficult" real integrals become trivial when you use complex analysis.
+
+**The Residue Theorem**
+
+For a function f(z) with poles inside a closed contour γ:
+
+∮_γ f(z) dz = 2πi × ∑ Res(f, zₖ)
+
+In plain English: integrate around a loop, and the result depends only on the "residues" (special values) at the singular points inside.
+
+**What I Implemented:**
+
+1. **Classic integral: ∫₋∞^∞ dx/(1+x²)**
+   - Function has poles at z = ±i
+   - Only z=i is in the upper half-plane
+   - Residue = 1/(2i)
+   - Result: 2πi × 1/(2i) = π ✓
+
+2. **Trigonometric integrals**
+   - Converted ∫₀^(2π) dθ/(a + b cos θ) to contour integral
+   - Substitution z = e^(iθ) transforms the problem
+   - Found poles, computed residues, got exact answer
+   - Numerical verification: < 0.001% error!
+
+3. **Fresnel integrals (advanced)**
+   - C(x) = ∫₀^x cos(t²) dt
+   - S(x) = ∫₀^x sin(t²) dt
+   - Created the famous Cornu spiral visualization
+   - Asymptotic value: √(π/8) ≈ 0.626657
+
+**What I Learned:**
+
+- Complex analysis isn't just abstract theory - it's a practical computational tool
+- The Residue Theorem reduces integration to finding poles and computing limits
+- Numerical verification builds confidence in analytical results
+- Visualization helps understand what's happening in the complex plane
+
+**Visualizations Created:**
+- Magnitude plots of |f(z)| showing poles
+- Multiple contour paths around poles
+- Function behavior along integration paths
+- The beautiful Fresnel/Cornu spiral
+- Poles inside/outside unit circles
+
+**Applications:**
+
+This technique appears everywhere in physics and engineering:
+- Quantum mechanics (Green's functions)
+- Signal processing (inverse Laplace/Fourier transforms)
+- Electromagnetism (Fresnel diffraction)
+- Fluid dynamics (complex potential theory)
+
+**Interactive Notebook:**
+
+You can view and run the full notebook here:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/contour_integration.ipynb
+
+All code is self-contained Python using numpy/scipy/matplotlib. The notebook includes theoretical foundations, executable code with detailed comments, and comprehensive visualizations.
+
+Happy to answer questions about the implementation or the mathematics!
+
+
+### 6. FACEBOOK (< 500 chars, general audience)
+----------------------------------------------------------------
+Just explored one of the coolest math techniques: using imaginary numbers to solve real problems! 🧮
+
+Contour integration lets you evaluate impossible-looking integrals by taking a detour through the complex plane. Found that ∫₋∞^∞ dx/(1+x²) = π by analyzing "poles" at ±i.
+
+Created visualizations showing how this works - including the beautiful Fresnel spiral pattern that appears in wave diffraction!
+
+Math isn't just abstract theory - it's a powerful computational tool. 🚀
+
+View the interactive notebook:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/contour_integration.ipynb
+
+
+### 7. LINKEDIN (< 1000 chars, professional tone)
+----------------------------------------------------------------
+**Computational Exploration: Contour Integration in Complex Analysis**
+
+I recently developed a comprehensive Jupyter notebook implementing contour integration techniques - a fundamental method in complex analysis with wide-ranging applications in science and engineering.
+
+**Technical Implementation:**
+
+The project demonstrates:
+• Numerical verification of the Residue Theorem
+• Transformation of real integrals to complex contour integrals
+• Residue calculation at simple and higher-order poles
+• Fresnel integral computation and Cornu spiral visualization
+
+**Key Results:**
+
+Evaluated ∫₋∞^∞ dx/(1+x²) = π using residue analysis at z=i, achieving numerical verification with < 0.001% error. Implemented trigonometric integral evaluation via z = e^(iθ) substitution, demonstrating the transformation from real to complex domains.
+
+**Skills Demonstrated:**
+- Complex analysis theory and application
+- Python scientific computing (NumPy, SciPy, Matplotlib)
+- Numerical methods and error analysis
+- Mathematical visualization
+- Algorithm validation and verification
+
+**Real-World Applications:**
+
+These techniques are essential in:
+- Quantum mechanics (propagator calculations)
+- Signal processing (inverse transforms)
+- Electromagnetic theory (diffraction integrals)
+- Control systems (stability analysis)
+
+The complete notebook with executable code and visualizations is available for review and interaction:
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/contour_integration.ipynb
+
+#Mathematics #ScientificComputing #Python #ComplexAnalysis #ComputationalScience
+
+
+### 8. INSTAGRAM (< 500 chars, visual-focused caption)
+----------------------------------------------------------------
+Contour Integration in Complex Analysis 🔄
+
+Swipe to see:
+→ Function magnitude plots in the complex plane
+→ Circular contours wrapping around poles
+→ The mesmerizing Fresnel (Cornu) spiral
+→ Poles at ±i visualized
+
+The math: using complex numbers to evaluate real integrals that seem impossible!
+
+Example: ∫₋∞^∞ dx/(1+x²) = π
+
+The trick? Find the "residues" at special points (poles), multiply by 2πi, and you're done.
+
+Complex analysis turns calculus into algebra ✨
+
+.
+
+#mathematics #python #complexanalysis #dataviz #computational #mathviz #stem #coding #jupyter #visualization #fresnel #math #science
+
+================================================================
+END OF SOCIAL POSTS
+================================================================

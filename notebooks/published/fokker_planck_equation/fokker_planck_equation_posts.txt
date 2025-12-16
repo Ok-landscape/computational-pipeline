@@ -1,0 +1,172 @@
+================================================================================
+FOKKER-PLANCK EQUATION - SOCIAL MEDIA POSTS
+Generated from: fokker_planck_equation.ipynb
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+How does probability evolve in noisy systems? The Fokker-Planck equation bridges random particle motion and smooth probability distributions.
+
+Simulated relaxation to equilibrium + bistable barrier crossing in Python.
+
+#Physics #Math #Python #Science
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+The Fokker-Planck equation: a PDE describing how probability densities evolve in stochastic systems.
+
+Implemented a Crank-Nicolson solver in Python to simulate:
+- Ornstein-Uhlenbeck relaxation to Gaussian equilibrium
+- Double-well barrier crossing dynamics
+
+Numerical results match analytical predictions.
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wonder how randomness and probability connect?
+
+The Fokker-Planck equation describes how probability distributions evolve over time in noisy systems. It's the bridge between microscopic random motion and macroscopic predictable behavior.
+
+I built a numerical solver to simulate:
+1. A particle relaxing to equilibrium (Ornstein-Uhlenbeck process)
+2. Probability escaping over energy barriers (double-well potential)
+
+The math: dP/dt = -d(AP)/dx + (1/2)d²(DP)/dx²
+
+Beautiful when theory matches simulation!
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented a Fokker-Planck equation solver using the Crank-Nicolson scheme.
+
+The FPE: dP/dt = -d(A·P)/dx + (1/2)d²(D·P)/dx²
+
+Two test cases:
+1. Ornstein-Uhlenbeck: drift A(x)=-γx, constant diffusion. Verified relaxation to Gaussian with variance σ²/(2γ)
+
+2. Double-well V(x)=x⁴/4-x²/2: Observed Kramers escape over barriers. Bimodal equilibrium emerges.
+
+Numerical variance error < 1% vs analytical solution.
+
+#Physics #StochasticProcesses #Python #ComputationalScience
+
+--------------------------------------------------------------------------------
+5. REDDIT (r/learnpython or r/physics)
+--------------------------------------------------------------------------------
+
+**Title:** I built a Fokker-Planck equation solver in Python - simulating how probability evolves in noisy systems
+
+**Body:**
+
+The Fokker-Planck equation (FPE) is one of those beautiful pieces of physics that connects random microscopic motion to smooth, predictable probability distributions. Developed by Fokker and Planck around 1914-1917, it describes how the probability density of a stochastic process changes over time.
+
+**What is it?**
+
+Imagine dropping a particle into a fluid. It gets buffeted randomly by molecules (Brownian motion), but also feels forces pushing it around. The FPE tells you: given this randomness and these forces, where will the particle probably be at time t?
+
+The equation: dP/dt = -d(AP)/dx + (1/2)d²(DP)/dx²
+
+Where A(x) is the drift (deterministic force) and D(x) is the diffusion coefficient (noise strength).
+
+**What I simulated:**
+
+1. **Ornstein-Uhlenbeck process**: A particle in a harmonic trap with thermal noise. Starts displaced, relaxes to a Gaussian equilibrium. My numerical solution matched the analytical prediction with < 1% error.
+
+2. **Double-well potential**: A particle that can exist in two stable states separated by an energy barrier. Watched probability "leak" from one well to the other via noise-driven barrier crossing (Kramers escape).
+
+**The implementation:**
+
+Used numpy and scipy with a Crank-Nicolson finite difference scheme (unconditionally stable, 2nd order accurate). The solver handles arbitrary drift and diffusion functions.
+
+**Key takeaways:**
+
+- The interplay between drift (pulling toward equilibrium) and diffusion (spreading out) determines the final distribution
+- Higher noise = faster barrier crossing but broader distributions
+- Probability is conserved (the FPE is a continuity equation)
+
+View and run the full notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fokker_planck_equation.ipynb
+
+Happy to answer questions about the physics or implementation!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+How does randomness become predictable?
+
+The Fokker-Planck equation answers this - it shows how probability distributions evolve when things are noisy and uncertain.
+
+I simulated two scenarios:
+- A particle relaxing to equilibrium in a trap
+- Probability escaping over energy barriers
+
+The beautiful result: random microscopic motion produces smooth, predictable macroscopic behavior.
+
+This equation appears everywhere - from physics to finance to biology!
+
+Explore the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fokker_planck_equation.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Bridging Stochastic Dynamics and Deterministic Predictions
+
+I recently implemented a numerical solver for the Fokker-Planck equation, a fundamental PDE in statistical physics that describes probability density evolution in stochastic systems.
+
+The implementation uses the Crank-Nicolson finite difference scheme, providing unconditional stability and second-order accuracy. Built with NumPy and SciPy sparse solvers for efficiency.
+
+Key demonstrations:
+
+1. Ornstein-Uhlenbeck Process: Verified relaxation to Gaussian equilibrium, matching analytical predictions with sub-1% variance error.
+
+2. Bistable System: Simulated noise-induced barrier crossing in a double-well potential, observing Kramers escape dynamics and bimodal equilibrium emergence.
+
+Technical skills demonstrated:
+- PDE numerical methods
+- Scientific Python (NumPy, SciPy, Matplotlib)
+- Stochastic process theory
+- Validation against analytical solutions
+
+Applications span statistical mechanics, neuroscience, quantitative finance, chemical kinetics, and systems biology.
+
+View the full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/fokker_planck_equation.ipynb
+
+#ComputationalScience #Physics #Python #DataScience #NumericalMethods
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+From chaos to order.
+
+This visualization shows probability density evolving over time in two systems governed by the Fokker-Planck equation.
+
+Top: A particle relaxing to equilibrium
+Bottom: Probability escaping over energy barriers
+
+The math behind randomness is beautiful.
+
+Colors show time evolution - watch how the initial spike spreads and settles into its final form.
+
+Built with Python + Matplotlib.
+
+#Physics
+#Math
+#DataVisualization
+#Python
+#Science
+#Probability
+#CodingLife
+
+================================================================================
+END OF POSTS
+================================================================================

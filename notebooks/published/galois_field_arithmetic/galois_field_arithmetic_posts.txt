@@ -1,0 +1,143 @@
+================================================================================
+GALOIS FIELD ARITHMETIC - SOCIAL MEDIA POSTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. TWITTER/X (< 280 chars)
+--------------------------------------------------------------------------------
+
+Finite fields are the hidden math behind your encryption! GF(2^n) makes AES, QR codes & Reed-Solomon error correction possible. Addition = XOR, multiplication = polynomial magic. Built a Python implementation from scratch.
+
+#Math #Cryptography #Python #InfoSec
+
+--------------------------------------------------------------------------------
+2. BLUESKY (< 300 chars)
+--------------------------------------------------------------------------------
+
+Explored Galois field arithmetic today - the algebraic structures that power modern cryptography. Implemented GF(p) and GF(2^n) in Python, visualized Cayley tables, and demonstrated error detection. The multiplicative group is cyclic - every non-zero element is a power of the primitive element.
+
+#Math #Cryptography
+
+--------------------------------------------------------------------------------
+3. THREADS (< 500 chars)
+--------------------------------------------------------------------------------
+
+Ever wondered what math powers your encrypted messages?
+
+Galois fields (finite fields) are the answer. Named after Evariste Galois who died at 20, these algebraic structures have exactly p^n elements.
+
+In GF(2^n), addition is just XOR - super efficient for computers. AES encryption uses GF(2^8) for its byte operations.
+
+Built a Python implementation covering prime fields GF(p) and extension fields GF(2^n). The visualization of Cayley tables reveals beautiful symmetric structure.
+
+#Python #Math #Cryptography
+
+--------------------------------------------------------------------------------
+4. MASTODON (< 500 chars)
+--------------------------------------------------------------------------------
+
+Implemented Galois field arithmetic in Python:
+
+Prime fields GF(p): integers mod p with extended Euclidean algorithm for inverses
+
+Extension fields GF(2^n): polynomials mod irreducible poly, where addition = XOR
+
+Key insight: the multiplicative group GF(q)* is cyclic of order q-1. Primitive elements generate all non-zero elements through their powers.
+
+Used GF(16) with irreducible polynomial x^4 + x + 1 to demonstrate Reed-Solomon style error detection. Visualized both addition and multiplication Cayley tables.
+
+#Math #Cryptography #Python
+
+--------------------------------------------------------------------------------
+5. REDDIT
+--------------------------------------------------------------------------------
+
+**Title:** I built a Galois Field arithmetic implementation in Python - here's what I learned about the math behind AES and error correction
+
+**Subreddit:** r/learnpython, r/math, r/cryptography
+
+**Body:**
+
+I've been curious about how encryption and error-correcting codes actually work at the mathematical level, so I built a Python implementation of Galois field (finite field) arithmetic from scratch.
+
+**ELI5 version:** A Galois field is like doing math with a limited set of numbers where you can still add, subtract, multiply, and divide (except by zero). The cool part? They only exist when the number of elements is a prime or prime power.
+
+**What the notebook covers:**
+
+- **Prime fields GF(p):** Regular integers mod a prime. Uses the Extended Euclidean Algorithm to find multiplicative inverses
+- **Extension fields GF(2^n):** Binary polynomials! Addition becomes XOR, which is why computers love these
+- **Primitive elements:** Special elements whose powers generate every non-zero element in the field
+- **Cayley tables:** Visual representations showing how addition and multiplication work
+
+**Why this matters:**
+
+- AES encryption uses GF(2^8) with the irreducible polynomial x^8 + x^4 + x^3 + x + 1
+- QR codes use Reed-Solomon error correction over GF(2^8)
+- Elliptic curve crypto uses curves over these fields
+
+The implementation includes both GF(7) as a prime field example and GF(2^4) = GF(16) for extension fields. I also demonstrated simple error detection by computing syndromes.
+
+**Key mathematical insight:** For any finite field of order q, the multiplicative group (all non-zero elements) is cyclic of order q-1. This means there's always a "generator" element whose powers give you every other non-zero element.
+
+Check out the interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/galois_field_arithmetic.ipynb
+
+Happy to answer questions about the implementation or the math!
+
+--------------------------------------------------------------------------------
+6. FACEBOOK (< 500 chars)
+--------------------------------------------------------------------------------
+
+Did you know there's beautiful math hiding in your encrypted messages and QR codes?
+
+Galois fields are special number systems with exactly p^n elements where every equation has a solution. They're named after Evariste Galois, a French mathematician who died in a duel at age 20.
+
+I built a Python implementation and visualized how arithmetic works in these fields. The patterns in the multiplication tables are fascinating!
+
+Explore the notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/galois_field_arithmetic.ipynb
+
+--------------------------------------------------------------------------------
+7. LINKEDIN (< 1000 chars)
+--------------------------------------------------------------------------------
+
+Understanding the Mathematical Foundations of Cryptography: Galois Field Arithmetic
+
+I recently developed a comprehensive Python implementation of Galois field (finite field) arithmetic, exploring the algebraic structures that underpin modern cryptographic systems and error-correcting codes.
+
+Key technical components:
+
+- Prime field GF(p) implementation with Extended Euclidean Algorithm for computing multiplicative inverses
+- Extension field GF(2^n) using polynomial arithmetic modulo irreducible polynomials
+- Primitive element detection and cyclic group generation
+- Cayley table visualization for structural analysis
+- Reed-Solomon style error detection demonstration
+
+Practical applications of this mathematics:
+- AES encryption operates over GF(2^8)
+- Reed-Solomon codes in QR codes and data storage
+- Elliptic curve cryptography over finite fields
+
+The project demonstrates proficiency in abstract algebra implementation, algorithm design (modular exponentiation, polynomial multiplication), and data visualization with matplotlib.
+
+View the full implementation: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/galois_field_arithmetic.ipynb
+
+#Cryptography #Mathematics #Python #SoftwareEngineering #DataScience
+
+--------------------------------------------------------------------------------
+8. INSTAGRAM (< 500 chars, visual-focused)
+--------------------------------------------------------------------------------
+
+The hidden math behind encryption
+
+These colorful grids are Cayley tables - they show how numbers combine in Galois fields, the algebraic structures powering:
+
+- Your encrypted messages (AES)
+- QR codes (Reed-Solomon)
+- Secure websites (ECC)
+
+Named after Evariste Galois, who discovered them before dying in a duel at 20
+
+The patterns reveal deep mathematical structure - notice the symmetry in multiplication but not quite in addition
+
+Built this visualization while implementing finite field arithmetic from scratch in Python
+
+#math #cryptography #python #dataviz #coding #computerscience #encryption #algebra
