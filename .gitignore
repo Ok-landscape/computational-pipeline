@@ -61,6 +61,11 @@ latex-templates/**/*.fls
 latex-templates/**/*.fdb_latexmk
 latex-templates/**/*.synctex.gz
 latex-templates/**/*.syncdb
+latex-templates/**/*.pytxcode
+
+# === Private Data Directory ===
+# Output data from automation (should not be in public repo)
+repo-data/
 
 # === Development Files ===
 *~
