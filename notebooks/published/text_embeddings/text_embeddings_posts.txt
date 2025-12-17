@@ -1,0 +1,165 @@
+=== WORD EMBEDDINGS FROM SCRATCH SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+Build Word2Vec from scratch! Skip-gram, negative sampling, t-SNE visualization - all implemented in NumPy.
+
+Notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+#NLP #MachineLearning #Python
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+Understand word embeddings by building them yourself. Skip-gram Word2Vec implementation with visualization and semantic similarity.
+
+Interactive: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+#NLP #DeepLearning
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+How do machines understand that "king" and "queen" are related?
+
+Word embeddings! This notebook teaches you by building Word2Vec from scratch:
+- Text preprocessing and tokenization
+- Skip-gram model with negative sampling
+- Visualize embeddings with PCA and t-SNE
+- Find similar words with cosine similarity
+- Word analogies through vector arithmetic
+
+Pure NumPy implementation for learning.
+
+Explore: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+New NLP notebook: Word Embeddings from Scratch
+
+Implements the complete Word2Vec pipeline:
+- Text preprocessing and vocabulary building
+- Skip-gram architecture with negative sampling
+- Training loop with loss tracking
+- PCA and t-SNE for visualization
+- Cosine similarity for word relationships
+- Vector arithmetic for analogies
+
+No external NLP libraries - pure NumPy.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+#NLP #MachineLearning #Python #OpenSource
+
+================================================================================
+REDDIT (< 40,000 chars)
+================================================================================
+**Title:** [Educational] Word Embeddings from Scratch - Complete Skip-gram Implementation in NumPy
+
+**Body:**
+I created an educational notebook that implements Word2Vec (Skip-gram with negative sampling) from scratch using only NumPy.
+
+**What you'll learn:**
+
+1. **Text Preprocessing**
+   - Tokenization and vocabulary building
+   - Word-to-index mapping
+   - Generating (center, context) training pairs
+
+2. **Skip-gram Model**
+   - Architecture: center word predicts context words
+   - Negative sampling for efficient training
+   - Gradient descent update rules
+   - Loss tracking over epochs
+
+3. **Visualization**
+   - PCA for dimensionality reduction (from scratch)
+   - t-SNE implementation for clustering (simplified)
+   - Color-coded by word categories
+
+4. **Applications**
+   - Cosine similarity for finding related words
+   - Word similarity heatmaps
+   - Vector arithmetic for analogies (A - B + C = ?)
+
+The notebook uses a small science/technology corpus for fast training while demonstrating all concepts.
+
+4 visualizations included:
+- Training loss curve
+- PCA and t-SNE embedding plots
+- Word similarity matrix
+- Analogy visualization in embedding space
+
+Perfect for understanding how LLMs and NLP models represent language internally.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+Suggested subreddits: r/MachineLearning, r/learnmachinelearning, r/LanguageTechnology, r/learnpython
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+How do computers understand that "science" and "physics" are related?
+
+Word embeddings! This notebook teaches the concept by building Word2Vec from scratch:
+- Learn how words become vectors
+- Train a Skip-gram model step by step
+- Visualize word relationships
+- Find similar words automatically
+- Discover word analogies
+
+Understanding embeddings is key to modern NLP and LLMs. Start here!
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+Understanding Word Embeddings: Building Word2Vec from Scratch
+
+Word embeddings are foundational to modern NLP, from search engines to large language models. This notebook provides a complete implementation to understand how they work.
+
+Key concepts covered:
+
+SKIP-GRAM ARCHITECTURE: Predict context words from a center word. Learn why this creates meaningful representations.
+
+NEGATIVE SAMPLING: Efficient training by contrasting positive examples with random negative samples.
+
+DIMENSIONALITY REDUCTION: Visualize high-dimensional embeddings using:
+- PCA (implemented from scratch)
+- t-SNE for local structure
+
+SEMANTIC SIMILARITY: Use cosine similarity to find related words automatically.
+
+WORD ANALOGIES: The famous "king - man + woman = queen" property emerges from training.
+
+The implementation uses only NumPy, making every step transparent. The notebook includes 4 visualizations showing training progress, embedding spaces, similarity matrices, and analogy relationships.
+
+Essential knowledge for anyone working with NLP or wanting to understand how LLMs represent language.
+
+Explore: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/text_embeddings/text_embeddings.ipynb
+
+#NLP #MachineLearning #Python #WordEmbeddings #AI
+
+================================================================================
+INSTAGRAM (< 2200 chars)
+================================================================================
+How do AI models understand words?
+
+Word embeddings! This notebook teaches you by building Word2Vec from scratch.
+
+You'll learn:
+- Text preprocessing fundamentals
+- Skip-gram model architecture
+- Training with negative sampling
+- Visualizing word relationships
+- Finding similar words
+- Word analogies (king - man + woman = ?)
+
+Pure NumPy implementation - no black boxes!
+
+Link in bio or search: text_embeddings notebook
+
+#nlp #machinelearning #artificialintelligence #deeplearning #python #datascience #wordembeddings #word2vec #programming #coding #jupyter #ai #ml #tech #education #learning #developer #software #opensource #neuralnetworks

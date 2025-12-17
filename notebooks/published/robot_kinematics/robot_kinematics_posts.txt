@@ -1,0 +1,153 @@
+=== ROBOT ARM KINEMATICS SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+Robot arm kinematics from scratch. Forward/inverse kinematics, Jacobian matrices, trajectory planning - all with Python visualizations.
+
+Notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+#Robotics #Python
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+Learn how robot arms move! This notebook covers forward/inverse kinematics, velocity control via Jacobians, and smooth trajectory planning.
+
+Interactive: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+#Robotics #Engineering
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+Ever wondered how robot arms figure out where to move?
+
+This notebook teaches the mathematics of robot kinematics:
+- Forward kinematics: joint angles to position
+- Inverse kinematics: position to joint angles
+- Jacobian: controlling end-effector velocity
+- Trajectory planning: smooth motion profiles
+
+Complete Python implementation with beautiful visualizations.
+
+Explore: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+New robotics notebook: 2-Link Arm Kinematics
+
+Implements from scratch:
+- Forward kinematics using DH-style approach
+- Inverse kinematics with elbow-up/down solutions
+- Jacobian matrix for velocity control
+- Quintic polynomial trajectory planning
+- Manipulability analysis and singularity detection
+
+All visualized with matplotlib.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+#Robotics #Python #MechanicalEngineering #OpenSource
+
+================================================================================
+REDDIT (< 40,000 chars)
+================================================================================
+**Title:** [Educational] Robot Arm Kinematics from Scratch - Complete Python Notebook with Visualizations
+
+**Body:**
+I created an educational notebook that implements robot arm kinematics from first principles for a 2-link planar robot (2R arm).
+
+**Topics covered:**
+
+1. **Forward Kinematics**
+   - Compute end-effector (x, y) from joint angles (theta1, theta2)
+   - Trigonometric formulation
+
+2. **Inverse Kinematics**
+   - Find joint angles to reach a target position
+   - Law of cosines approach
+   - Multiple solutions (elbow-up vs elbow-down configurations)
+
+3. **Workspace Analysis**
+   - Reachable region visualization
+   - Inner and outer boundaries
+
+4. **Jacobian Matrix**
+   - Relates joint velocities to end-effector velocities
+   - Manipulability measure (determinant of J)
+   - Singularity analysis
+
+5. **Trajectory Planning**
+   - 5th-order polynomial for smooth motion
+   - Zero velocity and acceleration at start/end
+   - Path visualization in workspace
+
+The notebook includes 4 detailed visualizations showing arm configurations, workspace, trajectories, and manipulability ellipsoids.
+
+Great for students learning robotics fundamentals or engineers wanting to understand the math behind robot motion.
+
+Interactive notebook: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+Suggested subreddits: r/robotics, r/ControlTheory, r/MechanicalEngineering, r/learnpython
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+How do robot arms know where their hand is? How do they plan smooth motions?
+
+This notebook teaches robot kinematics from scratch:
+- Convert joint angles to positions (forward kinematics)
+- Find joint angles for any target (inverse kinematics)
+- Control velocity with Jacobian matrices
+- Plan smooth trajectories
+
+All concepts visualized with Python. Great for robotics students!
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+Robot Arm Kinematics: From Theory to Implementation
+
+Understanding robot kinematics is fundamental for anyone working in robotics, automation, or mechatronics. This interactive notebook provides a complete implementation for a 2-link planar robot arm.
+
+Key concepts covered:
+
+FORWARD KINEMATICS: Given joint angles, compute end-effector position using trigonometry
+
+INVERSE KINEMATICS: Given target position, find required joint angles using geometric approach (law of cosines)
+
+JACOBIAN MATRIX: Relate joint velocities to Cartesian velocities. Essential for velocity control and understanding singularities.
+
+TRAJECTORY PLANNING: Generate smooth motion using 5th-order polynomials with zero velocity/acceleration at endpoints
+
+MANIPULABILITY: Analyze where the robot can move freely vs. where it approaches singularities
+
+The notebook generates 4 detailed visualizations including workspace analysis, multiple arm configurations, trajectory planning, and manipulability ellipsoids.
+
+Explore: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/robot_kinematics/robot_kinematics.ipynb
+
+#Robotics #Engineering #Python #Kinematics #Automation
+
+================================================================================
+INSTAGRAM (< 2200 chars)
+================================================================================
+Robot math is beautiful!
+
+This notebook teaches how robot arms move through space. You'll learn the core algorithms that power industrial robots, surgical systems, and more.
+
+What's covered:
+- Forward kinematics (angles to position)
+- Inverse kinematics (position to angles)
+- Jacobian matrices for velocity control
+- Smooth trajectory planning
+- Singularity analysis
+
+All with stunning visualizations!
+
+Link in bio or search: robot_kinematics notebook
+
+#robotics #engineering #python #kinematics #mechanicalengineering #automation #robots #coding #programming #stem #education #learning #tech #science #mathematics #controlsystems #jupyter #dataviz #opensource #developer

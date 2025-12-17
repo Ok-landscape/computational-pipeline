@@ -1,0 +1,165 @@
+=== OPTIONS PRICING SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+What's a call option really worth? Black-Scholes answers: C = SN(d₁) - Ke⁻ʳᵀN(d₂)
+
+From analytical formulas to Monte Carlo simulation - see how quants price derivatives.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+#QuantFinance #Python
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+Options pricing demystified: Black-Scholes vs Monte Carlo
+
+This notebook covers the Greeks (Delta, Gamma, Theta, Vega), risk-neutral pricing, and why 1M simulations converge to the analytical solution.
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+Ever wonder how Wall Street prices options?
+
+Two approaches:
+→ Black-Scholes: elegant analytical formula
+→ Monte Carlo: simulate millions of price paths
+
+The Greeks tell you the risks:
+• Delta: how much you gain/lose per $1 stock move
+• Gamma: how fast Delta changes
+• Theta: daily time decay
+• Vega: sensitivity to volatility
+
+This notebook implements both methods from scratch.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+Options Pricing: Black-Scholes and Monte Carlo Methods
+
+Implemented both analytical and simulation approaches to European option valuation:
+
+✓ Black-Scholes formula derivation
+✓ Put-call parity verification
+✓ All five Greeks with visualizations
+✓ Monte Carlo convergence analysis
+✓ Implied volatility and the smile
+
+The math: C = S₀N(d₁) - Ke⁻ʳᵀN(d₂)
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+#QuantitativeFinance #Python #Derivatives
+
+================================================================================
+REDDIT (< 40,000 chars)
+================================================================================
+**Title:** Options Pricing from First Principles: Black-Scholes and Monte Carlo Implementation in Python
+
+**Body:**
+I created an interactive notebook that implements options pricing from the ground up, covering both the analytical Black-Scholes model and Monte Carlo simulation.
+
+**What's covered:**
+
+1. **Black-Scholes Model** - The famous formula C = SN(d₁) - Ke⁻ʳᵀN(d₂), including the assumptions and when they break down
+
+2. **The Greeks** - Complete implementation of Delta, Gamma, Theta, Vega, and Rho with visualizations showing how they vary with stock price
+
+3. **Monte Carlo Simulation** - Simulating geometric Brownian motion paths and watching the estimate converge to the analytical solution as simulations increase (demonstrating the O(1/√n) convergence rate)
+
+4. **Implied Volatility** - Using Brent's method to back out the volatility from market prices, plus visualization of the volatility smile
+
+5. **Put-Call Parity** - Numerical verification that C - P = S - Ke⁻ʳᵀ
+
+The notebook includes 4 publication-quality visualizations and compares Monte Carlo results at different simulation counts (1K to 1M) against Black-Scholes.
+
+Perfect for anyone learning quantitative finance, preparing for quant interviews, or just curious about how derivatives are priced.
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+Suggested subreddits: r/algotrading, r/quant, r/learnpython, r/FinancialCareers, r/options
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+How do traders know what an option is worth?
+
+This notebook explores two approaches to options pricing:
+
+📊 Black-Scholes: The elegant analytical formula that won a Nobel Prize
+🎲 Monte Carlo: Simulate millions of possible futures
+
+You'll learn to calculate the Greeks (Delta, Gamma, Theta, Vega, Rho) - the essential risk measures every options trader monitors.
+
+Watch Monte Carlo converge to the exact answer as simulations increase!
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+Options Pricing: From Theory to Implementation
+
+Understanding derivative pricing is fundamental to quantitative finance. This notebook provides a hands-on implementation of two core approaches:
+
+📐 Black-Scholes Model
+The Nobel Prize-winning formula that revolutionized finance: C = S₀N(d₁) - Ke⁻ʳᵀN(d₂). We verify put-call parity and explore the model's assumptions.
+
+📊 The Greeks
+Complete implementation of Delta, Gamma, Theta, Vega, and Rho with intuitive visualizations. Essential for risk management and hedging strategies.
+
+🎲 Monte Carlo Simulation
+For complex derivatives, simulation is often the only option. Watch the estimate converge at O(1/√n) as we increase from 1,000 to 1,000,000 paths.
+
+📈 Implied Volatility
+Back out market expectations using numerical methods. Visualize the volatility smile that challenges Black-Scholes assumptions.
+
+Whether you're preparing for quant interviews or building trading systems, this notebook provides the foundational implementations.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/options_pricing/options_pricing.ipynb
+
+================================================================================
+INSTAGRAM (< 2200 chars)
+================================================================================
+📈💰 OPTIONS PRICING: The Math Behind Wall Street 💰📈
+
+Ever wonder how traders know what an option is worth? This notebook reveals the secrets!
+
+TWO POWERFUL APPROACHES:
+
+🔷 BLACK-SCHOLES MODEL
+The Nobel Prize-winning formula:
+C = S₀N(d₁) - Ke⁻ʳᵀN(d₂)
+
+Elegant, fast, and the foundation of modern finance.
+
+🔷 MONTE CARLO SIMULATION
+Simulate MILLIONS of possible futures and average the payoffs. Watch it converge to the exact answer!
+
+THE GREEKS - Your Risk Dashboard:
+→ Delta: Exposure to stock price moves
+→ Gamma: How fast Delta changes
+→ Theta: Time decay (the enemy of option buyers!)
+→ Vega: Sensitivity to volatility
+→ Rho: Interest rate sensitivity
+
+PLUS: Implied volatility extraction and the famous "volatility smile" that challenges theory!
+
+4 beautiful visualizations included 📊
+
+Perfect for:
+• Finance students
+• Quant interview prep
+• Algo traders
+• Anyone curious about derivatives
+
+Link in bio or search: cocalc computational-pipeline options_pricing
+
+#QuantitativeFinance #OptionsTrading #BlackScholes #MonteCarlo #Python #Finance #Trading #WallStreet #DerivativesPricing #FinancialMathematics #Quant #AlgoTrading #DataScience #FinTech #InvestmentBanking #RiskManagement #Greeks #Delta #Gamma #Theta #Vega #Volatility #STEM #CodingInFinance #LearnToCode

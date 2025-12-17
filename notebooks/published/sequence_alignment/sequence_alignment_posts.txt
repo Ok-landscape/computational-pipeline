@@ -1,0 +1,176 @@
+=== SEQUENCE ALIGNMENT SOCIAL MEDIA POSTS ===
+
+================================================================================
+TWITTER/X (< 280 chars)
+================================================================================
+How do we find similar DNA sequences? Dynamic programming!
+
+Needleman-Wunsch (global) vs Smith-Waterman (local) - the algorithms behind BLAST.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+#Bioinformatics #Python
+
+================================================================================
+BLUESKY (< 300 chars)
+================================================================================
+DNA sequence alignment from scratch in Python
+
+This notebook implements Needleman-Wunsch and Smith-Waterman algorithms - the foundations of computational biology.
+
+See the dynamic programming matrices and tracebacks visualized!
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+================================================================================
+THREADS (< 500 chars)
+================================================================================
+The algorithms that power genome analysis
+
+When scientists compare DNA sequences to find evolutionary relationships or disease mutations, they use:
+
+→ Needleman-Wunsch: Align entire sequences end-to-end
+→ Smith-Waterman: Find best matching regions
+
+Both use dynamic programming with O(mn) complexity.
+
+This notebook implements them from scratch with visualizations of the scoring matrices and traceback paths.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+================================================================================
+MASTODON (< 500 chars)
+================================================================================
+Sequence Alignment: Needleman-Wunsch and Smith-Waterman
+
+Implemented the classic bioinformatics algorithms from scratch:
+
+✓ Global alignment (Needleman-Wunsch)
+✓ Local alignment (Smith-Waterman)
+✓ Scoring matrices visualization
+✓ Traceback for optimal alignment
+✓ Dot matrix analysis
+
+The foundation of tools like BLAST that revolutionized biology.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+#Bioinformatics #Python #Algorithms
+
+================================================================================
+REDDIT (< 40,000 chars)
+================================================================================
+**Title:** DNA Sequence Alignment from Scratch: Needleman-Wunsch and Smith-Waterman in Python
+
+**Body:**
+I built a notebook implementing the two fundamental algorithms of bioinformatics - Needleman-Wunsch (global alignment) and Smith-Waterman (local alignment).
+
+**What's covered:**
+
+1. **Scoring Systems** - Match rewards, mismatch penalties, and gap costs. How these parameters affect alignment quality.
+
+2. **Needleman-Wunsch Algorithm** - The classic dynamic programming approach for global alignment. Builds the scoring matrix, then traces back to find the optimal alignment.
+
+3. **Smith-Waterman Algorithm** - Modified for local alignment. Key difference: negative scores reset to 0, allowing the algorithm to find the best matching subsequences anywhere in the sequences.
+
+4. **Visualizations** - Heatmaps of the DP matrices showing how scores propagate, plus dot matrices for quick homology detection.
+
+5. **Real DNA Example** - Aligning original vs mutated sequences to calculate sequence identity and find conserved regions.
+
+**Why this matters:**
+These algorithms are the foundation of BLAST and other tools that made the genomics revolution possible. Understanding how they work helps you interpret results from bioinformatics pipelines.
+
+**Complexity:** Both are O(mn) in time and space, where m and n are sequence lengths.
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+Suggested subreddits: r/bioinformatics, r/learnpython, r/algorithms, r/biology, r/compsci
+
+================================================================================
+FACEBOOK (< 500 chars)
+================================================================================
+How do scientists find similar genes across species?
+
+Sequence alignment algorithms compare DNA, RNA, and proteins to find:
+- Evolutionary relationships
+- Disease-causing mutations
+- Functional similarities
+
+This notebook implements the two classic methods:
+- Needleman-Wunsch (global alignment)
+- Smith-Waterman (local alignment)
+
+Watch dynamic programming build the scoring matrices step by step!
+
+Try it: https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+================================================================================
+LINKEDIN (< 1000 chars)
+================================================================================
+DNA Sequence Alignment: The Algorithms Behind Genomics
+
+Understanding sequence alignment is fundamental to computational biology, drug discovery, and personalized medicine.
+
+This notebook implements the two foundational algorithms:
+
+Needleman-Wunsch (1970)
+Global alignment that compares entire sequences end-to-end. Uses dynamic programming to find the optimal alignment considering matches, mismatches, and gaps.
+
+Smith-Waterman (1981)
+Local alignment that finds the best matching regions within larger sequences. Critical for finding conserved domains and functional sites.
+
+Key concepts covered:
+- Scoring matrices (match/mismatch/gap penalties)
+- Dynamic programming recurrence relations
+- Traceback for optimal alignment recovery
+- Sequence identity calculation
+
+These algorithms power tools like BLAST that process millions of sequences daily in research labs worldwide.
+
+Whether you're entering bioinformatics or building healthcare ML models, understanding these fundamentals is essential.
+
+https://cocalc.com/github/Ok-landscape/computational-pipeline/blob/main/notebooks/published/sequence_alignment/sequence_alignment.ipynb
+
+================================================================================
+INSTAGRAM (< 2200 chars)
+================================================================================
+🧬🔬 DNA SEQUENCE ALIGNMENT: The Code Behind Genomics 🔬🧬
+
+Ever wonder how scientists compare genes across species or find disease mutations?
+
+SEQUENCE ALIGNMENT is the answer - and this notebook shows you exactly how it works!
+
+TWO POWERFUL ALGORITHMS:
+
+🔷 NEEDLEMAN-WUNSCH (Global)
+Align entire sequences end-to-end
+Perfect for comparing similar-length genes
+The original dynamic programming approach (1970)
+
+🔷 SMITH-WATERMAN (Local)
+Find best matching regions anywhere in sequences
+Critical for finding conserved domains
+Powers BLAST database searches
+
+HOW IT WORKS:
+1. Build a scoring matrix using:
+   • +2 for matches
+   • -1 for mismatches
+   • -2 for gaps
+
+2. Trace back through the matrix to find the optimal path
+
+3. Output the aligned sequences!
+
+REAL APPLICATIONS:
+→ Finding evolutionary relationships
+→ Identifying disease mutations
+→ Drug target discovery
+→ Forensic DNA matching
+→ Protein structure prediction
+
+4 beautiful visualizations showing the DP matrices and dot plots included!
+
+Link in bio or search: cocalc computational-pipeline sequence_alignment
+
+#Bioinformatics #DNA #Genomics #Python #ComputationalBiology #DynamicProgramming #Algorithms #Science #STEM #Biology #Coding #DataScience #LifeSciences #Genetics #Biotechnology #Research #MachineLearning #Healthcare #LearnToCode #Programming
